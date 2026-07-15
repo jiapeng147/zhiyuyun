@@ -7,8 +7,8 @@
           <span></span>
         </div>
         <div class="m-brand-text">
-          <div class="m-brand-name">XianYuAssistant</div>
-          <div class="m-brand-sub">闲鱼助手</div>
+          <div class="m-brand-name">Zhiyuyun</div>
+          <div class="m-brand-sub">智鱼云</div>
         </div>
       </button>
       <button type="button" class="m-user" aria-label="打开个人中心" @click="activeTab = 'profile'">

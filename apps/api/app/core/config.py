@@ -36,7 +36,7 @@ OPTIONAL_FILE_BACKED_SECRET_FIELDS = (
 
 
 class Settings(BaseSettings):
-    app_name: str = "xianyu-assistant-python"
+    app_name: str = "zhiyuyun-python"
     server_host: str = "127.0.0.1"
     # Isolated local default. Production Compose explicitly overrides this
     # with its private, unpublished container port (12401).
@@ -161,7 +161,7 @@ class Settings(BaseSettings):
         return value.resolve()
 
     jwt_secret: str = Field(
-        default="xianyu-assistant-jwt-secret-key-2026-04-22-very-long-secret-for-hmac-sha",
+        default="zhiyuyun-jwt-secret-key-2026-04-22-very-long-secret-for-hmac-sha",
         exclude=True,
         repr=False,
     )
@@ -170,8 +170,8 @@ class Settings(BaseSettings):
     # impact of browser/storage compromise.
     jwt_expiration_ms: int = 43_200_000
     jwt_algorithm: str = "HS256"
-    jwt_issuer: str = "xianyu-assistant-api"
-    jwt_audience: str = "xianyu-assistant-web"
+    jwt_issuer: str = "zhiyuyun-api"
+    jwt_audience: str = "zhiyuyun-web"
     cookie_crypto_secret: str = Field(
         default="dev-only-cookie-crypto-secret-change-me-32-chars",
         exclude=True,
@@ -354,7 +354,7 @@ class Settings(BaseSettings):
                 "please-change-this-to-a-random-32-char-string",
                 "dev-only-internal-api-token-change-me-32-chars",
                 "dev-only-cookie-crypto-secret-change-me-32-chars",
-                "xianyu-assistant-jwt-secret-key-2026-04-22-very-long-secret-for-hmac-sha",
+                "zhiyuyun-jwt-secret-key-2026-04-22-very-long-secret-for-hmac-sha",
             }
             for field_name, value in {
                 "JWT_SECRET": self.jwt_secret,

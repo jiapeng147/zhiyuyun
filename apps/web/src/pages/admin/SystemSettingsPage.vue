@@ -55,7 +55,7 @@
         <div class="field-grid two">
           <label class="field">
             <span>站点名称（siteName）</span>
-            <input v-model="form.siteName" class="input" placeholder="闲鱼助手开源版" />
+            <input v-model="form.siteName" class="input" placeholder="智鱼云" />
           </label>
 
           <label class="field">

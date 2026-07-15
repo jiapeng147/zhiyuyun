@@ -28,7 +28,7 @@ else:  # pragma: no cover - direct deployment entry point
 MAX_READINESS_BODY_BYTES = 64 * 1024
 ROOT = Path(__file__).resolve().parents[1]
 BASE_COMPOSE_FILE = ROOT / "docker-compose.yml"
-COMPOSE_PROJECT_NAME = "xianyu-assistant"
+COMPOSE_PROJECT_NAME = "zhiyuyun"
 UNSAFE_AMBIENT_COMPOSE_FIELDS = (
     "COMPOSE_FILE",
     "COMPOSE_PROJECT_NAME",

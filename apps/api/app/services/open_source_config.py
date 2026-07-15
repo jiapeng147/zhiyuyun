@@ -122,7 +122,7 @@ def build_public_open_source_config(config: Any) -> dict[str, Any]:
 
 def default_open_source_config() -> dict[str, Any]:
     return {
-        "siteName": "闲鱼助手开源版",
+        "siteName": "智鱼云",
         "icp": "",
         "logoUrl": "/xya/brand/brand_004.png",
         "crawlerBaseUrl": settings.crawler_base_url,

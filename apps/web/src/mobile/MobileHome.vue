@@ -2,7 +2,7 @@
   <div class="m-home">
     <div class="m-hero">
       <div class="m-hero-content">
-        <h1>闲鱼助手<span class="m-hero-highlight">移动端</span></h1>
+        <h1>智鱼云<span class="m-hero-highlight">移动端</span></h1>
         <p class="m-hero-sub">随时随地掌控店铺，快速查看与低风险操作</p>
         <div class="m-hero-tags">
           <span class="m-tag"><MIcon name="check" :size="16" />轻量高效</span>

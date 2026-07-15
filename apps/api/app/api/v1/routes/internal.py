@@ -37,7 +37,7 @@ async def verify_internal_or_current_user(
 @router.get("/health")
 async def internal_health(_: None = Depends(verify_internal_token)):
     return ResultObject.success({
-        "service": "xianyu-assistant-api",
+        "service": "zhiyuyun-api",
         "status": "ok",
         "boundary": "python-execution-only",
     })

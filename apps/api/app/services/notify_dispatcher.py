@@ -585,7 +585,7 @@ async def _send_email(channel: dict, title: str, rendered: str, timeout_seconds:
     try:
         msg = MIMEText(rendered, "plain", "utf-8")
         msg["Subject"] = title
-        msg["From"] = formataddr(("闲鱼助手", from_email))
+        msg["From"] = formataddr(("智鱼云", from_email))
         msg["To"] = to_email
         msg["Date"] = formatdate(localtime=True)
         refused_recipients = await asyncio.to_thread(

@@ -98,7 +98,7 @@
 
         <ol class="hint-list ordered">
           <li><strong>申请高德开放平台账号</strong>：访问 <code>https://lbs.amap.com</code>，注册并完成实名认证（个人或企业均可）。</li>
-          <li><strong>创建应用</strong>：进入“控制台 → 应用管理 → 我的应用 → 创建新应用”，应用名可填 <code>xianyu-assistant</code>，类型选“Web端（JS API）”。</li>
+          <li><strong>创建应用</strong>：进入“控制台 → 应用管理 → 我的应用 → 创建新应用”，应用名可填 <code>zhiyuyun</code>，类型选“Web端（JS API）”。</li>
           <li><strong>获取 Key</strong>：在应用下“添加 Key”，服务平台必须选 <strong>Web 服务</strong>（用于服务端调用 POI 接口）。复制生成的 Key 粘贴到上方输入框。</li>
           <li><strong>计费说明</strong>：高德地图对个人开发者每日免费提供 5000 次 POI 调用，普通商品发布场景通常远低于配额。</li>
           <li><strong>调试方法</strong>：保存后点击“重新加载”，确认“地图状态”变为“已配置”。若发布商品页仍无法搜索地址，可检查 <code>/api/amap/inputtips</code> 的响应与报错。</li>

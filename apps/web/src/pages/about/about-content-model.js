@@ -49,7 +49,7 @@ function sanitizeLegalDocs(legalDocs) {
 export function createDefaultAboutContent() {
   const releaseDate = buildDateText()
   return {
-    heroTitle: 'XianYuAssistant 开源版',
+    heroTitle: '智鱼云',
     heroBadgeText: '付费广告商业桥',
     heroDescription: '开源单管理员版本提供本地核心能力；只有付费广告申请、支付与展示会连接商业版后端。',
     serviceStatusText: '本地核心能力；付费广告桥按需配置',

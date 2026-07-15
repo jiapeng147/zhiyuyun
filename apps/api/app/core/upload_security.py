@@ -559,7 +559,7 @@ async def download_public_image(url: str, max_bytes: int | None = None) -> bytes
                         target.connect_url,
                         headers={
                             "Host": target.host_header,
-                            "User-Agent": "xianyu-assistant/1.0",
+                            "User-Agent": "zhiyuyun/1.0",
                         },
                         extensions={"sni_hostname": target.sni_hostname},
                     ) as response:

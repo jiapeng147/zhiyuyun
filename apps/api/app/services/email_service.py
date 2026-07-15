@@ -264,7 +264,7 @@ async def send_verification_email(
     smtp_user = str(config.get("smtpUser") or "").strip()
     smtp_pass = str(config.get("smtpPass") or "").strip()
     from_email = str(config.get("fromEmail") or "").strip() or smtp_user
-    from_name = str(config.get("fromName") or "").strip() or "闲鱼助手"
+    from_name = str(config.get("fromName") or "").strip() or "智鱼云"
 
     if not smtp_host or not smtp_port or not smtp_user or not smtp_pass:
         raise ValueError(
@@ -276,7 +276,7 @@ async def send_verification_email(
     await store_code(email, purpose, code)
 
     purpose_text = PURPOSE_TEXT_MAP[purpose]
-    subject = f"【闲鱼助手】您的{purpose_text}验证码"
+    subject = f"【智鱼云】您的{purpose_text}验证码"
     body = (
         f"您正在进行{purpose_text}操作。\n\n"
         f"验证码：{code}\n\n"

@@ -1,4 +1,4 @@
-name: xianyu-assistant
+name: zhiyuyun
 x-service-defaults:
   restart: unless-stopped
   init: true
@@ -155,7 +155,7 @@ services:
     logging: *id002
     build:
       context: ./apps/api
-    image: ${API_IMAGE:-xianyu-assistant-api:local}
+    image: ${API_IMAGE:-zhiyuyun-api:local}
     command:
     - python
     - -m
@@ -206,7 +206,7 @@ services:
     logging: *id002
     build:
       context: ./apps/api
-    image: ${API_IMAGE:-xianyu-assistant-api:local}
+    image: ${API_IMAGE:-zhiyuyun-api:local}
     user: 10001:10001
     read_only: true
     cap_drop:
@@ -228,8 +228,8 @@ services:
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-43200000}
       JWT_ALGORITHM: HS256
-      JWT_ISSUER: ${JWT_ISSUER:-xianyu-assistant-api}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-xianyu-assistant-web}
+      JWT_ISSUER: ${JWT_ISSUER:-zhiyuyun-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-zhiyuyun-web}
       COOKIE_CRYPTO_SECRET_FILE: /run/secrets/cookie_crypto_secret
       INTERNAL_API_TOKEN_FILE: /run/secrets/internal_api_token
       CRAWLER_BASE_URL: http://crawler:3001

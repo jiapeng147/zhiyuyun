@@ -4,7 +4,7 @@
       <svg viewBox="0 0 24 24" class="ui-icon"><path d="M6 6l12 12M18 6 6 18" /></svg>
     </button>
     <button type="button" class="brand brand-image" aria-label="返回首页" @click="$emit('navigate','dashboard')">
-      <img src="/xya/brand/brand_004.png" alt="XianYuAssistant 闲鱼助手" class="brand-logo" />
+      <img src="/xya/brand/brand_004.png" alt="智鱼云" class="brand-logo" />
     </button>
     <nav class="nav-scroll">
       <div v-for="group in groups" :key="group.title" class="nav-group">
@@ -30,7 +30,7 @@
       <span class="online-dot"></span><span class="online-text">在线</span>
     </button>
     <button class="sidebar-logout" type="button" @click="$emit('logout')">退出登录</button>
-    <div class="version">© {{ copyrightYear }} XianYuAssistant<br />v{{ APP_VERSION }}</div>
+    <div class="version">© {{ copyrightYear }} Zhiyuyun<br />v{{ APP_VERSION }}</div>
   </aside>
 </template>
 

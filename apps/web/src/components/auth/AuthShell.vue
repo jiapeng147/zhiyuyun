@@ -2,7 +2,7 @@
   <div :class="['auth-shell', `auth-shell-${pageKey}`]">
     <header class="auth-topbar">
       <button type="button" class="brand brand-image auth-brand" @click="emit('navigate', 'dashboard')">
-        <img src="/xya/brand/brand_002.png" class="brand-logo brand-icon" alt="XianYuAssistant" />
+        <img src="/xya/brand/brand_002.png" class="brand-logo brand-icon" alt="Zhiyuyun" />
       </button>
       <div class="auth-lang-switch" aria-label="当前语言：简体中文">
         <TrustedSvg class="auth-lang-icon" :markup="authIcons.globe" />
@@ -66,7 +66,7 @@
     </main>
 
     <footer class="auth-footer">
-      <span>© {{ resolvedCopyrightYear }} XianYuAssistant 开源项目</span>
+      <span>© {{ resolvedCopyrightYear }} 智鱼云</span>
       <span>开源软件，请按实际部署主体补充合规信息</span>
       <button type="button" class="footer-link" @click="openDoc('隐私政策')">隐私政策</button>
       <button type="button" class="footer-link" @click="openDoc('用户协议')">用户协议</button>

@@ -355,7 +355,7 @@
                     <input
                       v-model="selectedChannel.webhookUrl"
                       type="text"
-                      :placeholder="selectedChannel.webhookUrlConfigured ? `已配置${selectedChannel.webhookUrlHost ? `：${selectedChannel.webhookUrlHost}` : ''}，留空保留` : 'https://notify.example.com/webhook/xianyu-assistant'"
+                      :placeholder="selectedChannel.webhookUrlConfigured ? `已配置${selectedChannel.webhookUrlHost ? `：${selectedChannel.webhookUrlHost}` : ''}，留空保留` : 'https://notify.example.com/webhook/zhiyuyun'"
                     />
                     <button
                       v-if="selectedChannel.webhookUrl"
@@ -807,7 +807,7 @@ const CHANNEL_TUTORIALS = {
       {
         title: '把完整地址填到 Webhook 地址',
         detail: '直接粘贴完整的 https 链接，不要填 localhost、内网 IP 或需要登录才能访问的地址。',
-        tip: '推荐保留固定路径，例如 /webhook/xianyu-assistant，后续排查更方便。'
+        tip: '推荐保留固定路径，例如 /webhook/zhiyuyun，后续排查更方便。'
       },
       {
         title: '按稳定性设置超时、重试和失败策略',
@@ -1333,7 +1333,7 @@ function createChannelSeed(meta, overrides = {}) {
     secretConfigured: false,
     timeoutSeconds: 10,
     retryCount: 3,
-    template: '【{title}】\n{{content}}\n\n事件：{event}\n账号：{account}\n时间：{time}\n\n来自 XianYuAssistant 通知中心',
+    template: '【{title}】\n{{content}}\n\n事件：{event}\n账号：{account}\n时间：{time}\n\n来自 Zhiyuyun 通知中心',
     failurePolicy: 'retry',
     dedupeWindow: 10,
     smtpHost: '',
@@ -1527,7 +1527,7 @@ function maskValue(value, start = 4, end = 4) {
 function normalizeChannelTemplate(value) {
   const text = String(value || '').trim()
   if (!text) {
-    return '【{{title}}】 {{content}}\n事件：{{event}} 账号：{{account}} 时间：{{time}}\n来自 XianYuAssistant 通知中心'
+    return '【{{title}}】 {{content}}\n事件：{{event}} 账号：{{account}} 时间：{{time}}\n来自 Zhiyuyun 通知中心'
   }
   return text
 }

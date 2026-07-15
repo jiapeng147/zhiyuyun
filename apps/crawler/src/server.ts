@@ -16,7 +16,7 @@ import { chromium } from 'playwright'
 import { readSecretEnvironmentValue } from './fileSecret.js'
 import { solveGoofishSlider, type SlideSolveOptions } from './sliderSolver.js'
 
-const SERVICE_NAME = 'xianyu-crawler'
+const SERVICE_NAME = 'zhiyuyun-crawler'
 const NODE_ENV = String(process.env.NODE_ENV || 'development').trim().toLowerCase()
 const IS_PRODUCTION = ['production', 'prod', 'staging', 'stage'].includes(NODE_ENV)
 const PORT = process.env.CRAWLER_PORT

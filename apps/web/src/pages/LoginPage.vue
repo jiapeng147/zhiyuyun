@@ -4,8 +4,8 @@
     title-lead="让闲鱼运营"
     title-accent="更简单"
     title-tail="更高效"
-    description="XianYuAssistant 开源版通过账号密码登录管理后台。"
-    legal-description="该页面用于说明 XianYuAssistant 登录、身份验证与账号安全相关规则。"
+    description="智鱼云通过账号密码登录管理后台。"
+    legal-description="该页面用于说明 Zhiyuyun 登录、身份验证与账号安全相关规则。"
     @navigate="emit('navigate', $event)"
   >
     <div v-if="errorMsg" class="form-error" role="alert" aria-live="assertive">{{ errorMsg }}</div>
@@ -94,7 +94,7 @@ const canSubmit = computed(() => Boolean(
 ))
 
 function openDoc(title) {
-  openLegalDoc(title, '该页面用于说明 XianYuAssistant 登录、身份验证与账号安全相关规则。')
+  openLegalDoc(title, '该页面用于说明 Zhiyuyun 登录、身份验证与账号安全相关规则。')
 }
 
 async function handleLogin() {

@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢你对闲鱼助手开源项目的关注！本文档描述了参与贡献的流程和规范。
+感谢你对智鱼云开源项目的关注！本文档描述了参与贡献的流程和规范。
 
 ## 行为准则
 
@@ -24,7 +24,7 @@
 
 ```bash
 git clone <repo-url>
-cd xianyu-assistant-opensource
+cd zhiyuyun
 cp .env.example .env
 # 编辑 .env，填写数据库密码等必填项
 ```
