@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _PUBLIC_API_PATHS = {
     "/api/auth/login",
+    # 智鱼云商业版: 自助注册与套餐查询(公开, 无需登录)
+    "/api/auth/register",
+    "/api/auth/register/send-code",
+    "/api/auth/plans",
     "/api/feishu/webhook",
     "/api/sse/subscribe",
     # 广告展示接口：公共可读，任何人无需登录即可查看商业版配置的轮播图和文本广告
@@ -248,9 +252,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 return _json_error(401, "暂未登录或登录已过期", request_id)
             request.state.auth_payload = payload
             request.state.current_user = {
-                "user_id": 0,
+                "user_id": int(payload.get("uid") or 0),
                 "username": payload["username"],
-                "role": "admin",
+                "role": payload.get("role", "user"),
                 "jti": payload["jti"],
                 "exp": payload["exp"],
             }

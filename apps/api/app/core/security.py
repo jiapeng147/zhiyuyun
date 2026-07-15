@@ -63,13 +63,14 @@ def validate_password_strength(password: str, username: str = "") -> str | None:
     return None
 
 
-def create_token(username: str) -> str:
+def create_token(username: str, *, user_id: int = 0, role: str = "superadmin") -> str:
     now = datetime.now(timezone.utc)
     jti = uuid.uuid4().hex
     payload = {
-        "sub": "admin",
+        "sub": str(user_id),
+        "uid": int(user_id),
         "username": username,
-        "role": "admin",
+        "role": role,
         "jti": jti,
         "iss": settings.jwt_issuer,
         "aud": settings.jwt_audience,
@@ -178,20 +179,51 @@ async def revoke_all_tokens() -> None:
     )
 
 
+def _user_valid_after_key(user_id) -> str:
+    return f"jwt_tokens_valid_after:{user_id}"
+
+
+async def revoke_user_tokens(user_id: int) -> None:
+    """Invalidate all tokens for a single user (password change / force logout)."""
+    await redis_set(
+        _user_valid_after_key(int(user_id)),
+        repr(time.time()),
+        allow_memory_fallback=_allow_security_memory_fallback(),
+    )
+
+
 async def is_token_revoked(payload: dict[str, Any]) -> bool:
     if await is_token_blacklisted(str(payload.get("jti") or "")):
         return True
+    try:
+        issued_at = float(payload.get("auth_time") or payload.get("iat") or 0)
+    except (TypeError, ValueError):
+        return True
+    # 全局 cutoff(超管紧急吊销全体)
     raw_cutoff = await redis_get(
         _TOKENS_VALID_AFTER_KEY,
         allow_memory_fallback=_allow_security_memory_fallback(),
     )
-    if not raw_cutoff:
-        return False
-    try:
-        issued_at = float(payload.get("auth_time") or payload.get("iat") or 0)
-        return issued_at <= float(raw_cutoff)
-    except (TypeError, ValueError):
-        return True
+    if raw_cutoff:
+        try:
+            if issued_at <= float(raw_cutoff):
+                return True
+        except (TypeError, ValueError):
+            return True
+    # per-user cutoff(单用户改密/强制登出)
+    uid = payload.get("uid")
+    if uid is not None:
+        raw_u = await redis_get(
+            _user_valid_after_key(uid),
+            allow_memory_fallback=_allow_security_memory_fallback(),
+        )
+        if raw_u:
+            try:
+                if issued_at <= float(raw_u):
+                    return True
+            except (TypeError, ValueError):
+                return True
+    return False
 
 
 async def authenticate_token(token: str) -> dict[str, Any] | None:
@@ -199,9 +231,10 @@ async def authenticate_token(token: str) -> dict[str, Any] | None:
         payload = decode_token(token)
     except jwt.PyJWTError:
         return None
-    if payload.get("sub") != "admin" or payload.get("role") != "admin":
+    # 多用户: token 必须携带 uid, 且角色属于已知集合。JWT 已签名, uid/role 可信。
+    if payload.get("role") not in ("user", "superadmin"):
         return None
-    if payload.get("username") != settings.admin_username:
+    if payload.get("uid") is None:
         return None
     if await is_token_revoked(payload):
         return None

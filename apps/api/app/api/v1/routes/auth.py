@@ -25,7 +25,10 @@ from ....core.security import (
     validate_password_strength,
     verify_password,
 )
-from ....models.entities import XianyuOperationLog, XianyuSysSetting
+from sqlalchemy.exc import IntegrityError
+
+from ....models.entities import XianyuOperationLog, XianyuSysSetting, AdminUser, AppPlan
+from ....services.email_service import send_verification_email, verify_code
 from ..deps import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -57,6 +60,11 @@ class ProfileRespDTO(CamelModel):
     role: str = "admin"
     avatar: Optional[str] = ""
     email: Optional[str] = ""
+    nickname: Optional[str] = ""
+    plan_code: Optional[str] = ""
+    max_accounts: int = 0
+    ai_daily_quota: int = 0
+    email_verified: bool = False
 
 
 class ChangePasswordReqDTO(CamelModel):
@@ -220,26 +228,66 @@ async def enforce_login_rate_limit(request: Request) -> None:
 async def login(req: LoginReqDTO, request: Request, db: AsyncSession = Depends(get_db)):
     try:
         await enforce_login_rate_limit(request)
-        error = await validate_admin_credentials(db, req.username, req.password)
-        if error:
-            if error == "用户名或密码不能为空":
-                raise HTTPException(status_code=422, detail=error)
-            if error.startswith("管理员密码未配置"):
-                raise HTTPException(status_code=503, detail="认证服务尚未完成管理员密码配置")
-            await record_login_failure(request)
-            raise HTTPException(status_code=401, detail="用户名或密码错误")
+        login_id = (req.username or "").strip()
+        password = req.password or ""
+        if not login_id or not password:
+            raise HTTPException(status_code=422, detail="用户名或密码不能为空")
+
+        user = await load_user_by_login(db, login_id)
+        authed_uid = 0
+        authed_username = login_id
+        authed_role = "user"
+
+        if user is not None:
+            is_super = bool(user.is_super)
+            if is_super and user.username == settings.admin_username:
+                # 种子超管: 历史改密写在 admin_password_hash 设置里, 走 legacy 校验保持兼容
+                error = await validate_admin_credentials(db, user.username, password)
+                if error:
+                    if error.startswith("管理员密码未配置"):
+                        raise HTTPException(status_code=503, detail="认证服务尚未完成管理员密码配置")
+                    await record_login_failure(request)
+                    raise HTTPException(status_code=401, detail="用户名或密码错误")
+            else:
+                ok = await asyncio.to_thread(verify_password, password, user.password_hash or "")
+                if not ok:
+                    await record_login_failure(request)
+                    raise HTTPException(status_code=401, detail="用户名或密码错误")
+                if not user.email_verified:
+                    raise HTTPException(status_code=403, detail="邮箱未验证，请先完成邮箱验证")
+            authed_uid = int(user.id)
+            authed_username = user.username
+            authed_role = "superadmin" if is_super else "user"
+        else:
+            # 表中无记录: 仅允许 legacy 种子管理员(admin_user 未种入的场景)
+            if login_id == settings.admin_username:
+                error = await validate_admin_credentials(db, login_id, password)
+                if error:
+                    if error.startswith("管理员密码未配置"):
+                        raise HTTPException(status_code=503, detail="认证服务尚未完成管理员密码配置")
+                    await record_login_failure(request)
+                    raise HTTPException(status_code=401, detail="用户名或密码错误")
+                authed_uid = 0
+                authed_username = login_id
+                authed_role = "superadmin"
+            else:
+                await record_login_failure(request)
+                raise HTTPException(status_code=401, detail="用户名或密码错误")
 
         await clear_login_failures(request)
-        token_username = settings.admin_username
-        token = create_token(token_username)
+        token = create_token(authed_username, user_id=authed_uid, role=authed_role)
         try:
-            await mark_admin_login(db, commit=False)
+            if user is not None:
+                user.last_login_time = datetime.now(timezone.utc)
+                db.add(user)
+            if authed_username == settings.admin_username:
+                await mark_admin_login(db, commit=False)
             db.add(XianyuOperationLog(
-                operator=token_username,
+                operator=authed_username,
                 operation_type="login",
-                operation_desc="管理员登录",
+                operation_desc="用户登录",
                 target_type="auth",
-                target_id="admin",
+                target_id=str(authed_uid),
                 ip_address=request_client_ip(request),
             ))
             await db.commit()
@@ -252,7 +300,7 @@ async def login(req: LoginReqDTO, request: Request, db: AsyncSession = Depends(g
             )
 
         return ResultObject.success(
-            LoginRespDTO(token=token, username=token_username, role="admin")
+            LoginRespDTO(token=token, username=authed_username, role=authed_role)
         )
     except RedisUnavailableError:
         raise HTTPException(
@@ -262,7 +310,7 @@ async def login(req: LoginReqDTO, request: Request, db: AsyncSession = Depends(g
     except HTTPException:
         raise
     except Exception:
-        logger.error("管理员登录失败", exc_info=True)
+        logger.error("登录失败", exc_info=True)
         raise HTTPException(status_code=503, detail="登录服务暂不可用，请稍后重试")
 
 
@@ -271,12 +319,31 @@ async def get_profile(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    uid = int(current_user.get("user_id") or 0)
+    user = None
+    if uid:
+        user = (await db.execute(select(AdminUser).where(AdminUser.id == uid))).scalars().first()
+    if user is not None:
+        return ResultObject.success(ProfileRespDTO(
+            user_id=int(user.id),
+            username=user.username,
+            role=("superadmin" if user.is_super else "user"),
+            avatar=user.avatar_url or "",
+            email=user.email or "",
+            nickname=user.nickname or user.username,
+            plan_code=user.plan_code or "free",
+            max_accounts=int(user.max_accounts or 0),
+            ai_daily_quota=int(user.ai_daily_quota or 0),
+            email_verified=bool(user.email_verified),
+        ))
+    # legacy 种子管理员回退
     email = await load_setting_value(db, ADMIN_EMAIL_SETTING_KEY, "")
     return ResultObject.success(ProfileRespDTO(
         user_id=current_user.get("user_id", 0),
         username=current_user.get("username", settings.admin_username),
-        role=current_user.get("role", "admin"),
+        role=current_user.get("role", "superadmin"),
         email=email,
+        plan_code="max",
     ))
 
 
@@ -321,3 +388,147 @@ async def change_password(
     except Exception:
         logger.error("修改密码失败", exc_info=True)
         return ResultObject.failed("修改密码失败，请稍后重试")
+
+
+# ============================================================
+# 多用户: 注册 / 套餐 (智鱼云商业版 2A)
+# ============================================================
+async def load_user_by_login(db: AsyncSession, login: str) -> Optional[AdminUser]:
+    """按用户名或邮箱加载启用状态的用户。"""
+    login = (login or "").strip()
+    if not login:
+        return None
+    stmt = select(AdminUser).where(
+        (AdminUser.username == login) | (AdminUser.email == login.lower()),
+        AdminUser.status == 1,
+    )
+    return (await db.execute(stmt)).scalars().first()
+
+
+class RegisterSendCodeReqDTO(CamelModel):
+    email: str
+
+
+class RegisterReqDTO(CamelModel):
+    email: str
+    code: str
+    username: str
+    password: str
+    nickname: Optional[str] = ""
+
+
+class PlanRespDTO(CamelModel):
+    code: str
+    name: str
+    max_accounts: int
+    ai_daily_quota: int
+    price_cents: int
+    description: Optional[str] = ""
+
+
+@router.get("/plans", response_model=ResultObject[list[PlanRespDTO]])
+async def list_plans(db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(
+        select(AppPlan).where(AppPlan.status == 1).order_by(AppPlan.sort_order)
+    )).scalars().all()
+    return ResultObject.success([
+        PlanRespDTO(
+            code=p.code, name=p.name, max_accounts=p.max_accounts,
+            ai_daily_quota=p.ai_daily_quota, price_cents=p.price_cents,
+            description=p.description or "",
+        ) for p in rows
+    ])
+
+
+@router.post("/register/send-code", response_model=ResultObject[None])
+async def register_send_code(
+    req: RegisterSendCodeReqDTO, request: Request, db: AsyncSession = Depends(get_db)
+):
+    email = (req.email or "").strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=422, detail="请输入有效邮箱")
+    exists = (await db.execute(select(AdminUser).where(AdminUser.email == email))).scalars().first()
+    if exists:
+        raise HTTPException(status_code=409, detail="该邮箱已注册")
+    try:
+        await send_verification_email(db, email, "register")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RedisUnavailableError:
+        raise HTTPException(status_code=503, detail="验证码服务暂不可用，请稍后重试")
+    return ResultObject.success(None, message="验证码已发送，5 分钟内有效")
+
+
+@router.post("/register", response_model=ResultObject[LoginRespDTO])
+async def register(
+    req: RegisterReqDTO, request: Request, db: AsyncSession = Depends(get_db)
+):
+    email = (req.email or "").strip().lower()
+    username = (req.username or "").strip()
+    password = req.password or ""
+    code = (req.code or "").strip()
+
+    if not email or "@" not in email:
+        raise HTTPException(status_code=422, detail="请输入有效邮箱")
+    if len(username) < 3 or len(username) > 32:
+        raise HTTPException(status_code=422, detail="用户名长度需为 3-32 个字符")
+    if username == settings.admin_username:
+        raise HTTPException(status_code=409, detail="该用户名不可用")
+    strength_error = validate_password_strength(password, username)
+    if strength_error:
+        raise HTTPException(status_code=422, detail=strength_error)
+
+    ok, msg = await verify_code(email, "register", code)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+
+    dup = (await db.execute(
+        select(AdminUser).where((AdminUser.email == email) | (AdminUser.username == username))
+    )).scalars().first()
+    if dup:
+        raise HTTPException(status_code=409, detail="用户名或邮箱已被占用")
+
+    plan = (await db.execute(select(AppPlan).where(AppPlan.code == "free"))).scalars().first()
+    max_accounts = int(plan.max_accounts) if plan else 1
+    ai_quota = int(plan.ai_daily_quota) if plan else 100
+
+    pwd_hash = await asyncio.to_thread(hash_password, password)
+    user = AdminUser(
+        username=username,
+        email=email,
+        password_hash=pwd_hash,
+        is_super=0,
+        status=1,
+        email_verified=1,
+        nickname=(req.nickname or username)[:100],
+        plan_code="free",
+        max_accounts=max_accounts,
+        ai_daily_quota=ai_quota,
+        register_ip=request_client_ip(request),
+        last_login_time=datetime.now(timezone.utc),
+    )
+    db.add(user)
+    try:
+        db.add(XianyuOperationLog(
+            operator=username,
+            operation_type="register",
+            operation_desc="用户注册",
+            target_type="auth",
+            target_id=email,
+            ip_address=request_client_ip(request),
+        ))
+        await db.commit()
+        await db.refresh(user)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="用户名或邮箱已被占用")
+    except Exception:
+        await db.rollback()
+        logger.error("注册失败", exc_info=True)
+        raise HTTPException(status_code=503, detail="注册服务暂不可用，请稍后重试")
+
+    token = create_token(user.username, user_id=int(user.id), role="user")
+    return ResultObject.success(
+        LoginRespDTO(token=token, username=user.username, role="user"),
+        message="注册成功",
+    )

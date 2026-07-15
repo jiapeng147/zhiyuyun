@@ -21,9 +21,9 @@ async def _decode_admin_credentials(
     if payload is None:
         return None
     return {
-        "user_id": 0,
+        "user_id": int(payload.get("uid") or 0),
         "username": payload["username"],
-        "role": "admin",
+        "role": payload.get("role", "user"),
         "jti": payload["jti"],
         "exp": payload["exp"],
     }

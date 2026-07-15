@@ -11,6 +11,7 @@ from ..core.database import Base
 class XianyuAccount(Base):
     __tablename__ = "xianyu_account"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户ID(多租户行级隔离锚点)")
     platform = Column(String(50), nullable=True, default="xianyu", comment="平台: xianyu")
     external_uid = Column(String(200), nullable=True, comment="闲鱼external_uid")
     nickname = Column(String(200), nullable=True)
@@ -1180,6 +1181,34 @@ class AdminUser(Base):
     email = Column(String(200), nullable=True, unique=True, index=True)
     password_hash = Column(String(255), nullable=False)
     is_super = Column(SmallInteger, nullable=True, default=0, comment="1=超级管理员")
+    plan_code = Column(String(50), nullable=True, default="free", comment="套餐代码")
+    plan_expire_time = Column(DateTime, nullable=True, comment="套餐到期(NULL=永久/免费)")
+    max_accounts = Column(Integer, nullable=True, default=1, comment="可绑定闲鱼账号数配额")
+    ai_daily_quota = Column(Integer, nullable=True, default=100, comment="AI每日调用配额")
+    email_verified = Column(SmallInteger, nullable=True, default=0, comment="邮箱是否已验证")
+    nickname = Column(String(100), nullable=True, comment="昵称")
+    phone = Column(String(30), nullable=True, comment="手机号")
+    avatar_url = Column(Text, nullable=True, comment="头像URL")
+    last_login_time = Column(DateTime, nullable=True, comment="最近登录时间")
+    register_ip = Column(String(64), nullable=True, comment="注册IP")
     status = Column(SmallInteger, nullable=True, default=1, comment="1=启用 0=禁用")
+    created_time = Column(DateTime, default=func.now())
+    updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AppPlan(Base):
+    """套餐目录: 注册/升级页展示与配额来源。"""
+
+    __tablename__ = "app_plan"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    code = Column(String(50), nullable=False, unique=True, index=True)
+    name = Column(String(100), nullable=False)
+    max_accounts = Column(Integer, nullable=False, default=1, comment="可绑定闲鱼账号数")
+    ai_daily_quota = Column(Integer, nullable=False, default=100, comment="AI每日调用配额")
+    price_cents = Column(Integer, nullable=False, default=0, comment="月价(分)")
+    sort_order = Column(Integer, nullable=False, default=0)
+    status = Column(SmallInteger, nullable=False, default=1, comment="1上架 0下架")
+    description = Column(String(500), nullable=True)
     created_time = Column(DateTime, default=func.now())
     updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
