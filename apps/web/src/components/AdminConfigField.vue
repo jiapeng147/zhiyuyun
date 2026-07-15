@@ -46,10 +46,10 @@ defineProps({
 
 .admin-config-field:hover {
   transform: translateY(-1px);
-  border-color: rgba(189, 210, 243, 0.98);
+  border-color: rgba(243, 205, 189, 0.98);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 14px 28px rgba(31, 53, 94, 0.06);
+    0 14px 28px rgba(94, 50, 31, 0.06);
 }
 
 .admin-config-field.is-wide {
@@ -110,7 +110,7 @@ defineProps({
   padding: 0 10px;
   border-radius: 999px;
   background: rgba(255, 79, 0, 0.08);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
@@ -124,10 +124,10 @@ defineProps({
 .admin-config-field-control :deep(.config-input),
 .admin-config-field-control :deep(.config-textarea) {
   width: 100%;
-  border: 1px solid rgba(214, 225, 242, 0.95);
+  border: 1px solid rgba(242, 222, 214, 0.95);
   border-radius: 14px;
   background: #fff;
-  color: #33435f;
+  color: #5f4033;
   text-align: left;
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
@@ -152,7 +152,7 @@ defineProps({
 
 .admin-config-field-control :deep(.config-input:hover),
 .admin-config-field-control :deep(.config-textarea:hover) {
-  border-color: #c7d7ef;
+  border-color: #efd3c7;
 }
 
 .admin-config-field-control :deep(.config-input:focus),

@@ -946,13 +946,13 @@ onBeforeUnmount(() => {
 }
 .import-tab.active {
   background: #fff;
-  color: #2d5bff;
+  color: #ff6c2d;
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
-.import-tab:hover:not(.active) { color: #2d5bff; }
+.import-tab:hover:not(.active) { color: #ff6c2d; }
 
 .file-drop-zone {
-  border: 1px dashed #b8c9e5;
+  border: 1px dashed #e5c6b8;
   border-radius: 10px;
   background: #FFFFFF;
   padding: 24px 16px;
@@ -1006,10 +1006,10 @@ onBeforeUnmount(() => {
 }
 .tab-btn.active {
   background: #fff;
-  color: #2d5bff;
+  color: #ff6c2d;
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
-.tab-btn:hover:not(.active) { color: #2d5bff; }
+.tab-btn:hover:not(.active) { color: #ff6c2d; }
 
 .table-info {
   font-size: 14px;

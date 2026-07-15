@@ -33,7 +33,7 @@ const tabs = settingsTabs
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.92));
   border: 1px solid rgba(231, 237, 247, 0.95);
   border-radius: 22px;
-  box-shadow: 0 18px 42px rgba(31, 53, 94, 0.08);
+  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
   padding: 16px 14px 14px;
   min-height: calc(100vh - 168px);
   position: sticky;
@@ -86,7 +86,7 @@ const tabs = settingsTabs
 
 .config-link:hover {
   background: #f3f8ff;
-  color: #2563eb;
+  color: #eb6025;
   transform: translateX(1px);
 }
 

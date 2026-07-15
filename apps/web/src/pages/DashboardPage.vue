@@ -79,7 +79,7 @@
 
         <CardPanel title="最近实时事件" class="dashboard-section">
           <div v-if="realtimeEvents.length === 0" class="events-empty">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#b7c5db" stroke-width="1.5">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#dbc2b7" stroke-width="1.5">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               <path d="m9 12 2 2 4-4" />
             </svg>
@@ -848,16 +848,16 @@ onBeforeUnmount(() => {
   margin-top: 18px;
   border-radius: 18px;
   padding: 20px;
-  box-shadow: 0 16px 40px rgba(32, 68, 132, 0.05);
+  box-shadow: 0 16px 40px rgba(132, 62, 32, 0.05);
 }
 
 .hero-card {
   position: relative;
   overflow: hidden;
   border-radius: 22px;
-  border: 1px solid rgba(190, 211, 247, 0.9);
+  border: 1px solid rgba(247, 207, 190, 0.9);
   background: linear-gradient(180deg, #eff6ff 0%, #f7fbff 100%);
-  box-shadow: 0 18px 48px rgba(41, 88, 171, 0.1);
+  box-shadow: 0 18px 48px rgba(171, 80, 41, 0.1);
   padding: 14px;
 }
 
@@ -910,7 +910,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 28px rgba(61, 95, 152, 0.14);
+  box-shadow: 0 12px 28px rgba(152, 88, 61, 0.14);
   z-index: 4;
 }
 
@@ -943,12 +943,12 @@ onBeforeUnmount(() => {
   border: 0;
   border-radius: 999px;
   padding: 0;
-  background: rgba(112, 143, 197, 0.32);
+  background: rgba(197, 138, 112, 0.32);
 }
 
 .hero-dot.active {
   width: 24px;
-  background: #1c73ff;
+  background: #ff601c;
 }
 
 .quick-start-grid {
@@ -980,8 +980,8 @@ onBeforeUnmount(() => {
 .quick-card:hover,
 .feature-card:hover {
   transform: translateY(-1px);
-  border-color: #c9dcff;
-  box-shadow: 0 14px 30px rgba(37, 106, 214, 0.08);
+  border-color: #ffd9c9;
+  box-shadow: 0 14px 30px rgba(214, 90, 37, 0.08);
 }
 
 .quick-text,
@@ -1064,7 +1064,7 @@ onBeforeUnmount(() => {
 }
 
 .event-row strong {
-  color: #314666;
+  color: #664131;
 }
 
 .event-row span {
@@ -1080,14 +1080,14 @@ onBeforeUnmount(() => {
 .side-panel {
   border-radius: 18px;
   padding: 20px 18px;
-  box-shadow: 0 16px 40px rgba(32, 68, 132, 0.06);
+  box-shadow: 0 16px 40px rgba(132, 62, 32, 0.06);
 }
 
 .side-link {
   border: 0;
   padding: 0;
   background: transparent;
-  color: #2f74f6;
+  color: #f66b2f;
   font-size: 12px;
   font-weight: 700;
 }
@@ -1099,7 +1099,7 @@ onBeforeUnmount(() => {
 
 .ad-side-panel {
   background:
-    radial-gradient(circle at top right, rgba(112, 174, 255, 0.16), transparent 34%),
+    radial-gradient(circle at top right, rgba(255, 155, 112, 0.16), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #FAFAFA 100%);
 }
 
@@ -1130,7 +1130,7 @@ onBeforeUnmount(() => {
 .ad-text-item {
   width: 100%;
   padding: 14px 14px 15px;
-  border: 1px solid #dce8f8;
+  border: 1px solid #f8e4dc;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.94);
   text-align: left;
@@ -1139,8 +1139,8 @@ onBeforeUnmount(() => {
 
 .ad-text-item:hover {
   transform: translateY(-1px);
-  border-color: #9dc0ff;
-  box-shadow: 0 14px 28px rgba(39, 94, 180, 0.1);
+  border-color: #ffba9d;
+  box-shadow: 0 14px 28px rgba(180, 81, 39, 0.1);
 }
 
 .ad-text-head {
@@ -1151,7 +1151,7 @@ onBeforeUnmount(() => {
 }
 
 .ad-text-head strong {
-  color: #173052;
+  color: #522917;
   font-size: 13px;
 }
 
@@ -1162,7 +1162,7 @@ onBeforeUnmount(() => {
   padding: 0 8px;
   border-radius: 999px;
   background: #edf5ff;
-  color: #2f74f6;
+  color: #f66b2f;
   font-size: 11px;
   font-style: normal;
   font-weight: 800;
@@ -1207,7 +1207,7 @@ onBeforeUnmount(() => {
 
 .guide-list strong {
   display: block;
-  color: #1d2d4b;
+  color: #4b2b1d;
 }
 
 .guide-list span {
@@ -1239,7 +1239,7 @@ onBeforeUnmount(() => {
 .guide-step-status.todo,
 .guide-step-status.suggest {
   background: #edf4ff;
-  color: #2767e7;
+  color: #e76127;
 }
 
 .guide-doc-link {
@@ -1269,7 +1269,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #2c3d59;
+  color: #59392c;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1382,7 +1382,7 @@ onBeforeUnmount(() => {
 
 .notice-tag-system {
   background: #edf4ff;
-  color: #2767e7;
+  color: #e76127;
 }
 
 .notice-tag-warning {

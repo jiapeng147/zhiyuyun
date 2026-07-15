@@ -959,7 +959,7 @@ onMounted(() => {
     radial-gradient(circle at top left, rgba(255, 79, 0, 0.12), transparent 32%),
     radial-gradient(circle at top right, rgba(22, 191, 120, 0.08), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 255, 0.96));
-  box-shadow: 0 18px 42px rgba(31, 53, 94, 0.08);
+  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
 }
 
 .fbk-hero-copy {
@@ -973,7 +973,7 @@ onMounted(() => {
   padding: 0 10px;
   border-radius: 999px;
   background: rgba(255, 79, 0, 0.08);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
 }
@@ -1003,7 +1003,7 @@ onMounted(() => {
   margin-top: 18px;
   padding: 16px 18px;
   border-radius: 18px;
-  border: 1px solid rgba(216, 230, 251, 0.98);
+  border: 1px solid rgba(251, 226, 216, 0.98);
   background: linear-gradient(135deg, rgba(241, 247, 255, 0.96), rgba(255, 255, 255, 0.98));
 }
 
@@ -1043,11 +1043,11 @@ onMounted(() => {
 
 .fbk-stat-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(31, 53, 94, 0.07);
+  box-shadow: 0 14px 30px rgba(94, 50, 31, 0.07);
 }
 
 .fbk-stat-card.active {
-  border-color: #bfd5fb;
+  border-color: #fbd1bf;
   box-shadow: 0 0 0 3px rgba(255, 79, 0, 0.08);
 }
 
@@ -1083,7 +1083,7 @@ onMounted(() => {
 }
 
 .fbk-stat-card.is-progress strong {
-  color: #1199ba;
+  color: #ba4411;
 }
 
 .fbk-stat-card.is-replied strong {
@@ -1102,7 +1102,7 @@ onMounted(() => {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 22px;
-  box-shadow: 0 10px 26px rgba(31, 53, 94, 0.055);
+  box-shadow: 0 10px 26px rgba(94, 50, 31, 0.055);
 }
 
 .fbk-board {
@@ -1123,7 +1123,7 @@ onMounted(() => {
   padding: 0 8px;
   border-radius: 999px;
   background: rgba(255, 79, 0, 0.08);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
 }
@@ -1179,7 +1179,7 @@ onMounted(() => {
 
 .fbk-pill.active {
   background: #eaf2ff;
-  border-color: #c6dafd;
+  border-color: #fdd6c6;
   color: #FF4F00;
 }
 
@@ -1201,7 +1201,7 @@ onMounted(() => {
   border-radius: 12px;
   background: #fff;
   padding: 0 12px;
-  color: #30415c;
+  color: #5c3d30;
 }
 
 .fbk-icon-btn {
@@ -1218,7 +1218,7 @@ onMounted(() => {
 .fbk-icon-btn:hover {
   background: #F6F6F6;
   color: #FF4F00;
-  border-color: #bfd4fb;
+  border-color: #fbd1bf;
   transform: rotate(90deg);
 }
 
@@ -1245,8 +1245,8 @@ onMounted(() => {
 
 .fbk-row:hover {
   transform: translateY(-1px);
-  border-color: #c7d8f0;
-  box-shadow: 0 14px 32px rgba(31, 53, 94, 0.07);
+  border-color: #f0d3c7;
+  box-shadow: 0 14px 32px rgba(94, 50, 31, 0.07);
 }
 
 .fbk-row.is-open {
@@ -1254,7 +1254,7 @@ onMounted(() => {
 }
 
 .fbk-row.is-in_progress {
-  border-left: 4px solid #11b5d8;
+  border-left: 4px solid #d84d11;
 }
 
 .fbk-row.is-replied {
@@ -1303,7 +1303,7 @@ onMounted(() => {
 
 .fbk-category-pill.cat-feature {
   background: #eef5ff;
-  color: #2868d8;
+  color: #d85d28;
 }
 
 .fbk-category-pill.cat-suggestion {
@@ -1323,7 +1323,7 @@ onMounted(() => {
 
 .fbk-tag.tag-in_progress {
   background: #e0f7fb;
-  color: #0a93b0;
+  color: #b03c0a;
 }
 
 .fbk-tag.tag-replied {
@@ -1377,7 +1377,7 @@ onMounted(() => {
 }
 
 .fbk-row-meta .sep {
-  color: #c4cde0;
+  color: #e0ccc4;
 }
 
 .fbk-row-meta .replied {
@@ -1419,7 +1419,7 @@ onMounted(() => {
   padding: 0 8px;
   border-radius: 999px;
   background: rgba(255, 79, 0, 0.08);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
 }
@@ -1544,16 +1544,16 @@ onMounted(() => {
 
 .fbk-priority-item.mid {
   background: #eef6ff;
-  border-color: #d4e5ff;
+  border-color: #ffe1d4;
 }
 
 .fbk-priority-item.mid strong {
-  color: #2868d8;
+  color: #d85d28;
 }
 
 .fbk-priority-item.low {
   background: #f4f7fb;
-  border-color: #e2e8f2;
+  border-color: #f2e7e2;
 }
 
 .fbk-priority-item.low strong {
@@ -1575,8 +1575,8 @@ onMounted(() => {
 }
 
 .fbk-btn-primary {
-  background: linear-gradient(90deg, #0865f4, #147dff);
-  border: 1px solid #0865f4;
+  background: linear-gradient(90deg, #f44f08, #ff5a14);
+  border: 1px solid #f44f08;
   color: #fff;
   box-shadow: 0 10px 22px rgba(255, 79, 0, 0.2);
 }
@@ -1588,12 +1588,12 @@ onMounted(() => {
 .fbk-btn-ghost {
   background: #fff;
   border: 1px solid var(--line);
-  color: #30415c;
+  color: #5c3d30;
 }
 
 .fbk-btn-ghost:hover:not(:disabled) {
   background: #F6F6F6;
-  border-color: #bfd4fb;
+  border-color: #fbd1bf;
   color: #FF4F00;
 }
 
@@ -1669,7 +1669,7 @@ onMounted(() => {
   padding: 0 8px;
   border-radius: 999px;
   background: rgba(255, 79, 0, 0.08);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
 }
@@ -1774,7 +1774,7 @@ onMounted(() => {
   border-radius: 12px;
   border: 1px solid var(--line);
   background: #fff;
-  color: #30415c;
+  color: #5c3d30;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1786,7 +1786,7 @@ onMounted(() => {
 
 .fbk-cat-btn:hover {
   background: #F6F6F6;
-  border-color: #bfd4fb;
+  border-color: #fbd1bf;
 }
 
 .fbk-cat-btn.active {
@@ -1802,7 +1802,7 @@ onMounted(() => {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fff;
-  color: #30415c;
+  color: #5c3d30;
   font-size: 14px;
   font-family: inherit;
   transition: border-color .16s ease, box-shadow .16s ease;
@@ -1867,11 +1867,11 @@ onMounted(() => {
   color: #6B6B6B;
   font-size: 12px;
   padding-bottom: 14px;
-  border-bottom: 1px dashed #d8e1ee;
+  border-bottom: 1px dashed #eedfd8;
 }
 
 .fbk-detail-sub .sep {
-  color: #c4cde0;
+  color: #e0ccc4;
 }
 
 .fbk-msg {
@@ -1885,7 +1885,7 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5a9fff, #FF4F00);
+  background: linear-gradient(135deg, #ff8c5a, #FF4F00);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -1926,7 +1926,7 @@ onMounted(() => {
 
 .fbk-msg-text {
   margin: 0;
-  color: #30415c;
+  color: #5c3d30;
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;

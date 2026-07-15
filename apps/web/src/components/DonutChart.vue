@@ -9,7 +9,7 @@
 <script setup>
 import { computed } from 'vue'
 const props = defineProps({ center: String, label: String, items: Array })
-const colors = ['#1977ff','#18c785','#ffb020','#ff6b6b','#9b5cff','#33cdd2']
+const colors = ['#ff5e19','#18c785','#ffb020','#ff6b6b','#ff8d5c','#33cdd2']
 const style = computed(() => {
   const values = (props.items || []).map(item => Math.max(0, Number(item?.value) || 0))
   const total = values.reduce((sum, value) => sum + value, 0)

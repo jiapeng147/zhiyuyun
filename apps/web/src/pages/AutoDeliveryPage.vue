@@ -1051,7 +1051,7 @@ onBeforeUnmount(() => {
 
 .config-tab.active {
   background: #fff;
-  color: #2d5bff;
+  color: #ff6c2d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 }
 
@@ -1106,7 +1106,7 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 60px;
   padding: 8px 12px;
-  border: 1px solid #dbe1ed;
+  border: 1px solid #ede0db;
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;

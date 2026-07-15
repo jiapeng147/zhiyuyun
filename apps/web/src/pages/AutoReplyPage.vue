@@ -1370,7 +1370,7 @@ onMounted(async () => {
   padding: 0 12px;
   border-radius: 999px;
   background: rgba(217, 63, 0, 0.08);
-  color: #3a63c6;
+  color: #c6643a;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -1382,7 +1382,7 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2f6bff, #59b3ff);
+  background: linear-gradient(135deg, #ff6d2f, #ff8b59);
 }
 
 .auto-reply-hero-copy h1 {
@@ -1390,7 +1390,7 @@ onMounted(async () => {
   font-size: 44px;
   line-height: 1;
   letter-spacing: -0.04em;
-  color: #16315d;
+  color: #5d2b16;
 }
 
 .auto-reply-hero-copy p {
@@ -1409,23 +1409,23 @@ onMounted(async () => {
 
 .auto-reply-action-button {
   min-height: 42px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
   padding: 0 16px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #436289;
+  color: #895843;
   font-size: 14px;
   font-weight: 700;
-  box-shadow: 0 10px 24px rgba(42, 72, 130, 0.08);
+  box-shadow: 0 10px 24px rgba(130, 68, 42, 0.08);
 }
 
 .auto-reply-action-button.primary {
   border-color: transparent;
   color: #fff;
-  background: linear-gradient(135deg, #2f6bff, #489cff);
+  background: linear-gradient(135deg, #ff6d2f, #ff7f48);
   box-shadow: 0 16px 30px rgba(217, 63, 0, 0.24);
 }
 
@@ -1459,11 +1459,11 @@ onMounted(async () => {
   position: relative;
   padding: 26px 28px;
   background:
-    radial-gradient(circle at 85% 20%, rgba(120, 195, 255, 0.28), transparent 18%),
+    radial-gradient(circle at 85% 20%, rgba(255, 161, 120, 0.28), transparent 18%),
     radial-gradient(circle at 70% 110%, rgba(20, 184, 166, 0.18), transparent 24%),
-    linear-gradient(135deg, #173b74 0%, #2457b8 48%, #4d98ff 100%);
+    linear-gradient(135deg, #743317 0%, #b85024 48%, #ff824d 100%);
   color: #fff;
-  box-shadow: 0 24px 42px rgba(32, 76, 177, 0.22);
+  box-shadow: 0 24px 42px rgba(177, 76, 32, 0.22);
 }
 
 .auto-reply-hero-main::before {
@@ -1588,7 +1588,7 @@ onMounted(async () => {
 .auto-reply-hero-side {
   padding: 22px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.94));
-  box-shadow: 0 18px 42px rgba(36, 67, 128, 0.1);
+  box-shadow: 0 18px 42px rgba(128, 64, 36, 0.1);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1615,7 +1615,7 @@ onMounted(async () => {
   font-size: 30px;
   line-height: 1.06;
   letter-spacing: -0.04em;
-  color: #16335f;
+  color: #5f2c16;
 }
 
 .auto-reply-side-pill {
@@ -1627,7 +1627,7 @@ onMounted(async () => {
   padding: 0 12px;
   border-radius: 999px;
   background: #edf4ff;
-  color: #2f6bff;
+  color: #ff6d2f;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1637,7 +1637,7 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2f6bff, #59b3ff);
+  background: linear-gradient(135deg, #ff6d2f, #ff8b59);
 }
 
 .auto-reply-side-note {
@@ -1650,7 +1650,7 @@ onMounted(async () => {
 .auto-reply-side-note strong {
   display: block;
   margin-bottom: 6px;
-  color: #16335f;
+  color: #5f2c16;
   font-size: 14px;
 }
 
@@ -1686,7 +1686,7 @@ onMounted(async () => {
 
 .auto-reply-side-item strong {
   display: block;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 18px;
   letter-spacing: -0.02em;
 }
@@ -1721,7 +1721,7 @@ onMounted(async () => {
 .auto-reply-status-pill.blue,
 .auto-reply-meta-badge.blue {
   background: #edf4ff;
-  color: #2f6bff;
+  color: #ff6d2f;
 }
 
 .auto-reply-status-chip.amber,
@@ -1754,7 +1754,7 @@ onMounted(async () => {
 
 .auto-reply-panel {
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 42px rgba(36, 67, 128, 0.1);
+  box-shadow: 0 18px 42px rgba(128, 64, 36, 0.1);
 }
 
 .auto-reply-panel-head {
@@ -1770,7 +1770,7 @@ onMounted(async () => {
   margin: 0 0 8px;
   font-size: 22px;
   letter-spacing: -0.02em;
-  color: #18345f;
+  color: #5f2d18;
 }
 
 .auto-reply-panel-head p {
@@ -1785,7 +1785,7 @@ onMounted(async () => {
   padding: 0 12px;
   border-radius: 999px;
   background: rgba(217, 63, 0, 0.08);
-  color: #3d66cb;
+  color: #cb683d;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1859,7 +1859,7 @@ onMounted(async () => {
   display: grid;
   place-items: center;
   flex: none;
-  color: #2f6bff;
+  color: #ff6d2f;
   font-size: 13px;
   font-weight: 900;
   background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.14));
@@ -1867,7 +1867,7 @@ onMounted(async () => {
 }
 
 .auto-reply-account-badge.is-all {
-  background: linear-gradient(135deg, #2f6bff 0%, #5aaeff 60%, #7debd7 100%);
+  background: linear-gradient(135deg, #ff6d2f 0%, #ff8c5a 60%, #7debd7 100%);
   color: #fff;
   box-shadow: 0 8px 18px rgba(217, 63, 0, 0.28);
 }
@@ -1896,7 +1896,7 @@ onMounted(async () => {
 .auto-reply-account-main strong {
   display: block;
   margin-bottom: 4px;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 15px;
 }
 
@@ -1932,7 +1932,7 @@ onMounted(async () => {
 .auto-reply-mini-stat b {
   display: block;
   margin-bottom: 4px;
-  color: #18345f;
+  color: #5f2d18;
   font-size: 17px;
   letter-spacing: -0.02em;
 }
@@ -1964,7 +1964,7 @@ onMounted(async () => {
 .auto-reply-search {
   flex: 1;
   min-height: 44px;
-  border: 1px solid #d9e4f4;
+  border: 1px solid #f4e1d9;
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff, #f7faff);
   padding: 0 14px;
@@ -1986,7 +1986,7 @@ onMounted(async () => {
 .auto-reply-search-icon {
   width: 14px;
   height: 14px;
-  border: 2px solid #9ab0ce;
+  border: 2px solid #ceaa9a;
   border-radius: 50%;
   position: relative;
   flex: none;
@@ -1999,7 +1999,7 @@ onMounted(async () => {
   height: 2px;
   right: -4px;
   bottom: -1px;
-  background: #9ab0ce;
+  background: #ceaa9a;
   transform: rotate(40deg);
   border-radius: 999px;
 }
@@ -2011,7 +2011,7 @@ onMounted(async () => {
 .auto-reply-filter-chip {
   min-height: 30px;
   padding: 0 12px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   border-radius: 999px;
   background: #fff;
   color: #7387a5;
@@ -2021,8 +2021,8 @@ onMounted(async () => {
 
 .auto-reply-filter-chip.active {
   background: #edf4ff;
-  border-color: #cfe0ff;
-  color: #2f6bff;
+  border-color: #ffddcf;
+  color: #ff6d2f;
 }
 
 .auto-reply-filter-chip:disabled,
@@ -2090,7 +2090,7 @@ onMounted(async () => {
   font-size: 12px;
   transition: all .2s;
 }
-.auto-reply-load-more .ghost:hover { border-color: var(--blue, #2563eb); color: var(--blue, #2563eb) }
+.auto-reply-load-more .ghost:hover { border-color: var(--blue, #eb6025); color: var(--blue, #eb6025) }
 
 .auto-reply-product-item {
   display: block;
@@ -2107,7 +2107,7 @@ onMounted(async () => {
 .auto-reply-checkbox {
   width: 18px;
   height: 18px;
-  border: 1.6px solid #b6c6dd;
+  border: 1.6px solid #ddc2b6;
   border-radius: 6px;
   margin-top: 2px;
   flex: none;
@@ -2117,7 +2117,7 @@ onMounted(async () => {
 .auto-reply-checkbox.checked {
   position: relative;
   border-color: transparent;
-  background: linear-gradient(135deg, #2f6bff, #5aaeff);
+  background: linear-gradient(135deg, #ff6d2f, #ff8c5a);
 }
 
 .auto-reply-checkbox.checked::after {
@@ -2140,7 +2140,7 @@ onMounted(async () => {
 .auto-reply-product-body strong {
   display: block;
   margin-bottom: 8px;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 14px;
   line-height: 1.55;
 }
@@ -2164,13 +2164,13 @@ onMounted(async () => {
   margin: 0 18px 18px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #173b74, #306fff);
+  background: linear-gradient(135deg, #743317, #ff6e30);
   color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 18px 30px rgba(32, 76, 177, 0.2);
+  box-shadow: 0 18px 30px rgba(177, 76, 32, 0.2);
 }
 
 .auto-reply-selection-bar strong {
@@ -2206,7 +2206,7 @@ onMounted(async () => {
 .auto-reply-selection-actions .fill {
   border: 0;
   background: #fff;
-  color: #245ad5;
+  color: #d55924;
 }
 
 .auto-reply-selection-actions button:disabled {
@@ -2226,7 +2226,7 @@ onMounted(async () => {
 
 .auto-reply-strategy-copy h4 {
   margin: 0 0 10px;
-  color: #18345f;
+  color: #5f2d18;
   font-size: 30px;
   line-height: 1.1;
   letter-spacing: -0.04em;
@@ -2275,7 +2275,7 @@ onMounted(async () => {
 }
 
 .auto-reply-toggle-box strong {
-  color: #17345f;
+  color: #5f2d17;
   font-size: 14px;
 }
 
@@ -2316,7 +2316,7 @@ onMounted(async () => {
   height: 18px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 8px 16px rgba(26, 76, 166, 0.18);
+  box-shadow: 0 8px 16px rgba(166, 68, 26, 0.18);
   transition: 0.2s;
 }
 
@@ -2326,7 +2326,7 @@ onMounted(async () => {
 }
 
 .auto-reply-switch input:checked + .auto-reply-slider {
-  background: linear-gradient(90deg, #2f6bff, #54a6ff);
+  background: linear-gradient(90deg, #ff6d2f, #ff8754);
 }
 
 .auto-reply-switch input:checked + .auto-reply-slider::before {
@@ -2349,7 +2349,7 @@ onMounted(async () => {
   border-radius: 20px;
   border: 1px solid #e7eef8;
   background: linear-gradient(180deg, #ffffff, #FAFAFA);
-  box-shadow: 0 10px 24px rgba(42, 72, 130, 0.08);
+  box-shadow: 0 10px 24px rgba(130, 68, 42, 0.08);
 }
 
 .auto-reply-metric-card b {
@@ -2365,7 +2365,7 @@ onMounted(async () => {
 
 .auto-reply-metric-card b.blue {
   background: #edf4ff;
-  color: #2f6bff;
+  color: #ff6d2f;
 }
 
 .auto-reply-metric-card b.green {
@@ -2381,7 +2381,7 @@ onMounted(async () => {
 .auto-reply-metric-card strong {
   display: block;
   margin-bottom: 8px;
-  color: #17325d;
+  color: #5d2c17;
   font-size: 28px;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -2420,7 +2420,7 @@ onMounted(async () => {
 
 .auto-reply-summary-block p {
   margin: 0;
-  color: #29476f;
+  color: #6f3e29;
   font-size: 14px;
   line-height: 1.8;
 }
@@ -2447,7 +2447,7 @@ onMounted(async () => {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #2f6bff, #5aaeff);
+  background: linear-gradient(135deg, #ff6d2f, #ff8c5a);
   color: #fff;
   font-size: 12px;
   font-weight: 900;
@@ -2457,7 +2457,7 @@ onMounted(async () => {
 .auto-reply-logic-step strong {
   display: block;
   margin-bottom: 6px;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 14px;
 }
 
@@ -2483,13 +2483,13 @@ onMounted(async () => {
 .auto-reply-impact-row strong {
   display: block;
   margin-bottom: 4px;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 14px;
 }
 
 .auto-reply-impact-value {
   flex: none;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.04em;
@@ -2500,13 +2500,13 @@ onMounted(async () => {
   border-radius: 18px;
   border: 1px solid rgba(20, 184, 166, 0.14);
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(217, 63, 0, 0.06));
-  color: #2a5b79;
+  color: #79422a;
 }
 
 .auto-reply-impact-note strong {
   display: block;
   margin-bottom: 6px;
-  color: #17345f;
+  color: #5f2d17;
   font-size: 14px;
 }
 

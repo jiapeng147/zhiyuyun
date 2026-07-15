@@ -43,10 +43,10 @@ defineProps({ active: String })
   border-radius: 24px;
   border: 1px solid rgba(231, 237, 247, 0.95);
   background:
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.1), transparent 30%),
+    radial-gradient(circle at top left, rgba(241, 142, 99, 0.1), transparent 30%),
     radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 35%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92));
-  box-shadow: 0 18px 42px rgba(31, 53, 94, 0.08);
+  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
 }
 
 .page-pill {
@@ -55,8 +55,8 @@ defineProps({ active: String })
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(79, 70, 229, 0.08);
-  color: #5145cd;
+  background: rgba(229, 118, 70, 0.08);
+  color: #cd6e45;
   font-size: 11px;
   font-weight: 800;
 }

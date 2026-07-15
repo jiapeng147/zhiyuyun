@@ -824,7 +824,7 @@ onBeforeUnmount(() => {
   transition: all 0.15s;
 }
 .m-chip.active {
-  background: linear-gradient(135deg, #FF4F00, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #ff6625);
   color: white;
   border-color: transparent;
   box-shadow: 0 4px 10px rgba(255,79,0,0.25);
@@ -957,7 +957,7 @@ onBeforeUnmount(() => {
   height: 80px;
   margin: 0 auto 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
+  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
   color: #FF4F00;
   display: flex;
   align-items: center;
@@ -971,7 +971,7 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   border: 1px solid #f0f4fa;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(31,53,94,0.05);
+  box-shadow: 0 2px 8px rgba(94,50,31,0.05);
 }
 .m-msg-item {
   display: flex;
@@ -989,7 +989,7 @@ onBeforeUnmount(() => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
+  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
   color: #FF4F00;
   display: flex;
   align-items: center;
@@ -999,7 +999,7 @@ onBeforeUnmount(() => {
 }
 .m-msg-avatar.is-robot {
   background: linear-gradient(135deg, #f0ebff, #e2d8ff);
-  color: #8b5cf6;
+  color: #f68a5c;
 }
 .m-msg-dot {
   position: absolute;
@@ -1110,11 +1110,11 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: #6B6B6B;
 }
-.m-msg-tip :deep(svg) { color: #8b5cf6; flex-shrink: 0; }
+.m-msg-tip :deep(svg) { color: #f68a5c; flex-shrink: 0; }
 .m-msg-tip span { flex: 1; min-width: 0; }
 .m-tip-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #FF4F00, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #ff6625);
   color: white;
   border: none;
   border-radius: 100px;
@@ -1228,7 +1228,7 @@ onBeforeUnmount(() => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
+  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
   color: #FF4F00;
   display: flex;
   align-items: center;
@@ -1236,7 +1236,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 .m-bubble-avatar.out-avatar {
-  background: linear-gradient(135deg, #FF4F00, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #ff6625);
   color: white;
 }
 .m-bubble-content {
@@ -1254,10 +1254,10 @@ onBeforeUnmount(() => {
   color: #111111;
   border: 1px solid #eef2fa;
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 3px rgba(31,53,94,0.06);
+  box-shadow: 0 1px 3px rgba(94,50,31,0.06);
 }
 .m-bubble.out .m-bubble-content {
-  background: linear-gradient(135deg, #FF4F00, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #ff6625);
   color: white;
   border-bottom-right-radius: 4px;
   box-shadow: 0 2px 8px rgba(255,79,0,0.2);
@@ -1319,7 +1319,7 @@ onBeforeUnmount(() => {
   margin: 0 -16px;
   padding-left: 12px;
   padding-right: 12px;
-  box-shadow: 0 -2px 12px rgba(31,53,94,0.06);
+  box-shadow: 0 -2px 12px rgba(94,50,31,0.06);
 }
 .m-chat-input input {
   flex: 1;
@@ -1338,7 +1338,7 @@ onBeforeUnmount(() => {
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #FF4F00, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #ff6625);
   color: white;
   display: flex;
   align-items: center;
@@ -1350,7 +1350,7 @@ onBeforeUnmount(() => {
 }
 .m-chat-send:active { transform: scale(0.95); }
 .m-chat-send:disabled {
-  background: #d4ddea;
+  background: #eadbd4;
   box-shadow: none;
   cursor: not-allowed;
 }

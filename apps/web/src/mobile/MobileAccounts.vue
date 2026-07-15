@@ -353,7 +353,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 2px 8px rgba(31, 53, 94, 0.05);
+  box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
   border: 1px solid #f0f4fa;
 }
 .m-acc-stat-icon {
@@ -366,7 +366,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .m-acc-stat-icon-blue {
-  background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
+  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
   color: #FF4F00;
 }
 .m-acc-stat-icon-green {
@@ -374,7 +374,7 @@ onMounted(() => {
   color: #16bf78;
 }
 .m-acc-stat-icon-gray {
-  background: linear-gradient(135deg, #eef1f6, #e2e7f0);
+  background: linear-gradient(135deg, #eef1f6, #f0e6e2);
   color: #8c98ae;
 }
 .m-acc-stat-icon-red {
@@ -396,7 +396,7 @@ onMounted(() => {
   height: 80px;
   margin: 0 auto 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
+  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
   color: #FF4F00;
   display: flex;
   align-items: center;
@@ -416,7 +416,7 @@ onMounted(() => {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(31, 53, 94, 0.05);
+  box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
   border: 1px solid #f0f4fa;
 }
 
@@ -450,7 +450,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
+  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
   color: #FF4F00;
 }
 .m-acc-status-dot {
@@ -462,7 +462,7 @@ onMounted(() => {
   border-radius: 50%;
   border: 2px solid white;
   box-sizing: border-box;
-  box-shadow: 0 1px 3px rgba(31, 53, 94, 0.15);
+  box-shadow: 0 1px 3px rgba(94, 50, 31, 0.15);
 }
 .m-acc-status-dot-online { background: #16bf78; }
 .m-acc-status-dot-offline { background: #c2cad6; }
@@ -643,7 +643,7 @@ onMounted(() => {
   width: 100%;
   min-height: 44px;
   margin-top: 12px;
-  border: 1px solid #cfdcf2;
+  border: 1px solid #f2dacf;
   border-radius: 12px;
   color: #FF4F00;
   background: #fff;
@@ -665,7 +665,7 @@ onMounted(() => {
 .m-acc-tip :deep(svg) { color: #ff9f22; flex-shrink: 0; }
 .m-tip-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #FF4F00, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #ff6625);
   color: white;
   border: none;
   border-radius: 100px;

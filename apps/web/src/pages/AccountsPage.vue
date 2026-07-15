@@ -2031,8 +2031,8 @@ onBeforeUnmount(() => {
   border: 1px solid #e6edf5;
   border-radius: 9px;
   background: #fff;
-  box-shadow: 0 2px 12px rgba(39, 72, 118, 0.045);
-  color: #2a3851;
+  box-shadow: 0 2px 12px rgba(118, 63, 39, 0.045);
+  color: #51362a;
 }
 
 .detail-title-row,
@@ -2102,7 +2102,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 13px;
   border-radius: 50%;
-  background: #cfdae7;
+  background: #e7d6cf;
   content: '';
 }
 
@@ -2119,7 +2119,7 @@ onBeforeUnmount(() => {
 .account-name-row strong {
   max-width: 128px;
   overflow: hidden;
-  color: #23324b;
+  color: #4b2f23;
   font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2133,7 +2133,7 @@ onBeforeUnmount(() => {
   padding: 0 9px;
   border-radius: 4px;
   background: #edf4ff;
-  color: #4087ff;
+  color: #ff7940;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
@@ -2156,7 +2156,7 @@ onBeforeUnmount(() => {
 .account-meta-split i {
   width: 1px;
   height: 12px;
-  background: #e2e9f1;
+  background: #f1e6e2;
 }
 
 .online-state {
@@ -2205,7 +2205,7 @@ onBeforeUnmount(() => {
   border: 1px solid #e8eef5;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 2px 7px rgba(31, 65, 113, 0.035);
+  box-shadow: 0 2px 7px rgba(113, 56, 31, 0.035);
 }
 
 .health-card {
@@ -2254,7 +2254,7 @@ onBeforeUnmount(() => {
 }
 
 .health-ring-inner strong {
-  color: #22304a;
+  color: #4a2e22;
   font-size: 22px;
   line-height: 24px;
 }
@@ -2314,7 +2314,7 @@ onBeforeUnmount(() => {
 .text-action {
   border: 0;
   background: transparent;
-  color: #3486ff;
+  color: #ff7134;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -2374,7 +2374,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   height: 38px;
   padding: 0 5px;
-  border: 1px solid #e1e9f2;
+  border: 1px solid #f2e6e1;
   border-radius: 5px;
   background: #fff;
   color: #53627a;
@@ -2384,8 +2384,8 @@ onBeforeUnmount(() => {
 }
 
 .quick-actions button:hover {
-  border-color: #bcd4ff;
-  color: #3383ff;
+  border-color: #ffd0bc;
+  color: #ff7033;
 }
 
 .quick-actions button span {
@@ -2414,7 +2414,7 @@ onBeforeUnmount(() => {
 .batch-auth-card {
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid #dbe5f1;
+  border: 1px solid #f1e2db;
   border-radius: 10px;
   background: #fff;
   text-align: left;
@@ -2423,8 +2423,8 @@ onBeforeUnmount(() => {
 }
 
 .batch-auth-card:hover:not(:disabled) {
-  border-color: #82aef7;
-  box-shadow: 0 8px 20px rgba(64, 110, 188, 0.08);
+  border-color: #f7a582;
+  box-shadow: 0 8px 20px rgba(188, 101, 64, 0.08);
   transform: translateY(-1px);
 }
 
@@ -2435,7 +2435,7 @@ onBeforeUnmount(() => {
 
 .batch-auth-card strong {
   display: block;
-  color: #20304a;
+  color: #4a2d20;
   font-size: 14px;
 }
 
@@ -2462,7 +2462,7 @@ onBeforeUnmount(() => {
   background: #fff;
   border: 1px solid #E8E8E8;
   border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(31, 53, 94, .14);
+  box-shadow: 0 12px 32px rgba(94, 50, 31, .14);
   padding: 6px;
   display: flex;
   flex-direction: column;
@@ -2484,7 +2484,7 @@ onBeforeUnmount(() => {
 
 .more-actions-menu button:hover {
   background: #f1f6ff;
-  color: #2d5bff;
+  color: #ff6c2d;
 }
 
 .detail-empty {
@@ -2498,10 +2498,10 @@ onBeforeUnmount(() => {
 /* Table row selection highlight */
 .base-table tbody tr.row-selected {
   background: #e6f4ff;
-  box-shadow: inset 3px 0 0 #1677ff;
+  box-shadow: inset 3px 0 0 #ff5c16;
 }
 .base-table tbody tr.row-selected:hover {
-  background: #d6edff;
+  background: #ffe2d6;
 }
 
 /* ===== 闲鱼主页资料卡片 ===== */
@@ -2647,7 +2647,7 @@ onBeforeUnmount(() => {
 /* ===== Cookie 解析预览 ===== */
 .cookie-parse-preview {
   margin-top: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0e6e2;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -2703,7 +2703,7 @@ onBeforeUnmount(() => {
 .cookie-field-item {
   padding: 6px 8px;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0e6e2;
   border-radius: 5px;
 }
 
@@ -2757,9 +2757,9 @@ onBeforeUnmount(() => {
   margin-left: 8px;
   padding: 2px 8px;
   background: #eef2ff;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #fed7c7;
   border-radius: 4px;
-  color: #4338ca;
+  color: #ca6438;
   font-size: 11px;
   font-weight: 500;
 }

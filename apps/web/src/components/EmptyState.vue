@@ -24,13 +24,13 @@ const displayIcon = computed(() => props.icon || variantIcons[props.variant] || 
 </script>
 
 <style scoped>
-.empty-cta{display:flex;gap:16px;align-items:flex-start;padding:26px;border:1px dashed #cfd9ea;border-radius:18px;background:linear-gradient(135deg,#FFFFFF,#F7F7F8);color:#526079;margin:12px 0}
+.empty-cta{display:flex;gap:16px;align-items:flex-start;padding:26px;border:1px dashed #ead7cf;border-radius:18px;background:linear-gradient(135deg,#FFFFFF,#F7F7F8);color:#526079;margin:12px 0}
 .empty-cta-icon{width:48px;height:48px;border-radius:16px;background:#edf4ff;color:#FF4F00;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:0 0 auto}
 .empty-cta h3{margin:0 0 6px;color:#16213e;font-size:18px}
 .empty-cta p{margin:0;line-height:1.7;color:#667085}
 .empty-cta-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.empty-cta.search{border-color:#dbe7f5;background:linear-gradient(135deg,#FFFFFF,#F5F5F5)}
-.empty-cta.search .empty-cta-icon{background:#F5F5F5;color:#3b6fd4}
+.empty-cta.search{border-color:#f5e3db;background:linear-gradient(135deg,#FFFFFF,#F5F5F5)}
+.empty-cta.search .empty-cta-icon{background:#F5F5F5;color:#d4693b}
 .empty-cta.error{border-color:#ffd1d1;background:linear-gradient(135deg,#fff8f8,#fff5f5)}
 .empty-cta.error .empty-cta-icon{background:#fff0f0;color:#ef4444}
 .empty-cta.dev{border-color:#ffe1b0;background:linear-gradient(135deg,#fffaf0,#fff8ea)}

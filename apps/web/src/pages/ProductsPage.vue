@@ -2019,11 +2019,11 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   white-space: nowrap;
 }
 .tabs.products-tabs .tab:hover {
-  color: #1e40af;
+  color: #af4a1e;
   background: rgba(255,255,255,0.6);
 }
 .tabs.products-tabs .tab.active {
-  color: #1d4ed8;
+  color: #d8551d;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   font-weight: 600;
@@ -2076,7 +2076,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 .products-table :deep(td:nth-child(12)) { text-align: center; }
 
 .products-table :deep(tbody tr) { cursor: pointer; }
-.products-table :deep(tbody tr.row-selected) { background: #eef5ff; box-shadow: inset 3px 0 0 #2563eb; }
+.products-table :deep(tbody tr.row-selected) { background: #eef5ff; box-shadow: inset 3px 0 0 #eb6025; }
 .products-table :deep(tbody tr.row-selected:hover) { background: #e0edff; }
 .products-table :deep(tbody tr:hover td) { background: #f5f9ff; }
 
@@ -2231,7 +2231,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   height: 32px;
   padding: 0 8px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0e6e2;
   background: #fff;
   font-size: 13px;
   color: #1e293b;
@@ -2239,8 +2239,8 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 .page-size-select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  border-color: #eb6025;
+  box-shadow: 0 0 0 2px rgba(235, 96, 37, 0.12);
 }
 .page-size-unit {
   font-size: 13px;
@@ -2272,18 +2272,18 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   transition: all 0.15s;
   user-select: none;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0e6e2;
   color: #475569;
 }
 .page-no:hover:not(:disabled) {
   background: #eef2ff;
-  color: #2563eb;
-  border-color: #c7d6f5;
+  color: #eb6025;
+  border-color: #f5d5c7;
 }
 .page-no.active {
-  background: #2563eb;
+  background: #eb6025;
   color: #fff;
-  border-color: #2563eb;
+  border-color: #eb6025;
 }
 .page-no:disabled {
   opacity: 0.45;
@@ -2348,7 +2348,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   transition: all 0.15s;
 }
 .drawer-close:hover {
-  background: #e2e8f0;
+  background: #f0e6e2;
   color: #1e293b;
 }
 .preview-card {
@@ -2415,7 +2415,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 
 .products-table :deep(.badge.purple) {
   background: #f4efff;
-  color: #7c3aed;
+  color: #ed703a;
 }
 
 @media (max-width: 1280px) {

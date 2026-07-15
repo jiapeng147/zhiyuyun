@@ -1395,10 +1395,10 @@ onBeforeUnmount(() => {
   padding: 28px;
   border-radius: 24px;
   background:
-    radial-gradient(circle at top left, rgba(56, 136, 255, 0.18), transparent 34%),
+    radial-gradient(circle at top left, rgba(255, 116, 56, 0.18), transparent 34%),
     linear-gradient(135deg, #FAFAFA 0%, #eef5ff 56%, #fdfefe 100%);
-  border: 1px solid rgba(190, 211, 247, 0.95);
-  box-shadow: 0 18px 48px rgba(38, 92, 176, 0.08);
+  border: 1px solid rgba(247, 207, 190, 0.95);
+  box-shadow: 0 18px 48px rgba(176, 79, 38, 0.08);
 }
 
 .ads-hero-badge {
@@ -1408,7 +1408,7 @@ onBeforeUnmount(() => {
   padding: 0 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
-  color: #2d63ce;
+  color: #ce5d2d;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1458,7 +1458,7 @@ onBeforeUnmount(() => {
   padding: 18px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(214, 228, 249, 0.92);
+  border: 1px solid rgba(249, 224, 214, 0.92);
 }
 
 .ads-hero-stat strong {
@@ -1584,7 +1584,7 @@ onBeforeUnmount(() => {
 .ads-section {
   border-radius: 20px;
   padding: 22px;
-  box-shadow: 0 16px 40px rgba(32, 68, 132, 0.06);
+  box-shadow: 0 16px 40px rgba(132, 62, 32, 0.06);
 }
 
 .ads-state {
@@ -1606,7 +1606,7 @@ onBeforeUnmount(() => {
   min-height: 220px;
   padding: 18px;
   border-radius: 20px;
-  border: 1px solid #dbe7f7;
+  border: 1px solid #f7e3db;
   background: linear-gradient(180deg, #ffffff, #FAFAFA);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -1615,8 +1615,8 @@ onBeforeUnmount(() => {
 .plan-card:hover,
 .plan-card.active {
   transform: translateY(-1px);
-  border-color: #8fb6ff;
-  box-shadow: 0 18px 34px rgba(37, 106, 214, 0.12);
+  border-color: #ffb18f;
+  box-shadow: 0 18px 34px rgba(214, 90, 37, 0.12);
 }
 
 .plan-head {
@@ -1645,7 +1645,7 @@ onBeforeUnmount(() => {
   padding: 0 10px;
   border-radius: 999px;
   background: #eef5ff;
-  color: #2968e8;
+  color: #e86229;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1695,7 +1695,7 @@ onBeforeUnmount(() => {
 }
 
 .ads-field span {
-  color: #32435d;
+  color: #5d3f32;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1705,7 +1705,7 @@ onBeforeUnmount(() => {
   width: 100%;
   color: #16233d;
   background: #fff;
-  border: 1px solid #d8e3f4;
+  border: 1px solid #f4e0d8;
   border-radius: 14px;
   font-size: 14px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
@@ -1726,7 +1726,7 @@ onBeforeUnmount(() => {
 .ads-input:focus,
 .ads-textarea:focus {
   outline: none;
-  border-color: #7ba7ff;
+  border-color: #ffa37b;
   box-shadow: 0 0 0 4px rgba(217, 63, 0, 0.1);
 }
 
@@ -1756,7 +1756,7 @@ onBeforeUnmount(() => {
 }
 
 .upload-head span {
-  color: #32435d;
+  color: #5d3f32;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1780,10 +1780,10 @@ onBeforeUnmount(() => {
   gap: 8px;
   width: 220px;
   height: 132px;
-  border: 1px dashed #9ab8ef;
+  border: 1px dashed #efb39a;
   border-radius: 18px;
   background: linear-gradient(180deg, #FFFFFF, #f3f8ff);
-  color: #2f6bff;
+  color: #ff6d2f;
 }
 
 .upload-card:disabled {
@@ -1829,7 +1829,7 @@ onBeforeUnmount(() => {
 }
 
 .payment-method-head span {
-  color: #32435d;
+  color: #5d3f32;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1850,7 +1850,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 6px;
   padding: 14px;
-  border: 1px solid #dbe5f5;
+  border: 1px solid #f5e3db;
   border-radius: 16px;
   background: #fff;
   text-align: left;
@@ -1858,7 +1858,7 @@ onBeforeUnmount(() => {
 }
 
 .method-card.active {
-  border-color: #2f6bff;
+  border-color: #ff6d2f;
   box-shadow: 0 14px 26px rgba(217, 63, 0, 0.12);
   transform: translateY(-1px);
 }
@@ -1869,7 +1869,7 @@ onBeforeUnmount(() => {
 }
 
 .method-card strong {
-  color: #17315c;
+  color: #5c2c17;
   font-size: 14px;
 }
 
@@ -1903,12 +1903,12 @@ onBeforeUnmount(() => {
 .ads-btn-ghost {
   color: #4b617f;
   background: #fff;
-  border-color: #dbe5f5;
+  border-color: #f5e3db;
 }
 
 .ads-btn-primary {
   color: #fff;
-  background: linear-gradient(90deg, #0d6cff, #1b86ff);
+  background: linear-gradient(90deg, #ff560d, #ff5f1b);
   box-shadow: 0 14px 30px rgba(255, 79, 0, 0.2);
 }
 
@@ -1922,7 +1922,7 @@ onBeforeUnmount(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #2f74f6;
+  color: #f66b2f;
   font-size: 12px;
   font-weight: 700;
 }
@@ -1945,7 +1945,7 @@ onBeforeUnmount(() => {
 
 .payment-top strong {
   display: block;
-  color: #17315c;
+  color: #5c2c17;
   font-size: 16px;
 }
 

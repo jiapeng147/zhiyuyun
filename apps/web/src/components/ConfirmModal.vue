@@ -226,7 +226,7 @@ function trapFocus(event) {
   width: 100%;
   height: 42px;
   padding: 0 14px;
-  border: 1px solid #dce2ed;
+  border: 1px solid #ede1dc;
   border-radius: 8px;
   font-size: 14px;
   color: #1e293b;
@@ -236,8 +236,8 @@ function trapFocus(event) {
 }
 
 .global-confirm-input:focus {
-  border-color: #0865f4;
-  box-shadow: 0 0 0 3px rgba(8, 101, 244, .1);
+  border-color: #f44f08;
+  box-shadow: 0 0 0 3px rgba(244, 79, 8, .1);
 }
 
 .global-confirm-input::placeholder {

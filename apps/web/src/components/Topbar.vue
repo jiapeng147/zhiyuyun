@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
   background: #fff;
   border: 1px solid #E8E8E8;
   border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(30, 52, 92, 0.14);
+  box-shadow: 0 18px 40px rgba(92, 49, 30, 0.14);
   padding: 8px;
   z-index: 20;
   opacity: 0;
@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
   background: #fff;
   border: 1px solid var(--line, #E5E5E5);
   border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(30, 52, 92, 0.14);
+  box-shadow: 0 18px 40px rgba(92, 49, 30, 0.14);
   z-index: 40;
   display: flex;
   flex-direction: column;

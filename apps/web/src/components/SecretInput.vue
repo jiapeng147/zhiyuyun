@@ -42,7 +42,7 @@ const revealed = ref(false)
 }
 
 .secret-input:hover {
-  border-color: #c7d4ea;
+  border-color: #ead2c7;
 }
 
 .secret-input:focus-within {
@@ -58,7 +58,7 @@ const revealed = ref(false)
   background: transparent;
   outline: none;
   padding: 0 14px;
-  color: #33435f;
+  color: #5f4033;
   font-size: 14px;
   text-align: left;
 }
@@ -82,7 +82,7 @@ const revealed = ref(false)
   border: 0;
   border-left: 1px solid var(--line, #E5E5E5);
   background: linear-gradient(180deg, #f7faff, #eef4ff);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -92,7 +92,7 @@ const revealed = ref(false)
 
 .secret-input-toggle:hover {
   background: #eaf2ff;
-  color: #1d4ed8;
+  color: #d8551d;
 }
 
 .secret-input-toggle:active {

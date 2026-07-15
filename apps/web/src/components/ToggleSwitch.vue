@@ -35,7 +35,7 @@ const isInteractive = computed(() => props.interactive || typeof attrs.onClick =
   opacity: 0.6;
 }
 .switch:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline: 3px solid rgba(235, 96, 37, 0.35);
   outline-offset: 2px;
 }
 </style>

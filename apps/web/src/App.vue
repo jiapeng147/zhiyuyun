@@ -626,7 +626,7 @@ const headerActions = computed(() => {
   border-radius: 18px;
   padding: 28px;
   text-align: center;
-  box-shadow: 0 10px 26px rgba(31, 53, 94, .08);
+  box-shadow: 0 10px 26px rgba(94, 50, 31, .08);
 }
 
 .page-load-error {

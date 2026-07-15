@@ -65,11 +65,11 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
 .app-status-banner {
   min-height: 52px;
   padding: 12px 14px;
-  border: 1px solid #d8e5fa;
+  border: 1px solid #fae2d8;
   border-radius: 14px;
   background: rgba(255, 255, 255, .97);
-  box-shadow: 0 18px 48px rgba(25, 48, 86, .2);
-  color: #24466f;
+  box-shadow: 0 18px 48px rgba(86, 43, 25, .2);
+  color: #6f3a24;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -106,7 +106,7 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
   height: 16px;
   flex: 0 0 auto;
   border: 2px solid rgba(217, 63, 0, .28);
-  border-top-color: #2f6bff;
+  border-top-color: #ff6d2f;
   border-radius: 50%;
   animation: app-status-spin .8s linear infinite;
 }
@@ -172,7 +172,7 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
 }
 
 .app-status-close:hover {
-  background: rgba(20, 55, 105, .08);
+  background: rgba(105, 46, 20, .08);
 }
 
 @media (max-width: 600px) {

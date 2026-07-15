@@ -2915,7 +2915,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-card {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid #edf2fb;
-  box-shadow: 0 14px 40px rgba(23, 61, 135, 0.08);
+  box-shadow: 0 14px 40px rgba(135, 57, 23, 0.08);
 }
 
 .xya-msg-sidebar,
@@ -3033,7 +3033,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   padding: 0 10px;
   height: 24px;
   background: #e9f1ff;
-  color: #2563eb;
+  color: #eb6025;
 }
 
 .xya-msg-realtime-badge {
@@ -3117,9 +3117,9 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-send-btn,
 .xya-msg-retry-btn,
 .xya-msg-icon-btn {
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   background: #fff;
-  color: #38506b;
+  color: #6b4738;
   border-radius: 999px;
   cursor: pointer;
   transition: all .2s ease;
@@ -3145,10 +3145,10 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-editor-tabs button.active,
 .xya-msg-send-btn,
 .xya-msg-image-url-send {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #eb6025, #f6733b);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 10px 24px rgba(235, 96, 37, 0.22);
 }
 
 .xya-msg-tabs button:hover,
@@ -3166,7 +3166,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-icon-btn:hover,
 .xya-msg-retry-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(22, 42, 84, 0.10);
+  box-shadow: 0 10px 22px rgba(84, 41, 22, 0.10);
 }
 
 .xya-msg-icon-btn {
@@ -3231,7 +3231,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-image-url-input {
   height: 42px;
   border-radius: 14px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   background: #fff;
   padding: 0 14px;
 }
@@ -3273,7 +3273,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-conversation:hover,
 .xya-msg-conversation.active {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(59, 130, 246, 0.03));
+  background: linear-gradient(135deg, rgba(235, 96, 37, 0.08), rgba(246, 115, 59, 0.03));
 }
 
 .xya-msg-avatar-wrap {
@@ -3284,7 +3284,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   width: 44px;
   height: 44px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  background: linear-gradient(135deg, #eb6025, #fa8e60);
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -3356,7 +3356,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-buyer-tag {
   padding: 4px 9px;
   background: #eff6ff;
-  color: #2563eb;
+  color: #eb6025;
 }
 
 .xya-msg-conversation-time,
@@ -3375,7 +3375,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-status-row b,
 .xya-msg-card-bubble p,
 .xya-msg-bubble {
-  color: #31445f;
+  color: #5f3f31;
   font-size: 13px;
 }
 
@@ -3548,7 +3548,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 .xya-msg-bubble.me {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #eb6025, #f6733b);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
 }
@@ -3680,7 +3680,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 .xya-msg-emoji-btn {
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   border-radius: 12px;
   background: #fff;
   padding: 8px 0;
@@ -3847,13 +3847,13 @@ watch(() => selected.value?.xyGoodsId, () => {
   border-radius: 50%;
 }
 .xya-msg-switch input:checked + .xya-msg-switch-slider {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #eb6025, #f6733b);
 }
 .xya-msg-switch input:checked + .xya-msg-switch-slider:before {
   transform: translateX(18px);
 }
 .xya-msg-switch input:focus-visible + .xya-msg-switch-slider {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 0 0 3px rgba(235, 96, 37, 0.22);
 }
 .xya-msg-switch input:disabled + .xya-msg-switch-slider {
   cursor: not-allowed;
@@ -3910,17 +3910,17 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 .xya-msg-modal-input {
   padding: 8px 12px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
 }
 .xya-msg-modal-input:focus {
-  border-color: #2563eb;
+  border-color: #eb6025;
 }
 .xya-msg-modal-textarea {
   padding: 8px 12px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
@@ -3928,7 +3928,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   font-family: inherit;
 }
 .xya-msg-modal-textarea:focus {
-  border-color: #2563eb;
+  border-color: #eb6025;
 }
 .xya-msg-template-edit-actions {
   display: flex;

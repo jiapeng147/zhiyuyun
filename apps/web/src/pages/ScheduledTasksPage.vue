@@ -398,7 +398,7 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 160px;
   padding: 10px 12px;
-  border: 1px solid #d9e2f0;
+  border: 1px solid #f0e0d9;
   border-radius: 10px;
   resize: vertical;
 }
@@ -429,8 +429,8 @@ onBeforeUnmount(() => {
 
 .scheduler-info {
   background: #eff8ff;
-  color: #175cd3;
-  border-color: #b2ddff;
+  color: #d34f17;
+  border-color: #ffc9b2;
 }
 
 .result-summary {

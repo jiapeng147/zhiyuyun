@@ -891,7 +891,7 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 120px;
   padding: 10px 12px;
-  border: 1px solid #d9e2f0;
+  border: 1px solid #f0e0d9;
   border-radius: 10px;
   resize: vertical;
 }

@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
   border: 1px solid #dbe8ff;
   border-radius: 7px;
   font-size: 12px;
-  color: #2d6ae3;
+  color: #e3642d;
   cursor: pointer;
   font-weight: 650;
   transition: all .15s;
@@ -368,7 +368,7 @@ onBeforeUnmount(() => {
 }
 .var-chip:hover:not(:disabled) {
   background: #e0e8ff;
-  border-color: #b8ceff;
+  border-color: #ffcdb8;
   transform: translateY(-1px);
 }
 .var-chip:disabled {

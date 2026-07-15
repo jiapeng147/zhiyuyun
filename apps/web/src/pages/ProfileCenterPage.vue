@@ -64,7 +64,7 @@
                 <svg viewBox="0 0 64 64" width="64" height="64">
                   <defs>
                     <linearGradient id="avG" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#5a9fff" />
+                      <stop offset="0%" stop-color="#ff8c5a" />
                       <stop offset="100%" stop-color="#FF4F00" />
                     </linearGradient>
                   </defs>
@@ -561,7 +561,7 @@ onBeforeUnmount(() => {
 .content-panel {
   border-radius: 24px;
   border: 1px solid rgba(229, 236, 247, 0.96);
-  box-shadow: 0 12px 34px rgba(29, 53, 87, 0.05);
+  box-shadow: 0 12px 34px rgba(87, 46, 29, 0.05);
 }
 
 .profile-side-card {
@@ -591,7 +591,7 @@ onBeforeUnmount(() => {
   width: auto;
   min-width: 0;
   padding: 12px 14px;
-  border: 1px solid rgba(219, 228, 243, 0.9);
+  border: 1px solid rgba(243, 226, 219, 0.9);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.86);
   color: #50617d;
@@ -626,7 +626,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-side-tab.active::before {
-  background: linear-gradient(180deg, #7cb8ff 0%, #FF4F00 100%);
+  background: linear-gradient(180deg, #ffa37c 0%, #FF4F00 100%);
 }
 
 .profile-side-tab-icon {
@@ -649,7 +649,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-side-tab.active .profile-side-tab-icon {
-  background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(145deg, #dbeafe 0%, #fed2bf 100%);
 }
 
 .profile-side-tab-label {
@@ -671,7 +671,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 14% 50%, rgba(255, 255, 255, 0.08), transparent 18%),
     radial-gradient(circle at 81% 34%, rgba(255, 255, 255, 0.42), transparent 18%),
     radial-gradient(circle at 68% 54%, rgba(229, 240, 255, 0.34), transparent 22%),
-    linear-gradient(92deg, #6aaefe 0%, #7dbbff 18%, #9ccaff 57%, #bbdbff 100%);
+    linear-gradient(92deg, #fe966a 0%, #ffa47d 18%, #ffba9c 57%, #ffcfbb 100%);
 }
 
 .welcome-hero::before {
@@ -714,7 +714,7 @@ onBeforeUnmount(() => {
   border-radius: 24px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(231, 242, 255, 0.85) 100%);
   border: 1px solid rgba(255, 255, 255, 0.46);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 20px 40px rgba(22, 76, 163, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 20px 40px rgba(163, 64, 22, 0.18);
 }
 
 .welcome-avatar svg {
@@ -729,7 +729,7 @@ onBeforeUnmount(() => {
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.02em;
-  text-shadow: 0 10px 24px rgba(45, 98, 177, 0.18);
+  text-shadow: 0 10px 24px rgba(177, 85, 45, 0.18);
 }
 
 .wave {
@@ -760,11 +760,11 @@ onBeforeUnmount(() => {
   color: #4a5f7f;
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(31, 53, 94, 0.035);
+  box-shadow: 0 4px 12px rgba(94, 50, 31, 0.035);
 }
 
 .plan-chip {
-  color: #1674ff;
+  color: #ff5c16;
   border-color: rgba(255, 255, 255, 0.36);
   background: linear-gradient(135deg, rgba(244, 250, 255, 0.98) 0%, rgba(223, 238, 255, 0.94) 100%);
 }
@@ -793,7 +793,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 16px 24px 16px 38px;
   border-radius: 68px;
-  background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.3) 0%, rgba(202, 228, 255, 0.18) 36%, transparent 74%);
+  background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 218, 202, 0.18) 36%, transparent 74%);
   filter: blur(8px);
 }
 
@@ -804,7 +804,7 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: contain;
   object-position: center;
-  filter: drop-shadow(0 22px 30px rgba(61, 113, 224, 0.13));
+  filter: drop-shadow(0 22px 30px rgba(224, 110, 61, 0.13));
 }
 
 .profile-stats {
@@ -824,13 +824,13 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), transparent 36%),
     linear-gradient(180deg, #ffffff 0%, #FFFFFF 100%);
-  box-shadow: 0 10px 28px rgba(31, 53, 94, 0.045);
+  box-shadow: 0 10px 28px rgba(94, 50, 31, 0.045);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 1px 2px rgba(31, 53, 94, 0.04), 0 16px 32px rgba(31, 53, 94, 0.08);
+  box-shadow: 0 1px 2px rgba(94, 50, 31, 0.04), 0 16px 32px rgba(94, 50, 31, 0.08);
   border-color: rgba(255, 79, 0, 0.16);
 }
 
@@ -856,7 +856,7 @@ onBeforeUnmount(() => {
   width: 28px;
   height: 28px;
   object-fit: contain;
-  filter: drop-shadow(0 8px 16px rgba(31, 53, 94, 0.12));
+  filter: drop-shadow(0 8px 16px rgba(94, 50, 31, 0.12));
 }
 
 .stat-card .stat-icon.green {
@@ -870,8 +870,8 @@ onBeforeUnmount(() => {
 }
 
 .stat-card .stat-icon.purple {
-  background: linear-gradient(145deg, #f3ecff 0%, #e3d4ff 100%);
-  color: #8b5cf6;
+  background: linear-gradient(145deg, #f3ecff 0%, #ffe1d4 100%);
+  color: #f68a5c;
 }
 
 .stat-info {
@@ -917,7 +917,7 @@ onBeforeUnmount(() => {
 
 .stat-wave path {
   fill: none;
-  stroke: #5b7cff;
+  stroke: #ff8c5b;
   stroke-width: 3;
   stroke-linecap: round;
 }
@@ -931,7 +931,7 @@ onBeforeUnmount(() => {
 }
 
 .stat-wave.purple path {
-  stroke: #8b5cf6;
+  stroke: #f68a5c;
 }
 
 .two-col-grid,
@@ -1137,7 +1137,7 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9), transparent 36%),
     linear-gradient(180deg, #FFFFFF 0%, #F7F7F8 100%);
-  box-shadow: 0 8px 18px rgba(31, 53, 94, 0.035);
+  box-shadow: 0 8px 18px rgba(94, 50, 31, 0.035);
   text-align: center;
 }
 
@@ -1243,7 +1243,7 @@ onBeforeUnmount(() => {
 .quick-action-btn:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 79, 0, 0.16);
-  box-shadow: 0 16px 30px rgba(31, 53, 94, 0.07);
+  box-shadow: 0 16px 30px rgba(94, 50, 31, 0.07);
 }
 
 .quick-action-btn .circle-ico {
@@ -1264,7 +1264,7 @@ onBeforeUnmount(() => {
   width: 26px;
   height: 26px;
   object-fit: contain;
-  filter: drop-shadow(0 8px 14px rgba(31, 53, 94, 0.12));
+  filter: drop-shadow(0 8px 14px rgba(94, 50, 31, 0.12));
 }
 
 .quick-action-btn b {
@@ -1303,7 +1303,7 @@ onBeforeUnmount(() => {
     linear-gradient(180deg, #ffffff 0%, #FFFFFF 100%);
   padding: 22px 20px 20px;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  box-shadow: 0 12px 28px rgba(31, 53, 94, 0.05);
+  box-shadow: 0 12px 28px rgba(94, 50, 31, 0.05);
 }
 
 .security-card.enhanced {
@@ -1315,7 +1315,7 @@ onBeforeUnmount(() => {
 
 .security-card.enhanced:hover {
   transform: translateY(-2px);
-  box-shadow: 0 1px 2px rgba(31, 53, 94, 0.04), 0 16px 32px rgba(31, 53, 94, 0.1);
+  box-shadow: 0 1px 2px rgba(94, 50, 31, 0.04), 0 16px 32px rgba(94, 50, 31, 0.1);
   border-color: rgba(255, 79, 0, 0.25);
 }
 
@@ -1420,7 +1420,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 82% 35%, rgba(255, 255, 255, 0.28), transparent 18%),
     linear-gradient(135deg, #fff8ea, #fffefb 70%, #ffffff);
   overflow: hidden;
-  box-shadow: 0 22px 46px rgba(31, 53, 94, 0.055);
+  box-shadow: 0 22px 46px rgba(94, 50, 31, 0.055);
 }
 
 .security-level-card::before {
@@ -1858,8 +1858,8 @@ onBeforeUnmount(() => {
 
 .security-tip-icon.blue { background: linear-gradient(145deg, #eef5ff 0%, #dbeafe 100%); color: #FF4F00; }
 .security-tip-icon.mint { background: linear-gradient(145deg, #ecfbf3 0%, #d8f7e7 100%); color: #16bf78; }
-.security-tip-icon.violet { background: linear-gradient(145deg, #f5ecff 0%, #e9dcff 100%); color: #8b5cf6; }
-.security-tip-icon.sky { background: linear-gradient(145deg, #edf9ff 0%, #d8efff 100%); color: #4f86ff; }
+.security-tip-icon.violet { background: linear-gradient(145deg, #f5ecff 0%, #e9dcff 100%); color: #f68a5c; }
+.security-tip-icon.sky { background: linear-gradient(145deg, #edf9ff 0%, #d8efff 100%); color: #ff844f; }
 
 .security-tip-copy {
   min-width: 0;
@@ -1896,7 +1896,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 154px;
   object-fit: contain;
-  filter: sepia(0.12) saturate(1.1) hue-rotate(-5deg) drop-shadow(0 18px 28px rgba(76, 131, 224, 0.16));
+  filter: sepia(0.12) saturate(1.1) hue-rotate(-5deg) drop-shadow(0 18px 28px rgba(224, 120, 76, 0.16));
 }
 
 .security-card .app-btn {
@@ -1918,7 +1918,7 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at top left, rgba(255, 79, 0, 0.06), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
-  box-shadow: 0 12px 34px rgba(29, 53, 87, 0.05);
+  box-shadow: 0 12px 34px rgba(87, 46, 29, 0.05);
 }
 
 .profile-side-nav {
@@ -2022,7 +2022,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding: 14px 16px 10px;
   margin-bottom: 10px;
-  box-shadow: 0 14px 30px rgba(31, 53, 94, 0.045);
+  box-shadow: 0 14px 30px rgba(94, 50, 31, 0.045);
 }
 
 .security-level-card::before {
@@ -2146,7 +2146,7 @@ onBeforeUnmount(() => {
 .security-card {
   padding: 16px 16px 14px;
   border-radius: 20px;
-  box-shadow: 0 10px 24px rgba(31, 53, 94, 0.04);
+  box-shadow: 0 10px 24px rgba(94, 50, 31, 0.04);
 }
 
 .security-card.enhanced {
@@ -2215,7 +2215,7 @@ onBeforeUnmount(() => {
 }
 
 .security-bullet-list li::marker {
-  color: #4f86ff;
+  color: #ff844f;
 }
 
 .security-risk-pill.safe::before {
@@ -2452,7 +2452,7 @@ onBeforeUnmount(() => {
 }
 
 .page-number.active {
-  background: linear-gradient(180deg, #1976ff 0%, #FF4F00 100%);
+  background: linear-gradient(180deg, #ff5e19 0%, #FF4F00 100%);
   border-color: #FF4F00;
   color: #fff;
   box-shadow: 0 12px 20px rgba(255, 79, 0, 0.2);

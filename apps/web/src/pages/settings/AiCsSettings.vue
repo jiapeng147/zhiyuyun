@@ -771,7 +771,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   border-radius: 12px;
   background: #fff;
   font-size: 13px;
@@ -781,7 +781,7 @@ onBeforeUnmount(() => {
 }
 
 .aics-input:focus {
-  border-color: #2563eb;
+  border-color: #eb6025;
 }
 
 .aics-textarea {
@@ -864,9 +864,9 @@ onBeforeUnmount(() => {
 }
 
 .aics-save-btn {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #eb6025, #f6733b);
   color: #fff;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, .22);
+  box-shadow: 0 8px 20px rgba(235, 96, 37, .22);
 }
 
 .aics-save-btn:hover:not(:disabled) {
@@ -883,8 +883,8 @@ onBeforeUnmount(() => {
 
 .aics-test-btn {
   background: #fff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  color: #eb6025;
+  border: 1px solid #fed2bf;
 }
 
 .aics-test-btn:hover:not(:disabled),
@@ -911,13 +911,13 @@ onBeforeUnmount(() => {
 .aics-bubble.them {
   align-self: flex-start;
   background: #F7F7F8;
-  color: #31445f;
+  color: #5f3f31;
   border-radius: 14px 14px 14px 4px;
 }
 
 .aics-bubble.me {
   align-self: flex-end;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #eb6025, #f6733b);
   color: #fff;
   border-radius: 14px 14px 4px 14px;
 }
@@ -982,7 +982,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   margin-top: 8px;
   padding: 10px;
-  border: 1px dashed #dbe6f6;
+  border: 1px dashed #f6e3db;
   border-radius: 10px;
   background: #fafbfc;
   flex-wrap: wrap;
@@ -991,9 +991,9 @@ onBeforeUnmount(() => {
 .aics-upload-btn {
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid #fed2bf;
   background: #fff;
-  color: #2563eb;
+  color: #eb6025;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -1061,7 +1061,7 @@ onBeforeUnmount(() => {
 .aics-restore-btn {
   padding: 2px 8px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0e6e2;
   background: #fff;
   color: #6b7a90;
   font-size: 11px;
@@ -1070,8 +1070,8 @@ onBeforeUnmount(() => {
 }
 
 .aics-restore-btn:hover {
-  color: #2563eb;
-  border-color: #bfdbfe;
+  color: #eb6025;
+  border-color: #fed2bf;
 }
 
 .aics-error-box,
@@ -1111,9 +1111,9 @@ onBeforeUnmount(() => {
   align-self: flex-start;
   padding: 4px 12px;
   border-radius: 6px;
-  border: 1px solid #dbe6f6;
+  border: 1px solid #f6e3db;
   background: #fff;
-  color: #2563eb;
+  color: #eb6025;
   font-size: 12px;
   cursor: pointer;
 }

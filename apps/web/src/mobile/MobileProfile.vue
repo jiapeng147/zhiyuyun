@@ -53,7 +53,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'profile')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#d0e2ff);color:#FF4F00">
+          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#ffded0);color:#FF4F00">
             <MIcon name="user" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -92,7 +92,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'profile')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#f0ebff,#e2d8ff);color:#8b5cf6">
+          <div class="m-menu-icon" style="background:linear-gradient(135deg,#f0ebff,#e2d8ff);color:#f68a5c">
             <MIcon name="lock" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -111,7 +111,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'logs')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#f0ebff,#e2d8ff);color:#8b5cf6">
+          <div class="m-menu-icon" style="background:linear-gradient(135deg,#f0ebff,#e2d8ff);color:#f68a5c">
             <MIcon name="help" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -198,13 +198,13 @@ onMounted(() => {
   gap: 14px;
   margin-bottom: 16px;
   border: 1px solid rgba(255, 79, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(31, 53, 94, 0.05);
+  box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
 }
 .m-pro-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FF4F00, #3b9bff);
+  background: linear-gradient(135deg, #FF4F00, #ff763b);
   color: white;
   display: flex;
   align-items: center;
@@ -273,7 +273,7 @@ onMounted(() => {
   justify-content: space-around;
   margin-bottom: 16px;
   border: 1px solid #f0f4fa;
-  box-shadow: 0 2px 8px rgba(31,53,94,0.05);
+  box-shadow: 0 2px 8px rgba(94,50,31,0.05);
 }
 .m-pro-stat {
   flex: 1;
@@ -301,7 +301,7 @@ onMounted(() => {
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(31,53,94,0.05);
+  box-shadow: 0 2px 8px rgba(94,50,31,0.05);
   border: 1px solid #f0f4fa;
 }
 .m-section-header {
@@ -407,7 +407,7 @@ onMounted(() => {
 .m-btn-outline {
   background: white;
   color: #FF4F00;
-  border: 1.5px solid #d4e4ff;
+  border: 1.5px solid #ffe1d4;
 }
 .m-btn-danger {
   background: #fff5f5;

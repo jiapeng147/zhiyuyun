@@ -409,7 +409,7 @@ onBeforeUnmount(() => {
 .m-hero-content { position: relative; z-index: 2; max-width: 60%; min-width: 0; }
 .m-hero h1 { margin: 0 0 8px; font-size: 28px; font-weight: 800; color: #111111; line-height: 1.2; }
 .m-hero-highlight {
-  background: linear-gradient(135deg, #FF4F00, #3b9bff);
+  background: linear-gradient(135deg, #FF4F00, #ff763b);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .m-hero-sub { margin: 0 0 14px; font-size: 14px; color: #5a6a85; line-height: 1.6; }
@@ -424,7 +424,7 @@ onBeforeUnmount(() => {
 .m-hero-illus { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); width: 160px; height: 160px; z-index: 1; }
 .m-phone {
   position: absolute; right: 10px; top: 15px; width: 90px; height: 140px;
-  background: linear-gradient(145deg, #4a8fff, #2d6bff); border-radius: 16px;
+  background: linear-gradient(145deg, #ff804a, #ff6c2d); border-radius: 16px;
   box-shadow: 0 12px 30px rgba(255,79,0,0.3); padding: 8px 5px; transform: rotate(-8deg);
 }
 .m-phone::before { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 22px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 4px; }
@@ -433,7 +433,7 @@ onBeforeUnmount(() => {
 .m-phone-msg-2 { width: 60%; }
 .m-fish-badge {
   position: absolute; right: 0; bottom: 10px; width: 48px; height: 48px;
-  background: linear-gradient(135deg, #5ba3ff, #2d7bff); border-radius: 50%;
+  background: linear-gradient(135deg, #ff8c5b, #ff6c2d); border-radius: 50%;
   display: flex; align-items: center; justify-content: center; color: white;
   box-shadow: 0 6px 16px rgba(255,79,0,0.35); z-index: 2;
 }
@@ -461,7 +461,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   background: white; border-radius: 16px; padding: 14px;
   display: flex; flex-direction: column; gap: 6px; min-width: 0;
-  box-shadow: 0 2px 8px rgba(31,53,94,0.05); border: 1px solid #f0f4fa;
+  box-shadow: 0 2px 8px rgba(94,50,31,0.05); border: 1px solid #f0f4fa;
   cursor: pointer; transition: transform 0.15s;
 }
 .m-stat-card:active { transform: scale(0.97); }
@@ -469,12 +469,12 @@ onBeforeUnmount(() => {
   width: 44px; height: 44px; border-radius: 13px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.m-stat-blue { background: linear-gradient(135deg,#e8f1ff,#d4e4ff); color: #FF4F00; }
-.m-stat-blue2 { background: linear-gradient(135deg,#e8f1ff,#d4e4ff); color: #1678ff; }
+.m-stat-blue { background: linear-gradient(135deg,#e8f1ff,#ffe1d4); color: #FF4F00; }
+.m-stat-blue2 { background: linear-gradient(135deg,#e8f1ff,#ffe1d4); color: #ff5c16; }
 .m-stat-orange { background: linear-gradient(135deg,#fff4e0,#ffe7c2); color: #ff9f22; }
 .m-stat-green { background: linear-gradient(135deg,#e2f8ee,#cdf2df); color: #16bf78; }
 .m-stat-red { background: linear-gradient(135deg,#ffeaea,#ffd0d0); color: #ff5252; }
-.m-stat-purple { background: linear-gradient(135deg,#f0ebff,#e2d8ff); color: #8b5cf6; }
+.m-stat-purple { background: linear-gradient(135deg,#f0ebff,#e2d8ff); color: #f68a5c; }
 .m-stat-label { font-size: 12px; color: #8c98ae; font-weight: 500; }
 .m-stat-value { font-size: 24px; font-weight: 800; color: #111111; line-height: 1.2; }
 .m-stat-desc { font-size: 11px; color: #8c98ae; }
@@ -484,7 +484,7 @@ onBeforeUnmount(() => {
 
 .m-section {
   background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(31,53,94,0.05); border: 1px solid #f0f4fa;
+  box-shadow: 0 2px 8px rgba(94,50,31,0.05); border: 1px solid #f0f4fa;
 }
 .m-data-warning {
   display: flex;
@@ -539,12 +539,12 @@ onBeforeUnmount(() => {
   width: 46px; height: 46px; border-radius: 13px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.m-quick-blue { background: linear-gradient(135deg,#e8f1ff,#d0e2ff); color: #FF4F00; }
+.m-quick-blue { background: linear-gradient(135deg,#e8f1ff,#ffded0); color: #FF4F00; }
 .m-quick-green { background: linear-gradient(135deg,#e2f8ee,#cdf2df); color: #16bf78; }
-.m-quick-purple { background: linear-gradient(135deg,#f0ebff,#e2d8ff); color: #8b5cf6; }
+.m-quick-purple { background: linear-gradient(135deg,#f0ebff,#e2d8ff); color: #f68a5c; }
 .m-quick-orange { background: linear-gradient(135deg,#fff4e0,#ffe7c2); color: #ff9f22; }
-.m-quick-blue2 { background: linear-gradient(135deg,#e6f2ff,#d0e6ff); color: #2578ff; }
-.m-quick-purple2 { background: linear-gradient(135deg,#ede8ff,#ddd3ff); color: #7c5cff; }
+.m-quick-blue2 { background: linear-gradient(135deg,#e6f2ff,#ffded0); color: #ff6625; }
+.m-quick-purple2 { background: linear-gradient(135deg,#ede8ff,#ffe0d3); color: #ff8d5c; }
 .m-quick-info { flex: 1; min-width: 0; overflow: hidden; }
 .m-quick-title { font-size: 14px; font-weight: 600; color: #111111; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .m-quick-desc { font-size: 11px; color: #8c98ae; line-height: 1.4; word-break: break-word; }
@@ -561,7 +561,7 @@ onBeforeUnmount(() => {
   width: 44px; height: 44px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
 }
-.m-starter-blue { background: linear-gradient(135deg,#e8f1ff,#d0e2ff); color: #FF4F00; }
+.m-starter-blue { background: linear-gradient(135deg,#e8f1ff,#ffded0); color: #FF4F00; }
 .m-starter-orange { background: linear-gradient(135deg,#fff4e0,#ffe7c2); color: #ff9f22; }
 .m-starter-green { background: linear-gradient(135deg,#e2f8ee,#cdf2df); color: #16bf78; }
 .m-starter-done { background: linear-gradient(135deg,#d4f5e2,#b8ebcc); color: #16bf78; }
@@ -632,8 +632,8 @@ onBeforeUnmount(() => {
   cursor: pointer; transition: transform 0.1s;
 }
 .m-btn:active { transform: scale(0.97); }
-.m-btn-outline { background: white; color: #111111; border: 1.5px solid #e0e6f0; }
-.m-btn-primary { background: linear-gradient(135deg, #FF4F00, #2580ff); color: white; box-shadow: 0 6px 18px rgba(255,79,0,0.3); }
+.m-btn-outline { background: white; color: #111111; border: 1.5px solid #f0e5e0; }
+.m-btn-primary { background: linear-gradient(135deg, #FF4F00, #ff6625); color: white; box-shadow: 0 6px 18px rgba(255,79,0,0.3); }
 
 .m-safe-bottom { height: 80px; }
 

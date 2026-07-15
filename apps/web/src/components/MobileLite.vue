@@ -307,13 +307,13 @@ onMounted(() => {
   width: 12px;
   height: 43px;
   border-radius: 8px;
-  background: linear-gradient(180deg, #0d7fff, #16b7ff);
+  background: linear-gradient(180deg, #ff560d, #ff5c16);
   transform: rotate(42deg);
   box-shadow: 0 4px 12px rgba(255,79,0,0.25);
 }
 .m-brand-mark span + span {
   transform: rotate(-42deg);
-  background: linear-gradient(180deg, #25a5ff, #0362f4);
+  background: linear-gradient(180deg, #ff6625, #f44b03);
 }
 .m-brand-name {
   font-size: 17px;
@@ -336,7 +336,7 @@ onMounted(() => {
   background: white;
   border-radius: 100px;
   padding: 5px 10px 5px 14px;
-  box-shadow: 0 2px 8px rgba(31,53,94,0.06);
+  box-shadow: 0 2px 8px rgba(94,50,31,0.06);
   border: 1px solid #eef2fa;
   cursor: pointer;
   transition: transform 0.1s;
@@ -390,7 +390,7 @@ onMounted(() => {
   align-items: stretch;
   justify-content: space-around;
   z-index: 100;
-  box-shadow: 0 -4px 20px rgba(31,53,94,0.05);
+  box-shadow: 0 -4px 20px rgba(94,50,31,0.05);
 }
 .m-tab {
   flex: 1;
@@ -424,7 +424,7 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 24px;
   height: 3px;
-  background: linear-gradient(90deg, #FF4F00, #3b9bff);
+  background: linear-gradient(90deg, #FF4F00, #ff763b);
   border-radius: 0 0 3px 3px;
 }
 </style>

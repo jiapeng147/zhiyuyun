@@ -339,10 +339,10 @@ function onHeaderAction(event) {
   border-radius: 24px;
   border: 1px solid rgba(231, 237, 247, 0.95);
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 32%),
+    radial-gradient(circle at top left, rgba(235, 96, 37, 0.12), transparent 32%),
     radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 35%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92));
-  box-shadow: 0 18px 42px rgba(31, 53, 94, 0.08);
+  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
 }
 
 .page-pill {
@@ -351,8 +351,8 @@ function onHeaderAction(event) {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.08);
-  color: #2c63d4;
+  background: rgba(235, 96, 37, 0.08);
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
 }
@@ -443,7 +443,7 @@ function onHeaderAction(event) {
   padding: 0 8px;
   border-radius: 999px;
   background: rgba(255, 79, 0, 0.08);
-  color: #2c63d4;
+  color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
 }
