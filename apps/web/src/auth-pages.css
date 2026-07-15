@@ -1083,3 +1083,10 @@
 .auth-code-btn:hover:not(:disabled) { background: rgba(255, 79, 0, .12); }
 .auth-code-btn:disabled { opacity: .5; cursor: not-allowed; }
 .auth-muted { color: var(--muted, #6B6B6B); font-size: 13px; margin-right: 6px; }
+
+/* 智鱼云 Swiss: 蓝色3D插图(PNG位图)渲染期转橙, 与全站橙色统一 */
+.auth-visual-layer,
+.auth-visual-chart-left, .auth-visual-logo-main, .auth-visual-chart-right,
+.auth-visual-cube-right, .auth-visual-base-main {
+  filter: hue-rotate(162deg) saturate(1.08);
+}
