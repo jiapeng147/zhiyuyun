@@ -16,7 +16,8 @@ class ResultObject(CamelModel, Generic[T]):
         return ResultObject(code=200, msg=message, data=data)
 
     @staticmethod
-    def failed(message: str = "操作失败", code: int = 500) -> "ResultObject":
+    def failed(message: str = "操作失败", code: int = 400) -> "ResultObject":
+        # 业务/校验失败属客户端错误(4xx)。真正的服务器异常请用 internal_error()(500)。
         return ResultObject(code=code, msg=redact_sensitive_text(message), data=None)
 
     @staticmethod
