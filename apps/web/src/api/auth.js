@@ -8,6 +8,11 @@ export const login = data => request.post('/auth/login', data, { suppressGlobalE
 
 export const getProfile = () => request.get('/auth/profile')
 
+// 智鱼云商业版: 自助注册
+export const sendRegisterCode = data => request.post('/auth/register/send-code', data, { suppressGlobalError: true })
+export const register = data => request.post('/auth/register', data, { suppressGlobalError: true })
+export const getPlans = () => request.get('/auth/plans', { suppressGlobalError: true })
+
 export async function logout() {
   try {
     return await request.post('/auth/logout', {})

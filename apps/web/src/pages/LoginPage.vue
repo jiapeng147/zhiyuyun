@@ -54,6 +54,7 @@
           <input v-model="remember" type="checkbox" />
           <span>记住登录</span>
         </label>
+        <button type="button" class="auth-text-link" @click="emit('navigate','register')">注册新账号</button>
       </div>
 
       <button class="auth-submit" type="submit" :disabled="!canSubmit" :aria-busy="loading">

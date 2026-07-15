@@ -127,6 +127,7 @@ const SettingsPage = asyncPage(() => import('./pages/SettingsPage.vue'))
 
 const pageMap = {
   login: LoginPage,
+  register: asyncPage(() => import('./pages/RegisterPage.vue')),
   dashboard: DashboardPage,
   data: asyncPage(() => import('./pages/DataPage.vue')),
   accounts: asyncPage(() => import('./pages/AccountsPage.vue')),
@@ -160,7 +161,7 @@ const settingsKeys = [
   'settings-product',
   'settings-about'
 ]
-const authPages = ['login']
+const authPages = ['login', 'register']
 const defaultPage = DEFAULT_PAGE
 const mobileLitePages = new Set([
   'dashboard',
