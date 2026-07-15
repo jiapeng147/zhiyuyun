@@ -4,7 +4,7 @@
       <svg viewBox="0 0 24 24" class="ui-icon"><path d="M6 6l12 12M18 6 6 18" /></svg>
     </button>
     <button type="button" class="brand brand-image" aria-label="返回首页" @click="$emit('navigate','dashboard')">
-      <img src="/xya/brand/brand_004.png" alt="智鱼云" class="brand-logo" />
+      <img src="/xya/brand/zhiyuyun-logo.svg" alt="智鱼云" class="brand-logo" />
     </button>
     <nav class="nav-scroll">
       <div v-for="group in groups" :key="group.title" class="nav-group">

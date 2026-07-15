@@ -1,7 +1,7 @@
 <template>
   <div v-if="booting" class="boot-screen">
     <div class="boot-card">
-      <img src="/xya/brand/brand_002.png" class="boot-brand-icon" alt="Zhiyuyun" />
+      <img src="/xya/brand/zhiyuyun-mark.svg" class="boot-brand-icon" alt="Zhiyuyun" />
       <b>正在连接后端服务...</b>
       <span>{{ bootMessage }}</span>
     </div>
@@ -29,7 +29,7 @@
         <button class="m-menu-btn" type="button" aria-label="打开菜单" @click="mobileNavOpen = true">
           <svg viewBox="0 0 24 24" class="ui-icon"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
         </button>
-        <img src="/xya/brand/brand_002.png" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
+        <img src="/xya/brand/zhiyuyun-mark.svg" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
         <button
           v-if="mobileDesktopOverride"
           class="m-return-lite"

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 44" fill="none" role="img" aria-label="智鱼云">
+  <rect x="2" y="7" width="30" height="30" rx="6" fill="#FF4F00"/>
+  <path d="M9 22c4.2-6.6 11.8-6.6 16 0-4.2 6.6-11.8 6.6-16 0Z" fill="#FFFFFF"/>
+  <circle cx="21.5" cy="22" r="2.1" fill="#FF4F00"/>
+  <text x="44" y="30" font-family="'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif" font-size="23" font-weight="700" fill="#111111" letter-spacing="1.5">智鱼云</text>
+  <rect x="45" y="36" width="26" height="2.4" fill="#FF4F00"/>
+</svg>
