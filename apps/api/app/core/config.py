@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     # Isolated local default. Production Compose explicitly overrides this
     # with its private, unpublished container port (12401).
     server_port: int = 15177
+    # 智鱼云商业版: 自助注册开关(默认关闭, 数据隔离全部落地后再开)
+    registration_enabled: bool = False
 
     db_path: str = "../dbdata/xianyu_assistant.db"  # kept for backward compat
     uploads_dir: str = str(DEFAULT_UPLOADS_DIR)

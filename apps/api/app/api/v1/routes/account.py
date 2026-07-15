@@ -22,6 +22,12 @@ from ....schemas.account import (
     RefreshAccountProfileRespDTO
 )
 from ..deps import get_current_user
+from ....core.tenancy import (
+    scope_by_owner,
+    assert_account_owned,
+    current_uid,
+    is_superadmin,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/account")
@@ -70,7 +76,7 @@ async def get_account_list(
     current_user: dict = Depends(get_current_user)
 ):
     try:
-        query = select(XianyuAccount)
+        query = scope_by_owner(select(XianyuAccount), XianyuAccount.owner_user_id, current_user)
         result = await db.execute(query)
         accounts = result.scalars().all()
         account_list = [account_to_dto(a) for a in accounts]
@@ -102,6 +108,7 @@ async def add_account(
             return ResultObject.failed("账号已存在")
 
         account = XianyuAccount(
+            owner_user_id=current_uid(current_user),
             external_uid=unb,
             remark=req.account_note,
             status=1
@@ -158,6 +165,7 @@ async def manual_add_account(
             return ResultObject.failed("账号已存在")
 
         account = XianyuAccount(
+            owner_user_id=current_uid(current_user),
             external_uid=unb,
             remark=req.account_note,
             status=1
@@ -200,8 +208,12 @@ async def update_account(
 ):
     try:
         result = await db.execute(
-            select(XianyuAccount).where(
-                XianyuAccount.id == req.account_id,
+            scope_by_owner(
+                select(XianyuAccount).where(
+                    XianyuAccount.id == req.account_id,
+                ),
+                XianyuAccount.owner_user_id,
+                current_user,
             )
         )
         account = result.scalar_one_or_none()
@@ -226,8 +238,12 @@ async def delete_account(
 ):
     try:
         result = await db.execute(
-            select(XianyuAccount).where(
-                XianyuAccount.id == req.account_id,
+            scope_by_owner(
+                select(XianyuAccount).where(
+                    XianyuAccount.id == req.account_id,
+                ),
+                XianyuAccount.owner_user_id,
+                current_user,
             )
         )
         account = result.scalar_one_or_none()
@@ -256,8 +272,12 @@ async def get_account_detail(
 ):
     try:
         result = await db.execute(
-            select(XianyuAccount).where(
-                XianyuAccount.id == req.account_id,
+            scope_by_owner(
+                select(XianyuAccount).where(
+                    XianyuAccount.id == req.account_id,
+                ),
+                XianyuAccount.owner_user_id,
+                current_user,
             )
         )
         account = result.scalar_one_or_none()
@@ -277,8 +297,12 @@ async def refresh_account_profile(
 ):
     try:
         result = await db.execute(
-            select(XianyuAccount).where(
-                XianyuAccount.id == req.account_id,
+            scope_by_owner(
+                select(XianyuAccount).where(
+                    XianyuAccount.id == req.account_id,
+                ),
+                XianyuAccount.owner_user_id,
+                current_user,
             )
         )
         account = result.scalar_one_or_none()
@@ -335,6 +359,8 @@ async def update_account_cookie(
         cookie = data.get("cookie", "")
         if not account_id or not cookie:
             return ResultObject.validate_failed("accountId 和 cookie 不能为空")
+        if not await assert_account_owned(db, current_user, account_id):
+            return ResultObject.failed("账号不存在")
         # 提取 _m_h5_tk
         m_h5_tk = extract_m_h5_tk_from_cookie(cookie)
         if not m_h5_tk:
@@ -413,6 +439,7 @@ async def get_refresh_status(current_user: dict = Depends(get_current_user)):
 @router.post("/refresh/force", response_model=ResultObject[dict])
 async def force_refresh_account(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     """手动触发单账号刷新
@@ -423,6 +450,8 @@ async def force_refresh_account(
         refresh_type = data.get("refreshType") or "all"
         if not account_id:
             return ResultObject.validate_failed("accountId 不能为空")
+        if not await assert_account_owned(db, current_user, account_id):
+            return ResultObject.failed("账号不存在")
         if refresh_type not in ("all", "cookie", "mh5tk", "ws_token"):
             return ResultObject.validate_failed("refreshType 必须为 all/cookie/mh5tk/ws_token")
 
@@ -451,7 +480,9 @@ async def force_refresh_account(
 
 @router.post("/refresh/start", response_model=ResultObject[dict])
 async def start_refresh_scheduler(current_user: dict = Depends(get_current_user)):
-    """启动刷新调度器（管理员操作）"""
+    """启动刷新调度器（超级管理员操作）"""
+    if not is_superadmin(current_user):
+        raise HTTPException(status_code=403, detail="需要超级管理员权限")
     try:
         from app.services.cookie_token_refresher import start_dispatcher
         await start_dispatcher()
@@ -463,7 +494,9 @@ async def start_refresh_scheduler(current_user: dict = Depends(get_current_user)
 
 @router.post("/refresh/stop", response_model=ResultObject[dict])
 async def stop_refresh_scheduler(current_user: dict = Depends(get_current_user)):
-    """停止刷新调度器（管理员操作）"""
+    """停止刷新调度器（超级管理员操作）"""
+    if not is_superadmin(current_user):
+        raise HTTPException(status_code=403, detail="需要超级管理员权限")
     try:
         from app.services.cookie_token_refresher import stop_dispatcher
         await stop_dispatcher()

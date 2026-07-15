@@ -17,6 +17,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.config import settings
+from ....core.tenancy import current_uid
 from ....core.database import get_db
 from ....core.logging_security import redact_sensitive_text
 from ....core.response import ResultObject
@@ -2555,6 +2556,7 @@ async def compat_xianyu_accounts_create(
         return ResultObject.failed("账号已存在")
 
     account = XianyuAccount(
+        owner_user_id=current_uid(current_user),
         external_uid=unb,
         remark=payload.get("accountNote") or payload.get("remark") or "",
         status=1

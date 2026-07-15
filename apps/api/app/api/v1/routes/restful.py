@@ -10,6 +10,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
 from ....core.database import get_db
+from ....core.tenancy import current_uid
 from ....core.response import ResultObject
 from ....core.unavailable_features import (
     ACCOUNT_LOGIN_CREDENTIAL_UNAVAILABLE,
@@ -720,6 +721,7 @@ async def restful_create_account(
         remark = body.get("account_note") or body.get("remark", "")
         external_uid = body.get("unb") or body.get("external_uid", "")
         account = XianyuAccount(
+            owner_user_id=current_uid(current_user),
             external_uid=external_uid,
             nickname=nickname,
             remark=remark,

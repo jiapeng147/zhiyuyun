@@ -444,6 +444,8 @@ async def list_plans(db: AsyncSession = Depends(get_db)):
 async def register_send_code(
     req: RegisterSendCodeReqDTO, request: Request, db: AsyncSession = Depends(get_db)
 ):
+    if not settings.registration_enabled:
+        raise HTTPException(status_code=403, detail="注册暂未开放")
     email = (req.email or "").strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=422, detail="请输入有效邮箱")
@@ -463,6 +465,8 @@ async def register_send_code(
 async def register(
     req: RegisterReqDTO, request: Request, db: AsyncSession = Depends(get_db)
 ):
+    if not settings.registration_enabled:
+        raise HTTPException(status_code=403, detail="注册暂未开放")
     email = (req.email or "").strip().lower()
     username = (req.username or "").strip()
     password = req.password or ""
