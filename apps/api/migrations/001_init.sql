@@ -1,6 +1,6 @@
 -- ============================================================
 -- 单租户精简版数据库初始化 Schema
--- 基于 zhiyuyun 源项目 entities.py 改造
+-- 基于 xianyu-assistant-package-temp 源项目 entities.py 改造
 -- 改造规则：
 --   1. 移除所有表的 tenant_id、user_id 字段
 --   2. operation_log 表使用 operator varchar(64) 替代 user_id
