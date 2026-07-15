@@ -424,7 +424,7 @@ onMounted(() => {
 .m-date-tab.active {
   background: white;
   color: #FF4F00;
-  box-shadow: 0 2px 6px rgba(13, 107, 255, 0.12);
+  box-shadow: 0 2px 6px rgba(255, 79, 0, 0.12);
 }
 
 .m-loading {
@@ -648,7 +648,7 @@ onMounted(() => {
   border-radius: 6px 6px 0 0;
   transition: height 0.4s ease;
   min-height: 4px;
-  box-shadow: 0 2px 6px rgba(13, 107, 255, 0.18);
+  box-shadow: 0 2px 6px rgba(255, 79, 0, 0.18);
 }
 .m-chart-date {
   margin-top: 6px;
@@ -745,7 +745,7 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(13, 107, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.25);
 }
 .m-pc-notice-btn:active {
   transform: scale(0.96);

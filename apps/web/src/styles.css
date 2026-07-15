@@ -107,7 +107,7 @@ a {
   border-radius: 12px;
   background: linear-gradient(180deg, #0d7fff, #16b7ff);
   transform: rotate(42deg);
-  box-shadow: 0 6px 18px rgba(13, 107, 255, .28)
+  box-shadow: 0 6px 18px rgba(255, 79, 0, .28)
 }
 
 .brand-mark span+span {
@@ -169,7 +169,7 @@ a {
 .nav-item.active {
   background: linear-gradient(90deg, #FF4F00, #167cff);
   color: white;
-  box-shadow: 0 10px 20px rgba(13, 107, 255, .22)
+  box-shadow: 0 10px 20px rgba(255, 79, 0, .22)
 }
 
 .nav-item.child {
@@ -372,7 +372,7 @@ a {
   background: linear-gradient(90deg, #0865f4, #147dff);
   border-color: #0865f4;
   color: #fff;
-  box-shadow: 0 9px 18px rgba(13, 107, 255, .20)
+  box-shadow: 0 9px 18px rgba(255, 79, 0, .20)
 }
 
 .app-btn.danger {
@@ -950,7 +950,7 @@ input {
   height: 90px;
   border-radius: 28px;
   background: linear-gradient(135deg, #cfe1ff, #FF4F00);
-  filter: drop-shadow(0 18px 28px rgba(13, 107, 255, .22));
+  filter: drop-shadow(0 18px 28px rgba(255, 79, 0, .22));
   transform: skew(-18deg)
 }
 
@@ -1119,7 +1119,7 @@ input {
   border-radius: 46px;
   background: linear-gradient(160deg, #eef6ff 0, #dbeaff 45%, #FF4F00 100%);
   transform: perspective(500px) rotateX(52deg) rotateZ(-4deg);
-  box-shadow: 0 35px 70px rgba(13, 107, 255, .22)
+  box-shadow: 0 35px 70px rgba(255, 79, 0, .22)
 }
 
 .big-illus:after {
@@ -2548,7 +2548,7 @@ input {
   }
 
   .app-btn.primary {
-    box-shadow: 0 4px 12px rgba(13, 107, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(255, 79, 0, 0.2);
   }
 
   /* 输入框移动端优化 */
@@ -2751,7 +2751,7 @@ input {
   border-radius: 12px;
   background: linear-gradient(180deg, #0d7fff, #16b7ff);
   transform: rotate(42deg);
-  box-shadow: 0 6px 18px rgba(13, 107, 255, .28)
+  box-shadow: 0 6px 18px rgba(255, 79, 0, .28)
 }
 
 .brand .brand-mark:not(:has(span))::after {
@@ -2764,7 +2764,7 @@ input {
   border-radius: 12px;
   background: linear-gradient(180deg, #25a5ff, #0362f4);
   transform: rotate(-42deg);
-  box-shadow: 0 6px 18px rgba(13, 107, 255, .18)
+  box-shadow: 0 6px 18px rgba(255, 79, 0, .18)
 }
 
 /* account add modals */
@@ -2858,7 +2858,7 @@ input {
   background: #FF4F00;
   border-color: #FF4F00;
   color: #fff;
-  box-shadow: 0 8px 18px rgba(13, 107, 255, .25)
+  box-shadow: 0 8px 18px rgba(255, 79, 0, .25)
 }
 
 .scan-steps i {
@@ -3022,7 +3022,7 @@ input {
 .state.active span {
   background: #FF4F00;
   color: #fff;
-  box-shadow: 0 0 0 8px rgba(13, 107, 255, .12)
+  box-shadow: 0 0 0 8px rgba(255, 79, 0, .12)
 }
 
 .state.ok span {

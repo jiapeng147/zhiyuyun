@@ -827,7 +827,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border-color: transparent;
-  box-shadow: 0 4px 10px rgba(13,107,255,0.25);
+  box-shadow: 0 4px 10px rgba(255,79,0,0.25);
 }
 .m-chip-dot {
   width: 6px;
@@ -871,12 +871,12 @@ onBeforeUnmount(() => {
   transition: all 0.15s;
 }
 .m-filter-tab.active {
-  background: rgba(13,107,255,0.1);
+  background: rgba(255,79,0,0.1);
   color: #FF4F00;
   font-weight: 600;
 }
 .m-filter-count {
-  background: rgba(13,107,255,0.12);
+  background: rgba(255,79,0,0.12);
   color: #FF4F00;
   font-size: 10px;
   padding: 1px 6px;
@@ -1090,7 +1090,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(13,107,255,0.08);
+  background: rgba(255,79,0,0.08);
   padding: 3px 8px;
   border-radius: 6px;
   max-width: 100%;
@@ -1157,7 +1157,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   flex-shrink: 0;
 }
-.m-chat-back:active { background: rgba(13,107,255,0.08); }
+.m-chat-back:active { background: rgba(255,79,0,0.08); }
 .m-chat-title { flex: 1; min-width: 0; }
 .m-chat-name {
   font-size: 16px;
@@ -1192,7 +1192,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   flex-shrink: 0;
 }
-.m-chat-more:active { background: rgba(13,107,255,0.08); }
+.m-chat-more:active { background: rgba(255,79,0,0.08); }
 
 .m-chat-body {
   flex: 1;
@@ -1260,7 +1260,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(13,107,255,0.2);
+  box-shadow: 0 2px 8px rgba(255,79,0,0.2);
 }
 .m-bubble-text { white-space: pre-wrap; }
 .m-bubble-image-wrap { margin-bottom: 4px; }
@@ -1332,7 +1332,7 @@ onBeforeUnmount(() => {
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.m-chat-input input:focus { border-color: #FF4F00; background: white; box-shadow: 0 0 0 3px rgba(13,107,255,0.1); }
+.m-chat-input input:focus { border-color: #FF4F00; background: white; box-shadow: 0 0 0 3px rgba(255,79,0,0.1); }
 .m-chat-send {
   width: 44px;
   height: 44px;
@@ -1345,7 +1345,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(13,107,255,0.3);
+  box-shadow: 0 4px 10px rgba(255,79,0,0.3);
   transition: transform 0.1s;
 }
 .m-chat-send:active { transform: scale(0.95); }

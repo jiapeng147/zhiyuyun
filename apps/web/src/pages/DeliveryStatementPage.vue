@@ -429,7 +429,7 @@ onBeforeUnmount(() => {
 }
 .form-row textarea:focus {
   border-color: #FF4F00;
-  box-shadow: 0 0 0 3px rgba(13,107,255,.1);
+  box-shadow: 0 0 0 3px rgba(255,79,0,.1);
 }
 .form-actions {
   margin-top: 20px;

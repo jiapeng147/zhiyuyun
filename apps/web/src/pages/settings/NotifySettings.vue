@@ -2161,7 +2161,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border: 1px solid rgba(218, 229, 246, 0.96);
   background:
-    radial-gradient(circle at 0% 0%, rgba(47, 107, 255, 0.15), transparent 30%),
+    radial-gradient(circle at 0% 0%, rgba(217, 63, 0, 0.15), transparent 30%),
     radial-gradient(circle at 100% 0%, rgba(23, 184, 150, 0.12), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(242, 247, 255, 0.95));
   box-shadow: 0 24px 60px rgba(32, 76, 177, 0.12);
@@ -2203,7 +2203,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(47, 107, 255, 0.08);
+  background: rgba(217, 63, 0, 0.08);
   color: #365fc6;
   font-size: 13px;
   font-weight: 800;
@@ -2376,11 +2376,11 @@ onBeforeUnmount(() => {
 }
 
 .notify-summary-icon.blue,
-.notify-channel-icon.blue { background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(90, 174, 255, 0.16)); color: #3666d0; }
+.notify-channel-icon.blue { background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.16)); color: #3666d0; }
 .notify-summary-icon.green,
 .notify-channel-icon.green { background: linear-gradient(135deg, rgba(22, 191, 120, 0.14), rgba(91, 220, 160, 0.16)); color: #16a46b; }
 .notify-summary-icon.cyan,
-.notify-channel-icon.cyan { background: linear-gradient(135deg, rgba(35, 192, 232, 0.14), rgba(90, 174, 255, 0.16)); color: #1985c6; }
+.notify-channel-icon.cyan { background: linear-gradient(135deg, rgba(35, 192, 232, 0.14), rgba(229, 229, 229, 0.16)); color: #1985c6; }
 .notify-summary-icon.orange,
 .notify-channel-icon.orange { background: linear-gradient(135deg, rgba(255, 180, 73, 0.18), rgba(255, 111, 127, 0.14)); color: #ef9a29; }
 .notify-summary-icon.indigo,
@@ -2466,7 +2466,7 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(47, 107, 255, 0.08);
+  background: rgba(217, 63, 0, 0.08);
   color: #3d66cb;
   font-size: 12px;
   font-weight: 700;
@@ -2501,9 +2501,9 @@ onBeforeUnmount(() => {
 }
 
 .notify-channel-item.active {
-  border-color: rgba(47, 107, 255, 0.3);
-  background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(23, 184, 150, 0.08));
-  box-shadow: inset 0 0 0 1px rgba(47, 107, 255, 0.06);
+  border-color: rgba(217, 63, 0, 0.3);
+  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(23, 184, 150, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(217, 63, 0, 0.06);
 }
 
 .notify-channel-icon {
@@ -2561,7 +2561,7 @@ onBeforeUnmount(() => {
   height: 48px;
   border-radius: 18px;
   border: 1px dashed #bfd0ed;
-  background: linear-gradient(135deg, rgba(47, 107, 255, 0.05), rgba(90, 174, 255, 0.03));
+  background: linear-gradient(135deg, rgba(217, 63, 0, 0.05), rgba(229, 229, 229, 0.03));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2620,12 +2620,12 @@ onBeforeUnmount(() => {
   padding: 14px 16px;
   border-radius: 20px;
   border: 1px solid rgba(20, 184, 109, 0.18);
-  background: linear-gradient(135deg, rgba(20, 184, 109, 0.08), rgba(47, 107, 255, 0.05));
+  background: linear-gradient(135deg, rgba(20, 184, 109, 0.08), rgba(217, 63, 0, 0.05));
 }
 
 .notify-status-strip.disconnected {
   border-color: rgba(255, 180, 73, 0.24);
-  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(47, 107, 255, 0.05));
+  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(217, 63, 0, 0.05));
 }
 
 .notify-strip-main {
@@ -2644,7 +2644,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   color: #169d73;
-  background: linear-gradient(135deg, rgba(20, 184, 109, 0.16), rgba(47, 107, 255, 0.12));
+  background: linear-gradient(135deg, rgba(20, 184, 109, 0.16), rgba(217, 63, 0, 0.12));
 }
 
 .notify-status-strip.disconnected .notify-strip-icon {
@@ -2719,8 +2719,8 @@ onBeforeUnmount(() => {
   height: 34px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid rgba(47, 107, 255, 0.12);
-  background: rgba(47, 107, 255, 0.06);
+  border: 1px solid rgba(217, 63, 0, 0.12);
+  background: rgba(217, 63, 0, 0.06);
   color: #315fc6;
   display: inline-flex;
   align-items: center;
@@ -2819,7 +2819,7 @@ onBeforeUnmount(() => {
   height: 32px;
   border: 0;
   border-radius: 12px;
-  background: rgba(47, 107, 255, 0.08);
+  background: rgba(217, 63, 0, 0.08);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2862,7 +2862,7 @@ onBeforeUnmount(() => {
 .notify-segment button.active {
   color: #fff;
   background: linear-gradient(135deg, #2f6bff, #4c9fff);
-  box-shadow: 0 12px 24px rgba(47, 107, 255, 0.2);
+  box-shadow: 0 12px 24px rgba(217, 63, 0, 0.2);
 }
 
 .notify-chip-group {
@@ -2885,8 +2885,8 @@ onBeforeUnmount(() => {
 
 .notify-chip-group button.active {
   color: #2f6bff;
-  border-color: rgba(47, 107, 255, 0.26);
-  background: rgba(47, 107, 255, 0.08);
+  border-color: rgba(217, 63, 0, 0.26);
+  background: rgba(217, 63, 0, 0.08);
 }
 
 .notify-config-actions {
@@ -2906,7 +2906,7 @@ onBeforeUnmount(() => {
   padding: 18px;
   border-radius: 24px;
   border: 1px solid rgba(214, 226, 244, 0.96);
-  background: linear-gradient(135deg, rgba(47, 107, 255, 0.08), rgba(255, 255, 255, 0.98));
+  background: linear-gradient(135deg, rgba(217, 63, 0, 0.08), rgba(255, 255, 255, 0.98));
 }
 
 .notify-tutorial-hero.cyan {
@@ -2914,7 +2914,7 @@ onBeforeUnmount(() => {
 }
 
 .notify-tutorial-hero.indigo {
-  background: linear-gradient(135deg, rgba(90, 84, 255, 0.12), rgba(255, 255, 255, 0.98));
+  background: linear-gradient(135deg, rgba(107, 107, 107, 0.12), rgba(255, 255, 255, 0.98));
 }
 
 .notify-tutorial-hero.green {
@@ -2939,7 +2939,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(90, 174, 255, 0.18));
+  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.18));
   color: #2f6bff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
@@ -2950,7 +2950,7 @@ onBeforeUnmount(() => {
 }
 
 .notify-tutorial-icon.indigo {
-  background: linear-gradient(135deg, rgba(90, 84, 255, 0.14), rgba(138, 132, 255, 0.18));
+  background: linear-gradient(135deg, rgba(107, 107, 107, 0.14), rgba(138, 132, 255, 0.18));
   color: #4f4ae1;
 }
 
@@ -3026,7 +3026,7 @@ onBeforeUnmount(() => {
 }
 
 .notify-tutorial-block-highlight {
-  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(47, 107, 255, 0.04), rgba(255, 255, 255, 0.98));
+  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(217, 63, 0, 0.04), rgba(255, 255, 255, 0.98));
 }
 
 .notify-tutorial-block-head {
@@ -3044,7 +3044,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(90, 174, 255, 0.16));
+  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.16));
   color: #2f6bff;
 }
 
@@ -3097,7 +3097,7 @@ onBeforeUnmount(() => {
   color: #fff;
   font-size: 13px;
   font-weight: 800;
-  box-shadow: 0 12px 20px rgba(47, 107, 255, 0.2);
+  box-shadow: 0 12px 20px rgba(217, 63, 0, 0.2);
 }
 
 .notify-step-copy {
@@ -3182,7 +3182,7 @@ onBeforeUnmount(() => {
   margin-top: 2px;
   border-radius: 50%;
   flex: none;
-  background: linear-gradient(135deg, rgba(20, 184, 109, 0.18), rgba(47, 107, 255, 0.12));
+  background: linear-gradient(135deg, rgba(20, 184, 109, 0.18), rgba(217, 63, 0, 0.12));
   position: relative;
 }
 
@@ -3257,7 +3257,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(90, 174, 255, 0.16));
+  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.16));
   color: #2f6bff;
 }
 
@@ -3347,7 +3347,7 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.notify-log-icon.blue { background: rgba(47, 107, 255, 0.1); color: #2f6bff; }
+.notify-log-icon.blue { background: rgba(217, 63, 0, 0.1); color: #2f6bff; }
 .notify-log-icon.green { background: rgba(20, 184, 109, 0.1); color: #16a34a; }
 .notify-log-icon.orange { background: rgba(255, 180, 73, 0.16); color: #ea8a00; }
 
@@ -3410,7 +3410,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(47, 107, 255, 0.08);
+  background: rgba(217, 63, 0, 0.08);
   color: #3d66cb;
   font-size: 12px;
   font-weight: 700;
@@ -3475,7 +3475,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(47, 107, 255, 0.08);
+  background: rgba(217, 63, 0, 0.08);
   color: #2f6bff;
 }
 

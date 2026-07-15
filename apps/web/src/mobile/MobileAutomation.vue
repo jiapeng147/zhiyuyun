@@ -335,7 +335,7 @@ defineEmits(['navigate', 'force-desktop'])
   margin-top: 10px;
   border-radius: 16px;
   background: linear-gradient(135deg, #eff6ff, #F7F7F8);
-  border: 1px solid rgba(13, 107, 255, 0.1);
+  border: 1px solid rgba(255, 79, 0, 0.1);
   box-shadow: 0 2px 8px rgba(31, 53, 94, 0.05);
 }
 
@@ -386,7 +386,7 @@ defineEmits(['navigate', 'force-desktop'])
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 18px rgba(13, 107, 255, 0.25);
+  box-shadow: 0 6px 18px rgba(255, 79, 0, 0.25);
   cursor: pointer;
 }
 

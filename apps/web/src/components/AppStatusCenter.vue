@@ -105,7 +105,7 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
-  border: 2px solid rgba(47, 107, 255, .28);
+  border: 2px solid rgba(217, 63, 0, .28);
   border-top-color: #2f6bff;
   border-radius: 50%;
   animation: app-status-spin .8s linear infinite;

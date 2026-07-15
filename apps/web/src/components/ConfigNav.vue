@@ -93,7 +93,7 @@ const tabs = settingsTabs
 .config-link.active {
   background: linear-gradient(135deg, #edf4ff, #e7f0ff);
   color: #FF4F00;
-  box-shadow: inset 0 0 0 1px rgba(13, 107, 255, 0.12), 0 8px 20px rgba(13, 107, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 79, 0, 0.12), 0 8px 20px rgba(255, 79, 0, 0.08);
 }
 
 .config-link span {

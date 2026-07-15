@@ -442,7 +442,7 @@ function onHeaderAction(event) {
   align-items: center;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(13, 107, 255, 0.08);
+  background: rgba(255, 79, 0, 0.08);
   color: #2c63d4;
   font-size: 11px;
   font-weight: 800;

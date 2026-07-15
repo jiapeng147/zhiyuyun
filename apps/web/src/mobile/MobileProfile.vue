@@ -197,7 +197,7 @@ onMounted(() => {
   align-items: flex-start;
   gap: 14px;
   margin-bottom: 16px;
-  border: 1px solid rgba(13, 107, 255, 0.08);
+  border: 1px solid rgba(255, 79, 0, 0.08);
   box-shadow: 0 2px 8px rgba(31, 53, 94, 0.05);
 }
 .m-pro-avatar {
@@ -209,7 +209,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(13,107,255,0.3);
+  box-shadow: 0 8px 20px rgba(255,79,0,0.3);
   flex-shrink: 0;
 }
 .m-pro-info { flex: 1; min-width: 0; }
@@ -327,7 +327,7 @@ onMounted(() => {
   border-radius: 100px;
   flex-shrink: 0;
 }
-.m-section-action:active { background: rgba(13,107,255,0.08); }
+.m-section-action:active { background: rgba(255,79,0,0.08); }
 
 /* 菜单 */
 .m-menu-list { display: flex; flex-direction: column; gap: 4px; }

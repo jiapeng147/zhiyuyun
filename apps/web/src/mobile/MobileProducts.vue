@@ -446,7 +446,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(13, 107, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.25);
 }
 
 .m-loading { text-align: center; padding: 40px; color: #8c98ae; font-size: 14px; }
@@ -480,7 +480,7 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(13, 107, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.25);
 }
 .m-empty-btn :deep(svg) { flex-shrink: 0; }
 .m-load-more {

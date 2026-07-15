@@ -47,7 +47,7 @@ const revealed = ref(false)
 
 .secret-input:focus-within {
   border-color: var(--primary, #FF4F00);
-  box-shadow: 0 0 0 3px rgba(13, 107, 255, .12);
+  box-shadow: 0 0 0 3px rgba(255, 79, 0, .12);
 }
 
 .secret-input-control {

@@ -1727,7 +1727,7 @@ onBeforeUnmount(() => {
 .ads-textarea:focus {
   outline: none;
   border-color: #7ba7ff;
-  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(217, 63, 0, 0.1);
 }
 
 .ads-input:disabled,
@@ -1859,7 +1859,7 @@ onBeforeUnmount(() => {
 
 .method-card.active {
   border-color: #2f6bff;
-  box-shadow: 0 14px 26px rgba(47, 107, 255, 0.12);
+  box-shadow: 0 14px 26px rgba(217, 63, 0, 0.12);
   transform: translateY(-1px);
 }
 
@@ -1909,7 +1909,7 @@ onBeforeUnmount(() => {
 .ads-btn-primary {
   color: #fff;
   background: linear-gradient(90deg, #0d6cff, #1b86ff);
-  box-shadow: 0 14px 30px rgba(13, 107, 255, 0.2);
+  box-shadow: 0 14px 30px rgba(255, 79, 0, 0.2);
 }
 
 .ads-btn-danger {

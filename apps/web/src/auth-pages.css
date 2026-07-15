@@ -239,7 +239,7 @@
   height: 42px;
   border-radius: 14px;
   color: #0d6cff;
-  background: linear-gradient(180deg, rgba(46, 122, 255, .14), rgba(46, 122, 255, .04));
+  background: linear-gradient(180deg, rgba(217, 63, 0, .14), rgba(217, 63, 0, .04));
 }
 
 .auth-feature-icon .ui-icon {
@@ -1073,13 +1073,13 @@
   padding: 0 12px;
   border: 1px solid var(--primary, #FF4F00);
   border-radius: 10px;
-  background: rgba(13, 107, 255, .06);
+  background: rgba(255, 79, 0, .06);
   color: var(--primary, #FF4F00);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   transition: background .15s, opacity .15s;
 }
-.auth-code-btn:hover:not(:disabled) { background: rgba(13, 107, 255, .12); }
+.auth-code-btn:hover:not(:disabled) { background: rgba(255, 79, 0, .12); }
 .auth-code-btn:disabled { opacity: .5; cursor: not-allowed; }
 .auth-muted { color: var(--muted, #6B6B6B); font-size: 13px; margin-right: 6px; }

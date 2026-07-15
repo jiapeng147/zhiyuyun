@@ -416,7 +416,7 @@ onBeforeUnmount(() => {
 .m-hero-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .m-tag {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 12px; color: #FF4F00; background: rgba(13,107,255,0.1);
+  font-size: 12px; color: #FF4F00; background: rgba(255,79,0,0.1);
   padding: 4px 10px; border-radius: 100px; font-weight: 500;
 }
 .m-tag :deep(svg) { color: #FF4F00; }
@@ -425,7 +425,7 @@ onBeforeUnmount(() => {
 .m-phone {
   position: absolute; right: 10px; top: 15px; width: 90px; height: 140px;
   background: linear-gradient(145deg, #4a8fff, #2d6bff); border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(13,107,255,0.3); padding: 8px 5px; transform: rotate(-8deg);
+  box-shadow: 0 12px 30px rgba(255,79,0,0.3); padding: 8px 5px; transform: rotate(-8deg);
 }
 .m-phone::before { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 22px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 4px; }
 .m-phone-screen { background: rgba(255,255,255,0.95); border-radius: 10px; height: 100%; padding: 12px 8px; margin-top: 4px; }
@@ -435,7 +435,7 @@ onBeforeUnmount(() => {
   position: absolute; right: 0; bottom: 10px; width: 48px; height: 48px;
   background: linear-gradient(135deg, #5ba3ff, #2d7bff); border-radius: 50%;
   display: flex; align-items: center; justify-content: center; color: white;
-  box-shadow: 0 6px 16px rgba(13,107,255,0.35); z-index: 2;
+  box-shadow: 0 6px 16px rgba(255,79,0,0.35); z-index: 2;
 }
 
 .m-stats-scroll {
@@ -633,7 +633,7 @@ onBeforeUnmount(() => {
 }
 .m-btn:active { transform: scale(0.97); }
 .m-btn-outline { background: white; color: #111111; border: 1.5px solid #e0e6f0; }
-.m-btn-primary { background: linear-gradient(135deg, #FF4F00, #2580ff); color: white; box-shadow: 0 6px 18px rgba(13,107,255,0.3); }
+.m-btn-primary { background: linear-gradient(135deg, #FF4F00, #2580ff); color: white; box-shadow: 0 6px 18px rgba(255,79,0,0.3); }
 
 .m-safe-bottom { height: 80px; }
 

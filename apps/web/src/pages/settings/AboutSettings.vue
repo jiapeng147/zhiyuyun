@@ -458,7 +458,7 @@ function exportDiagnostics() {
   border-radius: 14px;
   background: linear-gradient(180deg, #0d7fff, #16b7ff);
   transform: rotate(42deg);
-  box-shadow: 0 8px 22px rgba(13, 107, 255, 0.32);
+  box-shadow: 0 8px 22px rgba(255, 79, 0, 0.32);
 }
 .brand-mark span + span { transform: rotate(-42deg); background: linear-gradient(180deg, #25a5ff, #0362f4); }
 .hero-text { min-width: 0; }

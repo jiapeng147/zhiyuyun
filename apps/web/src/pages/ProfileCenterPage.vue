@@ -568,7 +568,7 @@ onBeforeUnmount(() => {
   position: relative;
   padding: 12px;
   background:
-    radial-gradient(circle at top left, rgba(13, 107, 255, 0.06), transparent 34%),
+    radial-gradient(circle at top left, rgba(255, 79, 0, 0.06), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
 }
 
@@ -614,15 +614,15 @@ onBeforeUnmount(() => {
 
 .profile-side-tab:hover {
   transform: translateY(-1px);
-  border-color: rgba(13, 107, 255, 0.22);
-  box-shadow: 0 12px 28px rgba(13, 107, 255, 0.08);
+  border-color: rgba(255, 79, 0, 0.22);
+  box-shadow: 0 12px 28px rgba(255, 79, 0, 0.08);
 }
 
 .profile-side-tab.active {
   color: #FF4F00;
-  border-color: rgba(13, 107, 255, 0.2);
+  border-color: rgba(255, 79, 0, 0.2);
   background: linear-gradient(135deg, #FAFAFA 0%, #eef5ff 100%);
-  box-shadow: 0 16px 36px rgba(13, 107, 255, 0.12);
+  box-shadow: 0 16px 36px rgba(255, 79, 0, 0.12);
 }
 
 .profile-side-tab.active::before {
@@ -831,7 +831,7 @@ onBeforeUnmount(() => {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(31, 53, 94, 0.04), 0 16px 32px rgba(31, 53, 94, 0.08);
-  border-color: rgba(13, 107, 255, 0.16);
+  border-color: rgba(255, 79, 0, 0.16);
 }
 
 .stat-card-main {
@@ -1242,7 +1242,7 @@ onBeforeUnmount(() => {
 
 .quick-action-btn:hover {
   transform: translateY(-2px);
-  border-color: rgba(13, 107, 255, 0.16);
+  border-color: rgba(255, 79, 0, 0.16);
   box-shadow: 0 16px 30px rgba(31, 53, 94, 0.07);
 }
 
@@ -1316,7 +1316,7 @@ onBeforeUnmount(() => {
 .security-card.enhanced:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(31, 53, 94, 0.04), 0 16px 32px rgba(31, 53, 94, 0.1);
-  border-color: rgba(13, 107, 255, 0.25);
+  border-color: rgba(255, 79, 0, 0.25);
 }
 
 .security-card-head {
@@ -1367,7 +1367,7 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   font-size: 15px;
   font-weight: 800;
-  box-shadow: 0 14px 24px rgba(13, 107, 255, 0.2);
+  box-shadow: 0 14px 24px rgba(255, 79, 0, 0.2);
 }
 
 .security-card-note {
@@ -1888,7 +1888,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 20px 24px 20px 24px;
   border-radius: 50%;
-  background: radial-gradient(circle at center, rgba(98, 156, 255, 0.16), rgba(98, 156, 255, 0.04) 54%, transparent 76%);
+  background: radial-gradient(circle at center, rgba(224, 224, 224, 0.16), rgba(224, 224, 224, 0.04) 54%, transparent 76%);
 }
 
 .security-tips-image {
@@ -1906,7 +1906,7 @@ onBeforeUnmount(() => {
   align-self: flex-start;
   border-radius: 12px;
   font-size: 14px;
-  box-shadow: 0 10px 20px rgba(13, 107, 255, 0.18);
+  box-shadow: 0 10px 20px rgba(255, 79, 0, 0.18);
 }
 
 .profile-side-card {
@@ -1916,7 +1916,7 @@ onBeforeUnmount(() => {
   border-radius: 24px;
   border: 1px solid rgba(229, 236, 247, 0.96);
   background:
-    radial-gradient(circle at top left, rgba(13, 107, 255, 0.06), transparent 34%),
+    radial-gradient(circle at top left, rgba(255, 79, 0, 0.06), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
   box-shadow: 0 12px 34px rgba(29, 53, 87, 0.05);
 }
@@ -2285,7 +2285,7 @@ onBeforeUnmount(() => {
 
 .profile-form input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(13, 107, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(255, 79, 0, 0.08);
 }
 
 .code-row {
@@ -2435,7 +2435,7 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-.page-jump input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13, 107, 255, 0.1); }
+.page-jump input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 79, 0, 0.1); }
 
 .total-count { color: #5d6c86; font-size: 12px; font-weight: 700; }
 
@@ -2455,7 +2455,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(180deg, #1976ff 0%, #FF4F00 100%);
   border-color: #FF4F00;
   color: #fff;
-  box-shadow: 0 12px 20px rgba(13, 107, 255, 0.2);
+  box-shadow: 0 12px 20px rgba(255, 79, 0, 0.2);
 }
 
 .page-ellipsis {

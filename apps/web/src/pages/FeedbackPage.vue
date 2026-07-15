@@ -956,7 +956,7 @@ onMounted(() => {
   border-radius: 26px;
   border: 1px solid rgba(231, 237, 247, 0.96);
   background:
-    radial-gradient(circle at top left, rgba(13, 107, 255, 0.12), transparent 32%),
+    radial-gradient(circle at top left, rgba(255, 79, 0, 0.12), transparent 32%),
     radial-gradient(circle at top right, rgba(22, 191, 120, 0.08), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 255, 0.96));
   box-shadow: 0 18px 42px rgba(31, 53, 94, 0.08);
@@ -972,7 +972,7 @@ onMounted(() => {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(13, 107, 255, 0.08);
+  background: rgba(255, 79, 0, 0.08);
   color: #2c63d4;
   font-size: 11px;
   font-weight: 800;
@@ -1048,7 +1048,7 @@ onMounted(() => {
 
 .fbk-stat-card.active {
   border-color: #bfd5fb;
-  box-shadow: 0 0 0 3px rgba(13, 107, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(255, 79, 0, 0.08);
 }
 
 .fbk-stat-card small {
@@ -1122,7 +1122,7 @@ onMounted(() => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(13, 107, 255, 0.08);
+  background: rgba(255, 79, 0, 0.08);
   color: #2c63d4;
   font-size: 11px;
   font-weight: 800;
@@ -1408,7 +1408,7 @@ onMounted(() => {
 
 .fbk-side-card.emphasis {
   background:
-    radial-gradient(circle at top right, rgba(13, 107, 255, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(255, 79, 0, 0.14), transparent 30%),
     linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(255, 255, 255, 0.98));
 }
 
@@ -1418,7 +1418,7 @@ onMounted(() => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(13, 107, 255, 0.08);
+  background: rgba(255, 79, 0, 0.08);
   color: #2c63d4;
   font-size: 11px;
   font-weight: 800;
@@ -1578,7 +1578,7 @@ onMounted(() => {
   background: linear-gradient(90deg, #0865f4, #147dff);
   border: 1px solid #0865f4;
   color: #fff;
-  box-shadow: 0 10px 22px rgba(13, 107, 255, 0.2);
+  box-shadow: 0 10px 22px rgba(255, 79, 0, 0.2);
 }
 
 .fbk-btn-primary:hover:not(:disabled) {
@@ -1668,7 +1668,7 @@ onMounted(() => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(13, 107, 255, 0.08);
+  background: rgba(255, 79, 0, 0.08);
   color: #2c63d4;
   font-size: 11px;
   font-weight: 800;
@@ -1817,7 +1817,7 @@ onMounted(() => {
 .fbk-textarea:focus {
   outline: none;
   border-color: #FF4F00;
-  box-shadow: 0 0 0 4px rgba(13, 107, 255, 0.11);
+  box-shadow: 0 0 0 4px rgba(255, 79, 0, 0.11);
 }
 
 .fbk-textarea {

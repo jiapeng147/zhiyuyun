@@ -254,7 +254,7 @@ onMounted(() => {
   border-radius: 100px;
   flex-shrink: 0;
 }
-.m-back-btn:active { background: rgba(13,107,255,0.08); }
+.m-back-btn:active { background: rgba(255,79,0,0.08); }
 
 .m-sub-title {
   flex: 1;
@@ -280,7 +280,7 @@ onMounted(() => {
   cursor: pointer;
   flex-shrink: 0;
 }
-.m-desktop-btn:active { background: rgba(13,107,255,0.08); }
+.m-desktop-btn:active { background: rgba(255,79,0,0.08); }
 
 .m-brand {
   display: flex;
@@ -309,7 +309,7 @@ onMounted(() => {
   border-radius: 8px;
   background: linear-gradient(180deg, #0d7fff, #16b7ff);
   transform: rotate(42deg);
-  box-shadow: 0 4px 12px rgba(13,107,255,0.25);
+  box-shadow: 0 4px 12px rgba(255,79,0,0.25);
 }
 .m-brand-mark span + span {
   transform: rotate(-42deg);
