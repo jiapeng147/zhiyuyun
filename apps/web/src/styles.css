@@ -3169,7 +3169,7 @@ input {
   object-fit: contain;
   vertical-align: -.16em;
   stroke: initial !important;
-  filter: none
+  filter: hue-rotate(162deg) saturate(1.05);
 }
 
 .nav-icon .ui-icon-img {
