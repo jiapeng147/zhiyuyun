@@ -1009,7 +1009,7 @@ onBeforeUnmount(() => {
 .feature-text em {
   display: block;
   margin-top: 6px;
-  color: #0d6bff;
+  color: #FF4F00;
   font-style: normal;
   font-size: 12px;
   font-weight: 700;
@@ -1100,7 +1100,7 @@ onBeforeUnmount(() => {
 .ad-side-panel {
   background:
     radial-gradient(circle at top right, rgba(112, 174, 255, 0.16), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    linear-gradient(180deg, #ffffff 0%, #FAFAFA 100%);
 }
 
 .ad-side-copy {
@@ -1247,7 +1247,7 @@ onBeforeUnmount(() => {
   border: 0;
   padding: 0;
   background: transparent;
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 13px;
   font-weight: 800;
 }
@@ -1311,7 +1311,7 @@ onBeforeUnmount(() => {
   border: 0;
   padding: 0;
   background: transparent;
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 12px;
   font-weight: 800;
 }

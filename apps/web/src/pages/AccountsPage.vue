@@ -1950,7 +1950,7 @@ onBeforeUnmount(() => {
   padding: 12px;
   border: 1px solid #dbe8fb;
   border-radius: 10px;
-  background: #f8fbff;
+  background: #FAFAFA;
 }
 
 .polish-status-head,
@@ -2460,7 +2460,7 @@ onBeforeUnmount(() => {
   margin-top: 6px;
   z-index: 250;
   background: #fff;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 12px;
   box-shadow: 0 12px 32px rgba(31, 53, 94, .14);
   padding: 6px;
@@ -2764,9 +2764,9 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.diagnosis-card{border:1px solid #e8eef8;border-radius:18px;padding:16px;background:#fbfdff;margin:14px 0}
+.diagnosis-card{border:1px solid #E8E8E8;border-radius:18px;padding:16px;background:#FFFFFF;margin:14px 0}
 .diagnosis-card h4{margin:0 0 12px;color:#16213e}
-.diagnosis-item{padding:10px 0;border-bottom:1px solid #eef3fa}
+.diagnosis-item{padding:10px 0;border-bottom:1px solid #F0F0F0}
 .diagnosis-item:last-child{border-bottom:0}
 .diagnosis-item span{display:flex;align-items:center;gap:8px;color:#526079;font-weight:700}
 .diagnosis-item i{width:9px;height:9px;border-radius:50%;background:#16bf78}.diagnosis-item.warn i{background:#f79009}.diagnosis-item.danger i{background:#ef4444}

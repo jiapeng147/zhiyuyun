@@ -65,7 +65,7 @@
                   <defs>
                     <linearGradient id="avG" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stop-color="#5a9fff" />
-                      <stop offset="100%" stop-color="#0d6bff" />
+                      <stop offset="100%" stop-color="#FF4F00" />
                     </linearGradient>
                   </defs>
                   <circle cx="32" cy="32" r="30" fill="url(#avG)" opacity="0.12" />
@@ -619,14 +619,14 @@ onBeforeUnmount(() => {
 }
 
 .profile-side-tab.active {
-  color: #0d6bff;
+  color: #FF4F00;
   border-color: rgba(13, 107, 255, 0.2);
-  background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+  background: linear-gradient(135deg, #FAFAFA 0%, #eef5ff 100%);
   box-shadow: 0 16px 36px rgba(13, 107, 255, 0.12);
 }
 
 .profile-side-tab.active::before {
-  background: linear-gradient(180deg, #7cb8ff 0%, #0d6bff 100%);
+  background: linear-gradient(180deg, #7cb8ff 0%, #FF4F00 100%);
 }
 
 .profile-side-tab-icon {
@@ -637,7 +637,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 10px;
   background: #eef4ff;
-  color: #0d6bff;
+  color: #FF4F00;
   flex: 0 0 auto;
 }
 
@@ -823,7 +823,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(228, 235, 247, 0.96);
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), transparent 36%),
-    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    linear-gradient(180deg, #ffffff 0%, #FFFFFF 100%);
   box-shadow: 0 10px 28px rgba(31, 53, 94, 0.045);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
@@ -848,7 +848,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(145deg, #edf4ff 0%, #dbeafe 100%);
-  color: #0d6bff;
+  color: #FF4F00;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
@@ -884,7 +884,7 @@ onBeforeUnmount(() => {
 .stat-info span {
   font-size: 13px;
   font-weight: 700;
-  color: #667491;
+  color: #6B6B6B;
 }
 
 .stat-info strong {
@@ -906,7 +906,7 @@ onBeforeUnmount(() => {
 .stat-card-foot em {
   font-style: normal;
   font-size: 11px;
-  color: #7a879e;
+  color: #6B6B6B;
 }
 
 .stat-wave {
@@ -1020,7 +1020,7 @@ onBeforeUnmount(() => {
 
 .panel-head p {
   margin: 6px 0 0;
-  color: #667491;
+  color: #6B6B6B;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -1116,7 +1116,7 @@ onBeforeUnmount(() => {
 
 .benefits-label {
   font-size: 12px;
-  color: #667491;
+  color: #6B6B6B;
   font-weight: 700;
 }
 
@@ -1136,7 +1136,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(229, 236, 247, 0.9);
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9), transparent 36%),
-    linear-gradient(180deg, #fbfdff 0%, #f6f9ff 100%);
+    linear-gradient(180deg, #FFFFFF 0%, #F7F7F8 100%);
   box-shadow: 0 8px 18px rgba(31, 53, 94, 0.035);
   text-align: center;
 }
@@ -1192,7 +1192,7 @@ onBeforeUnmount(() => {
   padding: 13px 15px;
   border-radius: 18px;
   border: 1px solid #e7eef8;
-  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #ffffff 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1230,7 +1230,7 @@ onBeforeUnmount(() => {
 .quick-action-btn {
   min-height: 96px;
   padding: 16px;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 18px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.96), transparent 34%),
@@ -1285,7 +1285,7 @@ onBeforeUnmount(() => {
 
 .quick-action-btn span {
   font-size: 12px;
-  color: #7a879e;
+  color: #6B6B6B;
   line-height: 1.55;
 }
 
@@ -1300,7 +1300,7 @@ onBeforeUnmount(() => {
   border-radius: 22px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    linear-gradient(180deg, #ffffff 0%, #FFFFFF 100%);
   padding: 22px 20px 20px;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   box-shadow: 0 12px 28px rgba(31, 53, 94, 0.05);
@@ -1353,7 +1353,7 @@ onBeforeUnmount(() => {
   display: block;
   min-height: 50px;
   margin: 0;
-  color: #667491;
+  color: #6B6B6B;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -1628,7 +1628,7 @@ onBeforeUnmount(() => {
 .security-level-text h4 {
   margin: 0;
   font-size: 15px;
-  color: #667491;
+  color: #6B6B6B;
   font-weight: 700;
 }
 
@@ -1694,7 +1694,7 @@ onBeforeUnmount(() => {
   margin: 0;
   max-width: 540px;
   font-size: 13px;
-  color: #7a879e;
+  color: #6B6B6B;
   line-height: 1.5;
 }
 
@@ -1703,7 +1703,7 @@ onBeforeUnmount(() => {
 }
 
 .security-link-hint {
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
@@ -1796,7 +1796,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   margin-top: 10px;
   font-size: 12px;
-  color: #7a879e;
+  color: #6B6B6B;
 }
 
 .security-tips {
@@ -1856,7 +1856,7 @@ onBeforeUnmount(() => {
   stroke-linejoin: round;
 }
 
-.security-tip-icon.blue { background: linear-gradient(145deg, #eef5ff 0%, #dbeafe 100%); color: #0d6bff; }
+.security-tip-icon.blue { background: linear-gradient(145deg, #eef5ff 0%, #dbeafe 100%); color: #FF4F00; }
 .security-tip-icon.mint { background: linear-gradient(145deg, #ecfbf3 0%, #d8f7e7 100%); color: #16bf78; }
 .security-tip-icon.violet { background: linear-gradient(145deg, #f5ecff 0%, #e9dcff 100%); color: #8b5cf6; }
 .security-tip-icon.sky { background: linear-gradient(145deg, #edf9ff 0%, #d8efff 100%); color: #4f86ff; }
@@ -1874,7 +1874,7 @@ onBeforeUnmount(() => {
 
 .security-tip-copy p {
   margin: 6px 0 0;
-  color: #667491;
+  color: #6B6B6B;
   font-size: 12px;
   line-height: 1.65;
 }
@@ -2195,7 +2195,7 @@ onBeforeUnmount(() => {
   padding: 16px 18px 14px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.96), transparent 30%),
-    linear-gradient(180deg, #f8fbff 0%, #f3f7ff 100%);
+    linear-gradient(180deg, #FAFAFA 0%, #f3f7ff 100%);
   border: 1px solid #e3ebf8;
 }
 
@@ -2452,8 +2452,8 @@ onBeforeUnmount(() => {
 }
 
 .page-number.active {
-  background: linear-gradient(180deg, #1976ff 0%, #0d6bff 100%);
-  border-color: #0d6bff;
+  background: linear-gradient(180deg, #1976ff 0%, #FF4F00 100%);
+  border-color: #FF4F00;
   color: #fff;
   box-shadow: 0 12px 20px rgba(13, 107, 255, 0.2);
 }

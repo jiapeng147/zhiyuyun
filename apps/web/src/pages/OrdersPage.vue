@@ -623,7 +623,7 @@ onBeforeUnmount(() => {
   max-width: 92vw;
   max-height: 85vh;
   background: #fff;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 18px;
   box-shadow: 0 28px 80px rgba(17, 35, 67, .25);
   display: flex;
@@ -676,7 +676,7 @@ onBeforeUnmount(() => {
   padding: 16px;
   background: #f8fafc;
   border-radius: 10px;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
 }
 
 .manual-delivery-warning {
@@ -855,7 +855,7 @@ onBeforeUnmount(() => {
   padding: 10px 12px;
   border: 1px solid #e6ecf5;
   border-radius: 10px;
-  background: #f8fbff;
+  background: #FAFAFA;
 }
 
 .content-box {
@@ -863,7 +863,7 @@ onBeforeUnmount(() => {
   padding: 12px;
   border: 1px solid #e6ecf5;
   border-radius: 10px;
-  background: #fbfdff;
+  background: #FFFFFF;
   white-space: pre-wrap;
   word-break: break-word;
 }

@@ -327,7 +327,7 @@ onMounted(() => {
 }
 
 .m-page-header { margin-bottom: 16px; }
-.m-page-header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 800; color: #15213d; }
+.m-page-header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 800; color: #111111; }
 .m-page-sub { margin: 0; font-size: 13px; color: #8c98ae; }
 .m-state-warning {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -367,7 +367,7 @@ onMounted(() => {
 }
 .m-acc-stat-icon-blue {
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
 }
 .m-acc-stat-icon-green {
   background: linear-gradient(135deg, #e2f8ee, #cdf2df);
@@ -382,7 +382,7 @@ onMounted(() => {
   color: #ff5252;
 }
 .m-acc-stat-info { flex: 1; min-width: 0; }
-.m-acc-stat-val { font-size: 22px; font-weight: 800; color: #15213d; line-height: 1.1; }
+.m-acc-stat-val { font-size: 22px; font-weight: 800; color: #111111; line-height: 1.1; }
 .m-acc-stat-label { font-size: 12px; color: #8c98ae; margin-top: 3px; }
 
 .m-loading { text-align: center; padding: 40px; color: #8c98ae; font-size: 14px; }
@@ -397,12 +397,12 @@ onMounted(() => {
   margin: 0 auto 16px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.m-empty-text { font-size: 16px; font-weight: 600; color: #15213d; margin-bottom: 6px; }
+.m-empty-text { font-size: 16px; font-weight: 600; color: #111111; margin-bottom: 6px; }
 .m-empty-desc { font-size: 13px; color: #8c98ae; }
 
 .m-acc-list {
@@ -451,7 +451,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
 }
 .m-acc-status-dot {
   position: absolute;
@@ -474,7 +474,7 @@ onMounted(() => {
 .m-acc-name {
   font-size: 16px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -545,7 +545,7 @@ onMounted(() => {
 .m-acc-metric-val {
   font-size: 22px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
   line-height: 1.1;
 }
 .m-acc-metric-val-accent { color: #ff5b2e; }
@@ -645,7 +645,7 @@ onMounted(() => {
   margin-top: 12px;
   border: 1px solid #cfdcf2;
   border-radius: 12px;
-  color: #0d6bff;
+  color: #FF4F00;
   background: #fff;
   font-weight: 600;
 }
@@ -660,12 +660,12 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #72809a;
+  color: #6B6B6B;
 }
 .m-acc-tip :deep(svg) { color: #ff9f22; flex-shrink: 0; }
 .m-tip-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border: none;
   border-radius: 100px;

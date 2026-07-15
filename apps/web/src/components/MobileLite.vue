@@ -246,7 +246,7 @@ onMounted(() => {
   gap: 2px;
   background: none;
   border: none;
-  color: #15213d;
+  color: #111111;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -261,7 +261,7 @@ onMounted(() => {
   text-align: center;
   font-size: 17px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -270,7 +270,7 @@ onMounted(() => {
 .m-desktop-btn {
   background: none;
   border: none;
-  color: #72809a;
+  color: #6B6B6B;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -318,13 +318,13 @@ onMounted(() => {
 .m-brand-name {
   font-size: 17px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
   line-height: 1.2;
   letter-spacing: -0.2px;
 }
 .m-brand-sub {
   font-size: 11px;
-  color: #72809a;
+  color: #6B6B6B;
   letter-spacing: 1px;
   margin-top: 1px;
 }
@@ -347,7 +347,7 @@ onMounted(() => {
 .m-user-name {
   font-size: 14px;
   font-weight: 600;
-  color: #15213d;
+  color: #111111;
   max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -411,7 +411,7 @@ onMounted(() => {
 }
 .m-tab :deep(svg) { transition: transform 0.2s; }
 .m-tab.active {
-  color: #0d6bff;
+  color: #FF4F00;
 }
 .m-tab.active :deep(svg) {
   transform: scale(1.08);
@@ -424,7 +424,7 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 24px;
   height: 3px;
-  background: linear-gradient(90deg, #0d6bff, #3b9bff);
+  background: linear-gradient(90deg, #FF4F00, #3b9bff);
   border-radius: 0 0 3px 3px;
 }
 </style>

@@ -466,7 +466,7 @@ function exportDiagnostics() {
 .hero-title-row h1 { margin: 0; font-size: 24px; line-height: 1.15; font-weight: 900; color: #13213d; }
 .hero-text p { margin: 8px 0 0; font-size: 13px; color: #65748b; }
 .hero-meta { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-.hero-meta-item { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #7a879e; font-weight: 600; }
+.hero-meta-item { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #6B6B6B; font-weight: 600; }
 .hero-meta-divider { width: 1px; height: 10px; background: #d8e0ec; }
 .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .dot-green { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18); }
@@ -494,7 +494,7 @@ function exportDiagnostics() {
 .metric-tile-purple .metric-icon { background: #f4efff; color: #8b5cf6; }
 .metric-icon :deep(.ui-icon), .metric-icon :deep(.ui-icon-img) { width: 20px; height: 20px; }
 .metric-info { display: flex; flex-direction: column; gap: 2px; }
-.metric-label { font-size: 11px; color: #7a879e; font-weight: 600; }
+.metric-label { font-size: 11px; color: #6B6B6B; font-weight: 600; }
 .metric-value { font-size: 20px; font-weight: 900; color: #13213d; }
 .metric-value-green { color: #16a34a; }
 .main-grid { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
@@ -566,7 +566,7 @@ function exportDiagnostics() {
 .support-icon :deep(.ui-icon), .support-icon :deep(.ui-icon-img) { width: 18px; height: 18px; }
 .support-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .support-text b { font-size: 13px; color: #13213d; }
-.support-text p { margin: 0; font-size: 11px; color: #7a879e; line-height: 1.45; }
+.support-text p { margin: 0; font-size: 11px; color: #6B6B6B; line-height: 1.45; }
 .community-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

@@ -788,7 +788,7 @@ onBeforeUnmount(() => {
   overflow-x: hidden;
 }
 .m-page-header { margin-bottom: 20px; }
-.m-page-header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 800; color: #15213d; }
+.m-page-header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 800; color: #111111; }
 .m-page-sub { margin: 0; font-size: 13px; color: #8c98ae; }
 
 .m-account-chips {
@@ -824,7 +824,7 @@ onBeforeUnmount(() => {
   transition: all 0.15s;
 }
 .m-chip.active {
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border-color: transparent;
   box-shadow: 0 4px 10px rgba(13,107,255,0.25);
@@ -858,7 +858,7 @@ onBeforeUnmount(() => {
   gap: 5px;
   background: transparent;
   border: none;
-  color: #72809a;
+  color: #6B6B6B;
   font-size: 13px;
   font-weight: 500;
   padding: 10px 14px;
@@ -872,19 +872,19 @@ onBeforeUnmount(() => {
 }
 .m-filter-tab.active {
   background: rgba(13,107,255,0.1);
-  color: #0d6bff;
+  color: #FF4F00;
   font-weight: 600;
 }
 .m-filter-count {
   background: rgba(13,107,255,0.12);
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 10px;
   padding: 1px 6px;
   border-radius: 100px;
   font-weight: 600;
 }
 .m-filter-tab.active .m-filter-count {
-  background: #0d6bff;
+  background: #FF4F00;
   color: white;
 }
 .m-state-warning {
@@ -942,7 +942,7 @@ onBeforeUnmount(() => {
   width: 28px;
   height: 28px;
   border: 3px solid #e8edf5;
-  border-top-color: #0d6bff;
+  border-top-color: #FF4F00;
   border-radius: 50%;
   animation: m-spin 0.8s linear infinite;
 }
@@ -958,12 +958,12 @@ onBeforeUnmount(() => {
   margin: 0 auto 16px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.m-empty-text { font-size: 16px; font-weight: 600; color: #15213d; margin-bottom: 6px; }
+.m-empty-text { font-size: 16px; font-weight: 600; color: #111111; margin-bottom: 6px; }
 .m-empty-desc { font-size: 13px; color: #8c98ae; }
 
 .m-msg-list {
@@ -990,7 +990,7 @@ onBeforeUnmount(() => {
   height: 44px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1018,7 +1018,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   margin-bottom: 4px;
 }
-.m-msg-name { font-size: 15px; font-weight: 600; color: #15213d; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-msg-name { font-size: 15px; font-weight: 600; color: #111111; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .m-msg-time { font-size: 11px; color: #b0bacb; flex-shrink: 0; }
 .m-msg-bottom {
   display: flex;
@@ -1081,11 +1081,11 @@ onBeforeUnmount(() => {
 }
 .m-msg-status-done {
   background: #f0f4fa;
-  color: #72809a;
+  color: #6B6B6B;
 }
 .m-msg-goods {
   font-size: 11px;
-  color: #0d6bff;
+  color: #FF4F00;
   margin-top: 6px;
   display: inline-flex;
   align-items: center;
@@ -1108,13 +1108,13 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #72809a;
+  color: #6B6B6B;
 }
 .m-msg-tip :deep(svg) { color: #8b5cf6; flex-shrink: 0; }
 .m-msg-tip span { flex: 1; min-width: 0; }
 .m-tip-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border: none;
   border-radius: 100px;
@@ -1147,7 +1147,7 @@ onBeforeUnmount(() => {
 .m-chat-back {
   background: none;
   border: none;
-  color: #15213d;
+  color: #111111;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -1162,14 +1162,14 @@ onBeforeUnmount(() => {
 .m-chat-name {
   font-size: 16px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .m-chat-goods {
   font-size: 11px;
-  color: #0d6bff;
+  color: #FF4F00;
   margin-top: 2px;
   display: inline-flex;
   align-items: center;
@@ -1182,7 +1182,7 @@ onBeforeUnmount(() => {
 .m-chat-more {
   background: none;
   border: none;
-  color: #72809a;
+  color: #6B6B6B;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -1229,14 +1229,14 @@ onBeforeUnmount(() => {
   height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .m-bubble-avatar.out-avatar {
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
 }
 .m-bubble-content {
@@ -1251,13 +1251,13 @@ onBeforeUnmount(() => {
 }
 .m-bubble.in .m-bubble-content {
   background: white;
-  color: #15213d;
+  color: #111111;
   border: 1px solid #eef2fa;
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(31,53,94,0.06);
 }
 .m-bubble.out .m-bubble-content {
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   border-bottom-right-radius: 4px;
   box-shadow: 0 2px 8px rgba(13,107,255,0.2);
@@ -1332,13 +1332,13 @@ onBeforeUnmount(() => {
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.m-chat-input input:focus { border-color: #0d6bff; background: white; box-shadow: 0 0 0 3px rgba(13,107,255,0.1); }
+.m-chat-input input:focus { border-color: #FF4F00; background: white; box-shadow: 0 0 0 3px rgba(13,107,255,0.1); }
 .m-chat-send {
   width: 44px;
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   display: flex;
   align-items: center;

@@ -391,7 +391,7 @@ onMounted(() => {
   margin: 0 0 4px;
   font-size: 24px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
   line-height: 1.2;
 }
 .m-page-sub {
@@ -417,13 +417,13 @@ onMounted(() => {
   border-radius: 9px;
   font-size: 13px;
   font-weight: 600;
-  color: #72809a;
+  color: #6B6B6B;
   cursor: pointer;
   transition: all 0.2s;
 }
 .m-date-tab.active {
   background: white;
-  color: #0d6bff;
+  color: #FF4F00;
   box-shadow: 0 2px 6px rgba(13, 107, 255, 0.12);
 }
 
@@ -444,7 +444,7 @@ onMounted(() => {
   height: 80px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #d4e4ff);
-  color: #0d6bff;
+  color: #FF4F00;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -493,7 +493,7 @@ onMounted(() => {
   justify-content: center;
   flex-shrink: 0;
 }
-.m-stat-blue { background: linear-gradient(135deg, #e8f1ff, #d4e4ff); color: #0d6bff; }
+.m-stat-blue { background: linear-gradient(135deg, #e8f1ff, #d4e4ff); color: #FF4F00; }
 .m-stat-green { background: linear-gradient(135deg, #e2f8ee, #cdf2df); color: #16bf78; }
 .m-stat-orange { background: linear-gradient(135deg, #fff4e0, #ffe7c2); color: #ff9f22; }
 .m-stat-red { background: linear-gradient(135deg, #ffe8e8, #ffd1d1); color: #ef4444; }
@@ -504,7 +504,7 @@ onMounted(() => {
 .m-stat-value {
   font-size: 22px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
   line-height: 1.2;
 }
 .m-stat-desc { font-size: 11px; color: #9aa6bd; margin-top: 2px; }
@@ -555,7 +555,7 @@ onMounted(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   min-width: 0;
 }
 .m-section-hint {
@@ -644,7 +644,7 @@ onMounted(() => {
 .m-chart-bar {
   width: 70%;
   max-width: 28px;
-  background: linear-gradient(180deg, #6fa6ff 0%, #2d7bff 60%, #0d6bff 100%);
+  background: linear-gradient(180deg, #6fa6ff 0%, #2d7bff 60%, #FF4F00 100%);
   border-radius: 6px 6px 0 0;
   transition: height 0.4s ease;
   min-height: 4px;
@@ -659,7 +659,7 @@ onMounted(() => {
 .m-chart-val {
   font-size: 11px;
   font-weight: 600;
-  color: #15213d;
+  color: #111111;
   margin-top: 2px;
 }
 
@@ -691,12 +691,12 @@ onMounted(() => {
   justify-content: center;
   flex-shrink: 0;
 }
-.m-quick-blue { background: linear-gradient(135deg, #e8f1ff, #d0e2ff); color: #0d6bff; }
+.m-quick-blue { background: linear-gradient(135deg, #e8f1ff, #d0e2ff); color: #FF4F00; }
 .m-quick-green { background: linear-gradient(135deg, #e2f8ee, #cdf2df); color: #16bf78; }
 .m-quick-purple { background: linear-gradient(135deg, #f0ebff, #e2d8ff); color: #8b5cf6; }
 .m-quick-orange { background: linear-gradient(135deg, #fff4e0, #ffe7c2); color: #ff9f22; }
 .m-quick-info { flex: 1; min-width: 0; }
-.m-quick-title { font-size: 14px; font-weight: 600; color: #15213d; margin-bottom: 2px; }
+.m-quick-title { font-size: 14px; font-weight: 600; color: #111111; margin-bottom: 2px; }
 .m-quick-desc { font-size: 11px; color: #8c98ae; line-height: 1.4; }
 .m-quick-arrow { color: #c4cddb; flex-shrink: 0; }
 
@@ -726,12 +726,12 @@ onMounted(() => {
 .m-pc-notice-title {
   font-size: 14px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   margin-bottom: 2px;
 }
 .m-pc-notice-desc {
   font-size: 12px;
-  color: #72809a;
+  color: #6B6B6B;
   line-height: 1.5;
 }
 .m-pc-notice-btn {
@@ -740,7 +740,7 @@ onMounted(() => {
   padding: 0 16px;
   border: none;
   border-radius: 16px;
-  background: linear-gradient(135deg, #0d6bff, #2580ff);
+  background: linear-gradient(135deg, #FF4F00, #2580ff);
   color: white;
   font-size: 13px;
   font-weight: 600;

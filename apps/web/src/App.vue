@@ -622,7 +622,7 @@ const headerActions = computed(() => {
 .page-load-error {
   color: #526079;
   background: #fff;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 18px;
   padding: 28px;
   text-align: center;

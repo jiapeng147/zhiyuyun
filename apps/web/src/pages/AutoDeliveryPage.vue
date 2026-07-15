@@ -930,7 +930,7 @@ onBeforeUnmount(() => {
 
 .page-head p {
   margin: 10px 0 0;
-  color: #667491;
+  color: #6B6B6B;
 }
 
 .stat-row {

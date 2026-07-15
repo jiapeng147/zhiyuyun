@@ -156,7 +156,7 @@ onBeforeUnmount(() => {
   right: 0;
   top: 46px;
   background: #fff;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 14px;
   box-shadow: 0 18px 40px rgba(30, 52, 92, 0.14);
   padding: 8px;
@@ -196,7 +196,7 @@ onBeforeUnmount(() => {
   width: 360px;
   max-height: 480px;
   background: #fff;
-  border: 1px solid var(--line, #e7edf7);
+  border: 1px solid var(--line, #E5E5E5);
   border-radius: 14px;
   box-shadow: 0 18px 40px rgba(30, 52, 92, 0.14);
   z-index: 40;
@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid #eef3fa;
+  border-bottom: 1px solid #F0F0F0;
 }
 
 .notice-panel-head h3 {

@@ -3206,7 +3206,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   height: 42px;
   padding: 0 14px;
   border-radius: 14px;
-  background: #f8fbff;
+  background: #FAFAFA;
   border: 1px solid #e5edf9;
 }
 
@@ -3435,7 +3435,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-mini-btn,
 .xya-msg-link-btn,
 .xya-msg-retry-btn {
-  background: #f8fbff;
+  background: #FAFAFA;
 }
 
 .xya-msg-footer-note {
@@ -3465,7 +3465,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-chat-head {
   justify-content: space-between;
   padding-bottom: 14px;
-  border-bottom: 1px solid #eef3fa;
+  border-bottom: 1px solid #F0F0F0;
 }
 
 .xya-msg-chat-user {
@@ -3514,7 +3514,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 .xya-msg-empty.soft {
-  background: #f8fbff;
+  background: #FAFAFA;
   border-radius: 18px;
 }
 
@@ -3541,7 +3541,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-bubble {
   padding: 12px 14px;
   border-radius: 18px 18px 18px 6px;
-  background: #f6f9ff;
+  background: #F7F7F8;
   line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
@@ -3764,7 +3764,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-metric-grid div {
   padding: 12px;
   background: #fff;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 16px;
 }
 

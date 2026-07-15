@@ -954,10 +954,10 @@ onBeforeUnmount(() => {
 .file-drop-zone {
   border: 1px dashed #b8c9e5;
   border-radius: 10px;
-  background: #fbfdff;
+  background: #FFFFFF;
   padding: 24px 16px;
   text-align: center;
-  color: #0d6bff;
+  color: #FF4F00;
   font-weight: 600;
   cursor: pointer;
   transition: all .15s;
@@ -966,8 +966,8 @@ onBeforeUnmount(() => {
   font: inherit;
 }
 .file-drop-zone:hover {
-  border-color: #0d6bff;
-  background: #f0f6ff;
+  border-color: #FF4F00;
+  background: #F5F5F5;
 }
 .file-drop-zone .file-name {
   color: #16213e;
@@ -1034,7 +1034,7 @@ onBeforeUnmount(() => {
 }
 .stat-item {
   background: #f8faff;
-  border: 1px solid #eef3fa;
+  border: 1px solid #F0F0F0;
   border-radius: 12px;
   padding: 16px;
   text-align: center;
@@ -1082,8 +1082,8 @@ onBeforeUnmount(() => {
   transition: all .15s;
 }
 .page-no:hover:not(:disabled) {
-  border-color: #0d6bff;
-  color: #0d6bff;
+  border-color: #FF4F00;
+  color: #FF4F00;
 }
 .page-no:disabled {
   opacity: 0.4;

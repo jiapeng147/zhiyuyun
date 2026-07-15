@@ -1075,7 +1075,7 @@ onMounted(() => {
 }
 
 .fbk-stat-card.is-total strong {
-  color: #0d6bff;
+  color: #FF4F00;
 }
 
 .fbk-stat-card.is-open strong {
@@ -1131,7 +1131,7 @@ onMounted(() => {
 .fbk-board-head h3 {
   margin: 10px 0 0;
   font-size: 22px;
-  color: #15213d;
+  color: #111111;
 }
 
 .fbk-board-head p {
@@ -1174,13 +1174,13 @@ onMounted(() => {
 
 .fbk-pill:hover {
   background: #eef4ff;
-  color: #0d6bff;
+  color: #FF4F00;
 }
 
 .fbk-pill.active {
   background: #eaf2ff;
   border-color: #c6dafd;
-  color: #0d6bff;
+  color: #FF4F00;
 }
 
 .fbk-pill-count {
@@ -1216,8 +1216,8 @@ onMounted(() => {
 }
 
 .fbk-icon-btn:hover {
-  background: #f4f8ff;
-  color: #0d6bff;
+  background: #F6F6F6;
+  color: #FF4F00;
   border-color: #bfd4fb;
   transform: rotate(90deg);
 }
@@ -1225,7 +1225,7 @@ onMounted(() => {
 .fbk-state {
   padding: 36px;
   text-align: center;
-  color: #72809a;
+  color: #6B6B6B;
   font-size: 14px;
 }
 
@@ -1239,7 +1239,7 @@ onMounted(() => {
   padding: 18px;
   border-radius: 18px;
   border: 1px solid #e6edf7;
-  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  background: linear-gradient(180deg, #ffffff, #FFFFFF);
   transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 
@@ -1348,7 +1348,7 @@ onMounted(() => {
 
 .fbk-row-title {
   margin: 0;
-  color: #15213d;
+  color: #111111;
   font-size: 17px;
   line-height: 1.45;
 }
@@ -1386,7 +1386,7 @@ onMounted(() => {
 }
 
 .fbk-row-link {
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1427,7 +1427,7 @@ onMounted(() => {
 .fbk-side-card h3 {
   margin: 12px 0 0;
   font-size: 20px;
-  color: #15213d;
+  color: #111111;
 }
 
 .fbk-side-card p {
@@ -1442,7 +1442,7 @@ onMounted(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #0d6bff;
+  color: #FF4F00;
   font-weight: 800;
 }
 
@@ -1454,7 +1454,7 @@ onMounted(() => {
 }
 
 .fbk-side-head strong {
-  color: #15213d;
+  color: #111111;
   font-size: 16px;
 }
 
@@ -1483,7 +1483,7 @@ onMounted(() => {
   align-items: flex-start;
   padding: 14px;
   border-radius: 16px;
-  background: #f8fbff;
+  background: #FAFAFA;
   border: 1px solid #e6eef9;
 }
 
@@ -1493,7 +1493,7 @@ onMounted(() => {
   height: 30px;
   border-radius: 10px;
   background: #edf4ff;
-  color: #0d6bff;
+  color: #FF4F00;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1502,7 +1502,7 @@ onMounted(() => {
 
 .fbk-process-item strong {
   display: block;
-  color: #15213d;
+  color: #111111;
   font-size: 14px;
 }
 
@@ -1592,9 +1592,9 @@ onMounted(() => {
 }
 
 .fbk-btn-ghost:hover:not(:disabled) {
-  background: #f4f8ff;
+  background: #F6F6F6;
   border-color: #bfd4fb;
-  color: #0d6bff;
+  color: #FF4F00;
 }
 
 .fbk-btn-primary:active:not(:disabled),
@@ -1659,7 +1659,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  background: linear-gradient(180deg, #fbfdff, #fff);
+  background: linear-gradient(180deg, #FFFFFF, #fff);
 }
 
 .fbk-modal-pill {
@@ -1677,7 +1677,7 @@ onMounted(() => {
 .fbk-modal-head h3 {
   margin: 10px 0 0;
   font-size: 20px;
-  color: #15213d;
+  color: #111111;
 }
 
 .fbk-close {
@@ -1692,7 +1692,7 @@ onMounted(() => {
 
 .fbk-close:hover {
   background: #f2f6fc;
-  color: #15213d;
+  color: #111111;
 }
 
 .fbk-modal-body {
@@ -1704,7 +1704,7 @@ onMounted(() => {
 .fbk-modal-foot {
   padding: 14px 20px 18px;
   border-top: 1px solid var(--line);
-  background: #fbfdff;
+  background: #FFFFFF;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -1726,7 +1726,7 @@ onMounted(() => {
 
 .fbk-modal-tip strong {
   display: block;
-  color: #15213d;
+  color: #111111;
 }
 
 .fbk-modal-tip p {
@@ -1748,7 +1748,7 @@ onMounted(() => {
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   margin-bottom: 8px;
 }
 
@@ -1785,14 +1785,14 @@ onMounted(() => {
 }
 
 .fbk-cat-btn:hover {
-  background: #f4f8ff;
+  background: #F6F6F6;
   border-color: #bfd4fb;
 }
 
 .fbk-cat-btn.active {
   background: #eaf2ff;
-  border-color: #0d6bff;
-  color: #0d6bff;
+  border-color: #FF4F00;
+  color: #FF4F00;
 }
 
 .fbk-input,
@@ -1816,7 +1816,7 @@ onMounted(() => {
 .fbk-input:focus,
 .fbk-textarea:focus {
   outline: none;
-  border-color: #0d6bff;
+  border-color: #FF4F00;
   box-shadow: 0 0 0 4px rgba(13, 107, 255, 0.11);
 }
 
@@ -1854,7 +1854,7 @@ onMounted(() => {
 
 .fbk-detail-title {
   margin: 0;
-  color: #15213d;
+  color: #111111;
   font-size: 20px;
   line-height: 1.45;
 }
@@ -1864,7 +1864,7 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  color: #7a879e;
+  color: #6B6B6B;
   font-size: 12px;
   padding-bottom: 14px;
   border-bottom: 1px dashed #d8e1ee;
@@ -1885,7 +1885,7 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5a9fff, #0d6bff);
+  background: linear-gradient(135deg, #5a9fff, #FF4F00);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -1914,7 +1914,7 @@ onMounted(() => {
 }
 
 .fbk-msg-label {
-  color: #7a879e;
+  color: #6B6B6B;
   font-size: 11px;
   font-weight: 700;
   margin-bottom: 4px;
@@ -1943,8 +1943,8 @@ onMounted(() => {
   text-align: center;
   padding: 18px;
   border-radius: 16px;
-  background: #fbfdff;
-  color: #7a879e;
+  background: #FFFFFF;
+  color: #6B6B6B;
   font-size: 13px;
 }
 

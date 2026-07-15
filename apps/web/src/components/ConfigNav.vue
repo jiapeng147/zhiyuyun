@@ -44,7 +44,7 @@ const tabs = settingsTabs
 .config-nav-head {
   padding: 4px 10px 14px;
   margin-bottom: 10px;
-  border-bottom: 1px solid #eef3fa;
+  border-bottom: 1px solid #F0F0F0;
 }
 
 .config-nav-head span {
@@ -92,7 +92,7 @@ const tabs = settingsTabs
 
 .config-link.active {
   background: linear-gradient(135deg, #edf4ff, #e7f0ff);
-  color: #0d6bff;
+  color: #FF4F00;
   box-shadow: inset 0 0 0 1px rgba(13, 107, 255, 0.12), 0 8px 20px rgba(13, 107, 255, 0.08);
 }
 

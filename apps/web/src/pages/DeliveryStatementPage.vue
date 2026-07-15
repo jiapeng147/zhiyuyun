@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
 }
 .page-head p {
   margin: 10px 0 0;
-  color: #667491;
+  color: #6B6B6B;
   font-size: 15px;
 }
 
@@ -324,10 +324,10 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 .preview-box {
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 12px;
   padding: 12px;
-  background: #fbfdff;
+  background: #FFFFFF;
   min-height: 80px;
 }
 .preview-content {
@@ -393,7 +393,7 @@ onBeforeUnmount(() => {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #0d6bff;
+  color: #FF4F00;
   white-space: nowrap;
 }
 .var-desc-text {
@@ -420,7 +420,7 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 110px;
   padding: 12px;
-  border: 1px solid #e7edf7;
+  border: 1px solid #E5E5E5;
   border-radius: 7px;
   font-family: inherit;
   resize: vertical;
@@ -428,7 +428,7 @@ onBeforeUnmount(() => {
   outline: none;
 }
 .form-row textarea:focus {
-  border-color: #0d6bff;
+  border-color: #FF4F00;
   box-shadow: 0 0 0 3px rgba(13,107,255,.1);
 }
 .form-actions {

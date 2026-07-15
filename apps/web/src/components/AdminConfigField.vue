@@ -80,7 +80,7 @@ defineProps({
   min-width: 0;
   font-size: 14px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
   letter-spacing: 0.2px;
 }
 
@@ -160,7 +160,7 @@ defineProps({
 .admin-config-field-control :deep(.config-textarea:focus),
 .admin-config-field-control :deep(.config-textarea:focus-visible) {
   outline: none;
-  border-color: #0d6bff;
+  border-color: #FF4F00;
   box-shadow: 0 0 0 4px rgba(13, 107, 255, 0.11);
   background: #fff;
 }

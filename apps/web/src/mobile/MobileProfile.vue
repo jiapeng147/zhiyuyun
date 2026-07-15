@@ -53,7 +53,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'profile')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#d0e2ff);color:#0d6bff">
+          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#d0e2ff);color:#FF4F00">
             <MIcon name="user" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -204,7 +204,7 @@ onMounted(() => {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0d6bff, #3b9bff);
+  background: linear-gradient(135deg, #FF4F00, #3b9bff);
   color: white;
   display: flex;
   align-items: center;
@@ -216,7 +216,7 @@ onMounted(() => {
 .m-pro-name {
   font-size: 20px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -224,7 +224,7 @@ onMounted(() => {
 }
 .m-pro-desc {
   font-size: 12px;
-  color: #72809a;
+  color: #6B6B6B;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -287,7 +287,7 @@ onMounted(() => {
   flex-direction: column;
   justify-content: center;
 }
-.m-pro-stat-val { font-size: 22px; font-weight: 800; color: #15213d; margin-bottom: 3px; line-height: 1.2; }
+.m-pro-stat-val { font-size: 22px; font-weight: 800; color: #111111; margin-bottom: 3px; line-height: 1.2; }
 .m-pro-stat-label { font-size: 12px; color: #8c98ae; font-weight: 500; }
 .m-pro-stat-div {
   width: 1px;
@@ -311,11 +311,11 @@ onMounted(() => {
   justify-content: space-between;
   gap: 8px;
 }
-.m-section-header h2 { margin: 0; font-size: 17px; font-weight: 700; color: #15213d; min-width: 0; }
+.m-section-header h2 { margin: 0; font-size: 17px; font-weight: 700; color: #111111; min-width: 0; }
 .m-section-action {
   background: none;
   border: none;
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 12px;
   display: inline-flex;
   align-items: center;
@@ -353,7 +353,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .m-menu-info { flex: 1; min-width: 0; }
-.m-menu-title { font-size: 14px; font-weight: 600; color: #15213d; margin-bottom: 2px; }
+.m-menu-title { font-size: 14px; font-weight: 600; color: #111111; margin-bottom: 2px; }
 .m-menu-desc {
   font-size: 12px;
   color: #8c98ae;
@@ -406,7 +406,7 @@ onMounted(() => {
 .m-btn:active { transform: scale(0.98); }
 .m-btn-outline {
   background: white;
-  color: #0d6bff;
+  color: #FF4F00;
   border: 1.5px solid #d4e4ff;
 }
 .m-btn-danger {

@@ -1673,8 +1673,8 @@ onMounted(async () => {
   gap: 12px;
   padding: 14px 16px;
   border-radius: 18px;
-  border: 1px solid #e8eef8;
-  background: #fbfdff;
+  border: 1px solid #E8E8E8;
+  background: #FFFFFF;
 }
 
 .auto-reply-side-item b {
@@ -1812,8 +1812,8 @@ onMounted(async () => {
 .auto-reply-product-item {
   width: 100%;
   text-align: left;
-  border: 1px solid #e8eef8;
-  background: #fbfdff;
+  border: 1px solid #E8E8E8;
+  background: #FFFFFF;
   padding: 0;
 }
 
@@ -2085,7 +2085,7 @@ onMounted(async () => {
   border: 1px dashed #c4cbd6;
   background: transparent;
   border-radius: 8px;
-  color: #5b6b86;
+  color: #555555;
   cursor: pointer;
   font-size: 12px;
   transition: all .2s;
@@ -2260,7 +2260,7 @@ onMounted(async () => {
   padding: 14px;
   border-radius: 20px;
   border: 1px solid #dfebff;
-  background: linear-gradient(135deg, #edf4ff, #f8fbff);
+  background: linear-gradient(135deg, #edf4ff, #FAFAFA);
   display: grid;
   place-items: center;
   gap: 8px;
@@ -2348,7 +2348,7 @@ onMounted(async () => {
   padding: 18px;
   border-radius: 20px;
   border: 1px solid #e7eef8;
-  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  background: linear-gradient(180deg, #ffffff, #FAFAFA);
   box-shadow: 0 10px 24px rgba(42, 72, 130, 0.08);
 }
 

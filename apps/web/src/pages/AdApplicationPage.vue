@@ -1396,7 +1396,7 @@ onBeforeUnmount(() => {
   border-radius: 24px;
   background:
     radial-gradient(circle at top left, rgba(56, 136, 255, 0.18), transparent 34%),
-    linear-gradient(135deg, #f8fbff 0%, #eef5ff 56%, #fdfefe 100%);
+    linear-gradient(135deg, #FAFAFA 0%, #eef5ff 56%, #fdfefe 100%);
   border: 1px solid rgba(190, 211, 247, 0.95);
   box-shadow: 0 18px 48px rgba(38, 92, 176, 0.08);
 }
@@ -1607,7 +1607,7 @@ onBeforeUnmount(() => {
   padding: 18px;
   border-radius: 20px;
   border: 1px solid #dbe7f7;
-  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  background: linear-gradient(180deg, #ffffff, #FAFAFA);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
@@ -1651,7 +1651,7 @@ onBeforeUnmount(() => {
 }
 
 .plan-price {
-  color: #0d6bff;
+  color: #FF4F00;
   font-size: 18px;
 }
 
@@ -1782,7 +1782,7 @@ onBeforeUnmount(() => {
   height: 132px;
   border: 1px dashed #9ab8ef;
   border-radius: 18px;
-  background: linear-gradient(180deg, #fbfdff, #f3f8ff);
+  background: linear-gradient(180deg, #FFFFFF, #f3f8ff);
   color: #2f6bff;
 }
 
@@ -1979,7 +1979,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: 18px;
   border-radius: 20px;
-  background: linear-gradient(180deg, #fbfdff, #f6f9ff);
+  background: linear-gradient(180deg, #FFFFFF, #F7F7F8);
   border: 1px solid #e2eaf7;
 }
 
@@ -2056,7 +2056,7 @@ onBeforeUnmount(() => {
   padding: 16px;
   border-radius: 18px;
   border: 1px solid #e4ecf8;
-  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  background: linear-gradient(180deg, #ffffff, #FFFFFF);
 }
 
 .application-head {
@@ -2091,7 +2091,7 @@ onBeforeUnmount(() => {
 }
 
 .application-status.is-pending-payment {
-  color: #0d6bff;
+  color: #FF4F00;
   background: #edf4ff;
 }
 

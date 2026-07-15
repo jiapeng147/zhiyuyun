@@ -392,7 +392,7 @@ function onHeaderAction(event) {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #7a879e;
+  color: #6B6B6B;
 }
 
 .status-card strong {
@@ -433,7 +433,7 @@ function onHeaderAction(event) {
   padding: 16px;
   border-radius: 18px;
   border: 1px solid rgba(225, 233, 245, 0.98);
-  background: linear-gradient(135deg, #fbfdff, #f5f9ff);
+  background: linear-gradient(135deg, #FFFFFF, #f5f9ff);
 }
 
 .overview-card span {
@@ -511,7 +511,7 @@ function onHeaderAction(event) {
   height: 30px;
   border-radius: 10px;
   background: #edf4ff;
-  color: #0d6bff;
+  color: #FF4F00;
   display: inline-flex;
   align-items: center;
   justify-content: center;

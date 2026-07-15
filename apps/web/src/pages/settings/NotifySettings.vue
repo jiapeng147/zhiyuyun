@@ -3423,7 +3423,7 @@ onBeforeUnmount(() => {
   padding: 14px 12px 18px;
   border-radius: 34px;
   border: 1px solid rgba(27, 67, 128, 0.16);
-  background: linear-gradient(180deg, #12376f, #1c4e97 22%, #eaf1ff 22.2%, #f6f9ff 100%);
+  background: linear-gradient(180deg, #12376f, #1c4e97 22%, #F2F2F2 22.2%, #F7F7F8 100%);
   box-shadow: 0 24px 48px rgba(20, 54, 112, 0.22);
 }
 

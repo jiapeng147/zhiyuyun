@@ -154,7 +154,7 @@ function trapFocus(event) {
   position: relative;
   width: 420px;
   background: #fff;
-  border: 1px solid #e8eef8;
+  border: 1px solid #E8E8E8;
   border-radius: 18px;
   box-shadow: 0 28px 80px rgba(17, 35, 67, .25);
   padding: 40px 36px 28px;

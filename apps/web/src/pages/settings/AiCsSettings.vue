@@ -910,7 +910,7 @@ onBeforeUnmount(() => {
 
 .aics-bubble.them {
   align-self: flex-start;
-  background: #f6f9ff;
+  background: #F7F7F8;
   color: #31445f;
   border-radius: 14px 14px 14px 4px;
 }
@@ -1017,7 +1017,7 @@ onBeforeUnmount(() => {
   padding: 12px;
   border: 1px solid #e5edf8;
   border-radius: 10px;
-  background: #fbfdff;
+  background: #FFFFFF;
 }
 
 .aics-entry-head {

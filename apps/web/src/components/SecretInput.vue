@@ -34,8 +34,8 @@ const revealed = ref(false)
   align-items: stretch;
   width: 100%;
   height: 46px;
-  border: 1px solid var(--line, #e7edf7);
-  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border: 1px solid var(--line, #E5E5E5);
+  background: linear-gradient(180deg, #ffffff, #FFFFFF);
   border-radius: 14px;
   overflow: hidden;
   transition: border-color .18s ease, box-shadow .18s ease;
@@ -46,7 +46,7 @@ const revealed = ref(false)
 }
 
 .secret-input:focus-within {
-  border-color: var(--primary, #0d6bff);
+  border-color: var(--primary, #FF4F00);
   box-shadow: 0 0 0 3px rgba(13, 107, 255, .12);
 }
 
@@ -80,7 +80,7 @@ const revealed = ref(false)
   justify-content: center;
   padding: 0 16px;
   border: 0;
-  border-left: 1px solid var(--line, #e7edf7);
+  border-left: 1px solid var(--line, #E5E5E5);
   background: linear-gradient(180deg, #f7faff, #eef4ff);
   color: #2c63d4;
   font-size: 12px;

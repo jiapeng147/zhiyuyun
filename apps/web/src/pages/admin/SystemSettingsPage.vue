@@ -442,7 +442,7 @@ function onHeaderAction(event) {
   padding: 18px;
   border-radius: 18px;
   border: 1px dashed #d4dff1;
-  background: linear-gradient(135deg, #fbfdff, #f6f9ff);
+  background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
 }
 
 .knowledge-summary strong {
@@ -470,7 +470,7 @@ function onHeaderAction(event) {
   padding: 14px 16px;
   border-radius: 12px;
   border: 1px dashed #d4dff1;
-  background: linear-gradient(135deg, #fbfdff, #f6f9ff);
+  background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
   color: #6e7e98;
   font-size: 13px;
   line-height: 1.7;
@@ -483,7 +483,7 @@ function onHeaderAction(event) {
   padding: 14px 16px;
   border-radius: 14px;
   border: 1px dashed #d4dff1;
-  background: linear-gradient(135deg, #fbfdff, #f6f9ff);
+  background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
 }
 
 .bridge-row {
@@ -548,7 +548,7 @@ function onHeaderAction(event) {
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #e3eaf5;
-  background: #fbfdff;
+  background: #FFFFFF;
 }
 
 .capability-name {

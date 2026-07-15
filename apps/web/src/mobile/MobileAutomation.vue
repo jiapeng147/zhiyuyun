@@ -140,7 +140,7 @@ defineEmits(['navigate', 'force-desktop'])
   margin: 0 0 4px;
   font-size: 26px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
 }
 
 .m-page-sub {
@@ -208,7 +208,7 @@ defineEmits(['navigate', 'force-desktop'])
   margin: 0;
   font-size: 17px;
   font-weight: 800;
-  color: #15213d;
+  color: #111111;
   min-width: 0;
 }
 
@@ -251,12 +251,12 @@ defineEmits(['navigate', 'force-desktop'])
 .m-auto-green { background: linear-gradient(135deg, #d7f8e7, #c0f1d6); color: #12a160; }
 .m-auto-purple { background: linear-gradient(135deg, #efe5ff, #dfd0ff); color: #7c46ff; }
 .m-auto-orange { background: linear-gradient(135deg, #fff0d8, #ffe0bf); color: #eb7b16; }
-.m-auto-blue { background: linear-gradient(135deg, #dff0ff, #cae5ff); color: #0d6bff; }
+.m-auto-blue { background: linear-gradient(135deg, #dff0ff, #cae5ff); color: #FF4F00; }
 
 .m-auto-title {
   font-size: 15px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   margin-bottom: 6px;
 }
 
@@ -303,7 +303,7 @@ defineEmits(['navigate', 'force-desktop'])
 }
 
 .m-menu-violet { background: linear-gradient(135deg, #efe6ff, #e3d7ff); color: #7c46ff; }
-.m-menu-sky { background: linear-gradient(135deg, #e3f5ff, #d1eaff); color: #0d6bff; }
+.m-menu-sky { background: linear-gradient(135deg, #e3f5ff, #d1eaff); color: #FF4F00; }
 .m-menu-mint { background: linear-gradient(135deg, #dff8f1, #cdf1e7); color: #13a36b; }
 
 .m-menu-info {
@@ -314,7 +314,7 @@ defineEmits(['navigate', 'force-desktop'])
 .m-menu-title {
   font-size: 15px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
   margin-bottom: 4px;
 }
 
@@ -334,7 +334,7 @@ defineEmits(['navigate', 'force-desktop'])
   padding: 14px 16px;
   margin-top: 10px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #eff6ff, #f6f9ff);
+  background: linear-gradient(135deg, #eff6ff, #F7F7F8);
   border: 1px solid rgba(13, 107, 255, 0.1);
   box-shadow: 0 2px 8px rgba(31, 53, 94, 0.05);
 }
@@ -344,7 +344,7 @@ defineEmits(['navigate', 'force-desktop'])
   height: 42px;
   border-radius: 14px;
   background: linear-gradient(135deg, #d8e9ff, #bfd9ff);
-  color: #0d6bff;
+  color: #FF4F00;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,12 +362,12 @@ defineEmits(['navigate', 'force-desktop'])
 .m-pc-notice-title {
   font-size: 15px;
   font-weight: 700;
-  color: #15213d;
+  color: #111111;
 }
 
 .m-pc-notice-desc {
   font-size: 12px;
-  color: #72809a;
+  color: #6B6B6B;
   line-height: 1.6;
 }
 
@@ -378,7 +378,7 @@ defineEmits(['navigate', 'force-desktop'])
   border: none;
   border-radius: 16px;
   padding: 14px 16px;
-  background: linear-gradient(135deg, #0d6bff, #35a2ff);
+  background: linear-gradient(135deg, #FF4F00, #35a2ff);
   color: #fff;
   font-size: 15px;
   font-weight: 700;

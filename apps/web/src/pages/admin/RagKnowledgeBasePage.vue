@@ -728,18 +728,18 @@ onBeforeUnmount(() => {
 .form-row label em { color: #ef4444; font-style: normal; margin-left: 2px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .subtle { color: #758198; font-size: 13px; margin: 4px 0 12px; }
-.detail-toolbar { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #f6f9ff; border: 1px solid #e4ebf5; border-radius: 12px; }
+.detail-toolbar { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 12px; }
 .detail-toolbar-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .upload-hint { color: #667085; line-height: 1.6; }
 .parse-status-cell { display: grid; gap: 4px; max-width: 240px; }
 .parse-status-cell small { color: #b42318; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chunks-list { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-.chunk-item { background: #f6f9ff; border: 1px solid #e4ebf5; border-radius: 10px; padding: 10px 12px; }
+.chunk-item { background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 10px; padding: 10px 12px; }
 .chunk-head { display: flex; justify-content: space-between; margin-bottom: 6px; color: #526079; font-size: 12px; }
 .chunk-item pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; font-size: 13px; color: #2d3448; }
 .search-box { display: flex; gap: 8px; margin-bottom: 14px; }
 .search-hits { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-.hit-item { background: #f6f9ff; border: 1px solid #e4ebf5; border-radius: 10px; padding: 10px 12px; }
+.hit-item { background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 10px; padding: 10px 12px; }
 .hit-head { display: flex; justify-content: space-between; margin-bottom: 6px; color: #526079; font-size: 12px; }
 .hit-item pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; font-size: 13px; color: #2d3448; }
 
