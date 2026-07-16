@@ -1,17 +1,32 @@
 <template>
-  <div class="grid wide-right">
+  <div class="connections-v4">
+    <n-card class="connections-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Connection Center</n-tag>
+        <h2>连接管理工作台</h2>
+        <p>集中查看闲鱼账号 Cookie、WebSocket、心跳与启动状态，异常账号可直接进入详情处理。</p>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <n-button size="small" :loading="loading" @click="load">刷新连接</n-button>
+        <n-button size="small" @click="batchStart">批量启动</n-button>
+        <n-button size="small" type="warning" @click="batchStop">批量断开</n-button>
+      </n-space>
+    </n-card>
+
+    <section class="connections-v4-stats">
+      <n-card v-for="item in connectionStatCards" :key="item.key" class="connections-v4-stat" :class="item.tone" :bordered="false">
+        <span class="connections-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
+  <div class="grid wide-right connections-v4-grid">
     <div>
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="notice" class="global-notice success">{{ notice }}</div>
-      <div class="grid stat-grid">
-        <StatCard title="账号总数" :value="connectionMetric(total)" change="全部记录" icon="account" />
-        <StatCard title="在线连接数" :value="connectionMetric(onlineCount)" change="当前页已探测" icon="product" color="green" />
-        <StatCard title="离线连接数" :value="connectionMetric(offlineCount)" change="当前页已探测" icon="settings" color="orange" />
-        <StatCard title="状态未知" :value="connectionMetric(unknownCount)" change="当前页需刷新" icon="data" color="purple" />
-        <StatCard title="Cookie正常" :value="connectionMetric(cookieOkCount)" change="当前页实际状态" icon="shield" color="green" />
-        <StatCard title="认证异常" :value="connectionMetric(errorCount)" change="当前页实际状态" icon="warning" color="red" />
-      </div>
-      <CardPanel :title="`账号连接列表（${rows.length}）`">
+      <n-card class="connections-v4-card" :bordered="false">
+        <template #header>账号连接列表（{{ rows.length }}）</template>
         <div class="toolbar">
           <select v-model="statusFilter" class="input" style="max-width:150px">
             <option value="all">全部状态</option>
@@ -37,30 +52,35 @@
             <button class="link" @click="select(row)">详情</button>
           </template>
         </BaseTable><Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
-      </CardPanel>
-      <div class="grid two-col" style="margin-top:16px"><CardPanel title="实时连接日志"><EmptyState v-if="logs.length===0" icon="📡" title="暂无本次页面操作日志" description="本页执行的连接、断开、重连操作会显示在这里。" /><div v-for="l in logs" :key="l.text+l.time" class="option-line"><span><i class="dot"></i>{{ l.text }}</span><span class="subtle">{{ l.time }}</span></div></CardPanel><CardPanel title="异常告警列表"><EmptyState v-if="dataAvailable === false" icon="⚠️" title="告警状态不可用" description="账号列表加载失败，当前无法确认是否有连接或 Cookie 异常。" /><EmptyState v-else-if="alerts.length===0" icon="✅" title="暂无已确认异常" description="当前已加载且已探测的账号中没有发现连接或 Cookie 异常。" /><div v-for="e in alerts" :key="e.id" class="option-line"><span><i class="dot orange"></i>{{ e.text }}</span><AppButton @click="handleAlert(e)">查看</AppButton></div></CardPanel></div>
+      </n-card>
+      <div class="grid two-col connections-v4-subgrid" style="margin-top:16px">
+        <n-card class="connections-v4-card" title="实时连接日志" :bordered="false"><EmptyState v-if="logs.length===0" icon="📡" title="暂无本次页面操作日志" description="本页执行的连接、断开、重连操作会显示在这里。" /><div v-for="l in logs" :key="l.text+l.time" class="option-line"><span><i class="dot"></i>{{ l.text }}</span><span class="subtle">{{ l.time }}</span></div></n-card>
+        <n-card class="connections-v4-card" title="异常告警列表" :bordered="false"><EmptyState v-if="dataAvailable === false" icon="⚠️" title="告警状态不可用" description="账号列表加载失败，当前无法确认是否有连接或 Cookie 异常。" /><EmptyState v-else-if="alerts.length===0" icon="✅" title="暂无已确认异常" description="当前已加载且已探测的账号中没有发现连接或 Cookie 异常。" /><div v-for="e in alerts" :key="e.id" class="option-line"><span><i class="dot orange"></i>{{ e.text }}</span><AppButton @click="handleAlert(e)">查看</AppButton></div></n-card>
+      </div>
     </div>
-    <div class="right-drawer">
+    <div class="right-drawer connections-v4-detail">
       <div style="display:flex;justify-content:space-between"><h3>连接详情</h3><button class="link" @click="selected = null">×</button></div>
       <template v-if="selected">
         <div class="product-cell"><img v-if="selected.avatar" :src="selected.avatar" class="avatar" alt=""><div v-else class="avatar"></div><div><strong>{{ selected.name }} <Badge type="blue">账号</Badge></strong><p class="subtle">{{ selected.user }}</p></div><b :style="{marginLeft:'auto',color:selected.connected === true ? 'var(--green)' : (selected.connected === false ? '#ef4444' : '#8c98ae')}">{{ selected.ws }}</b></div>
         <div class="donut-row" style="margin:22px 0"><div class="health-summary-card"><div class="health-summary-title">实时状态</div><div class="health-summary-desc">{{ selectedStatusSummary }}</div></div><div class="donut-legend"><div><i :style="{ background: selected.connected === true ? '#16bf78' : (selected.connected === false ? '#ef4444' : '#98a2b3') }"></i><span>WebSocket</span><b>{{ selected.ws }}</b></div><div><i :style="{ background: selected.connected === true ? '#16bf78' : '#98a2b3' }"></i><span>心跳状态</span><b>{{ selected.heartbeat }}</b></div><div><i :style="{ background: selected.authState === true ? '#16bf78' : (selected.authState === false ? '#ef4444' : '#98a2b3') }"></i><span>Cookie</span><b>{{ selected.cookie }}</b></div><div><i :style="{ background: selected.lastError ? '#ef4444' : '#98a2b3' }"></i><span>状态</span><b>{{ selected.lastError || selected.status || selected.phase || '-' }}</b></div></div></div>
-        <CardPanel title="连接信息"><div class="option-line"><span>账号 ID</span><b>{{ selected.id }}</b></div><div class="option-line"><span>Cookie 状态</span><b>{{ selected.cookie }}</b></div><div class="option-line"><span>连接阶段</span><b>{{ selected.phase || '-' }}</b></div><div class="option-line"><span>最近错误</span><b v-if="selected.refreshError" style="color:#ef4444">{{ selected.refreshError }}</b><b v-else>{{ selected.lastError || '-' }}</b></div><div class="option-line"><span>WS Token</span><b>{{ selected.wsTokenStatus || '-' }}</b></div><div class="option-line"><span>最近消息</span><b>{{ selected.last }}</b></div><div v-if="selected.refreshError" class="option-line"><span>操作</span><AppButton size="small" @click="refresh(selected)">重新刷新状态</AppButton></div></CardPanel>
+        <n-card class="connections-v4-card" title="连接信息" :bordered="false"><div class="option-line"><span>账号 ID</span><b>{{ selected.id }}</b></div><div class="option-line"><span>Cookie 状态</span><b>{{ selected.cookie }}</b></div><div class="option-line"><span>连接阶段</span><b>{{ selected.phase || '-' }}</b></div><div class="option-line"><span>最近错误</span><b v-if="selected.refreshError" style="color:#ef4444">{{ selected.refreshError }}</b><b v-else>{{ selected.lastError || '-' }}</b></div><div class="option-line"><span>WS Token</span><b>{{ selected.wsTokenStatus || '-' }}</b></div><div class="option-line"><span>最近消息</span><b>{{ selected.last }}</b></div><div v-if="selected.refreshError" class="option-line"><span>操作</span><AppButton size="small" @click="refresh(selected)">重新刷新状态</AppButton></div></n-card>
         <div class="grid" style="grid-template-columns:repeat(2,1fr);margin:16px 0">
           <AppButton type="primary" :disabled="isBusy(selected.id) || selected.connected == null || selected.operationPending" @click="toggle(selected)">{{ selected.operationPending ? '启动中' : '启动/断开' }}</AppButton>
           <AppButton type="danger" :disabled="isBusy(selected.id) || selected.connected !== true" @click="stop(selected)">断开连接</AppButton>
           <AppButton :disabled="isBusy(selected.id)" @click="refreshCookieAction(selected)">刷新 Cookie</AppButton>
           <AppButton :disabled="isBusy(selected.id)" @click="checkLoginAction(selected)">检查登录</AppButton>
         </div>
-        <CardPanel title="重连策略"><div class="option-line"><span>前端策略</span><Badge>手动控制</Badge></div><div class="option-line"><span>验证码</span><b>{{ selected.captcha || '-' }}</b></div><div class="option-line"><span>接口状态</span><b>{{ selected.status || '-' }}</b></div></CardPanel>
+        <n-card class="connections-v4-card" title="重连策略" :bordered="false"><div class="option-line"><span>前端策略</span><Badge>手动控制</Badge></div><div class="option-line"><span>验证码</span><b>{{ selected.captcha || '-' }}</b></div><div class="option-line"><span>接口状态</span><b>{{ selected.status || '-' }}</b></div></n-card>
       </template>
       <EmptyState v-else icon="👈" title="请选择一个连接" description="从左侧列表选择账号，查看连接详情、重连策略和实时状态。" />
     </div>
   </div>
+  </div>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import StatCard from '../components/StatCard.vue';import CardPanel from '../components/CardPanel.vue';import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import AppButton from '../components/AppButton.vue';import Pagination from '../components/Pagination.vue';import EmptyState from '../components/EmptyState.vue'
+import { NButton, NCard, NSpace, NStatistic, NTag } from 'naive-ui'
+import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import AppButton from '../components/AppButton.vue';import Pagination from '../components/Pagination.vue';import EmptyState from '../components/EmptyState.vue'
 import { getAccounts } from '../api/accounts.js'
 import { recordsOf } from '../utils/apiData.js'
 import { globalConfirm } from '../composables/confirmState.js'
@@ -92,10 +112,7 @@ const refreshingMap = ref({})  // { [id]: true/false }
 // 刷新错误追踪
 const refreshErrorMap = ref({})  // { [id]: errorMessage }
 // 启动命令只提交一次，随后仅轮询状态，避免重复启动产生副作用。
-const STATUS_POLL_INTERVAL = 300
-const MAX_STATUS_POLLS = 10
 const STARTUP_PHASES = new Set(['starting', 'refresh_token', 'connecting', 'registering', 'syncing', 'accepted', 'pending'])
-const TERMINAL_FAILURE_PHASES = new Set(['failed', 'error', 'stopped', 'cookie_expired'])
 const rows = computed(() => accounts.value.map(a => {
   const s = statusMap.value[a.id] || {}
   const phase = s.phase || s.status || ''
@@ -153,6 +170,14 @@ const offlineCount = computed(() => rows.value.filter(r => r.connected === false
 const unknownCount = computed(() => rows.value.filter(r => r.connected == null).length)
 const cookieOkCount = computed(() => accounts.value.filter(a => accountAuthState(a) === true).length)
 const errorCount = computed(() => accounts.value.filter(a => accountAuthState(a) === false).length)
+const connectionStatCards = computed(() => [
+  { key: 'total', title: '账号总数', value: connectionMetric(total.value), change: '全部记录', symbol: '账', tone: 'tone-blue' },
+  { key: 'online', title: '在线连接数', value: connectionMetric(onlineCount.value), change: '当前页已探测', symbol: '连', tone: 'tone-green' },
+  { key: 'offline', title: '离线连接数', value: connectionMetric(offlineCount.value), change: '当前页已探测', symbol: '断', tone: 'tone-orange' },
+  { key: 'unknown', title: '状态未知', value: connectionMetric(unknownCount.value), change: '当前页需刷新', symbol: '未', tone: 'tone-purple' },
+  { key: 'cookie', title: 'Cookie正常', value: connectionMetric(cookieOkCount.value), change: '当前页实际状态', symbol: 'CK', tone: 'tone-cyan' },
+  { key: 'error', title: '认证异常', value: connectionMetric(errorCount.value), change: '当前页实际状态', symbol: '异', tone: 'tone-red' }
+])
 const alerts = computed(() => rows.value
   .filter(r => (r.connected === false && !r.operationPending) || r.authState === false)
   .map(r => ({
@@ -410,8 +435,148 @@ onBeforeUnmount(()=>{ window.removeEventListener('xya-header-action', onHeader);
 </script>
 
 <style scoped>
+.connections-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.connections-v4-hero,
+.connections-v4-card,
+.connections-v4-stat,
+.connections-v4-detail {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.connections-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.connections-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.connections-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.connections-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.connections-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.connections-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.connections-v4-stat.tone-blue .connections-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.connections-v4-stat.tone-green .connections-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.connections-v4-stat.tone-orange .connections-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.connections-v4-stat.tone-purple .connections-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
+.connections-v4-stat.tone-cyan .connections-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.connections-v4-stat.tone-red .connections-v4-stat-icon { background: #fef2f2; color: #dc2626; }
+
+.connections-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.connections-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.connections-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.connections-v4-grid {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.connections-v4-subgrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.connections-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.connections-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.connections-v4-detail {
+  position: sticky;
+  top: 16px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.connections-v4-detail h3 {
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 650;
+}
+
 /* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
+  .connections-v4 {
+    gap: 12px;
+  }
+
+  .connections-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .connections-v4-stats,
+  .connections-v4-grid,
+  .connections-v4-subgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .connections-v4-detail {
+    position: static;
+  }
+
+  .connections-v4-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   /* 覆盖右侧详情操作按钮区内联 grid: repeat(2,1fr) → 单列堆叠 */
   .grid[style*="repeat(2,1fr)"] {
     grid-template-columns: minmax(0, 1fr) !important;

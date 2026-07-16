@@ -1,11 +1,16 @@
 <template>
-  <div>
-    <div class="page-head">
+  <div class="statement-v4">
+    <n-card class="statement-v4-hero" :bordered="false">
       <div>
+        <n-tag size="small" type="success" :bordered="false">Delivery Notice</n-tag>
         <h1>发货声明</h1>
         <p>配置发货声明文案与生效范围，买家确认声明后进入正式发货流程</p>
       </div>
-    </div>
+      <n-space :size="8" align="center" wrap>
+        <AppButton :disabled="statementLoading" @click="load">重新加载</AppButton>
+        <AppButton type="primary" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
+      </n-space>
+    </n-card>
 
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
@@ -29,7 +34,8 @@
 
     <div v-else class="statement-layout">
       <div class="statement-main">
-        <CardPanel title="发货声明配置">
+        <n-card class="statement-v4-card" :bordered="false">
+          <template #header>发货声明配置</template>
           <button
             type="button"
             class="option-line statement-toggle"
@@ -78,11 +84,12 @@
             <AppButton type="primary" :loading="saving" @click="save">保存配置</AppButton>
             <AppButton :disabled="saving || !enabled" @click="reset">恢复默认</AppButton>
           </div>
-        </CardPanel>
+        </n-card>
       </div>
 
       <div class="statement-side">
-        <CardPanel title="预览">
+        <n-card class="statement-v4-card" :bordered="false">
+          <template #header>预览</template>
           <div class="preview-box">
             <div v-if="!enabled" class="subtle" style="text-align:center;padding:20px 0">发货声明已禁用，启用后可预览效果</div>
             <div v-else-if="!previewText" class="subtle" style="text-align:center;padding:20px 0">点击下方按钮预览声明效果</div>
@@ -91,16 +98,17 @@
           <div style="margin-top:12px">
             <AppButton :disabled="!enabled" @click="refreshPreview">预览声明</AppButton>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="变量说明" style="margin-top:16px">
+        <n-card class="statement-v4-card" :bordered="false" style="margin-top:16px">
+          <template #header>变量说明</template>
           <div class="var-desc-list">
             <div v-for="v in variables" :key="v.key" class="var-desc-item">
               <code class="var-desc-key">{{ v.key }}</code>
               <span class="var-desc-text">{{ v.desc }}</span>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
       </div>
     </div>
   </div>
@@ -108,7 +116,7 @@
 
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NCard, NSpace, NTag } from 'naive-ui'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -278,24 +286,49 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.page-head {
-  height: 62px;
+.statement-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.statement-v4-hero,
+.statement-v4-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.statement-v4-hero :deep(.n-card__content) {
+  padding: 18px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 10px;
-  padding-right: 260px;
+  gap: 16px;
 }
-.page-head h1 {
+
+.statement-v4-hero h1 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.statement-v4-hero p {
   margin: 0;
-  font-size: 30px;
-  line-height: 1.1;
-  letter-spacing: .3px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
 }
-.page-head p {
-  margin: 10px 0 0;
-  color: #6B6B6B;
-  font-size: 15px;
+
+.statement-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.statement-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
 }
 
 .statement-toggle {
@@ -452,13 +485,23 @@ onBeforeUnmount(() => {
   .statement-layout > * {
     min-width: 0;
   }
-  .page-head {
-    padding-right: 0;
-  }
 }
 
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
+  .statement-v4 {
+    gap: 12px;
+  }
+
+  .statement-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .statement-v4-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   /* 页头：大字体收窄、高度自适应 */
   .page-head {
     height: auto;

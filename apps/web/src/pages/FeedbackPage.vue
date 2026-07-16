@@ -953,13 +953,10 @@ onMounted(() => {
   grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr);
   gap: 16px;
   padding: 22px;
-  border-radius: 26px;
-  border: 1px solid rgba(231, 237, 247, 0.96);
-  background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 32%),
-    radial-gradient(circle at top right, rgba(22, 191, 120, 0.08), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 255, 0.96));
-  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 .fbk-hero-copy {
@@ -971,9 +968,9 @@ onMounted(() => {
   align-items: center;
   min-height: 26px;
   padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border-radius: 6px;
+  background: #ecfeff;
+  color: #0891b2;
   font-size: 11px;
   font-weight: 800;
 }
@@ -1002,9 +999,9 @@ onMounted(() => {
 .fbk-response-banner {
   margin-top: 18px;
   padding: 16px 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(251, 226, 216, 0.98);
-  background: linear-gradient(135deg, rgba(241, 247, 255, 0.96), rgba(255, 255, 255, 0.98));
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
 }
 
 .fbk-response-banner strong {
@@ -1035,9 +1032,9 @@ onMounted(() => {
 .fbk-stat-card {
   text-align: left;
   padding: 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(227, 235, 246, 0.96);
-  background: rgba(255, 255, 255, 0.95);
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
   transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 
@@ -1100,9 +1097,9 @@ onMounted(() => {
 .fbk-board,
 .fbk-side-card {
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  box-shadow: 0 10px 26px rgba(94, 50, 31, 0.055);
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 .fbk-board {
@@ -1121,9 +1118,9 @@ onMounted(() => {
   align-items: center;
   min-height: 22px;
   padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
   font-size: 11px;
   font-weight: 800;
 }
@@ -1163,7 +1160,7 @@ onMounted(() => {
   gap: 8px;
   min-height: 36px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: 6px;
   background: #f5f8fd;
   border: 1px solid transparent;
   color: #5f708c;
@@ -1198,7 +1195,7 @@ onMounted(() => {
 .fbk-select {
   height: 38px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 6px;
   background: #fff;
   padding: 0 12px;
   color: #5c3d30;
@@ -1208,7 +1205,7 @@ onMounted(() => {
   width: 38px;
   height: 38px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 6px;
   background: #fff;
   color: #60738e;
   font-size: 16px;
@@ -1237,9 +1234,9 @@ onMounted(() => {
 
 .fbk-row {
   padding: 18px;
-  border-radius: 18px;
+  border-radius: 6px;
   border: 1px solid #e6edf7;
-  background: linear-gradient(180deg, #ffffff, #FFFFFF);
+  background: #fff;
   transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 

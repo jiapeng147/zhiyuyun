@@ -145,20 +145,6 @@
             </div>
           </div>
         </section>
-
-        <section class="notify-side-note">
-          <div class="notify-side-note-head">
-            <strong>设计亮点</strong>
-          </div>
-          <p>
-            用更强的主次关系取代“列表 + 表单 + 表格”的平铺结构，让通知管理更直观。
-          </p>
-          <ul>
-            <li>先看整体健康概况，再选择渠道配置</li>
-            <li>当前激活渠道在左侧列表中更突出</li>
-            <li>规则与日志独立放在右侧，减少视觉抢占</li>
-          </ul>
-        </section>
       </div>
 
       <div class="notify-center-column">
@@ -707,7 +693,6 @@
         </section>
       </div>
     </section>
-
   </div>
 </template>
 
@@ -2157,19 +2142,16 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 18px;
   padding: 28px;
-  border-radius: 30px;
+  border-radius: 6px;
   overflow: hidden;
-  border: 1px solid rgba(246, 226, 218, 0.96);
-  background:
-    radial-gradient(circle at 0% 0%, rgba(24, 160, 88, 0.15), transparent 30%),
-    radial-gradient(circle at 100% 0%, rgba(23, 184, 150, 0.12), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(242, 247, 255, 0.95));
-  box-shadow: 0 24px 60px rgba(177, 76, 32, 0.12);
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 .notify-hero::before,
 .notify-hero::after {
-  content: '';
+  content: none;
   position: absolute;
   border-radius: 30px;
   pointer-events: none;
@@ -2202,16 +2184,16 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(24, 160, 88, 0.08);
-  color: #c66136;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
 
 .notify-hero-pill::before {
-  content: '';
+  content: none;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -2220,10 +2202,10 @@ onBeforeUnmount(() => {
 
 .notify-hero-copy h1 {
   margin: 14px 0 12px;
-  font-size: 42px;
-  line-height: 1.04;
-  letter-spacing: -0.04em;
-  color: #5d2b16;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: #111827;
 }
 
 .notify-hero-copy p {
@@ -2255,14 +2237,15 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
   padding: 22px;
-  border-radius: 24px;
-  color: #fff;
-  background: linear-gradient(135deg, rgba(112, 46, 18, 0.98), rgba(255, 110, 48, 0.95));
-  box-shadow: 0 24px 44px rgba(177, 76, 32, 0.22);
+  border-radius: 6px;
+  color: #111827;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
 }
 
 .notify-health-card::before {
-  content: '';
+  content: none;
   position: absolute;
   width: 160px;
   height: 160px;
@@ -2284,12 +2267,13 @@ onBeforeUnmount(() => {
 .notify-health-icon {
   width: 52px;
   height: 52px;
-  border-radius: 18px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #2563eb;
 }
 
 .notify-health-icon :deep(.ui-icon-img),
@@ -2320,15 +2304,15 @@ onBeforeUnmount(() => {
   height: 10px;
   margin: 20px 0 14px;
   overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: #e5e7eb;
 }
 
 .notify-health-progress span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #7af1df, #ffffff);
+  background: #2563eb;
 }
 
 .notify-health-foot {
@@ -2350,10 +2334,10 @@ onBeforeUnmount(() => {
 .notify-summary-card {
   min-height: 122px;
   padding: 18px;
-  border-radius: 24px;
-  border: 1px solid rgba(228, 236, 247, 0.96);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 36px rgba(128, 64, 36, 0.08);
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
   display: flex;
   gap: 14px;
   align-items: flex-start;
@@ -2363,7 +2347,7 @@ onBeforeUnmount(() => {
   flex: none;
   width: 52px;
   height: 52px;
-  border-radius: 18px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2376,17 +2360,17 @@ onBeforeUnmount(() => {
 }
 
 .notify-summary-icon.blue,
-.notify-channel-icon.blue { background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(229, 229, 229, 0.16)); color: #d06436; }
+.notify-channel-icon.blue { background: #eff6ff; color: #2563eb; }
 .notify-summary-icon.green,
-.notify-channel-icon.green { background: linear-gradient(135deg, rgba(22, 191, 120, 0.14), rgba(91, 220, 160, 0.16)); color: #16a46b; }
+.notify-channel-icon.green { background: #ecfdf5; color: #059669; }
 .notify-summary-icon.cyan,
-.notify-channel-icon.cyan { background: linear-gradient(135deg, rgba(232, 94, 35, 0.14), rgba(229, 229, 229, 0.16)); color: #c64d19; }
+.notify-channel-icon.cyan { background: #ecfeff; color: #0891b2; }
 .notify-summary-icon.orange,
-.notify-channel-icon.orange { background: linear-gradient(135deg, rgba(255, 180, 73, 0.18), rgba(255, 111, 127, 0.14)); color: #ef9a29; }
+.notify-channel-icon.orange { background: #fff7ed; color: #ea580c; }
 .notify-summary-icon.indigo,
-.notify-channel-icon.indigo { background: linear-gradient(135deg, rgba(255, 128, 74, 0.14), rgba(255, 175, 141, 0.16)); color: #dd784d; }
+.notify-channel-icon.indigo { background: #eef2ff; color: #4f46e5; }
 .notify-summary-icon.purple,
-.notify-channel-icon.purple { background: linear-gradient(135deg, rgba(246, 138, 92, 0.14), rgba(255, 194, 168, 0.16)); color: #d67c56; }
+.notify-channel-icon.purple { background: #f5f3ff; color: #7c3aed; }
 
 .notify-summary-copy {
   min-width: 0;
@@ -2404,8 +2388,8 @@ onBeforeUnmount(() => {
 .notify-summary-copy strong {
   font-size: 30px;
   line-height: 1.02;
-  color: #5d2c17;
-  letter-spacing: -0.03em;
+  color: #111827;
+  letter-spacing: 0;
 }
 
 .notify-summary-copy span {
@@ -2430,11 +2414,11 @@ onBeforeUnmount(() => {
 }
 
 .notify-panel {
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(228, 236, 247, 0.96);
-  border-radius: 28px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 20px 42px rgba(128, 64, 36, 0.1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 .notify-panel-head {
@@ -2448,9 +2432,9 @@ onBeforeUnmount(() => {
 
 .notify-panel-head h3 {
   margin: 0 0 8px;
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1.1;
-  color: #5f2d18;
+  color: #111827;
 }
 
 .notify-panel-head p {

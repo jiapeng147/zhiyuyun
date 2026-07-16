@@ -1,16 +1,32 @@
 <template>
-  <div class="grid" style="grid-template-columns:minmax(0,1fr) 460px;gap:18px">
-    <div>
-      <div v-if="error" class="global-notice error">{{ error }}</div>
-      <div v-if="success" class="global-notice success">{{ success }}</div>
-      <div class="grid stat-grid">
-        <StatCard title="总操作数" :value="metricValue(total)" change="审计记录" icon="record" />
-        <StatCard title="当前页条数" :value="metricValue(rows.length)" change="本页统计" icon="shield" color="green" />
-        <StatCard title="操作类型" :value="metricValue(operationTypeCount)" change="本页去重" icon="record" />
-        <StatCard title="操作人" :value="metricValue(operatorCount)" change="本页去重" icon="account" color="green" />
-        <StatCard title="待人工核对" :value="metricValue(reconciliationCount)" change="结果未知或未完成" icon="shield" color="orange" />
+  <div class="logs-v4">
+    <n-card class="logs-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="warning" :bordered="false">Audit Trail</n-tag>
+        <h2>操作日志审计</h2>
+        <p>按操作类型、关键词与结果状态追踪关键写操作，结果未知的记录会被单独标记，便于人工核对。</p>
       </div>
-      <CardPanel title="操作日志">
+      <n-space :size="8" align="center" wrap>
+        <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新日志' }}</AppButton>
+        <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
+      </n-space>
+    </n-card>
+
+    <div v-if="error" class="global-notice error">{{ error }}</div>
+    <div v-if="success" class="global-notice success">{{ success }}</div>
+
+    <section class="logs-v4-stats">
+      <n-card v-for="item in logStatCards" :key="item.key" class="logs-v4-stat" :class="item.tone" :bordered="false">
+        <span class="logs-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
+    <div class="logs-v4-grid">
+      <div>
+      <n-card class="logs-v4-card" :bordered="false">
+        <template #header>操作日志</template>
         <div class="toolbar">
           <select v-model="filters.operationType" class="input" @change="search">
             <option value="">全部类型</option>
@@ -31,9 +47,9 @@
           <template #empty><EmptyState icon="📋" title="暂无操作日志" description="系统操作记录将在此显示。" /></template>
         </BaseTable>
         <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="size" @page-change="goPage" />
-      </CardPanel>
+      </n-card>
     </div>
-    <div class="right-drawer">
+    <div class="right-drawer logs-v4-detail">
       <template v-if="detail">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <h3>日志详情</h3>
@@ -76,12 +92,12 @@
       <EmptyState v-else icon="📋" title="选择日志查看详情" description="点击左侧列表中的「查看」按钮，这里会展示日志详情。" />
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import StatCard from '../components/StatCard.vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NCard, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -215,6 +231,13 @@ const cols = [
 const operationTypeCount = computed(() => new Set(rows.value.map(row => row.operationType).filter(Boolean)).size)
 const operatorCount = computed(() => new Set(rows.value.map(row => row.operator).filter(Boolean)).size)
 const reconciliationCount = computed(() => rows.value.filter(row => row.requiresReconciliation).length)
+const logStatCards = computed(() => [
+  { key: 'total', title: '总操作数', value: metricValue(total.value), change: '审计记录', symbol: '总', tone: 'tone-blue' },
+  { key: 'page', title: '当前页条数', value: metricValue(rows.value.length), change: '本页统计', symbol: '页', tone: 'tone-green' },
+  { key: 'types', title: '操作类型', value: metricValue(operationTypeCount.value), change: '本页去重', symbol: '类', tone: 'tone-cyan' },
+  { key: 'operators', title: '操作人', value: metricValue(operatorCount.value), change: '本页去重', symbol: '人', tone: 'tone-purple' },
+  { key: 'reconcile', title: '待人工核对', value: metricValue(reconciliationCount.value), change: '结果未知或未完成', symbol: '核', tone: 'tone-orange' }
+])
 
 function auditStatusType(row) {
   if (row?.requiresReconciliation) return 'orange'
@@ -303,8 +326,137 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.logs-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.logs-v4-hero,
+.logs-v4-card,
+.logs-v4-stat,
+.logs-v4-detail {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.logs-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logs-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.logs-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.logs-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.logs-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.logs-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.logs-v4-stat.tone-blue .logs-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.logs-v4-stat.tone-green .logs-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.logs-v4-stat.tone-cyan .logs-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.logs-v4-stat.tone-purple .logs-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
+.logs-v4-stat.tone-orange .logs-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+
+.logs-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.logs-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.logs-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.logs-v4-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  align-items: start;
+  gap: 16px;
+}
+
+.logs-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.logs-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.logs-v4-detail {
+  position: sticky;
+  top: 16px;
+  padding: 16px;
+  min-width: 0;
+}
+
 /* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
+  .logs-v4 {
+    gap: 12px;
+  }
+
+  .logs-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .logs-v4-stats,
+  .logs-v4-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .logs-v4-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
+  .logs-v4-detail {
+    position: static;
+  }
+
   /* 覆盖根容器内联 grid: minmax(0,1fr) 460px → 单列堆叠 */
   .grid[style*="460px"] {
     grid-template-columns: minmax(0, 1fr) !important;

@@ -1,5 +1,24 @@
 <template>
-  <div class="publish-layout">
+  <div class="publish-v4">
+    <n-card class="publish-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Publish Console</n-tag>
+        <h2>发布商品工作台</h2>
+        <p>按账号、基础信息、分类、位置、价格与发货能力逐步确认，提交前右侧实时汇总发布状态。</p>
+        <div class="publish-v4-steps">
+          <span>基础信息</span>
+          <span>分类位置</span>
+          <span>价格发货</span>
+          <span>发布检查</span>
+        </div>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <AppButton @click="handleCancel">取消</AppButton>
+        <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
+      </n-space>
+    </n-card>
+
+  <div class="publish-layout publish-v4-body">
     <div>
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="warning" class="global-notice warning">{{ warning }}</div>
@@ -10,7 +29,8 @@
         <pre>{{ persistedIntentSummary }}</pre>
       </div>
 
-      <CardPanel title="宝贝基础信息">
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>宝贝基础信息</template>
         <div class="form-grid">
           <div class="form-row">
             <label>闲鱼账号</label>
@@ -75,9 +95,10 @@
             >
           </div>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="商品分类" style="margin-top:16px">
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>商品分类</template>
         <div class="category-selector">
           <div class="auto-category-hint">
             <span class="hint-icon">💡</span>
@@ -180,9 +201,10 @@
             <span v-if="aiCategoryMessage" class="ai-category-tip">{{ aiCategoryMessage }}</span>
           </p>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="商品位置" style="margin-top:16px">
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>商品位置</template>
         <div class="location-search">
           <div class="location-input-wrap">
             <input
@@ -222,9 +244,10 @@
             </div>
           </div>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="商品价格与规格" style="margin-top:16px">
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>商品价格与规格</template>
         <div class="form-grid">
           <div class="form-row">
             <label>售价（元）</label>
@@ -239,9 +262,10 @@
           <span>多规格 <em>当前不可用，仅支持单规格发布</em></span>
           <ToggleSwitch :on="false" />
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="发货设置" style="margin-top:16px">
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>发货设置</template>
         <div class="shipping-grid">
           <div class="shipping-item">
             <span>包邮</span>
@@ -260,12 +284,13 @@
             <ToggleSwitch :on="form.supportSelfPick" @click="form.supportSelfPick = !form.supportSelfPick" />
           </div>
         </div>
-      </CardPanel>
+      </n-card>
       <div style="height:90px"></div>
     </div>
 
-    <div>
-      <CardPanel title="商品预览">
+    <div class="publish-v4-side">
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>商品预览</template>
         <div class="product-cell">
           <div class="product-thumb" style="width:130px;height:98px">
             <img v-if="form.imageUrls.length > 0" :src="form.imageUrls[0]" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px">
@@ -276,21 +301,23 @@
             <b style="color:#ef4444;font-size:22px">¥{{ displayPrice }}</b>
           </div>
         </div>
-      </CardPanel>
-      <CardPanel title="发布摘要" style="margin-top:16px">
+      </n-card>
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>发布摘要</template>
         <div class="option-line"><span>闲鱼账号</span><b>{{ selectedAccount || '未选择' }}</b></div>
         <div class="option-line"><span>商品分类</span><b>{{ selectedCategoryPath || '未选择' }}</b></div>
         <div class="option-line"><span>商品位置</span><b>{{ selectedPoi?.name || '未选择' }}</b></div>
         <div class="option-line"><span>规格能力</span><b>单规格</b></div>
         <div class="option-line"><span>总库存</span><b>{{ totalStock }}件</b></div>
         <div class="option-line"><span>运费模式</span><b>包邮</b></div>
-      </CardPanel>
-      <CardPanel title="发布检查" style="margin-top:16px">
+      </n-card>
+      <n-card class="publish-v4-card" :bordered="false">
+        <template #header>发布检查</template>
         <div v-for="i in checks" :key="i.text" class="option-line">
           <span><i :class="['dot', i.ok ? '' : 'orange']"></i>{{ i.text }}</span>
           <b :style="{color:i.ok?'var(--green)':'#f59e0b'}">{{ i.ok ? '通过' : '待完善' }}</b>
         </div>
-      </CardPanel>
+      </n-card>
     </div>
 
     <div class="bottom-actions">
@@ -298,11 +325,12 @@
       <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NCard, NSpace, NTag } from 'naive-ui'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { getAccounts } from '../api/accounts.js'
@@ -1353,6 +1381,90 @@ onMounted(load)
 </script>
 
 <style scoped>
+.publish-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.publish-v4-hero,
+.publish-v4-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.publish-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.publish-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.publish-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.publish-v4-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.publish-v4-steps span {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.publish-v4-body {
+  align-items: start;
+  gap: 16px;
+}
+
+.publish-v4-card {
+  margin-top: 16px;
+}
+
+.publish-v4-card:first-child {
+  margin-top: 0;
+}
+
+.publish-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.publish-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.publish-v4-side {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+}
+
 .unavailable-option {
   opacity: 0.72;
   cursor: not-allowed;
@@ -1713,6 +1825,23 @@ onMounted(load)
 
 /* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
+  .publish-v4 {
+    gap: 12px;
+  }
+
+  .publish-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .publish-v4-side {
+    position: static;
+  }
+
+  .publish-v4-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   /* 图片上传卡片：移动端缩小尺寸，更多列数 */
   .img-card {
     width: 78px;

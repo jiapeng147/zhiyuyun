@@ -48,7 +48,9 @@
 
     <div class="ads-layout">
       <div class="ads-main">
-        <CardPanel title="广告档位" desc="仅展示商业服务实时返回的套餐、价格与状态。" class="ads-section">
+        <n-card class="ads-section ads-v4-card" :bordered="false">
+          <template #header>广告档位</template>
+          <template #header-extra><span class="ads-section-desc">仅展示商业服务实时返回的套餐、价格与状态。</span></template>
           <div v-if="loading.plans" class="ads-state">正在加载广告档位...</div>
           <EmptyState
             v-else-if="!plans.length"
@@ -78,9 +80,11 @@
               </ul>
             </article>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="提交申请" desc="商业服务确认接收申请后，才会继续创建真实支付订单。" class="ads-section">
+        <n-card class="ads-section ads-v4-card" :bordered="false">
+          <template #header>提交申请</template>
+          <template #header-extra><span class="ads-section-desc">商业服务确认接收申请后，才会继续创建真实支付订单。</span></template>
           <form class="ads-form" @submit.prevent="handleSubmit">
             <div class="ads-form-grid">
               <label class="ads-field">
@@ -240,11 +244,12 @@
               </button>
             </div>
           </form>
-        </CardPanel>
+        </n-card>
       </div>
 
       <aside class="ads-side">
-        <CardPanel title="扫码支付" class="ads-section">
+        <n-card class="ads-section ads-v4-card" :bordered="false">
+          <template #header>扫码支付</template>
           <section
             v-if="paymentAttempt.visible"
             :class="['payment-attempt-safety', `is-${paymentAttempt.status}`]"
@@ -367,10 +372,11 @@
               </button>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="我的申请记录" class="ads-section">
-          <template #action>
+        <n-card class="ads-section ads-v4-card" :bordered="false">
+          <template #header>我的申请记录</template>
+          <template #header-extra>
             <button class="ads-link-btn" type="button" :disabled="loading.records" @click="loadApplications">
               {{ loading.records ? '刷新中...' : '刷新' }}
             </button>
@@ -439,16 +445,17 @@
               </div>
             </article>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="投放说明" class="ads-section">
+        <n-card class="ads-section ads-v4-card" :bordered="false">
+          <template #header>投放说明</template>
           <ol class="ads-steps">
             <li>部署管理员需先配置商业桥，并由商业服务提供真实套餐与支付方式。</li>
             <li>商业服务未配置时，开源端不会提交、保存申请或创建支付订单。</li>
             <li>支付、审核、排期与上下架均以商业服务返回的状态为准。</li>
             <li>历史本地申请记录只读保留，不代表已进入任何审核或投放流程。</li>
           </ol>
-        </CardPanel>
+        </n-card>
       </aside>
     </div>
   </div>
@@ -456,7 +463,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NCard } from 'naive-ui'
 import EmptyState from '../components/EmptyState.vue'
 import {
   closeAdPaymentOrder,
@@ -1393,12 +1400,10 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 1fr) 240px;
   gap: 18px;
   padding: 28px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top left, rgba(255, 116, 56, 0.18), transparent 34%),
-    linear-gradient(135deg, #FAFAFA 0%, #eef5ff 56%, #fdfefe 100%);
-  border: 1px solid rgba(247, 207, 190, 0.95);
-  box-shadow: 0 18px 48px rgba(176, 79, 38, 0.08);
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 .ads-hero-badge {
@@ -1406,9 +1411,9 @@ onBeforeUnmount(() => {
   align-items: center;
   height: 30px;
   padding: 0 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #ce5d2d;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #c2410c;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1438,8 +1443,8 @@ onBeforeUnmount(() => {
   align-items: center;
   min-height: 34px;
   padding: 0 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.88);
+  border-radius: 6px;
+  background: #f8fafc;
   color: #3e5371;
   font-size: 12px;
   font-weight: 700;
@@ -1456,9 +1461,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   min-height: 110px;
   padding: 18px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(249, 224, 214, 0.92);
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
 }
 
 .ads-hero-stat strong {
@@ -1582,9 +1587,26 @@ onBeforeUnmount(() => {
 }
 
 .ads-section {
-  border-radius: 20px;
-  padding: 22px;
-  box-shadow: 0 16px 40px rgba(132, 62, 32, 0.06);
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.ads-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.ads-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.ads-section-desc {
+  max-width: 320px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 .ads-state {
@@ -1605,7 +1627,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   min-height: 220px;
   padding: 18px;
-  border-radius: 20px;
+  border-radius: 6px;
   border: 1px solid #f7e3db;
   background: linear-gradient(180deg, #ffffff, #FAFAFA);
   cursor: pointer;

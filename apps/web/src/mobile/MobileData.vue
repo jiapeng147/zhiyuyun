@@ -1,6 +1,7 @@
 <template>
   <div class="m-data">
-    <div class="m-page-header">
+    <div class="m-page-header m-mobile-hero">
+      <span class="m-mobile-kicker">Mobile Metrics</span>
       <h1>数据面板</h1>
       <p class="m-page-sub">按所选时间范围查看后端实际统计</p>
     </div>
@@ -339,10 +340,31 @@ onMounted(() => {
 .m-page-header {
   margin-bottom: 14px;
 }
+
+.m-mobile-hero {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.m-mobile-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 750;
+}
+
 .m-page-header h1 {
-  margin: 0 0 4px;
-  font-size: 24px;
-  font-weight: 800;
+  margin: 10px 0 4px;
+  font-size: 22px;
+  font-weight: 700;
   color: #111111;
   line-height: 1.2;
 }
@@ -355,8 +377,9 @@ onMounted(() => {
 
 .m-date-tabs {
   display: flex;
-  background: #f1f5fb;
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   padding: 4px;
   margin-bottom: 16px;
 }
@@ -366,7 +389,7 @@ onMounted(() => {
   min-height: 44px;
   border: none;
   background: transparent;
-  border-radius: 9px;
+  border-radius: 4px;
   font-size: 13px;
   font-weight: 600;
   color: #6B6B6B;
@@ -394,9 +417,9 @@ onMounted(() => {
 .m-empty-icon {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #0f766e;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -423,14 +446,14 @@ onMounted(() => {
 }
 .m-stat-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 6px;
   padding: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
-  border: 1px solid #f0f4fa;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  border: 1px solid #e5e7eb;
   transition: transform 0.15s;
 }
 .m-stat-card:active {
@@ -439,18 +462,18 @@ onMounted(() => {
 .m-stat-icon {
   width: 46px;
   height: 46px;
-  border-radius: 13px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.m-stat-blue { background: linear-gradient(135deg, #e8f1ff, #ffe1d4); color: #0f766e; }
-.m-stat-green { background: linear-gradient(135deg, #e2f8ee, #cdf2df); color: #16bf78; }
-.m-stat-orange { background: linear-gradient(135deg, #fff4e0, #ffe7c2); color: #ff9f22; }
-.m-stat-red { background: linear-gradient(135deg, #ffe8e8, #ffd1d1); color: #ef4444; }
-.m-stat-purple { background: linear-gradient(135deg, #f0ebff, #e2d8ff); color: #f68a5c; }
-.m-stat-cyan { background: linear-gradient(135deg, #e0f7fb, #cdf0f6); color: #06b6d4; }
+.m-stat-blue { background: #eff6ff; color: #2563eb; }
+.m-stat-green { background: #ecfdf5; color: #059669; }
+.m-stat-orange { background: #fff7ed; color: #ea580c; }
+.m-stat-red { background: #fef2f2; color: #dc2626; }
+.m-stat-purple { background: #f5f3ff; color: #7c3aed; }
+.m-stat-cyan { background: #ecfeff; color: #0891b2; }
 .m-stat-info { flex: 1; min-width: 0; }
 .m-stat-label { font-size: 12px; color: #8c98ae; margin-bottom: 2px; }
 .m-stat-value {
@@ -463,11 +486,11 @@ onMounted(() => {
 
 .m-section {
   background: white;
-  border-radius: 16px;
+  border-radius: 6px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
-  border: 1px solid #f0f4fa;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  border: 1px solid #e5e7eb;
 }
 .m-data-warning {
   display: flex;
@@ -490,7 +513,7 @@ onMounted(() => {
   padding: 0 14px;
   flex-shrink: 0;
   border: 1px solid #e2ad3b;
-  border-radius: 12px;
+  border-radius: 6px;
   color: #744006;
   background: white;
   font-weight: 600;
@@ -539,15 +562,15 @@ onMounted(() => {
 }
 .m-progress {
   height: 10px;
-  background: linear-gradient(180deg, #eef2f8 0%, #e4eaf2 100%);
-  border-radius: 100px;
+  background: #e5e7eb;
+  border-radius: 6px;
   overflow: hidden;
   margin-bottom: 10px;
 }
 .m-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #16bf78, #5fd49a);
-  border-radius: 100px;
+  background: #059669;
+  border-radius: 6px;
   transition: width 0.4s ease;
 }
 .m-overview-meta {
@@ -565,7 +588,7 @@ onMounted(() => {
   display: inline-block;
   width: 7px;
   height: 7px;
-  border-radius: 50%;
+  border-radius: 6px;
 }
 .m-dot-green { background: #16bf78; }
 .m-dot-red { background: #ef4444; }
@@ -596,7 +619,7 @@ onMounted(() => {
 .m-chart-bar {
   width: 70%;
   max-width: 28px;
-  background: linear-gradient(180deg, #ff9a6f 0%, #ff6c2d 60%, #0f766e 100%);
+  background: #2563eb;
   border-radius: 6px 6px 0 0;
   transition: height 0.4s ease;
   min-height: 4px;
@@ -653,22 +676,22 @@ onMounted(() => {
 .m-quick-arrow { color: #c4cddb; flex-shrink: 0; }
 
 .m-pc-notice {
-  background: linear-gradient(135deg, #f5f9ff 0%, #fbfcff 100%);
-  border: 1px solid #e6eefc;
-  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   padding: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(94,50,31,0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 .m-pc-notice-icon {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff804a, #ff6c2d);
-  color: white;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #ea580c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -691,13 +714,13 @@ onMounted(() => {
   min-height: 44px;
   padding: 0 16px;
   border: none;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  border-radius: 6px;
+  background: #2563eb;
   color: white;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
+  box-shadow: none;
 }
 .m-pc-notice-btn:active {
   transform: scale(0.96);

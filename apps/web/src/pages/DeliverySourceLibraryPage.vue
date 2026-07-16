@@ -1,9 +1,30 @@
 <template>
-  <div>
+  <div class="source-v4">
+    <n-card class="source-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Source Library</n-tag>
+        <h2>货源库运营台</h2>
+        <p>统一管理自动发货素材、绑定商品与 AI 推荐结果，配置关系加载失败时不会开放写操作。</p>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <AppButton :disabled="sourcesLoading || Boolean(mutationBusy)" @click="loadSources">{{ sourcesLoading ? '刷新中...' : '刷新货源' }}</AppButton>
+        <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
+      </n-space>
+    </n-card>
+
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <CardPanel title="货源库">
+    <section class="source-v4-stats">
+      <n-card v-for="item in sourceStatCards" :key="item.key" class="source-v4-stat" :class="item.tone" :bordered="false">
+        <span class="source-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
+    <n-card class="source-v4-card" :bordered="false">
+      <template #header>货源库</template>
       <div class="toolbar">
         <input v-model="query.keyword" class="input" placeholder="搜索标题 / 正文 / 备注" :disabled="sourcesLoading || Boolean(mutationBusy)" @keyup.enter="searchSources" />
         <AppButton type="primary" :disabled="sourcesLoading || Boolean(mutationBusy)" @click="searchSources">搜索</AppButton>
@@ -36,9 +57,10 @@
       </BaseTable>
       <Pagination v-if="!mutationBusy" :total="sourceTotal" :current="query.current" :page-size="query.size" @page-change="goSourcePage" />
       </template>
-    </CardPanel>
+    </n-card>
 
-    <CardPanel v-if="editing" :title="editing.id ? '编辑货源' : '新增货源'" style="margin-top:16px">
+    <n-card v-if="editing" class="source-v4-card" :bordered="false">
+      <template #header>{{ editing.id ? '编辑货源' : '新增货源' }}</template>
       <div class="form-grid">
         <div class="form-row">
           <label>标题</label>
@@ -57,10 +79,11 @@
         <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="saveSource">{{ mutationBusy === 'save' ? '保存中…' : '保存' }}</AppButton>
         <AppButton :disabled="mutationBusy === 'save'" @click="cancelEdit">取消</AppButton>
       </div>
-    </CardPanel>
+    </n-card>
 
     <template v-if="selected">
-      <CardPanel title="货源详情" style="margin-top:16px">
+      <n-card class="source-v4-card" :bordered="false">
+        <template #header>货源详情</template>
         <EmptyState v-if="detailLoading" icon="⏳" title="货源详情加载中" description="正在读取绑定商品，期间不会开放配置操作。" />
         <EmptyState v-else-if="detailAvailable === false" icon="⚠️" title="货源详情暂不可用" description="当前无法确认绑定关系；为避免把旧商品配置到新货源，所有写操作已禁用。">
           <AppButton :disabled="detailLoading" @click="loadSelectedGoods(selected.id, selected)">重试</AppButton>
@@ -82,9 +105,10 @@
         </div>
         <div class="subtle source-preview">{{ selected.content || '暂无正文内容' }}</div>
         </template>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel v-if="detailAvailable === true" title="已配置商品" style="margin-top:16px">
+      <n-card v-if="detailAvailable === true" class="source-v4-card" :bordered="false">
+        <template #header>已配置商品</template>
         <div class="toolbar">
           <input
             v-model="configuredKeyword"
@@ -128,9 +152,10 @@
           :page-size="configuredGoodsPage.size"
           @page-change="goConfiguredGoodsPage"
         />
-      </CardPanel>
+      </n-card>
 
-      <CardPanel v-if="detailAvailable === true" :title="goodsView === 'recommend' ? 'AI 推荐商品' : '商品列表'" style="margin-top:16px">
+      <n-card v-if="detailAvailable === true" class="source-v4-card" :bordered="false">
+        <template #header>{{ goodsView === 'recommend' ? 'AI 推荐商品' : '商品列表' }}</template>
         <div class="toolbar">
           <input
             v-model="goodsKeyword"
@@ -228,14 +253,14 @@
           :page-size="candidateGoodsPage.size"
           @page-change="goCandidateGoodsPage"
         />
-      </CardPanel>
+      </n-card>
     </template>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NCard, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import AppButton from '../components/AppButton.vue'
 import Badge from '../components/Badge.vue'
@@ -334,6 +359,14 @@ const goodsColumns = [
 ]
 
 const configuredGoodsIds = computed(() => new Set(configuredGoods.value.map(row => String(row.id))))
+const sourceStatCards = computed(() => [
+  { key: 'total', title: '货源总数', value: sourceMetric(sourceTotal.value), change: '库内素材', symbol: '源', tone: 'tone-blue' },
+  { key: 'page', title: '当前页', value: sourceMetric(rows.value.length), change: '本页货源', symbol: '页', tone: 'tone-cyan' },
+  { key: 'bound', title: '已配置商品', value: sourceMetric(selected.value?.usageCount || 0), change: selected.value ? '当前货源' : '未选择货源', symbol: '绑', tone: 'tone-green' },
+  { key: 'candidate', title: '候选商品', value: sourceMetric(candidateLibraryTotal.value), change: '可配置商品池', symbol: '候', tone: 'tone-purple' },
+  { key: 'selected', title: '待批量配置', value: sourceMetric(selectedGoodsIds.value.length), change: '当前勾选', symbol: '选', tone: 'tone-orange' },
+  { key: 'ai', title: 'AI推荐', value: aiStatus.value?.configured ? '已配置' : '未配置', change: '模型状态', symbol: 'AI', tone: aiStatus.value?.configured ? 'tone-green' : 'tone-orange' }
+])
 
 const normalizedConfiguredGoods = computed(() => decorateGoodsRows(configuredGoods.value, false))
 const normalizedAllGoods = computed(() => decorateGoodsRows(allGoods.value, false))
@@ -348,6 +381,10 @@ const filteredConfiguredGoods = computed(() => normalizedConfiguredGoods.value)
 const filteredDisplayGoods = computed(() => {
   return goodsView.value === 'recommend' ? pagedRecommendedGoods.value : normalizedAllGoods.value
 })
+
+function sourceMetric(value) {
+  return sourcesAvailable.value === true ? value : '—'
+}
 
 const pageSelectedGoodsIds = computed({
   get: () => selectedGoodsIds.value,
@@ -950,6 +987,98 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.source-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.source-v4-hero,
+.source-v4-card,
+.source-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.source-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.source-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.source-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.source-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.source-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.source-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.source-v4-stat.tone-blue .source-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.source-v4-stat.tone-cyan .source-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.source-v4-stat.tone-green .source-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.source-v4-stat.tone-purple .source-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
+.source-v4-stat.tone-orange .source-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+
+.source-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.source-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.source-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.source-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.source-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
 .content-preview {
   max-width: 520px;
   white-space: nowrap;
@@ -1057,6 +1186,23 @@ onBeforeUnmount(() => {
 
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
+  .source-v4 {
+    gap: 12px;
+  }
+
+  .source-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .source-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .source-v4-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   /* 货源正文预览宽度收窄并允许换行 */
   .content-preview {
     max-width: 100%;

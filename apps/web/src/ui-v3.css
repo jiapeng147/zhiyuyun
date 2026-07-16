@@ -513,7 +513,6 @@ textarea {
 }
 
 /* Naive primitives and legacy controls */
-.n-card,
 .card-panel,
 .naive-admin-card,
 .table-wrap,
@@ -537,13 +536,11 @@ textarea {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.n-card:hover,
 .card-panel:hover,
 .naive-admin-card:hover {
   border-color: var(--line-strong) !important;
 }
 
-.n-card-header,
 .panel-head,
 .naive-admin-card-head,
 .notify-panel-head,
@@ -559,7 +556,6 @@ textarea {
   gap: 12px !important;
 }
 
-.n-card-header__main,
 .panel-head h3,
 .card-panel h3,
 .modal-head h3,

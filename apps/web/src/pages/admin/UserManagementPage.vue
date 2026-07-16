@@ -2,8 +2,22 @@
   <div class="user-mgmt-page">
     <div v-if="notice" :class="['global-notice', noticeType]" role="status">{{ notice }}</div>
 
+    <n-card class="user-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">User Operations</n-tag>
+        <h2>用户管理</h2>
+        <p>集中处理平台概览、套餐、手动建用户、自助注册、SMTP 与账号状态。</p>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <button class="btn" type="button" @click="loadAll">刷新数据</button>
+        <button class="btn primary" type="button" :disabled="planBusy" @click="openCreatePlan">新建套餐</button>
+      </n-space>
+    </n-card>
+
     <!-- 平台概览 -->
-    <CardPanel title="平台概览" desc="总用户/账号/商品/订单与活跃趋势（仅超管可见）" class="dashboard-section">
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>平台概览</template>
+      <template #header-extra><span class="user-v4-desc">总用户/账号/商品/订单与活跃趋势（仅超管可见）</span></template>
       <div v-if="overview" class="ov-grid">
         <div class="ov-card">
           <div class="ov-label">用户总数</div>
@@ -42,10 +56,12 @@
         </div>
       </div>
       <div v-else class="loading">加载中…</div>
-    </CardPanel>
+    </n-card>
 
     <!-- 套餐管理 -->
-    <CardPanel title="套餐管理" desc="新增/编辑/下架套餐。已被用户引用的套餐会被下架而非删除。" class="dashboard-section">
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>套餐管理</template>
+      <template #header-extra><span class="user-v4-desc">新增/编辑/下架套餐。已被用户引用的套餐会被下架而非删除。</span></template>
       <div class="plan-toolbar">
         <button class="btn primary" type="button" :disabled="planBusy" @click="openCreatePlan">+ 新建套餐</button>
         <span class="muted">共 {{ plans.length }} 个套餐</span>
@@ -81,10 +97,12 @@
           </tbody>
         </table>
       </div>
-    </CardPanel>
+    </n-card>
 
     <!-- 手动建用户 -->
-    <CardPanel title="手动建用户" desc="超管可直接创建账号，绕过注册开关和邮箱验证。" class="dashboard-section">
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>手动建用户</template>
+      <template #header-extra><span class="user-v4-desc">超管可直接创建账号，绕过注册开关和邮箱验证。</span></template>
       <form class="create-form" @submit.prevent="onCreateUser">
         <label class="field">
           <span>用户名 *</span>
@@ -112,10 +130,12 @@
           <button class="btn primary" type="submit" :disabled="createBusy">{{ createBusy ? '创建中...' : '创建用户' }}</button>
         </div>
       </form>
-    </CardPanel>
+    </n-card>
 
     <!-- 注册开关 -->
-    <CardPanel title="自助注册" desc="控制外部用户是否可以通过注册页自助注册账号" class="dashboard-section">
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>自助注册</template>
+      <template #header-extra><span class="user-v4-desc">控制外部用户是否可以通过注册页自助注册账号</span></template>
       <div class="reg-row">
         <div class="reg-info">
           <div class="reg-state">
@@ -127,10 +147,12 @@
         </div>
         <ToggleSwitch :on="regEnabled" interactive :disabled="regBusy" @click="toggleRegistration" />
       </div>
-    </CardPanel>
+    </n-card>
 
     <!-- 邮箱 SMTP -->
-    <CardPanel title="邮箱 SMTP 配置" desc="用于发送注册/找回密码验证码。密码不回显。" class="dashboard-section">
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>邮箱 SMTP 配置</template>
+      <template #header-extra><span class="user-v4-desc">用于发送注册/找回密码验证码。密码不回显。</span></template>
       <div class="form-grid">
         <label class="field">
           <span>SMTP 服务器</span>
@@ -156,10 +178,12 @@
       <div class="form-actions">
         <button class="btn primary" type="button" :disabled="emailBusy" @click="saveEmail">{{ emailBusy ? '保存中...' : '保存邮箱配置' }}</button>
       </div>
-    </CardPanel>
+    </n-card>
 
     <!-- 用户列表 -->
-    <CardPanel title="注册用户" :desc="`共 ${users.length} 个账号`" class="dashboard-section">
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>注册用户</template>
+      <template #header-extra><span class="user-v4-desc">共 {{ users.length }} 个账号</span></template>
       <div class="table-wrap">
         <table class="table user-table">
           <thead>
@@ -203,19 +227,23 @@
                   type="button"
                   :disabled="rowBusy === u.id"
                   @click="toggleStatus(u)"
-                >{{ u.status === 1 ? '禁用' : '启用' }}</button>
+                >
+                  {{ u.status === 1 ? '禁用' : '启用' }}
+                </button>
                 <button
                   class="btn small"
                   type="button"
                   :disabled="rowBusy === u.id"
                   @click="openResetPwd(u)"
-                >重置密码</button>
+                >
+                  重置密码
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </CardPanel>
+    </n-card>
 
     <!-- 重置密码模态 -->
     <div v-if="resetTarget" class="modal-mask" @click.self="resetTarget = null">
@@ -297,14 +325,13 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import CardPanel from '../../components/CardPanel.vue'
+import { NCard, NSpace, NTag } from 'naive-ui'
 import ToggleSwitch from '../../components/ToggleSwitch.vue'
 import { friendlyError } from '../../utils/friendlyError.js'
 import {
   listUsers, updateUser, createUser, resetPassword,
   getOverview, adminListPlans, adminCreatePlan, adminUpdatePlan, adminDeletePlan,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
-  getPublicPlans,
 } from '../../api/admin.js'
 
 const users = ref([])
@@ -439,14 +466,65 @@ onMounted(loadAll)
 </script>
 
 <style scoped>
-.user-mgmt-page { min-width: 0; }
-.dashboard-section { margin-top: 16px; }
+.user-mgmt-page {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.user-v4-hero,
+.user-v4-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.user-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.user-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.user-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.user-v4-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.user-v4-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.user-v4-desc {
+  max-width: 340px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dashboard-section { margin-top: 0; }
 .muted { color: var(--muted, #6b6b6b); font-size: 12px; }
 .loading { padding: 24px 0; text-align: center; color: var(--muted, #6b6b6b); }
 
 /* 概览 */
 .ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-.ov-card { background: var(--bg-elevated, #fafafa); border: 1px solid var(--line, #e5e5e5); border-radius: 10px; padding: 14px 16px; }
+.ov-card { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px 16px; }
 .ov-card.plan-dist { grid-column: span 2; }
 .ov-label { font-size: 12px; color: var(--muted, #6b6b6b); margin-bottom: 6px; }
 .ov-value { font-size: 28px; font-weight: 700; color: var(--text, #111); }
@@ -493,7 +571,7 @@ onMounted(loadAll)
 
 /* modal */
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }
-.modal-card { background: #fff; border-radius: 12px; padding: 20px; width: min(520px, 92vw); box-shadow: 0 16px 48px rgba(0,0,0,.18); }
+.modal-card { background: #fff; border-radius: 6px; padding: 20px; width: min(520px, 92vw); box-shadow: 0 16px 48px rgba(0,0,0,.18); }
 .modal-card.small { width: min(420px, 92vw); }
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .modal-head h3 { margin: 0; font-size: 16px; }
@@ -510,9 +588,28 @@ onMounted(loadAll)
 /* buttons */
 .btn { padding: 6px 14px; border: 1px solid var(--line, #d0d0d0); background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; }
 .btn:hover { border-color: #b0b0b0; }
-.btn.primary { background: #0f766e; color: #fff; border-color: #0f766e; }
-.btn.primary:hover { background: #d93f00; border-color: #d93f00; }
+.btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+.btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
 .btn.danger { color: #c0392b; border-color: rgba(192,57,43,.3); }
 .btn.small { padding: 4px 10px; font-size: 12px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .user-mgmt-page {
+    gap: 12px;
+  }
+
+  .user-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .user-v4-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
+  .ov-card.plan-dist {
+    grid-column: auto;
+  }
+}
 </style>
