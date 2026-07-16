@@ -249,6 +249,7 @@
               <th>金额</th>
               <th>周期</th>
               <th>状态</th>
+              <th>付款凭证</th>
               <th>有效期</th>
               <th>创建时间</th>
               <th>操作</th>
@@ -256,7 +257,7 @@
           </thead>
           <tbody>
             <tr v-if="orders.length === 0">
-              <td colspan="9" class="empty-cell">暂无订单</td>
+              <td colspan="10" class="empty-cell">暂无订单</td>
             </tr>
             <tr v-for="order in orders" :key="order.id">
               <td><code>{{ order.orderNo }}</code></td>
@@ -265,9 +266,23 @@
               <td>{{ money(order.amountCents) }}</td>
               <td>{{ order.durationDays }} 天</td>
               <td><span :class="['status-pill', order.status]">{{ statusText(order.status) }}</span></td>
+              <td>
+                <span :class="['proof-pill', proofStatus(order)]" :title="proofTitle(order)">
+                  {{ proofStatusText(order) }}
+                </span>
+              </td>
               <td>{{ fmt(order.expireTime) }}</td>
               <td>{{ fmt(order.createdTime) }}</td>
-              <td>
+              <td class="order-actions">
+                <button
+                  v-if="order.status === 'pending' && order.amountCents > 0"
+                  class="billing-btn small primary"
+                  type="button"
+                  :disabled="orderBusy"
+                  @click="openPaymentProof(order)"
+                >
+                  {{ order.paymentProof ? '更新凭证' : '提交凭证' }}
+                </button>
                 <button
                   v-if="order.status === 'pending'"
                   class="billing-btn small"
@@ -284,11 +299,59 @@
         </table>
       </div>
     </n-card>
+
+    <div v-if="paymentProofTarget" class="billing-modal-mask" @click.self="closePaymentProof">
+      <div class="billing-modal-card">
+        <div class="billing-modal-head">
+          <div>
+            <h3>提交付款凭证</h3>
+            <p>{{ paymentProofTarget.orderNo }} · 应付 {{ money(paymentProofTarget.amountCents) }}</p>
+          </div>
+          <button type="button" aria-label="关闭" @click="closePaymentProof">×</button>
+        </div>
+        <div class="proof-form">
+          <label>
+            <span>实付金额（元）</span>
+            <input v-model.trim="paymentProofForm.paidAmountYuan" type="number" min="0.01" step="0.01" />
+          </label>
+          <label>
+            <span>付款时间</span>
+            <input v-model="paymentProofForm.paidAt" type="datetime-local" />
+          </label>
+          <label>
+            <span>支付渠道</span>
+            <input v-model.trim="paymentProofForm.channel" placeholder="支付宝 / 微信 / 银行转账" />
+          </label>
+          <label>
+            <span>付款人</span>
+            <input v-model.trim="paymentProofForm.payerName" placeholder="付款账户名或昵称" />
+          </label>
+          <label class="wide">
+            <span>交易单号</span>
+            <input v-model.trim="paymentProofForm.transactionNo" placeholder="转账流水号 / 交易号" />
+          </label>
+          <label class="wide">
+            <span>凭证图片 URL</span>
+            <input v-model.trim="paymentProofForm.proofUrl" placeholder="https://..." />
+          </label>
+          <label class="wide">
+            <span>备注</span>
+            <textarea v-model.trim="paymentProofForm.remark" rows="3" placeholder="补充说明，例如付款账号后四位"></textarea>
+          </label>
+          <div class="proof-actions">
+            <button class="billing-btn" type="button" @click="closePaymentProof">取消</button>
+            <button class="billing-btn primary" type="button" :disabled="paymentProofBusy" @click="submitPaymentProof">
+              {{ paymentProofBusy ? '提交中...' : '提交凭证' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { NCard } from 'naive-ui'
 import { friendlyError } from '../utils/friendlyError.js'
 import {
@@ -301,6 +364,7 @@ import {
   listMyUsageDaily,
   listBillingOrders,
   previewBillingCoupon,
+  submitBillingPaymentProof,
 } from '../api/billing.js'
 
 const state = ref(null)
@@ -315,6 +379,17 @@ const durationDays = ref(30)
 const couponCode = ref('')
 const couponPreview = ref(null)
 const couponBusy = ref('')
+const paymentProofTarget = ref(null)
+const paymentProofBusy = ref(false)
+const paymentProofForm = reactive({
+  paidAmountYuan: '',
+  paidAt: '',
+  channel: '',
+  payerName: '',
+  transactionNo: '',
+  proofUrl: '',
+  remark: '',
+})
 const notice = ref('')
 const noticeType = ref('success')
 
@@ -342,6 +417,45 @@ function fmt(value) {
 
 function money(cents) {
   return `¥${(Number(cents || 0) / 100).toFixed(2)}`
+}
+
+function yuanToCents(value) {
+  return Math.round(Number(value || 0) * 100)
+}
+
+function centsToYuan(value) {
+  return (Number(value || 0) / 100).toFixed(2)
+}
+
+function toDatetimeLocal(value) {
+  if (!value) return ''
+  return String(value).replace('T', ' ').slice(0, 16).replace(' ', 'T')
+}
+
+function proofStatus(order) {
+  return order?.paymentProof?.status || 'none'
+}
+
+function proofStatusText(order) {
+  const map = {
+    submitted: '待核对',
+    confirmed: '已确认',
+    rejected: '已退回',
+    none: '未提交',
+  }
+  return map[proofStatus(order)] || '未提交'
+}
+
+function proofTitle(order) {
+  const proof = order?.paymentProof
+  if (!proof) return '未提交付款凭证'
+  return [
+    proof.channel ? `渠道：${proof.channel}` : '',
+    proof.payerName ? `付款人：${proof.payerName}` : '',
+    proof.transactionNo ? `交易号：${proof.transactionNo}` : '',
+    proof.paidAmountCents ? `实付：${money(proof.paidAmountCents)}` : '',
+    proof.remark ? `备注：${proof.remark}` : '',
+  ].filter(Boolean).join('\n') || '已提交付款凭证'
 }
 
 function clearCouponPreview() {
@@ -447,6 +561,52 @@ async function previewCoupon(plan) {
     flash(friendlyError(error, '优惠码不可用'), 'error')
   } finally {
     couponBusy.value = ''
+  }
+}
+
+function openPaymentProof(order) {
+  if (!order) return
+  const proof = order.paymentProof || {}
+  paymentProofTarget.value = order
+  paymentProofForm.paidAmountYuan = centsToYuan(proof.paidAmountCents || order.amountCents)
+  paymentProofForm.paidAt = toDatetimeLocal(proof.paidAt)
+  paymentProofForm.channel = proof.channel || ''
+  paymentProofForm.payerName = proof.payerName || ''
+  paymentProofForm.transactionNo = proof.transactionNo || ''
+  paymentProofForm.proofUrl = proof.proofUrl || ''
+  paymentProofForm.remark = proof.remark || ''
+}
+
+function closePaymentProof() {
+  paymentProofTarget.value = null
+  paymentProofBusy.value = false
+}
+
+async function submitPaymentProof() {
+  if (!paymentProofTarget.value || paymentProofBusy.value) return
+  const paidAmountCents = yuanToCents(paymentProofForm.paidAmountYuan)
+  if (paidAmountCents <= 0) {
+    flash('请填写有效的实付金额', 'error')
+    return
+  }
+  paymentProofBusy.value = true
+  try {
+    await submitBillingPaymentProof(paymentProofTarget.value.id, {
+      paidAmountCents,
+      paidAt: paymentProofForm.paidAt || null,
+      channel: paymentProofForm.channel,
+      payerName: paymentProofForm.payerName,
+      transactionNo: paymentProofForm.transactionNo,
+      proofUrl: paymentProofForm.proofUrl,
+      remark: paymentProofForm.remark,
+    })
+    flash('付款凭证已提交')
+    closePaymentProof()
+    await loadAll()
+  } catch (error) {
+    flash(friendlyError(error, '提交付款凭证失败'), 'error')
+  } finally {
+    paymentProofBusy.value = false
   }
 }
 
@@ -884,6 +1044,12 @@ onMounted(loadAll)
   cursor: not-allowed;
 }
 
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -962,6 +1128,114 @@ onMounted(loadAll)
   color: #92400e;
 }
 
+.proof-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.proof-pill.submitted {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.proof-pill.confirmed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.proof-pill.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.billing-modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .36);
+}
+
+.billing-modal-card {
+  width: min(680px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, .22);
+  padding: 18px;
+}
+
+.billing-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.billing-modal-head h3 {
+  margin: 0 0 4px;
+  color: #111827;
+  font-size: 17px;
+}
+
+.billing-modal-head p {
+  margin: 0;
+}
+
+.billing-modal-head button {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.proof-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.proof-form label {
+  display: grid;
+  gap: 6px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.proof-form .wide,
+.proof-actions {
+  grid-column: 1 / -1;
+}
+
+.proof-form input,
+.proof-form textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  padding: 8px 9px;
+}
+
+.proof-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 980px) {
   .billing-grid {
     grid-template-columns: 1fr;
@@ -981,6 +1255,10 @@ onMounted(loadAll)
   }
 
   .audit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .proof-form {
     grid-template-columns: 1fr;
   }
 }

@@ -267,6 +267,7 @@ def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
 
 def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None) -> dict:
     meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
+    proof = meta.get("paymentProof") if isinstance(meta.get("paymentProof"), dict) else None
     return {
         "id": int(order.id),
         "orderNo": order.order_no,
@@ -283,6 +284,7 @@ def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None
         "status": order.status,
         "paymentProvider": order.payment_provider or "",
         "paymentMethod": order.payment_method or "",
+        "paymentProof": proof,
         "paidTime": _dt(order.paid_time),
         "closedTime": _dt(order.closed_time),
         "expireTime": _dt(order.expire_time),
@@ -1069,9 +1071,19 @@ async def mark_billing_order_paid(
         return ResultObject.success(_billing_order_payload(order, user), message="订单已是已支付状态")
     if order.status != "pending":
         raise HTTPException(status_code=400, detail="当前订单状态不能确认支付")
+    meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
+    proof = meta.get("paymentProof") if isinstance(meta.get("paymentProof"), dict) else None
+    if proof:
+        proof = {
+            **proof,
+            "status": "confirmed",
+            "reviewedAt": datetime.utcnow().isoformat(),
+            "reviewedBy": str(current_user.get("username") or "admin"),
+        }
     order.metadata_json = {
-        **(order.metadata_json or {}),
+        **meta,
         "adminPaidNote": req.note or "",
+        **({"paymentProof": proof} if proof else {}),
     }
     try:
         await activate_order(db, order, operator=str(current_user.get("username") or "admin"))
@@ -1105,6 +1117,18 @@ async def close_admin_billing_order(
             operator=str(current_user.get("username") or "admin"),
             reason=req.reason or "admin_close",
         )
+        meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
+        proof = meta.get("paymentProof") if isinstance(meta.get("paymentProof"), dict) else None
+        if proof:
+            order.metadata_json = {
+                **meta,
+                "paymentProof": {
+                    **proof,
+                    "status": "rejected",
+                    "reviewedAt": datetime.utcnow().isoformat(),
+                    "reviewedBy": str(current_user.get("username") or "admin"),
+                },
+            }
         await db.commit()
         await db.refresh(order)
         user = (

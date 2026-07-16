@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 EVENT_BILLING_ORDER_PENDING = "账单待支付"
 EVENT_BILLING_ORDER_PAID = "账单支付确认"
 EVENT_BILLING_ORDER_CLOSED = "账单订单关闭"
+EVENT_BILLING_PAYMENT_PROOF = "付款凭证提交"
 EVENT_SUBSCRIPTION_EXPIRING = "套餐到期提醒"
 EVENT_SUBSCRIPTION_EXPIRED = "套餐已到期"
 EVENT_AI_QUOTA_WARNING = "AI 额度预警"
@@ -229,6 +230,37 @@ async def notify_billing_order_closed(
         reference_type="billing_order_closed",
         reference_id=int(order.id),
         priority=1,
+        context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
+    )
+
+
+async def notify_billing_payment_proof_submitted(
+    db: AsyncSession,
+    order: AppBillingOrder,
+    *,
+    proof: dict[str, Any],
+) -> None:
+    user = await _load_user(db, int(order.user_id))
+    username = user.username if user else f"#{order.user_id}"
+    title = "客户已提交付款凭证"
+    content = (
+        f"用户：{username}\n"
+        f"订单号：{order.order_no}\n"
+        f"套餐：{order.plan_code}\n"
+        f"应付金额：{_money(order.amount_cents)}\n"
+        f"实付金额：{_money(proof.get('paidAmountCents'))}\n"
+        f"支付渠道：{proof.get('channel') or '未填写'}\n"
+        f"交易单号：{proof.get('transactionNo') or '未填写'}\n"
+        "请在后台核对到账后确认生效。"
+    )
+    await _notify_once(
+        db,
+        event=EVENT_BILLING_PAYMENT_PROOF,
+        title=title,
+        content=content,
+        reference_type="billing_payment_proof",
+        reference_id=int(order.id),
+        priority=3,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
     )
 

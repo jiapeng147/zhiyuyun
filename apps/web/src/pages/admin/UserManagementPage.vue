@@ -237,12 +237,12 @@
             <table class="table billing-admin-table">
               <thead>
                 <tr>
-                  <th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>有效期</th><th>操作</th>
+                  <th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>付款凭证</th><th>有效期</th><th>操作</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="billingOrders.length === 0">
-                  <td colspan="7" class="empty-cell">暂无订单</td>
+                  <td colspan="8" class="empty-cell">暂无订单</td>
                 </tr>
                 <tr v-for="o in billingOrders" :key="o.id">
                   <td><code>{{ o.orderNo }}</code></td>
@@ -250,6 +250,9 @@
                   <td>{{ o.planCode }}</td>
                   <td>¥{{ (o.amountCents / 100).toFixed(2) }}</td>
                   <td><span :class="['status-pill', o.status]">{{ orderStatus(o.status) }}</span></td>
+                  <td class="proof-cell" :title="paymentProofTitle(o)">
+                    <span :class="['proof-pill', paymentProofStatus(o)]">{{ paymentProofText(o) }}</span>
+                  </td>
                   <td class="dim">{{ fmt(o.expireTime) }}</td>
                   <td class="actions">
                     <button
@@ -1227,6 +1230,31 @@ function orderStatus(status) {
   return ({ pending: '待确认', paid: '已生效', closed: '已关闭', refunded: '已退款' })[status] || status || '未知'
 }
 
+function paymentProofStatus(order) {
+  return order?.paymentProof?.status || 'none'
+}
+
+function paymentProofText(order) {
+  const proof = order?.paymentProof
+  if (!proof) return '未提交'
+  const statusText = ({ submitted: '待核对', confirmed: '已确认', rejected: '已退回' })[proof.status] || '已提交'
+  const amount = proof.paidAmountCents ? money(proof.paidAmountCents) : ''
+  return amount ? `${statusText} ${amount}` : statusText
+}
+
+function paymentProofTitle(order) {
+  const proof = order?.paymentProof
+  if (!proof) return '客户尚未提交付款凭证'
+  return [
+    proof.channel ? `渠道：${proof.channel}` : '',
+    proof.payerName ? `付款人：${proof.payerName}` : '',
+    proof.transactionNo ? `交易号：${proof.transactionNo}` : '',
+    proof.paidAmountCents ? `实付：${money(proof.paidAmountCents)}` : '',
+    proof.proofUrl ? `凭证：${proof.proofUrl}` : '',
+    proof.remark ? `备注：${proof.remark}` : '',
+  ].filter(Boolean).join('\n') || '客户已提交付款凭证'
+}
+
 function subscriptionStatus(status) {
   return ({ active: '生效中', replaced: '已替换', canceled: '已取消', expired: '已过期' })[status] || status || '未知'
 }
@@ -1406,6 +1434,11 @@ onMounted(loadAll)
 .status-pill.pending { background: #fef3c7; color: #92400e; }
 .status-pill.replaced,
 .status-pill.closed { background: #f1f5f9; color: #64748b; }
+.proof-cell { min-width: 110px; }
+.proof-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 12px; }
+.proof-pill.submitted { background: #dbeafe; color: #1d4ed8; }
+.proof-pill.confirmed { background: #dcfce7; color: #15803d; }
+.proof-pill.rejected { background: #fee2e2; color: #b91c1c; }
 
 /* 套餐管理 */
 .plan-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }

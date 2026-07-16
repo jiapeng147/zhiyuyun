@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -25,6 +27,7 @@ from ....services.billing import (
 from ..deps import get_current_user
 
 router = APIRouter(prefix="/billing", tags=["billing"])
+logger = logging.getLogger(__name__)
 
 
 class CreateBillingOrderReqDTO(CamelModel):
@@ -38,6 +41,16 @@ class CloseBillingOrderReqDTO(CamelModel):
     reason: Optional[str] = "user_cancel"
 
 
+class SubmitPaymentProofReqDTO(CamelModel):
+    paid_amount_cents: Optional[int] = None
+    paid_at: Optional[str] = ""
+    channel: Optional[str] = ""
+    payer_name: Optional[str] = ""
+    transaction_no: Optional[str] = ""
+    proof_url: Optional[str] = ""
+    remark: Optional[str] = ""
+
+
 class PreviewCouponReqDTO(CamelModel):
     plan_code: str
     duration_days: int = 30
@@ -48,8 +61,23 @@ def _dt(value) -> str:
     return value.isoformat() if value else ""
 
 
+def _clean_text(value: object, limit: int = 500) -> str:
+    return str(value or "").strip()[:limit]
+
+
+def _parse_paid_at(value: str | None) -> str:
+    raw = _clean_text(value, 64)
+    if not raw:
+        return ""
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).replace(tzinfo=None).isoformat()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="付款时间格式无效") from exc
+
+
 def _order_payload(order: AppBillingOrder) -> dict:
     meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
+    proof = meta.get("paymentProof") if isinstance(meta.get("paymentProof"), dict) else None
     return {
         "id": int(order.id),
         "orderNo": order.order_no,
@@ -64,6 +92,7 @@ def _order_payload(order: AppBillingOrder) -> dict:
         "status": order.status,
         "paymentProvider": order.payment_provider or "",
         "paymentMethod": order.payment_method or "",
+        "paymentProof": proof,
         "paidTime": _dt(order.paid_time),
         "closedTime": _dt(order.closed_time),
         "expireTime": _dt(order.expire_time),
@@ -209,6 +238,56 @@ async def create_my_billing_order(
     except BillingError as exc:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/orders/{order_id}/payment-proof", response_model=ResultObject[dict])
+async def submit_payment_proof(
+    order_id: int,
+    req: SubmitPaymentProofReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    uid = current_uid(current_user)
+    order = (
+        await db.execute(
+            select(AppBillingOrder).where(
+                AppBillingOrder.id == order_id,
+                AppBillingOrder.user_id == uid,
+            )
+        )
+    ).scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    if order.status != "pending":
+        raise HTTPException(status_code=400, detail="只有待确认订单可以提交付款凭证")
+    amount = int(req.paid_amount_cents or order.amount_cents or 0)
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="付款金额必须大于 0")
+    now = datetime.utcnow().isoformat()
+    meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
+    proof = {
+        "status": "submitted",
+        "paidAmountCents": amount,
+        "paidAt": _parse_paid_at(req.paid_at),
+        "channel": _clean_text(req.channel, 80),
+        "payerName": _clean_text(req.payer_name, 120),
+        "transactionNo": _clean_text(req.transaction_no, 160),
+        "proofUrl": _clean_text(req.proof_url, 1000),
+        "remark": _clean_text(req.remark, 1000),
+        "submittedAt": now,
+        "updatedAt": now,
+    }
+    order.metadata_json = {**meta, "paymentProof": proof}
+    await db.flush()
+    try:
+        from ....services.billing_notifications import notify_billing_payment_proof_submitted
+
+        await notify_billing_payment_proof_submitted(db, order, proof=proof)
+    except Exception:
+        logger.warning("payment proof notification failed", exc_info=True)
+    await db.commit()
+    await db.refresh(order)
+    return ResultObject.success(_order_payload(order), message="付款凭证已提交，等待管理员核对")
 
 
 @router.post("/orders/{order_id}/close", response_model=ResultObject[dict])

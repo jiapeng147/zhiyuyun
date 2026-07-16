@@ -8,4 +8,5 @@ export const listMyQuotaEvents = (params = {}) => request.get('/billing/quota-ev
 export const listBillingOrders = (params = {}) => request.get('/billing/orders', { params })
 export const previewBillingCoupon = (data) => request.post('/billing/coupons/preview', data)
 export const createBillingOrder = (data) => request.post('/billing/orders', data)
+export const submitBillingPaymentProof = (id, data) => request.post(`/billing/orders/${id}/payment-proof`, data)
 export const closeBillingOrder = (id, data = {}) => request.post(`/billing/orders/${id}/close`, data)
