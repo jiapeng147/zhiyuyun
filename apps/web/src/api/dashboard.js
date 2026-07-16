@@ -16,5 +16,5 @@ export function getDashboardSalesTrend(params) {
   })
 }
 
-// 向后兼容：DashboardPage.vue 仍使用 getDashboardStats
+// 向后兼容：旧调用名保留给数据面板和移动端统计。
 export const getDashboardStats = getDashboardSummary

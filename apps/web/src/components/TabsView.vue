@@ -16,7 +16,7 @@
       </n-breadcrumb>
 
       <div class="tabs-view-actions">
-        <n-button quaternary size="small" title="返回导航面板" @click="$emit('navigate', defaultKey)">
+        <n-button quaternary size="small" title="返回默认页" @click="$emit('navigate', defaultKey)">
           <template #icon>
             <n-icon><HomeOutline /></n-icon>
           </template>
@@ -66,7 +66,7 @@ const props = defineProps({
   active: { type: String, required: true },
   tabs: { type: Array, default: () => [] },
   breadcrumbItems: { type: Array, default: () => [] },
-  defaultKey: { type: String, default: 'dashboard' },
+  defaultKey: { type: String, default: 'data' },
 })
 
 const emit = defineEmits(['navigate', 'close', 'close-others', 'close-all'])

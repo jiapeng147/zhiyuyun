@@ -41,7 +41,7 @@ function scheduleReconnect(onEvent, onStatus, generation, token) {
     onStatus?.('disconnected')
     return
   }
-  // 超过最大重连次数则停止重连，避免控制台无限堆积错误日志
+  // 超过最大重连次数则停止重连，避免浏览器日志无限堆积。
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
     if (import.meta.env.DEV) {
       console.warn(`[SSE] 已达最大重连次数(${MAX_RECONNECT_ATTEMPTS})，停止重连`)

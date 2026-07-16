@@ -7,7 +7,7 @@
       :description="description"
     >
       <template #actions>
-        <AppButton type="primary" @click="emit('navigate', 'dashboard')">返回导航面板</AppButton>
+        <AppButton type="primary" @click="emit('navigate', 'data')">返回数据面板</AppButton>
         <AppButton @click="emit('navigate', 'settings-about')">查看使用说明</AppButton>
       </template>
     </EmptyState>

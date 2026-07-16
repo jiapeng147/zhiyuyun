@@ -4,7 +4,7 @@
       <n-icon><CloseOutline /></n-icon>
     </button>
 
-    <button class="naive-admin-logo" type="button" @click="$emit('navigate', 'dashboard')">
+    <button class="naive-admin-logo" type="button" @click="$emit('navigate', 'data')">
       <span class="naive-admin-logo-mark">ZY</span>
       <span v-if="!collapsed" class="naive-admin-logo-text">
         <strong>智鱼云</strong>

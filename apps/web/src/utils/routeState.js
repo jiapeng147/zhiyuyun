@@ -1,4 +1,4 @@
-export const DEFAULT_PAGE = 'dashboard'
+export const DEFAULT_PAGE = 'data'
 export const NOT_FOUND_PAGE = 'not-found'
 
 function safeDecode(value) {
@@ -19,9 +19,10 @@ export function extractHashPage(hash, defaultPage = DEFAULT_PAGE) {
 
 export function resolveHashRoute(hash, isKnownPage, defaultPage = DEFAULT_PAGE) {
   const requestedPage = extractHashPage(hash, defaultPage)
-  const known = Boolean(isKnownPage?.(requestedPage))
+  const normalizedPage = requestedPage === 'dashboard' ? defaultPage : requestedPage
+  const known = Boolean(isKnownPage?.(normalizedPage))
   return {
-    page: known ? requestedPage : NOT_FOUND_PAGE,
+    page: known ? normalizedPage : NOT_FOUND_PAGE,
     requestedPage,
     known,
   }

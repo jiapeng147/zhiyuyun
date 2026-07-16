@@ -2,7 +2,6 @@ export const navGroups = [
   {
     title: '概览',
     items: [
-      { key: 'dashboard', label: '导航面板', icon: 'dashboard' },
       { key: 'data', label: '数据面板', icon: 'data' },
     ],
   },
@@ -66,7 +65,6 @@ export const settingsTabs = [
 
 export const pageTitles = {
   'not-found': ['页面不存在', '该链接可能已失效、地址有误或对应功能已下线'],
-  dashboard: ['导航面板', '系统导航中心，帮助你快速进入常用功能'],
   data: ['数据面板', '按需查看运营数据、发货情况与业务趋势'],
   'admin-users': ['用户管理', '管理注册用户、套餐与自助注册开关（仅超级管理员）'],
   accounts: ['闲鱼账号', '管理账号状态、登录情况与连接健康度'],

@@ -1,7 +1,7 @@
 <template>
   <div :class="['auth-shell-v3', `auth-shell-${pageKey}`]">
     <header class="auth-v3-topbar">
-      <button type="button" class="auth-v3-brand" @click="emit('navigate', 'dashboard')">
+      <button type="button" class="auth-v3-brand" @click="emit('navigate', 'data')">
         <span>ZY</span>
         <strong>智鱼云</strong>
       </button>
@@ -56,7 +56,7 @@
         <div class="auth-v3-panel-head">
           <span class="auth-v3-brand-dot">ZY</span>
           <div>
-            <h2>{{ pageKey === 'register' ? '创建账号' : '登录控制台' }}</h2>
+            <h2>{{ pageKey === 'register' ? '创建账号' : '登录后台' }}</h2>
             <p>{{ pageKey === 'register' ? '使用邮箱验证码开通账户' : '进入你的运营工作台' }}</p>
           </div>
         </div>

@@ -47,7 +47,7 @@
           <button class="m-menu-btn" type="button" aria-label="打开菜单" @click="mobileNavOpen = true">
             <svg viewBox="0 0 24 24" class="ui-icon"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
+          <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate(defaultPage)" />
           <button
             v-if="mobileDesktopOverride"
             class="m-return-lite"
@@ -225,13 +225,11 @@ const asyncPage = loader => defineAsyncComponent({
 })
 
 const LoginPage = asyncPage(() => import('./pages/LoginPage.vue'))
-const DashboardPage = asyncPage(() => import('./pages/DashboardPage.vue'))
 const SettingsPage = asyncPage(() => import('./pages/SettingsPage.vue'))
 
 const pageMap = {
   login: LoginPage,
   register: asyncPage(() => import('./pages/RegisterPage.vue')),
-  dashboard: DashboardPage,
   data: asyncPage(() => import('./pages/DataPage.vue')),
   accounts: asyncPage(() => import('./pages/AccountsPage.vue')),
   connections: asyncPage(() => import('./pages/ConnectionsPage.vue')),
@@ -268,7 +266,6 @@ const settingsKeys = [
 const authPages = ['login', 'register']
 const defaultPage = DEFAULT_PAGE
 const mobileLitePages = new Set([
-  'dashboard',
   'data',
   'accounts',
   'products',
@@ -401,7 +398,7 @@ function onOnline() {
 }
 
 function navigate(key) {
-  const requested = key || defaultPage
+  const requested = key === 'dashboard' ? defaultPage : (key || defaultPage)
   const known = isKnownPage(requested)
   const next = known ? requested : NOT_FOUND_PAGE
   if (!isAuthed() && !authPages.includes(next)) {
@@ -426,7 +423,7 @@ function isTabRoute(key) {
 function routeTabLabel(key) {
   const meta = routeMetaMap.get(key)
   if (meta?.label) return meta.label
-  const rawTitle = (pageTitles[key] || pageTitles.dashboard)?.[0] || key
+  const rawTitle = (pageTitles[key] || pageTitles[defaultPage])?.[0] || key
   const segments = String(rawTitle).split('/').map((item) => item.trim()).filter(Boolean)
   return segments.at(-1) || rawTitle
 }
@@ -704,19 +701,19 @@ onBeforeUnmount(() => {
 
 const pageComponent = computed(() => {
   if (active.value === NOT_FOUND_PAGE) return NotFoundPage
-  return settingsKeys.includes(active.value) ? SettingsPage : (pageMap[active.value] || DashboardPage)
+  return settingsKeys.includes(active.value) ? SettingsPage : (pageMap[active.value] || pageMap[defaultPage])
 })
-const title = computed(() => (pageTitles[active.value] || pageTitles.dashboard)[0])
-const subtitle = computed(() => (pageTitles[active.value] || pageTitles.dashboard)[1])
+const title = computed(() => (pageTitles[active.value] || pageTitles[defaultPage])[0])
+const subtitle = computed(() => (pageTitles[active.value] || pageTitles[defaultPage])[1])
 const visitedTabs = computed(() => visitedTabKeys.value.map((key) => ({
   key,
   label: routeTabLabel(key),
   closable: key !== defaultPage,
 })))
 const breadcrumbItems = computed(() => {
-  if (active.value === defaultPage) return [{ label: '控制台' }]
+  if (active.value === defaultPage) return [{ label: routeTabLabel(defaultPage) }]
   const meta = routeMetaMap.get(active.value)
-  const items = [{ label: '控制台', key: defaultPage }]
+  const items = [{ label: routeTabLabel(defaultPage), key: defaultPage }]
   if (meta?.group && meta.group !== '概览') items.push({ label: meta.group })
   items.push({ label: meta?.label || routeTabLabel(active.value) })
   return items
