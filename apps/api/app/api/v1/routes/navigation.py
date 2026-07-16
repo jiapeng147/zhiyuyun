@@ -6,6 +6,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
+from ....core.tenancy import owned_account_id_subquery, current_uid, is_superadmin
 from ....core.redis_client import get_redis
 from ....core.response import ResultObject
 from ....models.entities import (
@@ -22,15 +23,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/navigation", tags=["navigation"])
 
 
-async def count_rows(db: AsyncSession, model) -> int:
+async def count_rows(db: AsyncSession, model, current_user=None) -> int:
     statement = select(func.count()).select_from(model)
     deleted_column = getattr(model, "deleted", None)
     if deleted_column is not None:
         statement = statement.where(deleted_column == 0)
-    # 商品表需进一步排除已退出账号的旧商品，保持前台统计与列表一致
-    if model is XianyuGoods:
-        valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
-        statement = statement.where(XianyuGoods.account_id.in_(valid_account_ids))
+    # 多租户: 账号本身按 owner; 挂 account_id 的表按 owner 的账号集合
+    if model is XianyuAccount:
+        if current_user is not None and not is_superadmin(current_user):
+            statement = statement.where(XianyuAccount.owner_user_id == current_uid(current_user))
+    elif getattr(model, "account_id", None) is not None:
+        statement = statement.where(model.account_id.in_(owned_account_id_subquery(current_user)))
     result = await db.execute(statement)
     return int(result.scalar() or 0)
 
@@ -40,7 +43,6 @@ async def get_navigation_overview(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
     try:
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         today_orders = await db.execute(
@@ -59,10 +61,10 @@ async def get_navigation_overview(
             )
         )
         return ResultObject.success({
-            "accountCount": await count_rows(db, XianyuAccount),
-            "goodsCount": await count_rows(db, XianyuGoods),
+            "accountCount": await count_rows(db, XianyuAccount, current_user),
+            "goodsCount": await count_rows(db, XianyuGoods, current_user),
             "todayOrderCount": int(today_orders.scalar() or 0),
-            "messageCount": await count_rows(db, XianyuConversation),
+            "messageCount": await count_rows(db, XianyuConversation, current_user),
             "pendingCount": int(pending_orders.scalar() or 0),
         })
     except Exception:

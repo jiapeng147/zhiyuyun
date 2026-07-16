@@ -7,6 +7,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
+from ....core.tenancy import owned_account_id_subquery
 from ....core.response import ResultObject
 from ....models.entities import AutoReplyRule, QuickReplyTemplate
 from ....services.ai_provider import _resolve_ai_config, generate_text, is_ai_configured
@@ -248,7 +249,7 @@ async def list_quick_reply_templates(
     db: AsyncSession = Depends(get_db),
     _: dict = Depends(get_current_user),
 ):
-    query = select(QuickReplyTemplate).where(QuickReplyTemplate.deleted == 0)
+    query = select(QuickReplyTemplate).where(QuickReplyTemplate.deleted == 0, QuickReplyTemplate.account_id.in_(owned_account_id_subquery(current_user)))
     if account_id is None:
         query = query.where(
             or_(QuickReplyTemplate.account_id.is_(None), QuickReplyTemplate.account_id == 0)
@@ -340,7 +341,7 @@ async def list_auto_reply_rules(
     db: AsyncSession = Depends(get_db),
     _: dict = Depends(get_current_user),
 ):
-    query = select(AutoReplyRule).where(AutoReplyRule.deleted == 0)
+    query = select(AutoReplyRule).where(AutoReplyRule.deleted == 0, AutoReplyRule.account_id.in_(owned_account_id_subquery(current_user)))
     if account_id is not None:
         query = query.where(AutoReplyRule.account_id == account_id)
 

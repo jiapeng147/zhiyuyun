@@ -17,7 +17,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.config import settings
-from ....core.tenancy import current_uid
+from ....core.tenancy import current_uid, owned_account_id_subquery
 from ....core.database import get_db
 from ....core.logging_security import redact_sensitive_text
 from ....core.response import ResultObject
@@ -3255,7 +3255,8 @@ async def compat_quick_reply_templates_list(
     from sqlalchemy import select
     result = await db.execute(
         select(QuickReplyTemplate).where(
-            QuickReplyTemplate.deleted == 0
+            QuickReplyTemplate.deleted == 0,
+            QuickReplyTemplate.account_id.in_(owned_account_id_subquery(current_user)),
         ).order_by(QuickReplyTemplate.sort_order.asc(), QuickReplyTemplate.id.asc())
     )
     items = result.scalars().all()
@@ -3432,7 +3433,8 @@ async def compat_auto_delivery_rules_list(
     from sqlalchemy import select
     result = await db.execute(
         select(DeliveryRule).where(
-            DeliveryRule.deleted == 0
+            DeliveryRule.deleted == 0,
+            DeliveryRule.account_id.in_(owned_account_id_subquery(current_user)),
         ).order_by(DeliveryRule.id.desc())
     )
     rules = result.scalars().all()

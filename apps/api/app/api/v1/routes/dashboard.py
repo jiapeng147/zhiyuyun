@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, cast, Date, or_
 from ....core.database import get_db
+from ....core.tenancy import owned_account_id_subquery, current_uid, is_superadmin
 from ....core.response import ResultObject
 from ....models.entities import (
     XianyuAccount, XianyuGoods, XianyuTradeOrder, XianyuMessage, DeliveryRecord
@@ -23,12 +24,12 @@ async def get_dashboard_stats(
 ):
     try:
         account_count_result = await db.execute(
-            select(func.count()).select_from(XianyuAccount).where(XianyuAccount.deleted == 0)
+            select(func.count()).select_from(XianyuAccount).where(XianyuAccount.deleted == 0, *( () if (current_user is None or is_superadmin(current_user)) else (XianyuAccount.owner_user_id == current_uid(current_user),) ))
         )
         account_count = account_count_result.scalar() or 0
 
         # 仅统计有效账号（deleted=0）的商品，已退出账号的旧商品不在前台展示
-        valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+        valid_account_ids = owned_account_id_subquery(current_user)
         goods_common_filters = (
             XianyuGoods.deleted == 0,
             XianyuGoods.account_id.in_(valid_account_ids),

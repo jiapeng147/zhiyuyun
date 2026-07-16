@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.camel import CamelModel
 from ....core.config import settings
 from ....core.database import get_db
+from ....core.tenancy import owned_account_id_subquery, current_uid, is_superadmin
 from ....core.response import ResultObject
 from ....core.security import request_client_ip
 from ....models.entities import (
@@ -29,15 +30,17 @@ class ChangeProfilePasswordReqDTO(CamelModel):
     new_password: str
 
 
-async def count_rows(db: AsyncSession, model) -> int:
+async def count_rows(db: AsyncSession, model, current_user=None) -> int:
     statement = select(func.count()).select_from(model)
     deleted_column = getattr(model, "deleted", None)
     if deleted_column is not None:
         statement = statement.where(deleted_column == 0)
-    # 商品表需进一步排除已退出账号的旧商品，保持前台统计与列表一致
-    if model is XianyuGoods:
-        valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
-        statement = statement.where(XianyuGoods.account_id.in_(valid_account_ids))
+    # 多租户: 账号本身按 owner; 挂 account_id 的表按 owner 的账号集合
+    if model is XianyuAccount:
+        if current_user is not None and not is_superadmin(current_user):
+            statement = statement.where(XianyuAccount.owner_user_id == current_uid(current_user))
+    elif getattr(model, "account_id", None) is not None:
+        statement = statement.where(model.account_id.in_(owned_account_id_subquery(current_user)))
     result = await db.execute(statement)
     return int(result.scalar() or 0)
 
@@ -47,10 +50,10 @@ async def get_profile_overview(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    account_count = await count_rows(db, XianyuAccount)
-    goods_count = await count_rows(db, XianyuGoods)
-    order_count = await count_rows(db, XianyuTradeOrder)
-    conversation_count = await count_rows(db, XianyuConversation)
+    account_count = await count_rows(db, XianyuAccount, current_user)
+    goods_count = await count_rows(db, XianyuGoods, current_user)
+    order_count = await count_rows(db, XianyuTradeOrder, current_user)
+    conversation_count = await count_rows(db, XianyuConversation, current_user)
 
     last_login_time = await load_setting_value(db, LAST_LOGIN_SETTING_KEY, "")
     last_security_update_time = await load_setting_value(db, LAST_SECURITY_UPDATE_SETTING_KEY, "")

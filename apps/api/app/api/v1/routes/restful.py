@@ -656,7 +656,7 @@ async def restful_get_messages(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        query = select(XianyuMessage).where(XianyuMessage.deleted == 0)
+        query = select(XianyuMessage).where(XianyuMessage.deleted == 0, XianyuMessage.account_id.in_(owned_account_id_subquery(current_user)))
         if account_id is not None:
             query = query.where(XianyuMessage.account_id == account_id)
         count_q = select(func.count()).select_from(query.subquery())
