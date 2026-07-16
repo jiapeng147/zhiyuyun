@@ -1,14 +1,32 @@
 <template>
-  <div class="grid wide-right" v-bind="$attrs">
-    <div>
-      <div class="alert-line">
+  <div class="accounts-page-v4" v-bind="$attrs">
+    <main class="accounts-v4-main">
+      <n-card class="accounts-v4-hero" :bordered="false">
+        <div class="accounts-v4-hero-copy">
+          <n-tag size="small" type="success" :bordered="false">Account Operations</n-tag>
+          <h2>闲鱼账号工作台</h2>
+          <p>
+            统一处理账号列表、扫码登录、Cookie 维护、资料刷新、WebSocket 状态与账号级策略。
+          </p>
+        </div>
+        <n-space class="accounts-v4-actions" :size="8" align="center">
+          <n-button type="primary" size="small" @click="openModal('scan')">扫码加账号</n-button>
+          <n-button size="small" @click="openModal('manual')">手动添加</n-button>
+          <n-button size="small" tertiary :loading="loading" @click="loadAccounts">刷新账号</n-button>
+        </n-space>
+      </n-card>
+
+      <n-alert class="accounts-v4-alert" type="info" :bordered="false">
         账号列表、手动添加、删除、资料刷新、WebSocket 状态与扫码登录均由当前部署的服务端处理。
         扫码前请确认这是你信任的部署；若服务不可用，页面会显示明确的不可用状态与重试入口。
+      </n-alert>
+
+      <div class="accounts-v4-notices">
+        <div v-if="error" class="global-notice error">{{ error }}</div>
+        <div v-if="accountListWarning" class="global-notice warning" role="status">{{ accountListWarning }}</div>
+        <div v-if="qrSuccessMsg" class="global-notice success">{{ qrSuccessMsg }}</div>
+        <div v-if="polishNotice.text" :class="['global-notice', polishNotice.type]">{{ polishNotice.text }}</div>
       </div>
-      <div v-if="error" class="global-notice error">{{ error }}</div>
-      <div v-if="accountListWarning" class="global-notice warning" role="status">{{ accountListWarning }}</div>
-      <div v-if="qrSuccessMsg" class="global-notice success">{{ qrSuccessMsg }}</div>
-      <div v-if="polishNotice.text" :class="['global-notice', polishNotice.type]">{{ polishNotice.text }}</div>
       <ItemPolishConflictCard
         v-if="activePolishConflict"
         :conflict="activePolishConflict"
@@ -16,25 +34,40 @@
         :refresh-message="activePolishConflictRefreshMessage"
         @refresh="refreshActivePolishConflict"
       />
-      <div class="grid stat-grid" style="grid-template-columns:repeat(5,1fr)">
-        <StatCard title="账号总数" :value="accountMetric(stats.total)" change="全部记录" icon="users" />
-        <StatCard title="正常账号" :value="accountMetric(stats.normal)" change="当前页" icon="account" color="green" />
-        <StatCard title="需验证" :value="accountMetric(stats.verify)" change="当前页" icon="shield" color="orange" />
-        <StatCard title="WS在线" :value="accountMetric(stats.wsOnline)" change="当前页已探测" icon="link" color="purple" />
-        <StatCard title="Cookie异常" :value="accountMetric(stats.cookieWarn)" change="当前页已确认" icon="opportunity" color="orange" />
-      </div>
-      <div class="toolbar">
-        <input v-model="keyword" class="input large" placeholder="搜索昵称 / UID / 备注" @keyup.enter="loadAccounts">
-        <select v-model="statusFilter" class="input" style="max-width:150px">
-          <option value="all">全部状态</option>
-          <option value="normal">正常</option>
-          <option value="verify">需验证</option>
-          <option value="cookieWarn">Cookie异常</option>
-          <option value="wsOnline">WS在线</option>
-        </select>
-        <AppButton :loading="loading" @click="loadAccounts">刷新</AppButton>
-      </div>
-      <CardPanel>
+
+      <section class="accounts-v4-stats">
+        <n-card
+          v-for="item in accountStatCards"
+          :key="item.key"
+          class="accounts-v4-stat"
+          :class="item.tone"
+          :bordered="false"
+        >
+          <span class="accounts-v4-stat-icon"><Icon :name="item.icon" /></span>
+          <n-statistic :label="item.title" :value="item.value" />
+          <small>{{ item.change }}</small>
+        </n-card>
+      </section>
+
+      <n-card class="accounts-v4-toolbar" :bordered="false">
+        <n-space :size="10" align="center" wrap>
+          <n-input
+            v-model:value="keyword"
+            clearable
+            class="accounts-v4-search"
+            placeholder="搜索昵称 / UID / 备注"
+            @keyup.enter="loadAccounts"
+          />
+          <n-select
+            v-model:value="statusFilter"
+            class="accounts-v4-filter"
+            :options="statusOptions"
+          />
+          <n-button :loading="loading" @click="loadAccounts">刷新</n-button>
+        </n-space>
+      </n-card>
+
+      <n-card class="accounts-v4-table-card" :bordered="false">
         <div v-if="accountsRefreshing" class="refresh-status" role="status" aria-live="polite">
           正在刷新账号列表，现有数据仍可查看。
         </div>
@@ -66,9 +99,9 @@
           </template>
         </BaseTable>
         <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
-      </CardPanel>
-    </div>
-    <div class="right-drawer">
+      </n-card>
+    </main>
+    <aside class="accounts-v4-side">
       <aside class="right-drawer account-detail-drawer">
   <div class="detail-title-row">
     <h3>账号详情</h3>
@@ -299,8 +332,8 @@
 
         <button
           type="button"
-          @click="openStrategyModal(selected)"
           title="求小红花配置在消息等待弹窗中"
+          @click="openStrategyModal(selected)"
         >
           <span>❀</span>
           求小红花
@@ -370,7 +403,7 @@
     请选择一个账号查看详情
   </div>
 </aside>
-    </div>
+    </aside>
   </div>
 
   <Teleport to="body">
@@ -727,7 +760,8 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import StatCard from '../components/StatCard.vue'; import CardPanel from '../components/CardPanel.vue'; import BaseTable from '../components/BaseTable.vue'; import Badge from '../components/Badge.vue'; import AppButton from '../components/AppButton.vue'; import Icon from '../components/Icon.vue'; import Pagination from '../components/Pagination.vue'; import EmptyState from '../components/EmptyState.vue'
+import { NAlert, NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import BaseTable from '../components/BaseTable.vue'; import Badge from '../components/Badge.vue'; import AppButton from '../components/AppButton.vue'; import Icon from '../components/Icon.vue'; import Pagination from '../components/Pagination.vue'; import EmptyState from '../components/EmptyState.vue'
 import { checkAccountAuth, deleteAccount, getAccounts, createAccountByCookie, refreshAccountProfile, updateAccountCookie, getAccountAutoRateConfig, saveAccountAutoRateConfig, getAccountStrategyConfig, saveAccountStrategyConfig } from '../api/accounts.js'
 import { startWebSocket, stopWebSocket, websocketStatus } from '../api/websocket.js'
 import { useDebouncedRef } from '../composables/useDebouncedRef.js'
@@ -774,9 +808,6 @@ const selectedWs = computed(() => wsMap[selected.value?.id] || {})
 const accountsRefreshing = computed(() => loading.value && dataAvailable.value === true)
 const accountsRequestGuard = createLatestRequestGuard()
 const WS_START_PHASES = new Set(['starting', 'refresh_token', 'connecting', 'registering', 'syncing', 'accepted', 'pending', 'recovering'])
-const WS_FAILURE_PHASES = new Set(['failed', 'error', 'stopped', 'cookie_expired'])
-const WS_STATUS_POLL_INTERVAL = 300
-const WS_STATUS_POLL_LIMIT = 10
 const selectedWsPending = computed(() => isWsPending(selected.value?.id))
 let qrTimer = null
 const qr = reactive({ loading:false, sessionId:'', qrUrl:'', status:'', message:'', mode:'create', accountId:null })
@@ -786,7 +817,6 @@ const qrSuccessMsg = ref('')
 const cookieEdit = reactive({ accountId: null, cookie: '' })
 const cookieEditError = ref('')
 const cookieEditSubmitting = ref(false)
-const batchAuthBusy = ref(false)
 const batchAuthError = ref('')
 const batchAuthSuccess = ref('')
 
@@ -1470,6 +1500,22 @@ const stats = computed(() => ({
   cookieWarn: accounts.value.filter(a => accountAuthState(a) === false).length
 }))
 
+const statusOptions = [
+  { label: '全部状态', value: 'all' },
+  { label: '正常', value: 'normal' },
+  { label: '需验证', value: 'verify' },
+  { label: 'Cookie异常', value: 'cookieWarn' },
+  { label: 'WS在线', value: 'wsOnline' },
+]
+
+const accountStatCards = computed(() => [
+  { key: 'total', title: '账号总数', value: accountMetric(stats.value.total), change: '全部记录', icon: 'users', tone: 'tone-blue' },
+  { key: 'normal', title: '正常账号', value: accountMetric(stats.value.normal), change: '当前页', icon: 'account', tone: 'tone-green' },
+  { key: 'verify', title: '需验证', value: accountMetric(stats.value.verify), change: '当前页', icon: 'shield', tone: 'tone-orange' },
+  { key: 'wsOnline', title: 'WS 在线', value: accountMetric(stats.value.wsOnline), change: '当前页已探测', icon: 'link', tone: 'tone-purple' },
+  { key: 'cookieWarn', title: 'Cookie 异常', value: accountMetric(stats.value.cookieWarn), change: '当前页已确认', icon: 'opportunity', tone: 'tone-orange' },
+])
+
 function accountMetric(value) {
   return dataAvailable.value === true ? value : '—'
 }
@@ -1937,6 +1983,202 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.accounts-page-v4 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.accounts-v4-main,
+.accounts-v4-side {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.accounts-v4-side {
+  position: sticky;
+  top: 118px;
+}
+
+.accounts-v4-hero,
+.accounts-v4-toolbar,
+.accounts-v4-table-card,
+.accounts-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.accounts-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.accounts-v4-hero-copy {
+  min-width: 0;
+}
+
+.accounts-v4-hero-copy h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.accounts-v4-hero-copy p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.accounts-v4-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.accounts-v4-alert {
+  border-radius: 6px;
+}
+
+.accounts-v4-notices {
+  display: grid;
+  gap: 8px;
+}
+
+.accounts-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.accounts-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.accounts-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accounts-v4-stat-icon :deep(.ui-icon) {
+  width: 19px;
+  height: 19px;
+}
+
+.accounts-v4-stat.tone-blue .accounts-v4-stat-icon {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.accounts-v4-stat.tone-green .accounts-v4-stat-icon {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.accounts-v4-stat.tone-orange .accounts-v4-stat-icon {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.accounts-v4-stat.tone-purple .accounts-v4-stat-icon {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.accounts-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.accounts-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.accounts-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.accounts-v4-toolbar :deep(.n-card__content),
+.accounts-v4-table-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.accounts-v4-search {
+  width: min(360px, 42vw);
+}
+
+.accounts-v4-filter {
+  width: 150px;
+}
+
+.accounts-v4-table-card {
+  overflow: hidden;
+}
+
+@media (max-width: 1500px) {
+  .accounts-v4-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1280px) {
+  .accounts-page-v4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-v4-side {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .accounts-page-v4,
+  .accounts-v4-main,
+  .accounts-v4-side {
+    gap: 12px;
+  }
+
+  .accounts-v4-hero :deep(.n-card__content) {
+    padding: 14px;
+    flex-direction: column;
+  }
+
+  .accounts-v4-hero-copy h2 {
+    font-size: 20px;
+  }
+
+  .accounts-v4-actions {
+    justify-content: flex-start;
+  }
+
+  .accounts-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-v4-search,
+  .accounts-v4-filter {
+    width: 100%;
+  }
+}
+
 .account-selector { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .account-selector-copy { min-width: 0; }
 .refresh-status {

@@ -14,6 +14,7 @@
 
     <n-scrollbar class="naive-admin-menu-scroll">
       <n-menu
+        class="naive-admin-menu"
         :value="activeMenuKey"
         :options="menuOptions"
         :collapsed="collapsed"

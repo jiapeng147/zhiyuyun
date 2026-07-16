@@ -175,7 +175,6 @@ textarea {
   width: 100% !important;
   padding: 0 18px !important;
   border: 0 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
   border-radius: 0 !important;
   background: transparent !important;
   color: #ffffff !important;
@@ -218,48 +217,78 @@ textarea {
 
 .naive-admin-menu-scroll {
   flex: 1 !important;
-  padding: 12px 8px !important;
+  padding: 8px 10px 12px !important;
 }
 
+.naive-admin-sider .naive-admin-menu,
 .naive-admin-sider .n-menu {
   background: transparent !important;
 }
 
-.naive-admin-sider .n-menu-item-content {
-  height: 42px !important;
-  margin: 2px 0 !important;
+.naive-admin-sider .naive-admin-menu .n-menu-item-content {
+  height: 40px !important;
+  margin: 1px 0 !important;
+  padding-right: 12px !important;
   border-radius: 4px !important;
   color: rgba(255, 255, 255, .74) !important;
   font-weight: 500 !important;
+  line-height: 40px !important;
+  transition: background .16s ease, color .16s ease !important;
 }
 
-.naive-admin-sider .n-menu-item-content:hover {
+.naive-admin-sider .naive-admin-menu .n-menu-item-content:hover {
   background: rgba(255, 255, 255, .08) !important;
   color: #fff !important;
 }
 
-.naive-admin-sider .n-menu-item-content--selected,
-.naive-admin-sider .n-menu-item-content--selected:hover {
+.naive-admin-sider .naive-admin-menu .n-menu-item-content--selected,
+.naive-admin-sider .naive-admin-menu .n-menu-item-content--selected:hover {
   background: var(--primary) !important;
   color: #fff !important;
 }
 
-.naive-admin-sider .n-menu-item-content-header,
-.naive-admin-sider .n-menu-item-content__icon {
+.naive-admin-sider .naive-admin-menu .n-menu-item-content-header {
+  min-width: 0 !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  line-height: 40px !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.naive-admin-sider .naive-admin-menu .n-menu-item-content__icon {
+  width: 20px !important;
+  min-width: 20px !important;
+  height: 40px !important;
+  margin-right: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   color: inherit !important;
 }
 
-.naive-admin-sider .n-menu-item-group-title {
-  height: 32px !important;
-  padding: 12px 14px 4px !important;
-  color: rgba(255, 255, 255, .38) !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
+.naive-admin-sider .naive-admin-menu .n-menu-item-group-title {
+  height: auto !important;
+  min-height: 22px !important;
+  padding: 14px 12px 5px !important;
+  color: rgba(255, 255, 255, .42) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+
+.naive-admin-sider .naive-admin-menu .n-menu-item-group:first-child .n-menu-item-group-title {
+  padding-top: 6px !important;
 }
 
 .naive-admin-sider-bottom {
   padding: 12px !important;
-  border-top: 1px solid rgba(255, 255, 255, .08) !important;
+  border-top: 0 !important;
   display: grid !important;
   gap: 10px !important;
 }
@@ -268,7 +297,7 @@ textarea {
   height: 50px !important;
   width: 100% !important;
   padding: 0 8px !important;
-  border: 1px solid rgba(255, 255, 255, .08) !important;
+  border: 0 !important;
   border-radius: 6px !important;
   background: rgba(255, 255, 255, .04) !important;
   color: #fff !important;
