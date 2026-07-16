@@ -64,7 +64,18 @@
         <Topbar v-else :user="currentUserInfo" :sse-status="displaySseStatus" @logout="handleLogout" @open-profile-center="openProfileCenter" />
       </n-layout-header>
       <n-layout-content class="main naive-real-content">
-        <PageHeader :title="title" :subtitle="subtitle">
+        <TabsView
+          v-if="!isMobile"
+          :active="active"
+          :tabs="visitedTabs"
+          :breadcrumb-items="breadcrumbItems"
+          :default-key="defaultPage"
+          @navigate="navigate"
+          @close="closeTab"
+          @close-others="closeOtherTabs"
+          @close-all="closeAllTabs"
+        />
+        <PageHeader :title="title" :subtitle="subtitle" :show-breadcrumb="isMobile">
           <div v-if="headerActions.length" class="head-actions">
             <AppButton
               v-for="action in headerActions"
@@ -100,13 +111,14 @@ import { computed, defineAsyncComponent, h, onBeforeUnmount, onMounted, ref, wat
 import { NConfigProvider, NDialogProvider, NLayout, NLayoutContent, NLayoutHeader, NLayoutSider, NMessageProvider } from 'naive-ui'
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
+import TabsView from './components/TabsView.vue'
 import PageHeader from './components/PageHeader.vue'
 import AppButton from './components/AppButton.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 import AppStatusCenter from './components/AppStatusCenter.vue'
 import MobileLite from './components/MobileLite.vue'
 import NotFoundPage from './pages/NotFoundPage.vue'
-import { pageTitles } from './data/nav.js'
+import { navGroups, pageTitles, settingsTabs } from './data/nav.js'
 import { logout as logoutApi } from './api/auth.js'
 import { currentUser } from './api/system.js'
 import { clearAuth, getCachedUsername, getToken, isAuthed, setAuth } from './utils/auth.js'
@@ -285,9 +297,21 @@ const isOnline = ref(navigator.onLine !== false)
 const isMobile = ref(false)
 const mobileNavOpen = ref(false)
 const mobileDesktopOverride = ref(readMobileDesktopOverride())
+const tabsStorageKey = 'xya_tabs_view'
 let noticeTimer = null
 let requestBusyTimer = null
 const pendingRequestIds = new Set()
+
+const routeMetaMap = new Map()
+for (const group of navGroups) {
+  for (const item of group.items || []) {
+    routeMetaMap.set(item.key, { group: group.title, label: item.label })
+  }
+}
+for (const tab of settingsTabs) {
+  routeMetaMap.set(tab.key, { group: '系统设置', label: tab.label })
+}
+routeMetaMap.set('profile', { group: '账户', label: '个人中心' })
 
 function showNotice(text, type = 'info', retry = null, source = null) {
   globalNotice.value = { ...(source || {}), text, type, retry }
@@ -395,6 +419,77 @@ function onSidebarNavigate(key) {
   navigate(key)
 }
 
+function isTabRoute(key) {
+  return Boolean(key) && isKnownPage(key) && !authPages.includes(key) && key !== NOT_FOUND_PAGE
+}
+
+function routeTabLabel(key) {
+  const meta = routeMetaMap.get(key)
+  if (meta?.label) return meta.label
+  const rawTitle = (pageTitles[key] || pageTitles.dashboard)?.[0] || key
+  const segments = String(rawTitle).split('/').map((item) => item.trim()).filter(Boolean)
+  return segments.at(-1) || rawTitle
+}
+
+function normalizeTabKeys(keys) {
+  const next = []
+  for (const key of [defaultPage, ...(keys || [])]) {
+    if (!isTabRoute(key) || next.includes(key)) continue
+    next.push(key)
+  }
+  return next
+}
+
+function readVisitedTabKeys(initialKey) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(tabsStorageKey) || '[]')
+    return normalizeTabKeys([...saved, initialKey])
+  } catch {
+    return normalizeTabKeys([initialKey])
+  }
+}
+
+const visitedTabKeys = ref(readVisitedTabKeys(active.value))
+
+function persistVisitedTabKeys(keys) {
+  try {
+    localStorage.setItem(tabsStorageKey, JSON.stringify(keys.filter((key) => key !== defaultPage)))
+  } catch {
+    // The tab list is a convenience feature; in-memory state is enough when storage is unavailable.
+  }
+}
+
+function syncVisitedTab(nextRoute) {
+  if (!isTabRoute(nextRoute)) return
+  const nextKeys = normalizeTabKeys([...visitedTabKeys.value, nextRoute])
+  visitedTabKeys.value = nextKeys
+  persistVisitedTabKeys(nextKeys)
+}
+
+function closeTab(key) {
+  if (key === defaultPage) return
+  const currentKeys = visitedTabKeys.value
+  const closedIndex = currentKeys.indexOf(key)
+  const nextKeys = normalizeTabKeys(currentKeys.filter((item) => item !== key))
+  visitedTabKeys.value = nextKeys
+  persistVisitedTabKeys(nextKeys)
+  if (active.value !== key) return
+  navigate(nextKeys[closedIndex] || nextKeys[closedIndex - 1] || defaultPage)
+}
+
+function closeOtherTabs() {
+  const nextKeys = normalizeTabKeys([defaultPage, active.value])
+  visitedTabKeys.value = nextKeys
+  persistVisitedTabKeys(nextKeys)
+}
+
+function closeAllTabs() {
+  const nextKeys = normalizeTabKeys([defaultPage])
+  visitedTabKeys.value = nextKeys
+  persistVisitedTabKeys(nextKeys)
+  if (active.value !== defaultPage) navigate(defaultPage)
+}
+
 function openProfileCenter() {
   navigate('profile')
 }
@@ -463,7 +558,10 @@ function onHash() {
   active.value = next
 }
 
-watch(active, clearRequestNoticeForRoute)
+watch(active, (nextRoute) => {
+  clearRequestNoticeForRoute(nextRoute)
+  syncVisitedTab(nextRoute)
+})
 
 async function loadCurrentUser() {
   if (!getToken()) return
@@ -610,6 +708,19 @@ const pageComponent = computed(() => {
 })
 const title = computed(() => (pageTitles[active.value] || pageTitles.dashboard)[0])
 const subtitle = computed(() => (pageTitles[active.value] || pageTitles.dashboard)[1])
+const visitedTabs = computed(() => visitedTabKeys.value.map((key) => ({
+  key,
+  label: routeTabLabel(key),
+  closable: key !== defaultPage,
+})))
+const breadcrumbItems = computed(() => {
+  if (active.value === defaultPage) return [{ label: '控制台' }]
+  const meta = routeMetaMap.get(active.value)
+  const items = [{ label: '控制台', key: defaultPage }]
+  if (meta?.group && meta.group !== '概览') items.push({ label: meta.group })
+  items.push({ label: meta?.label || routeTabLabel(active.value) })
+  return items
+})
 const shouldUseMobileLite = computed(() =>
   isMobile.value &&
   !mobileDesktopOverride.value &&
