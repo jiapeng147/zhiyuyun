@@ -24,45 +24,63 @@
     @force-desktop="enableMobileDesktopMode"
   />
 
-  <div v-else class="app-shell" :class="{ 'm-nav-open': mobileNavOpen, 'is-mobile': isMobile }">
-    <Sidebar :active="active" :user="currentUserInfo" :open="mobileNavOpen" @navigate="onSidebarNavigate" @close="mobileNavOpen = false" @logout="handleLogout" />
+  <n-layout
+    v-else
+    class="app-shell naive-real-layout"
+    :class="{ 'm-nav-open': mobileNavOpen, 'is-mobile': isMobile }"
+    :has-sider="!isMobile"
+  >
+    <n-layout-sider
+      v-if="!isMobile"
+      class="naive-real-sider"
+      :width="260"
+      :native-scrollbar="false"
+      bordered
+    >
+      <Sidebar :active="active" :user="currentUserInfo" :open="mobileNavOpen" @navigate="onSidebarNavigate" @close="mobileNavOpen = false" @logout="handleLogout" />
+    </n-layout-sider>
+    <Sidebar v-else :active="active" :user="currentUserInfo" :open="mobileNavOpen" @navigate="onSidebarNavigate" @close="mobileNavOpen = false" @logout="handleLogout" />
     <div v-if="isMobile && mobileNavOpen" class="m-nav-overlay" @click="mobileNavOpen = false"></div>
-    <main class="main">
-      <header v-if="isMobile" class="m-appbar">
-        <button class="m-menu-btn" type="button" aria-label="打开菜单" @click="mobileNavOpen = true">
-          <svg viewBox="0 0 24 24" class="ui-icon"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </button>
-        <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
-        <button
-          v-if="mobileDesktopOverride"
-          class="m-return-lite"
-          type="button"
-          aria-label="返回移动版"
-          @click="disableMobileDesktopMode"
-        >
-          返回移动版
-        </button>
-        <button class="m-appbar-user" type="button" aria-label="个人中心" @click="navigate('profile')">
-          <span class="avatar avatar-img small"></span>
-        </button>
-      </header>
-      <Topbar v-else :user="currentUserInfo" :sse-status="displaySseStatus" @logout="handleLogout" @open-profile-center="openProfileCenter" />
-      <PageHeader :title="title" :subtitle="subtitle">
-        <div v-if="headerActions.length" class="head-actions">
-          <AppButton
-            v-for="action in headerActions"
-            :key="action.text"
-            :type="action.type"
-            :disabled="action.disabled || pendingRequests > 0 || headerActionLocks.has(action.event)"
-            @click="onHeaderAction(action)"
+    <n-layout class="naive-real-body">
+      <n-layout-header class="naive-real-header" bordered>
+        <header v-if="isMobile" class="m-appbar">
+          <button class="m-menu-btn" type="button" aria-label="打开菜单" @click="mobileNavOpen = true">
+            <svg viewBox="0 0 24 24" class="ui-icon"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
+          <button
+            v-if="mobileDesktopOverride"
+            class="m-return-lite"
+            type="button"
+            aria-label="返回移动版"
+            @click="disableMobileDesktopMode"
           >
-{{ action.text }}
-</AppButton>
-        </div>
-      </PageHeader>
-      <component :is="pageComponent" :active="active" :user="currentUserInfo" :requested-route="requestedRoute" @navigate="navigate" />
-    </main>
-  </div>
+            返回移动版
+          </button>
+          <button class="m-appbar-user" type="button" aria-label="个人中心" @click="navigate('profile')">
+            <span class="avatar avatar-img small"></span>
+          </button>
+        </header>
+        <Topbar v-else :user="currentUserInfo" :sse-status="displaySseStatus" @logout="handleLogout" @open-profile-center="openProfileCenter" />
+      </n-layout-header>
+      <n-layout-content class="main naive-real-content">
+        <PageHeader :title="title" :subtitle="subtitle">
+          <div v-if="headerActions.length" class="head-actions">
+            <AppButton
+              v-for="action in headerActions"
+              :key="action.text"
+              :type="action.type"
+              :disabled="action.disabled || pendingRequests > 0 || headerActionLocks.has(action.event)"
+              @click="onHeaderAction(action)"
+            >
+              {{ action.text }}
+            </AppButton>
+          </div>
+        </PageHeader>
+        <component :is="pageComponent" :active="active" :user="currentUserInfo" :requested-route="requestedRoute" @navigate="navigate" />
+      </n-layout-content>
+    </n-layout>
+  </n-layout>
   <AppStatusCenter
     :online="isOnline"
     :notice="globalNotice"
@@ -79,7 +97,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { NConfigProvider, NDialogProvider, NMessageProvider } from 'naive-ui'
+import { NConfigProvider, NDialogProvider, NLayout, NLayoutContent, NLayoutHeader, NLayoutSider, NMessageProvider } from 'naive-ui'
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
 import PageHeader from './components/PageHeader.vue'
