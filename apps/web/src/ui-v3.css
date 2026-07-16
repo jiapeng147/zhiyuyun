@@ -92,21 +92,29 @@ textarea {
 .naive-real-body {
   min-width: 0 !important;
   min-height: 100vh !important;
+  width: calc(100% - var(--sidebar)) !important;
+  margin-left: var(--sidebar) !important;
   background: var(--admin-bg) !important;
 }
 
 .naive-real-sider {
-  height: 100vh !important;
-  position: sticky !important;
-  top: 0 !important;
-  left: 0 !important;
+  width: var(--sidebar) !important;
+  min-width: var(--sidebar) !important;
+  max-width: var(--sidebar) !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
   z-index: 50 !important;
   background: var(--admin-sider) !important;
   box-shadow: 2px 0 8px rgba(29, 35, 41, .05) !important;
+  overflow: hidden !important;
 }
 
 .naive-real-sider .n-layout-sider-scroll-container {
-  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  background: var(--admin-sider) !important;
 }
 
 .naive-real-header {
@@ -160,10 +168,11 @@ textarea {
   position: relative !important;
   inset: auto !important;
   width: 100% !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   box-shadow: none !important;
   z-index: auto !important;
+  overflow: hidden !important;
 }
 
 .sidebar-close {
@@ -217,6 +226,7 @@ textarea {
 
 .naive-admin-menu-scroll {
   flex: 1 !important;
+  min-height: 0 !important;
   padding: 8px 10px 12px !important;
 }
 
@@ -1786,6 +1796,11 @@ table tbody tr:last-child td {
     width: 100% !important;
     margin-left: 0 !important;
     padding: 0 14px 24px !important;
+  }
+
+  .naive-real-body {
+    width: 100% !important;
+    margin-left: 0 !important;
   }
 
   .topbar,
