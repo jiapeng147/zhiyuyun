@@ -1,31 +1,55 @@
 <template>
-  <aside class="config-nav">
+  <aside class="config-nav naive-admin-config-nav">
     <div class="config-nav-head">
       <span>系统设置</span>
       <p>系统配置 / 高德地图 / 模型配置 / RAG 知识库</p>
     </div>
 
-    <div class="config-nav-list">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        :class="['config-link', { active: active === tab.key }]"
-        @click="$emit('navigate', tab.key)"
-      >
-        <span><Icon :name="tab.icon" /></span>
-        {{ tab.label }}
-      </button>
-    </div>
+    <n-menu
+      class="config-nav-list"
+      :value="active"
+      :options="menuOptions"
+      :indent="12"
+      @update:value="key => emit('navigate', key)"
+    />
   </aside>
 </template>
 
 <script setup>
+import { computed, h } from 'vue'
+import { NIcon, NMenu } from 'naive-ui'
+import {
+  BusinessOutline,
+  ChatbubbleEllipsesOutline,
+  CodeSlashOutline,
+  DocumentTextOutline,
+  HardwareChipOutline,
+  LocationOutline,
+  NotificationsOutline,
+  SettingsOutline,
+} from '@vicons/ionicons5'
 import { settingsTabs } from '../data/nav.js'
-import Icon from './Icon.vue'
 
 defineProps({ active: String })
-defineEmits(['navigate'])
+const emit = defineEmits(['navigate'])
 const tabs = settingsTabs
+
+const iconMap = {
+  settings: SettingsOutline,
+  bell: NotificationsOutline,
+  message: ChatbubbleEllipsesOutline,
+  opportunity: BusinessOutline,
+  key: HardwareChipOutline,
+  board: DocumentTextOutline,
+  link: LocationOutline,
+  default: CodeSlashOutline,
+}
+
+const menuOptions = computed(() => tabs.map(tab => ({
+  key: tab.key,
+  label: tab.label,
+  icon: () => h(NIcon, null, { default: () => h(iconMap[tab.icon] || iconMap.default) }),
+})))
 </script>
 
 <style scoped>

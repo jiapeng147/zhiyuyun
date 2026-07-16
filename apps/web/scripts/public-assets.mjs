@@ -16,7 +16,7 @@ function walkFiles(root) {
 }
 
 function publicRelative(value) {
-  const normalized = String(value || '').replaceAll('\\', '/').replace(/^\/+/, '')
+  const normalized = String(value || '').replaceAll('\\', '/').replace(/^\/+/, '').split(/[?#]/, 1)[0]
   return ASSET_EXTENSIONS.has(path.posix.extname(normalized).toLowerCase()) ? normalized : ''
 }
 
@@ -47,7 +47,7 @@ export function collectRuntimePublicAssets(webRoot) {
 
   for (const file of sourceFiles) {
     const source = fs.readFileSync(file, 'utf8')
-    for (const match of source.matchAll(/["'`](\/xya\/[A-Za-z0-9_./-]+\.(?:gif|ico|jpe?g|png|svg|webp))["'`]/gi)) {
+    for (const match of source.matchAll(/["'`](\/xya\/[A-Za-z0-9_./-]+\.(?:gif|ico|jpe?g|png|svg|webp)(?:[?#][^"'`\r\n]*)?)["'`]/gi)) {
       const relative = publicRelative(match[1])
       if (relative) assets.add(relative)
     }

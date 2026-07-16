@@ -1,7 +1,10 @@
 <template>
+  <n-config-provider :theme-overrides="naiveThemeOverrides">
+    <n-message-provider>
+      <n-dialog-provider>
   <div v-if="booting" class="boot-screen">
     <div class="boot-card">
-      <img src="/xya/brand/zhiyuyun-mark.svg" class="boot-brand-icon" alt="Zhiyuyun" />
+      <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="boot-brand-icon" alt="Zhiyuyun" />
       <b>正在连接后端服务...</b>
       <span>{{ bootMessage }}</span>
     </div>
@@ -29,7 +32,7 @@
         <button class="m-menu-btn" type="button" aria-label="打开菜单" @click="mobileNavOpen = true">
           <svg viewBox="0 0 24 24" class="ui-icon"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
         </button>
-        <img src="/xya/brand/zhiyuyun-mark.svg" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
+        <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="m-appbar-logo m-appbar-brand-icon" alt="Zhiyuyun" @click="navigate('dashboard')" />
         <button
           v-if="mobileDesktopOverride"
           class="m-return-lite"
@@ -69,10 +72,14 @@
     @retry="retryGlobalRequest"
   />
   <ConfirmModal />
+      </n-dialog-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 
 <script setup>
 import { computed, defineAsyncComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { NConfigProvider, NDialogProvider, NMessageProvider } from 'naive-ui'
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
 import PageHeader from './components/PageHeader.vue'
@@ -95,6 +102,72 @@ import {
   retainGlobalNoticeForRoute,
   shouldTrackGlobalBusy,
 } from './utils/requestUi.js'
+
+const naiveThemeOverrides = {
+  common: {
+    primaryColor: '#18A058',
+    primaryColorHover: '#36AD6A',
+    primaryColorPressed: '#0C7A43',
+    primaryColorSuppl: '#36AD6A',
+    infoColor: '#2080F0',
+    successColor: '#18A058',
+    warningColor: '#F0A020',
+    errorColor: '#D03050',
+    bodyColor: '#F5F7FA',
+    modalColor: '#FFFFFF',
+    cardColor: '#FFFFFF',
+    popoverColor: '#FFFFFF',
+    borderColor: '#E5E7EB',
+    dividerColor: '#EDF0F5',
+    textColorBase: '#1F2937',
+    textColor1: '#111827',
+    textColor2: '#374151',
+    textColor3: '#6B7280',
+    borderRadius: '6px',
+    borderRadiusSmall: '4px',
+    fontSize: '14px',
+    fontSizeMedium: '14px',
+    boxShadow1: '0 1px 2px rgba(15, 23, 42, .05)',
+    boxShadow2: '0 8px 24px rgba(15, 23, 42, .10)',
+    boxShadow3: '0 18px 48px rgba(15, 23, 42, .14)',
+  },
+  Layout: {
+    color: '#F5F7FA',
+    siderColor: '#001529',
+    headerColor: '#FFFFFF',
+    footerColor: '#FFFFFF',
+  },
+  Menu: {
+    itemHeight: '42px',
+    itemTextColorInverted: 'rgba(255,255,255,.72)',
+    itemTextColorHoverInverted: '#FFFFFF',
+    itemTextColorActiveInverted: '#FFFFFF',
+    itemIconColorInverted: 'rgba(255,255,255,.62)',
+    itemIconColorHoverInverted: '#FFFFFF',
+    itemIconColorActiveInverted: '#FFFFFF',
+    itemColorActiveInverted: '#18A058',
+    itemColorActiveHoverInverted: '#18A058',
+    borderRadius: '6px',
+  },
+  Card: {
+    borderRadius: '6px',
+    paddingMedium: '20px 22px',
+    titleFontSizeMedium: '16px',
+  },
+  Button: {
+    borderRadiusMedium: '4px',
+    borderRadiusSmall: '4px',
+    fontWeight: '500',
+    heightMedium: '34px',
+  },
+  Input: {
+    borderRadius: '4px',
+    heightMedium: '34px',
+  },
+  Tag: {
+    borderRadius: '4px',
+  },
+}
 
 const AsyncPageLoading = {
   name: 'AsyncPageLoading',

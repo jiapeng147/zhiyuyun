@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 44" fill="none" role="img" aria-label="智鱼云">
-  <rect x="2" y="7" width="30" height="30" rx="6" fill="#FF4F00"/>
-  <path d="M9 22c4.2-6.6 11.8-6.6 16 0-4.2 6.6-11.8 6.6-16 0Z" fill="#FFFFFF"/>
-  <circle cx="21.5" cy="22" r="2.1" fill="#FF4F00"/>
-  <text x="44" y="30" font-family="'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif" font-size="23" font-weight="700" fill="#111111" letter-spacing="1.5">智鱼云</text>
-  <rect x="45" y="36" width="26" height="2.4" fill="#FF4F00"/>
+  <rect x="2" y="7" width="30" height="30" rx="6" fill="#001529"/>
+  <path d="M8.8 25.4c2-4.9 6-7.3 11.9-7.3h5c-2 4.9-6 7.3-11.9 7.3h-5Z" fill="#18A058"/>
+  <path d="M9.7 18.9h8.8c3.5 0 5.8 1.3 6.8 3.9h-8.8c-3.5 0-5.8-1.3-6.8-3.9Z" fill="#FFFFFF"/>
+  <circle cx="21.4" cy="22.3" r="1.8" fill="#001529"/>
+  <text x="44" y="30" font-family="'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif" font-size="23" font-weight="700" fill="#111827" letter-spacing="0">智鱼云</text>
+  <rect x="45" y="36" width="54" height="2.4" rx="1.2" fill="#18A058"/>
 </svg>

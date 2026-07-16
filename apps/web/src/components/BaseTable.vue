@@ -1,55 +1,57 @@
 <template>
-  <table class="base-table">
-    <thead>
-      <tr>
-        <th v-if="selectable" class="col-select" @click="onHeaderSelectClick">
-          <input
-            type="checkbox"
-            class="bt-checkbox"
-            :checked="allSelected"
-            :indeterminate.prop="someSelected"
-            :disabled="!rows || rows.length === 0"
-            aria-label="全选"
-            @click.stop
-            @change="toggleAll"
-          />
-        </th>
-        <th v-for="c in columns" :key="c.key">{{ c.title }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-if="!rows?.length">
-        <td :colspan="(columns?.length || 1) + (selectable ? 1 : 0)">
-          <slot name="empty">
-            <div class="table-empty">暂无数据</div>
-          </slot>
-        </td>
-      </tr>
-      <tr
-        v-for="(row, idx) in rows"
-        :key="resolveRowKey(row, idx)"
-        :class="rowClass?.(row, idx) || ''"
-        :tabindex="rowIsInteractive ? 0 : undefined"
-        @click="activateRow(row)"
-        @keydown.enter="activateRow(row)"
-        @keydown.space.prevent="activateRow(row)"
-      >
-        <td v-if="selectable" class="col-select" @click.stop="onRowSelectClick(row, idx, $event)">
-          <input
-            type="checkbox"
-            class="bt-checkbox"
-            :checked="isRowSelected(row, idx)"
-            :aria-label="'选择第 ' + (idx + 1) + ' 行'"
-            @click.stop
-            @change="toggleRow(row, idx)"
-          />
-        </td>
-        <td v-for="c in columns" :key="c.key">
-          <slot :name="c.key" :row="row">{{ row[c.key] }}</slot>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="base-table-wrap naive-admin-table">
+    <table class="base-table">
+      <thead>
+        <tr>
+          <th v-if="selectable" class="col-select" @click="onHeaderSelectClick">
+            <input
+              type="checkbox"
+              class="bt-checkbox"
+              :checked="allSelected"
+              :indeterminate.prop="someSelected"
+              :disabled="!rows || rows.length === 0"
+              aria-label="全选"
+              @click.stop
+              @change="toggleAll"
+            />
+          </th>
+          <th v-for="c in columns" :key="c.key">{{ c.title }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-if="!rows?.length">
+          <td :colspan="(columns?.length || 1) + (selectable ? 1 : 0)">
+            <slot name="empty">
+              <div class="table-empty">暂无数据</div>
+            </slot>
+          </td>
+        </tr>
+        <tr
+          v-for="(row, idx) in rows"
+          :key="resolveRowKey(row, idx)"
+          :class="rowClass?.(row, idx) || ''"
+          :tabindex="rowIsInteractive ? 0 : undefined"
+          @click="activateRow(row)"
+          @keydown.enter="activateRow(row)"
+          @keydown.space.prevent="activateRow(row)"
+        >
+          <td v-if="selectable" class="col-select" @click.stop="onRowSelectClick(row, idx, $event)">
+            <input
+              type="checkbox"
+              class="bt-checkbox"
+              :checked="isRowSelected(row, idx)"
+              :aria-label="'选择第 ' + (idx + 1) + ' 行'"
+              @click.stop
+              @change="toggleRow(row, idx)"
+            />
+          </td>
+          <td v-for="c in columns" :key="c.key">
+            <slot :name="c.key" :row="row">{{ row[c.key] }}</slot>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 <script setup>
 import { computed, getCurrentInstance } from 'vue'
