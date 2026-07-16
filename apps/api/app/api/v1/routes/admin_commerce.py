@@ -1,16 +1,21 @@
 """超级管理员: 商业版管理端点(用户管理 / 注册开关 / 邮箱SMTP)。"""
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from ....core.security import hash_password
 
 from ....core.camel import CamelModel
 from ....core.config import settings
 from ....core.database import get_db
 from ....core.response import ResultObject
-from ....models.entities import AdminUser, AppPlan, XianyuSysSetting
+from ....models.entities import (
+    AdminUser, AppPlan, XianyuAccount, XianyuGoods, XianyuTradeOrder, XianyuSysSetting,
+)
 from ....services.email_service import (
     load_email_smtp_config,
     save_email_smtp_config,
@@ -95,6 +100,53 @@ class EmailConfigReqDTO(CamelModel):
     from_name: Optional[str] = None
 
 
+class PlanReqDTO(CamelModel):
+    code: str
+    name: str
+    max_accounts: int = 1
+    ai_daily_quota: int = 100
+    price_cents: int = 0
+    sort_order: int = 0
+    status: int = 1
+    description: Optional[str] = None
+
+
+class PlanRespDTO(CamelModel):
+    id: int
+    code: str
+    name: str
+    max_accounts: int
+    ai_daily_quota: int
+    price_cents: int
+    sort_order: int
+    status: int
+    description: Optional[str] = ""
+    created_time: Optional[str] = ""
+    updated_time: Optional[str] = ""
+
+
+class CreateUserReqDTO(CamelModel):
+    username: str
+    email: Optional[str] = None
+    password: str
+    plan_code: Optional[str] = "free"
+    is_super: bool = False
+
+
+class ResetPasswordReqDTO(CamelModel):
+    new_password: str
+
+
+def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
+    return PlanRespDTO(
+        id=int(p.id), code=p.code, name=p.name,
+        max_accounts=int(p.max_accounts or 0), ai_daily_quota=int(p.ai_daily_quota or 0),
+        price_cents=int(p.price_cents or 0), sort_order=int(p.sort_order or 0),
+        status=int(p.status or 0), description=p.description or "",
+        created_time=_dt(p.created_time), updated_time=_dt(p.updated_time),
+    )
+
+
 @router.get("/users", response_model=ResultObject[list[UserRespDTO]])
 async def list_users(db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin)):
     rows = (await db.execute(select(AdminUser).order_by(AdminUser.id))).scalars().all()
@@ -162,3 +214,208 @@ async def set_email_config(
     payload = {k: v for k, v in req.model_dump().items() if v is not None}
     saved = await save_email_smtp_config(db, payload)
     return ResultObject.success(build_public_smtp_config(saved))
+
+
+
+@router.get("/overview", response_model=ResultObject[dict])
+async def platform_overview(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    """平台总览: 用户/账号/商品/订单 + 今日新增 + 活跃用户(7 日内登录) + 套餐分布。"""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    seven_days_ago = now - timedelta(days=7)
+
+    user_count = int((await db.execute(select(func.count()).select_from(AdminUser))).scalar() or 0)
+    active_user_count = int((await db.execute(
+        select(func.count()).select_from(AdminUser).where(
+            AdminUser.last_login_time.is_not(None),
+            AdminUser.last_login_time >= seven_days_ago,
+        )
+    )).scalar() or 0)
+    new_user_today = int((await db.execute(
+        select(func.count()).select_from(AdminUser).where(AdminUser.created_time >= today_start)
+    )).scalar() or 0)
+
+    account_count = int((await db.execute(
+        select(func.count()).select_from(XianyuAccount).where(XianyuAccount.deleted == 0)
+    )).scalar() or 0)
+    goods_count = int((await db.execute(
+        select(func.count()).select_from(XianyuGoods).where(XianyuGoods.deleted == 0)
+    )).scalar() or 0)
+    order_count = int((await db.execute(
+        select(func.count()).select_from(XianyuTradeOrder)
+    )).scalar() or 0)
+    new_order_today = int((await db.execute(
+        select(func.count()).select_from(XianyuTradeOrder).where(
+            XianyuTradeOrder.created_time >= today_start
+        ) if hasattr(XianyuTradeOrder, "created_time") else select(func.count()).select_from(XianyuTradeOrder)
+    )).scalar() or 0)
+
+    plan_rows = (await db.execute(
+        select(AdminUser.plan_code, func.count().label("n")).group_by(AdminUser.plan_code)
+    )).all()
+    plan_distribution = [{"plan_code": (r[0] or "free"), "count": int(r[1] or 0)} for r in plan_rows]
+
+    return ResultObject.success({
+        "user": {
+            "total": user_count,
+            "active_7d": active_user_count,
+            "new_today": new_user_today,
+        },
+        "account": {"total": account_count},
+        "goods": {"total": goods_count},
+        "order": {"total": order_count, "new_today": new_order_today},
+        "plan_distribution": plan_distribution,
+        "generated_at": now.isoformat(),
+    })
+
+
+# ============================================================
+# 套餐管理
+# ============================================================
+
+@router.get("/plans", response_model=ResultObject[list[PlanRespDTO]])
+async def list_plans(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    rows = (await db.execute(
+        select(AppPlan).order_by(AppPlan.sort_order.asc(), AppPlan.id.asc())
+    )).scalars().all()
+    return ResultObject.success([_plan_to_dto(p) for p in rows])
+
+
+@router.post("/plans", response_model=ResultObject[PlanRespDTO])
+async def create_plan(
+    req: PlanReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    code = (req.code or "").strip()
+    if not code:
+        raise HTTPException(status_code=400, detail="套餐代码不能为空")
+    existing = (await db.execute(select(AppPlan).where(AppPlan.code == code))).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"套餐代码 {code} 已存在")
+    plan = AppPlan(
+        code=code, name=req.name.strip(),
+        max_accounts=int(req.max_accounts), ai_daily_quota=int(req.ai_daily_quota),
+        price_cents=int(req.price_cents), sort_order=int(req.sort_order),
+        status=int(req.status), description=req.description,
+    )
+    db.add(plan)
+    await db.commit()
+    await db.refresh(plan)
+    return ResultObject.success(_plan_to_dto(plan))
+
+
+@router.put("/plans/{plan_id}", response_model=ResultObject[PlanRespDTO])
+async def update_plan(
+    plan_id: int, req: PlanReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    plan = (await db.execute(select(AppPlan).where(AppPlan.id == plan_id))).scalar_one_or_none()
+    if not plan:
+        raise HTTPException(status_code=404, detail="套餐不存在")
+    if req.code.strip() and req.code.strip() != plan.code:
+        clash = (await db.execute(select(AppPlan).where(
+            AppPlan.code == req.code.strip(), AppPlan.id != plan_id
+        ))).scalar_one_or_none()
+        if clash:
+            raise HTTPException(status_code=409, detail="套餐代码已被占用")
+        plan.code = req.code.strip()
+    plan.name = (req.name or plan.name).strip()
+    plan.max_accounts = int(req.max_accounts)
+    plan.ai_daily_quota = int(req.ai_daily_quota)
+    plan.price_cents = int(req.price_cents)
+    plan.sort_order = int(req.sort_order)
+    plan.status = int(req.status)
+    plan.description = req.description
+    await db.commit()
+    await db.refresh(plan)
+    return ResultObject.success(_plan_to_dto(plan))
+
+
+@router.delete("/plans/{plan_id}", response_model=ResultObject[str])
+async def delete_plan(
+    plan_id: int,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    plan = (await db.execute(select(AppPlan).where(AppPlan.id == plan_id))).scalar_one_or_none()
+    if not plan:
+        raise HTTPException(status_code=404, detail="套餐不存在")
+    in_use = int((await db.execute(
+        select(func.count()).select_from(AdminUser).where(AdminUser.plan_code == plan.code)
+    )).scalar() or 0)
+    if in_use > 0:
+        # 不级联,下架即可
+        plan.status = 0
+        await db.commit()
+        return ResultObject.success(f"套餐已被 {in_use} 个用户引用,已下架(未删除)")
+    await db.delete(plan)
+    await db.commit()
+    return ResultObject.success("已删除")
+
+
+# ============================================================
+# 手动建用户 + 重置密码
+# ============================================================
+
+@router.post("/users", response_model=ResultObject[UserRespDTO])
+async def create_user(
+    req: CreateUserReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    username = (req.username or "").strip()
+    password = req.password or ""
+    if not username:
+        raise HTTPException(status_code=400, detail="用户名不能为空")
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="密码至少 8 位")
+    clash = (await db.execute(select(AdminUser).where(AdminUser.username == username))).scalar_one_or_none()
+    if clash:
+        raise HTTPException(status_code=409, detail="用户名已存在")
+    if req.email:
+        e = req.email.strip().lower()
+        ec = (await db.execute(select(AdminUser).where(AdminUser.email == e))).scalar_one_or_none()
+        if ec:
+            raise HTTPException(status_code=409, detail="邮箱已被使用")
+    plan_code = (req.plan_code or "free").strip() or "free"
+    plan = (await db.execute(select(AppPlan).where(AppPlan.code == plan_code))).scalar_one_or_none()
+    user = AdminUser(
+        username=username,
+        email=(req.email.strip().lower() if req.email else None),
+        password_hash=hash_password(password),
+        is_super=1 if req.is_super else 0,
+        plan_code=plan.code if plan else plan_code,
+        max_accounts=(plan.max_accounts if plan else 1),
+        ai_daily_quota=(plan.ai_daily_quota if plan else 100),
+        status=1,
+        email_verified=1,
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return ResultObject.success(UserRespDTO(
+        id=int(user.id), username=user.username, email=user.email or "",
+        role=("superadmin" if user.is_super else "user"),
+        plan_code=user.plan_code or "free", status=int(user.status or 0),
+        email_verified=bool(user.email_verified),
+        max_accounts=int(user.max_accounts or 0), ai_daily_quota=int(user.ai_daily_quota or 0),
+        created_time=_dt(user.created_time), last_login_time=_dt(user.last_login_time),
+    ))
+
+
+@router.post("/users/{uid}/reset-password", response_model=ResultObject[str])
+async def reset_password(
+    uid: int, req: ResetPasswordReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    new_pw = req.new_password or ""
+    if len(new_pw) < 8:
+        raise HTTPException(status_code=400, detail="新密码至少 8 位")
+    user = (await db.execute(select(AdminUser).where(AdminUser.id == uid))).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    user.password_hash = hash_password(new_pw)
+    await db.commit()
+    return ResultObject.success(f"已重置 {user.username} 的密码")
