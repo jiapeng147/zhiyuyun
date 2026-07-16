@@ -1691,7 +1691,7 @@ table tbody tr:last-child td {
 /* Auth */
 .auth-shell-v3 {
   min-height: 100vh !important;
-  background: #f5f7fa !important;
+  background: #eef2f7 !important;
   display: grid !important;
   grid-template-rows: 56px 1fr 48px !important;
 }
@@ -1705,11 +1705,11 @@ table tbody tr:last-child td {
 }
 
 .auth-v3-main {
-  width: min(1120px, calc(100vw - 48px)) !important;
-  margin: 28px auto !important;
+  width: min(1180px, calc(100vw - 48px)) !important;
+  margin: 32px auto !important;
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 420px !important;
-  gap: 18px !important;
+  grid-template-columns: minmax(0, 1fr) 440px !important;
+  gap: 16px !important;
   align-items: stretch !important;
 }
 
@@ -1724,16 +1724,19 @@ table tbody tr:last-child td {
 }
 
 .auth-v3-showcase {
-  padding: 44px !important;
+  padding: 36px !important;
   min-height: 560px !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 24px !important;
 }
 
 .auth-v3-showcase h1 {
   margin: 0 !important;
   color: var(--text) !important;
-  font-size: clamp(36px, 5vw, 64px) !important;
+  font-size: clamp(34px, 4.5vw, 56px) !important;
   font-weight: 700 !important;
-  line-height: 1.06 !important;
+  line-height: 1.08 !important;
 }
 
 .auth-v3-showcase h1 span,
@@ -1742,10 +1745,41 @@ table tbody tr:last-child td {
 }
 
 .auth-v3-console {
-  border: 1px solid #0f2746 !important;
+  border: 1px solid #dbe3ee !important;
   border-radius: 6px !important;
-  background: var(--admin-sider) !important;
-  box-shadow: none !important;
+  background: #0f172a !important;
+  box-shadow: 0 16px 44px rgba(15, 23, 42, .16) !important;
+  overflow: hidden !important;
+}
+
+.auth-v3-panel {
+  padding: 28px !important;
+}
+
+.auth-v3-panel-head {
+  align-items: center !important;
+  padding-bottom: 18px !important;
+  margin-bottom: 18px !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.auth-v3-brand-dot {
+  border-radius: 6px !important;
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.auth-v4-feature-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.auth-v4-feature-row > div {
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  padding: 14px !important;
 }
 
 .auth-field,

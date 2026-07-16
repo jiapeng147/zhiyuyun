@@ -9,7 +9,7 @@
       </button>
     </div>
 
-    <section class="auto-reply-hero">
+    <n-card class="auto-reply-hero auto-reply-v4-hero" :bordered="false">
       <div class="auto-reply-hero-head">
         <div class="auto-reply-hero-copy">
           <span class="auto-reply-hero-pill">Auto Reply Console</span>
@@ -109,7 +109,7 @@
           </div>
         </div>
       </aside>
-    </section>
+    </n-card>
 
     <section class="auto-reply-workspace">
       <div class="auto-reply-left-column">
@@ -430,6 +430,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { NCard } from 'naive-ui'
 import { getAccounts } from '../api/accounts.js'
 import { getAutoReplyScopeProducts, getAutoReplyScopeStatus, updateProductAutoReplyScope, updateAccountAutoReplyScope, batchUpdateAutoReplyScope } from '../api/autoReplyScope.js'
 import { getBusinessSettings } from '../api/businessSettings.js'
@@ -1350,6 +1351,25 @@ onMounted(async () => {
   gap: 18px;
 }
 
+.auto-reply-v4-hero,
+.auto-reply-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.auto-reply-v4-hero :deep(.n-card__content) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 392px;
+  gap: 18px;
+  padding: 18px;
+}
+
+.auto-reply-v4-hero.auto-reply-hero {
+  display: block;
+}
+
 .auto-reply-hero-head {
   grid-column: 1 / -1;
   display: flex;
@@ -1754,7 +1774,7 @@ onMounted(async () => {
 
 .auto-reply-panel {
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 42px rgba(128, 64, 36, 0.1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 .auto-reply-panel-head {
@@ -2531,6 +2551,7 @@ button:disabled {
 
 @media (max-width: 1480px) {
   .auto-reply-hero,
+  .auto-reply-v4-hero :deep(.n-card__content),
   .auto-reply-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2584,11 +2605,15 @@ button:disabled {
     gap: 12px;
   }
 
+  .auto-reply-v4-hero :deep(.n-card__content) {
+    padding: 14px;
+  }
+
   /* Hero 主区/侧栏圆角收敛 */
   .auto-reply-hero-main,
   .auto-reply-hero-side,
   .auto-reply-panel {
-    border-radius: 16px;
+    border-radius: 6px;
   }
 
   /* Hero 主区内边距 + 大字号收敛 */

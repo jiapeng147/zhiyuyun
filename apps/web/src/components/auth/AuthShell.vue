@@ -8,9 +8,9 @@
       <button type="button" class="auth-v3-ghost" @click="openDoc('用户协议')">服务条款</button>
     </header>
 
-    <main class="auth-v3-main">
+    <main class="auth-v3-main auth-v4-main">
       <section class="auth-v3-showcase" aria-label="产品概览">
-        <div class="auth-v3-eyebrow">Operations workspace</div>
+        <div class="auth-v3-eyebrow">Zhiyuyun Admin</div>
         <h1>
           {{ titleLead }}
           <span v-if="titleAccent">{{ titleAccent }}</span>
@@ -21,7 +21,7 @@
         <div class="auth-v3-console" aria-hidden="true">
           <div class="auth-v3-console-head">
             <i></i><i></i><i></i>
-            <span>live workspace</span>
+            <span>operations map</span>
           </div>
           <div class="auth-v3-console-grid">
             <div class="auth-v3-metric">
@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <div class="auth-v3-feature-row">
+        <div class="auth-v3-feature-row auth-v4-feature-row">
           <div v-for="item in featureItems" :key="item.title">
             <b>{{ item.title }}</b>
             <span>{{ item.desc }}</span>

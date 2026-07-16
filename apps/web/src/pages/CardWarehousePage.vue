@@ -1,23 +1,48 @@
 <template>
-  <div class="grid wide-right">
-    <div v-if="error" class="global-notice error">{{ error }}</div>
-    <div v-if="groupsWarning" class="global-notice warning" role="status">{{ groupsWarning }}</div>
-    <div v-if="success" class="global-notice success">{{ success }}</div>
-    <!-- Left -->
-    <div>
-      <div class="grid stat-grid">
-        <StatCard title="卡密组" :value="groupsMetric(groups.length)" change="总分组数" icon="product" />
-        <StatCard title="卡密总量" :value="groupsMetric(stockStats.total)" change="全部卡密" icon="key" />
-        <StatCard title="未使用" :value="groupsMetric(stockStats.remain)" change="可用库存" icon="key" color="green" />
-        <StatCard title="已使用" :value="groupsMetric(stockStats.used)" change="已消耗" icon="account" />
-        <StatCard title="异常/作废" :value="groupsMetric(stockStats.invalid)" change="需关注" icon="warning" color="orange" />
-        <StatCard title="低库存" :value="groupsMetric(lowStockCount)" change="低于预警阈值" icon="warning" color="red" />
+  <div class="card-warehouse-v4">
+    <div class="card-warehouse-v4-notices">
+      <div v-if="error" class="global-notice error">{{ error }}</div>
+      <div v-if="groupsWarning" class="global-notice warning" role="status">{{ groupsWarning }}</div>
+      <div v-if="success" class="global-notice success">{{ success }}</div>
+    </div>
+
+    <n-card class="card-warehouse-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Card Inventory</n-tag>
+        <h2>卡密库存台</h2>
+        <p>集中管理卡密分组、库存明细、使用记录、导入和导出，自动发货会从这里领取库存。</p>
       </div>
-      <CardPanel>
-        <div class="toolbar">
-          <input v-model="query.keyword" class="input large" placeholder="搜索卡密组名称" @keyup.enter="load">
-          <AppButton :loading="groupsLoading" @click="load">搜索</AppButton>
-          <AppButton type="primary" @click="openCreateDialog">新建卡密组</AppButton>
+      <n-space :size="8" align="center" wrap>
+        <n-button size="small" :loading="groupsLoading" @click="load">刷新库存</n-button>
+        <n-button size="small" type="primary" @click="openCreateDialog">新建卡密组</n-button>
+      </n-space>
+    </n-card>
+
+    <section class="card-warehouse-v4-stats">
+      <n-card
+        v-for="item in warehouseStatCards"
+        :key="item.key"
+        class="card-warehouse-v4-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="card-warehouse-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
+    <div class="card-warehouse-v4-grid">
+      <div class="card-warehouse-v4-left">
+      <n-card class="card-warehouse-v4-table-card" :bordered="false">
+        <template #header>卡密分组</template>
+        <template #header-extra>
+          <n-tag size="small" :bordered="false">共 {{ groupsAvailable === true ? groups.length : '—' }} 组</n-tag>
+        </template>
+        <div class="card-warehouse-v4-toolbar">
+          <n-input v-model:value="query.keyword" clearable placeholder="搜索卡密组名称" @keyup.enter="load" />
+          <n-button :loading="groupsLoading" @click="load">搜索</n-button>
+          <n-button type="primary" @click="openCreateDialog">新建卡密组</n-button>
         </div>
         <div v-if="groupsRefreshing" class="refresh-status" role="status" aria-live="polite">
           正在刷新卡密分组，现有数据仍可查看。
@@ -51,8 +76,8 @@
             </EmptyState>
           </template>
         </BaseTable>
-      </CardPanel>
-      <CardPanel title="导入卡密" style="margin-top:16px">
+      </n-card>
+      <n-card title="导入卡密" class="card-warehouse-v4-import-card" :bordered="false">
         <div class="form-grid">
           <div class="form-row">
             <label>目标分组</label>
@@ -93,11 +118,12 @@
             </span>
           </div>
         </div>
-      </CardPanel>
+      </n-card>
     </div>
     <!-- Right -->
-    <div>
-      <CardPanel :title="selected ? selected.groupName : '卡密详情'">
+    <div class="card-warehouse-v4-right">
+      <n-card class="card-warehouse-v4-detail-card" :bordered="false">
+        <template #header>{{ selected ? selected.groupName : '卡密详情' }}</template>
         <EmptyState v-if="!selected" icon="👈" title="请选择卡密分组" description="从左侧列表选择一个卡密组，查看卡密明细、使用记录和导入历史。" style="padding:40px 0" />
         <template v-else>
           <div class="tab-bar">
@@ -219,7 +245,8 @@
             </div>
           </div>
         </template>
-      </CardPanel>
+      </n-card>
+    </div>
     </div>
     <!-- Edit / Create Dialog -->
     <div v-if="editDialogVisible" class="modal-overlay" @click.self="closeEditDialog">
@@ -283,8 +310,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import StatCard from '../components/StatCard.vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NButton, NCard, NInput, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -447,6 +473,15 @@ const lowStockCount = computed(() => {
 function groupsMetric(value) {
   return groupsAvailable.value === true ? value : '—'
 }
+
+const warehouseStatCards = computed(() => [
+  { key: 'groups', title: '卡密组', value: groupsMetric(groups.value.length), change: '总分组数', symbol: '组', tone: 'tone-blue' },
+  { key: 'total', title: '卡密总量', value: groupsMetric(stockStats.value.total), change: '全部卡密', symbol: '总', tone: 'tone-cyan' },
+  { key: 'remain', title: '未使用', value: groupsMetric(stockStats.value.remain), change: '可用库存', symbol: '余', tone: 'tone-green' },
+  { key: 'used', title: '已使用', value: groupsMetric(stockStats.value.used), change: '已消耗', symbol: '用', tone: 'tone-gray' },
+  { key: 'invalid', title: '异常/作废', value: groupsMetric(stockStats.value.invalid), change: '需关注', symbol: '异', tone: 'tone-orange' },
+  { key: 'low', title: '低库存', value: groupsMetric(lowStockCount.value), change: '低于预警阈值', symbol: '低', tone: 'tone-red' }
+])
 
 const bulkCount = computed(() => {
   return bulkText.value.split(/\n+/).map(s => s.trim()).filter(Boolean).length
@@ -903,6 +938,137 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.card-warehouse-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.card-warehouse-v4-notices {
+  display: grid;
+  gap: 8px;
+}
+
+.card-warehouse-v4-hero,
+.card-warehouse-v4-table-card,
+.card-warehouse-v4-import-card,
+.card-warehouse-v4-detail-card,
+.card-warehouse-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.card-warehouse-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.card-warehouse-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.card-warehouse-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.card-warehouse-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card-warehouse-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.card-warehouse-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.card-warehouse-v4-stat.tone-blue .card-warehouse-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.card-warehouse-v4-stat.tone-cyan .card-warehouse-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.card-warehouse-v4-stat.tone-green .card-warehouse-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.card-warehouse-v4-stat.tone-gray .card-warehouse-v4-stat-icon { background: #f1f5f9; color: #475569; }
+.card-warehouse-v4-stat.tone-orange .card-warehouse-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.card-warehouse-v4-stat.tone-red .card-warehouse-v4-stat-icon { background: #fef2f2; color: #dc2626; }
+
+.card-warehouse-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.card-warehouse-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.card-warehouse-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.card-warehouse-v4-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(390px, 0.42fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.card-warehouse-v4-left,
+.card-warehouse-v4-right {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.card-warehouse-v4-detail-card {
+  position: sticky;
+  top: 118px;
+}
+
+.card-warehouse-v4-table-card :deep(.n-card__content),
+.card-warehouse-v4-import-card :deep(.n-card__content),
+.card-warehouse-v4-detail-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.card-warehouse-v4-table-card :deep(.n-card-header),
+.card-warehouse-v4-import-card :deep(.n-card-header),
+.card-warehouse-v4-detail-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.card-warehouse-v4-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .success { background: #ecfdf3; color: #067647; border-color: #abefc6; }
 .warning,
 .inline-warning {
@@ -1122,6 +1288,31 @@ onBeforeUnmount(() => {
 
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
+  .card-warehouse-v4 {
+    gap: 12px;
+  }
+
+  .card-warehouse-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .card-warehouse-v4-stats,
+  .card-warehouse-v4-grid,
+  .card-warehouse-v4-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card-warehouse-v4-detail-card {
+    position: static;
+  }
+
+  .card-warehouse-v4-table-card :deep(.n-card__content),
+  .card-warehouse-v4-import-card :deep(.n-card__content),
+  .card-warehouse-v4-detail-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   /* 导入方式 tabs 内边距收窄 */
   .import-tabs {
     gap: 4px;

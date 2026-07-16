@@ -1,5 +1,32 @@
 <template>
   <div class="xya-msg-page">
+    <n-card class="messages-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Live Service Desk</n-tag>
+        <h2>在线消息工作台</h2>
+        <p>聚合买家咨询、AI 接待状态、快捷回复模板和商品上下文，围绕当前账号处理实时会话。</p>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <n-button size="small" :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
+        <n-button size="small" @click="startCurrentConnection">启动连接</n-button>
+        <n-button size="small" type="primary" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
+      </n-space>
+    </n-card>
+
+    <section class="messages-v4-stats">
+      <n-card
+        v-for="item in messageStatCards"
+        :key="item.key"
+        class="messages-v4-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="messages-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
     <div class="xya-msg-layout">
       <aside class="xya-msg-sidebar">
         <div class="xya-msg-sidebar-head">
@@ -399,6 +426,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { NButton, NCard, NSpace, NStatistic, NTag } from 'naive-ui'
 import { openExternalUrl } from '../utils/externalUrl.js'
 import { getAccounts } from '../api/accounts.js'
 import { onlineConversations, messageContext, updateConversationStatus, markConversationRead } from '../api/messages.js'
@@ -1001,6 +1029,13 @@ const unrepliedCount = computed(() => conversations.value.filter(item => item.un
 const inProgressCount = computed(() => conversations.value.filter(item => isConversationInProgress(item)).length)
 const completedCount = computed(() => conversations.value.filter(item => isConversationCompleted(item)).length)
 const robotCount = computed(() => conversations.value.filter(item => item.botEnabled).length)
+const messageStatCards = computed(() => [
+  { key: 'total', title: '会话总数', value: displayList.value.length, change: `${accountLabel.value || '当前账号'} · 当前筛选`, symbol: '会', tone: 'tone-blue' },
+  { key: 'unreplied', title: '未回复', value: unrepliedCount.value, change: '含未读买家消息', symbol: '未', tone: 'tone-orange' },
+  { key: 'progress', title: '进行中', value: inProgressCount.value, change: '仍需跟进的会话', symbol: '进', tone: 'tone-green' },
+  { key: 'robot', title: '机器人接待', value: robotCount.value, change: aiSettingsAvailable.value ? (aiGlobalEnabled.value ? '全局开关已开启' : '全局开关已关闭') : 'AI 状态未知', symbol: 'AI', tone: 'tone-cyan' },
+  { key: 'done', title: '已完成', value: completedCount.value, change: realtimeMode.value.label, symbol: '完', tone: 'tone-gray' }
+])
 watch(debouncedKeyword, () => {
   visibleConversationCount.value = DEFAULT_VISIBLE_CONVERSATIONS
 })
@@ -2899,11 +2934,91 @@ watch(() => selected.value?.xyGoodsId, () => {
 <style scoped>
 .xya-msg-page {
   width: 100%;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.messages-v4-hero,
+.messages-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.messages-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.messages-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.messages-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.messages-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.messages-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.messages-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.messages-v4-stat.tone-blue .messages-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.messages-v4-stat.tone-orange .messages-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.messages-v4-stat.tone-green .messages-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.messages-v4-stat.tone-cyan .messages-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.messages-v4-stat.tone-gray .messages-v4-stat-icon { background: #f1f5f9; color: #475569; }
+
+.messages-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.messages-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.messages-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .xya-msg-layout {
-  height: calc(100vh - 188px);
-  min-height: calc(100vh - 188px);
+  height: calc(100vh - 370px);
+  min-height: 560px;
   display: grid;
   grid-template-columns: 334px minmax(0, 1fr) 288px;
   gap: 16px;
@@ -3781,6 +3896,10 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 @media (max-width: 1440px) {
+  .messages-v4-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .xya-msg-layout {
     grid-template-columns: 300px minmax(0, 1fr);
   }
@@ -4009,6 +4128,19 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 /* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
+  .xya-msg-page {
+    gap: 12px;
+  }
+
+  .messages-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .messages-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .xya-msg-layout {
     grid-template-columns: 1fr;
     gap: 10px;

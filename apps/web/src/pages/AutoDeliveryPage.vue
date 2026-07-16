@@ -1,65 +1,64 @@
 <template>
-  <div>
-    <div class="page-head">
-      <div>
-        <h1>自动发货</h1>
-        <p>按商品配置自动发货时机，支持文本发货、卡密发货，以及引用货源库快速配置。</p>
-      </div>
-    </div>
-
+  <div class="auto-delivery-v4">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <div class="stat-row">
-      <StatCard title="今日发货成功" :value="statsMetric(stats.todaySuccess)" change="今日实际记录" icon="shield" color="green" />
-      <StatCard title="今日失败" :value="statsMetric(stats.todayFail)" change="今日实际记录" icon="warning" color="orange" />
-      <StatCard title="待处理发货" :value="statsMetric(stats.pendingOrders)" change="待处理记录" icon="clock" />
-      <StatCard title="库存不足" :value="statsMetric(stats.lowStockGoods)" change="需关注" icon="warning" color="red" />
-      <StatCard title="已启用自动发货" :value="statsMetric(stats.enabledGoods)" change="已确认配置" icon="product" />
-    </div>
+    <n-card class="auto-delivery-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Delivery Automation</n-tag>
+        <h2>自动发货工作台</h2>
+        <p>按商品配置付款后、确认收货后和好评后的发货策略，支持文本、卡密和货源库引用。</p>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <n-button size="small" @click="goSourceLibrary">管理货源库</n-button>
+        <n-button size="small" type="primary" @click="showBatchDialog = true">批量配置</n-button>
+        <n-button size="small" :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
+      </n-space>
+    </n-card>
+
+    <section class="auto-delivery-v4-stats">
+      <n-card
+        v-for="item in deliveryStatCards"
+        :key="item.key"
+        class="auto-delivery-v4-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="auto-delivery-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
 
     <div class="delivery-body">
       <div class="filter-panel">
-        <CardPanel title="筛选条件">
+        <n-card class="auto-delivery-v4-filter-card" :bordered="false">
+          <template #header>筛选条件</template>
           <div class="filter-section">
             <label class="filter-label">闲鱼账号</label>
-            <select v-model="query.accountId" class="input" style="width:100%" @change="loadGoods">
-              <option value="">全部账号</option>
-              <option v-for="account in accounts" :key="account.id" :value="account.id">{{ accountName(account) }}</option>
-            </select>
+            <n-select v-model:value="query.accountId" :options="accountFilterOptions" @update:value="loadGoods" />
           </div>
           <div class="filter-section">
             <label class="filter-label">搜索商品</label>
-            <input v-model="query.keyword" class="input" placeholder="标题 / ID" style="width:100%" @keyup.enter="loadGoods" />
+            <n-input v-model:value="query.keyword" clearable placeholder="标题 / ID" @keyup.enter="loadGoods" />
           </div>
           <div class="filter-section">
             <label class="filter-label">发货形式</label>
-            <select v-model="query.deliveryType" class="input" style="width:100%">
-              <option value="">全部</option>
-              <option value="text">文本发货</option>
-              <option value="card">卡密发货</option>
-              <option value="none">未配置</option>
-            </select>
+            <n-select v-model:value="query.deliveryType" :options="deliveryTypeOptions" />
           </div>
           <div class="filter-section">
             <label class="filter-label">配置状态</label>
-            <select v-model="query.configStatus" class="input" style="width:100%">
-              <option value="">全部</option>
-              <option value="configured">已配置</option>
-              <option value="unconfigured">未配置</option>
-            </select>
+            <n-select v-model:value="query.configStatus" :options="configStatusOptions" />
           </div>
           <div class="filter-section">
             <label class="filter-label">商品状态</label>
-            <select v-model="query.goodsStatus" class="input" style="width:100%">
-              <option value="">全部</option>
-              <option value="0">在售</option>
-              <option value="1">下架</option>
-            </select>
+            <n-select v-model:value="query.goodsStatus" :options="goodsStatusOptions" />
           </div>
-          <AppButton type="primary" style="width:100%;margin-top:8px" @click="applyFilter">应用筛选</AppButton>
-          <AppButton style="width:100%;margin-top:6px" @click="resetFilter">重置筛选</AppButton>
-        </CardPanel>
+          <n-space vertical :size="8" style="margin-top:8px">
+            <n-button type="primary" block @click="applyFilter">应用筛选</n-button>
+            <n-button block @click="resetFilter">重置筛选</n-button>
+          </n-space>
+        </n-card>
       </div>
 
       <div class="main-content">
@@ -68,7 +67,11 @@
           <span><b>付款后发货</b>会由系统定时扫描自动执行；<b>确认收货后赠送</b>和<b>好评后赠送</b>可在发货记录页手动触发，也可接入后续事件自动化。</span>
         </div>
 
-        <CardPanel>
+        <n-card class="auto-delivery-v4-table-card" :bordered="false">
+          <template #header>商品发货配置</template>
+          <template #header-extra>
+            <n-tag size="small" :bordered="false">共 {{ goodsAvailable ? filteredGoods.length : '—' }} 个商品</n-tag>
+          </template>
           <div class="toolbar" style="margin-bottom:12px">
             <span class="table-info">共 <b>{{ goodsAvailable ? filteredGoods.length : '—' }}</b> 个商品</span>
             <span style="margin-left:12px" class="subtle">点击状态列可快速进入对应时机配置。</span>
@@ -130,7 +133,7 @@
             </template>
           </BaseTable>
           <Pagination :total="filteredGoods.length" :current="current" :page-size="pageSize" @page-change="goPage" />
-        </CardPanel>
+        </n-card>
 
         <div v-if="configTarget" class="modal-overlay" @click.self="closeConfig">
           <div class="modal-content config-modal">
@@ -320,8 +323,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import StatCard from '../components/StatCard.vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
 import BaseTable from '../components/BaseTable.vue'
@@ -421,6 +423,33 @@ const columns = [
 ]
 
 const currentTimingLabel = computed(() => configTimings.find(item => item.key === configTiming.value)?.label || '')
+const accountFilterOptions = computed(() => [
+  { label: '全部账号', value: '' },
+  ...accounts.value.map(account => ({ label: accountName(account), value: String(account.id) }))
+])
+const deliveryTypeOptions = [
+  { label: '全部', value: '' },
+  { label: '文本发货', value: 'text' },
+  { label: '卡密发货', value: 'card' },
+  { label: '未配置', value: 'none' }
+]
+const configStatusOptions = [
+  { label: '全部', value: '' },
+  { label: '已配置', value: 'configured' },
+  { label: '未配置', value: 'unconfigured' }
+]
+const goodsStatusOptions = [
+  { label: '全部', value: '' },
+  { label: '在售', value: '0' },
+  { label: '下架', value: '1' }
+]
+const deliveryStatCards = computed(() => [
+  { key: 'success', title: '今日发货成功', value: statsMetric(stats.todaySuccess), change: '今日实际记录', symbol: '成', tone: 'tone-green' },
+  { key: 'fail', title: '今日失败', value: statsMetric(stats.todayFail), change: '今日实际记录', symbol: '败', tone: 'tone-orange' },
+  { key: 'pending', title: '待处理发货', value: statsMetric(stats.pendingOrders), change: '待处理记录', symbol: '待', tone: 'tone-blue' },
+  { key: 'low', title: '库存不足', value: statsMetric(stats.lowStockGoods), change: '需关注', symbol: '低', tone: 'tone-red' },
+  { key: 'enabled', title: '已启用自动发货', value: statsMetric(stats.enabledGoods), change: '已确认配置', symbol: '启', tone: 'tone-cyan' }
+])
 
 const cardKeyCount = computed(() => {
   return String(configForm.cardKeysText || '')
@@ -880,6 +909,101 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.auto-delivery-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.auto-delivery-v4-hero,
+.auto-delivery-v4-filter-card,
+.auto-delivery-v4-table-card,
+.auto-delivery-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.auto-delivery-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.auto-delivery-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.auto-delivery-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.auto-delivery-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.auto-delivery-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.auto-delivery-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auto-delivery-v4-stat.tone-green .auto-delivery-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.auto-delivery-v4-stat.tone-orange .auto-delivery-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.auto-delivery-v4-stat.tone-blue .auto-delivery-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.auto-delivery-v4-stat.tone-red .auto-delivery-v4-stat-icon { background: #fef2f2; color: #dc2626; }
+.auto-delivery-v4-stat.tone-cyan .auto-delivery-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+
+.auto-delivery-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.auto-delivery-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.auto-delivery-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.auto-delivery-v4-filter-card :deep(.n-card__content),
+.auto-delivery-v4-table-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.auto-delivery-v4-filter-card :deep(.n-card-header),
+.auto-delivery-v4-table-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
 .page-head {
   margin-bottom: 10px;
 }
@@ -904,7 +1028,18 @@ onBeforeUnmount(() => {
 .delivery-body {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
-  gap: 18px;
+  gap: 16px;
+  align-items: start;
+}
+
+.filter-panel,
+.main-content {
+  min-width: 0;
+}
+
+.filter-panel {
+  position: sticky;
+  top: 118px;
 }
 
 .filter-section {
@@ -1121,13 +1256,39 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .auto-delivery-v4-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .delivery-body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filter-panel {
+    position: static;
   }
 }
 
 /* ===== 移动端响应式 (max-width: 900px) ===== */
 @media (max-width: 900px) {
+  .auto-delivery-v4 {
+    gap: 12px;
+  }
+
+  .auto-delivery-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .auto-delivery-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .auto-delivery-v4-filter-card :deep(.n-card__content),
+  .auto-delivery-v4-table-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   /* 页头大字号收敛 */
   .page-head h1 {
     font-size: 20px;

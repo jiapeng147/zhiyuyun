@@ -2680,4 +2680,139 @@ onBeforeUnmount(() => {
     min-width: 0;
   }
 }
+.profile-center {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-side-card,
+.welcome-hero,
+.member-panel,
+.account-panel,
+.quick-panel,
+.content-panel,
+.stat-card,
+.security-card,
+.security-tips,
+.security-level-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.profile-side-card {
+  padding: 10px;
+  background: #fff;
+}
+
+.profile-side-tab {
+  border-radius: 6px;
+  border-color: #e5e7eb;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.profile-side-tab:hover,
+.profile-side-tab.active {
+  transform: none;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  box-shadow: none;
+}
+
+.profile-side-tab.active::before {
+  background: #2563eb;
+}
+
+.profile-side-tab-icon,
+.profile-side-tab.active .profile-side-tab-icon {
+  border-radius: 6px;
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.welcome-hero {
+  min-height: auto;
+  padding: 22px;
+  background: #fff;
+}
+
+.welcome-hero::before,
+.welcome-hero::after,
+.welcome-visual {
+  display: none;
+}
+
+.welcome-content {
+  max-width: 100%;
+}
+
+.welcome-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  border-color: #dbeafe;
+  background: #eff6ff;
+  box-shadow: none;
+}
+
+.welcome-avatar svg {
+  width: 58px;
+  height: 58px;
+}
+
+.welcome-text h2 {
+  color: #111827;
+  font-size: 28px;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+
+.welcome-text p {
+  color: #64748b;
+}
+
+.chip {
+  border-radius: 6px;
+  border-color: #e5e7eb;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.plan-chip {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.stat-card {
+  min-height: 108px;
+  padding: 16px;
+}
+
+.stat-card:hover {
+  transform: none;
+  border-color: #dbe3ee;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.stat-card .stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.stat-info strong {
+  color: #111827;
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.profile-overview .member-panel,
+.profile-overview .account-panel,
+.profile-overview .quick-panel,
+.content-panel {
+  padding: 16px;
+}
 </style>

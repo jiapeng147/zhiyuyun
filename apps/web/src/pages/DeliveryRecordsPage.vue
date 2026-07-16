@@ -1,46 +1,66 @@
 <template>
-  <div>
-    <div v-if="error" class="global-notice error">{{ error }}</div>
-    <div v-if="warning" class="global-notice warning" role="status">{{ warning }}</div>
-    <div v-if="success" class="global-notice success">{{ success }}</div>
-    <div class="global-notice capability-notice" role="status">
-      当前版本没有安全的发货记录自动重试执行器。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
+  <div class="delivery-records-v4">
+    <div class="delivery-records-v4-notices">
+      <div v-if="error" class="global-notice error">{{ error }}</div>
+      <div v-if="warning" class="global-notice warning" role="status">{{ warning }}</div>
+      <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <CardPanel title="发货记录筛选">
-      <div class="toolbar wrap">
-        <select v-model="query.status" class="input narrow">
-          <option value="">全部状态</option>
-          <option value="0">待处理</option>
-          <option value="1">进行中</option>
-          <option value="2">成功</option>
-          <option value="3">失败</option>
-          <option value="6">缺货</option>
-          <option value="7">配置错误</option>
-        </select>
-        <select v-model="query.timing" class="input narrow">
-          <option value="">全部时机</option>
-          <option value="after_payment">付款后</option>
-          <option value="after_receipt">收货后</option>
-          <option value="after_review">评价后</option>
-        </select>
-        <select v-model="query.deliveryMode" class="input narrow">
-          <option value="">全部方式</option>
-          <option value="text">文本</option>
-          <option value="card">卡密</option>
-        </select>
-        <input v-model="query.goodsKeyword" class="input grow" placeholder="商品关键词" />
-        <input v-model="query.buyerKeyword" class="input grow" placeholder="买家关键词" />
-        <input v-model="query.orderKeyword" class="input grow" placeholder="订单号 / 外部订单号" />
-        <AppButton type="primary" :loading="recordsLoading" @click="search">搜索</AppButton>
-        <AppButton @click="resetFilters">重置</AppButton>
-        <AppButton :disabled="recordsAvailable !== true || exportLoading" @click="exportCsv">
-          {{ exportLoading ? '导出中...' : '导出 CSV' }}
-        </AppButton>
+    <n-card class="delivery-records-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Fulfillment Audit</n-tag>
+        <h2>发货记录审计</h2>
+        <p>集中查看真实发货执行结果、失败原因、卡密/文本方式和订单闭环状态。</p>
       </div>
-    </CardPanel>
+      <n-space :size="8" align="center" wrap>
+        <n-button size="small" :loading="recordsLoading" @click="load">刷新记录</n-button>
+        <n-button size="small" type="primary" :disabled="recordsAvailable !== true || exportLoading" @click="exportCsv">
+          {{ exportLoading ? '导出中...' : '导出 CSV' }}
+        </n-button>
+      </n-space>
+    </n-card>
 
-    <CardPanel title="发货记录" style="margin-top: 16px">
+    <n-alert class="delivery-records-v4-alert" type="warning" :bordered="false">
+      当前版本没有安全的发货记录自动重试执行器。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
+    </n-alert>
+
+    <section class="delivery-records-v4-stats">
+      <n-card
+        v-for="item in recordStatCards"
+        :key="item.key"
+        class="delivery-records-v4-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="delivery-records-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
+    <n-card class="delivery-records-v4-filter" :bordered="false">
+      <div class="delivery-records-v4-filter-grid">
+        <n-select v-model:value="query.status" class="delivery-records-v4-select" :options="statusOptions" />
+        <n-select v-model:value="query.timing" class="delivery-records-v4-select" :options="timingOptions" />
+        <n-select v-model:value="query.deliveryMode" class="delivery-records-v4-select" :options="modeOptions" />
+        <n-input v-model:value="query.goodsKeyword" clearable placeholder="商品关键词" />
+        <n-input v-model:value="query.buyerKeyword" clearable placeholder="买家关键词" />
+        <n-input v-model:value="query.orderKeyword" clearable placeholder="订单号 / 外部订单号" @keyup.enter="search" />
+        <n-space :size="8" align="center" wrap>
+          <n-button type="primary" :loading="recordsLoading" @click="search">搜索</n-button>
+          <n-button :disabled="recordsLoading" @click="resetFilters">重置</n-button>
+        </n-space>
+      </div>
+    </n-card>
+
+    <n-card class="delivery-records-v4-table" :bordered="false">
+      <template #header>发货记录</template>
+      <template #header-extra>
+        <n-space :size="8" align="center">
+          <n-tag size="small" :bordered="false">共 {{ recordsAvailable === true ? total : '—' }} 条</n-tag>
+          <n-tag size="small" type="info" :bordered="false">第 {{ query.current }} 页</n-tag>
+        </n-space>
+      </template>
       <div v-if="recordsRefreshing" class="refresh-status" role="status" aria-live="polite">
         正在刷新发货记录，现有数据仍可查看。
       </div>
@@ -68,15 +88,9 @@
         <template #status="{ row }">
           <Badge :type="row.deliveryBadge">{{ row.deliveryStatusText }}</Badge>
         </template>
-        <template #timing="{ row }">
-          {{ row.timingText }}
-        </template>
-        <template #mode="{ row }">
-          {{ row.deliveryModeText }}
-        </template>
-        <template #progress="{ row }">
-          {{ row.deliveryProgressText }}
-        </template>
+        <template #timing="{ row }">{{ row.timingText }}</template>
+        <template #mode="{ row }">{{ row.deliveryModeText }}</template>
+        <template #progress="{ row }">{{ row.deliveryProgressText }}</template>
         <template #errorMessage="{ row }">
           <span class="cell-ellipsis" :title="row.errorMessage || ''">{{ row.errorMessage || '-' }}</span>
         </template>
@@ -87,9 +101,10 @@
         </template>
       </BaseTable>
       <Pagination v-if="recordsAvailable === true" :total="total" :current="query.current" :page-size="query.size" @page-change="goPage" />
-    </CardPanel>
+    </n-card>
 
-    <CardPanel v-if="detailView" title="发货记录详情" style="margin-top: 16px">
+    <n-card v-if="detailView" class="delivery-records-v4-detail" :bordered="false">
+      <template #header>发货记录详情</template>
       <div class="detail-grid">
         <div><b>记录 ID：</b> {{ detailView.id || '-' }}</div>
         <div><b>订单号：</b> {{ detailView.orderId || '-' }}</div>
@@ -114,13 +129,13 @@
         <div class="section-title">错误信息</div>
         <div class="content-box">{{ detailView.errorMessageText }}</div>
       </div>
-    </CardPanel>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NAlert, NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -173,6 +188,37 @@ const columns = [
 const rows = computed(() => records.value.map(buildDeliveryRecordRowViewModel))
 const recordsRefreshing = computed(() => recordsLoading.value && recordsAvailable.value === true)
 const detailView = computed(() => (detail.value ? buildDeliveryRecordDetailViewModel(detail.value) : null))
+const statusOptions = [
+  { label: '全部状态', value: '' },
+  { label: '待处理', value: '0' },
+  { label: '进行中', value: '1' },
+  { label: '成功', value: '2' },
+  { label: '失败', value: '3' },
+  { label: '缺货', value: '6' },
+  { label: '配置错误', value: '7' }
+]
+const timingOptions = [
+  { label: '全部时机', value: '' },
+  { label: '付款后', value: 'after_payment' },
+  { label: '收货后', value: 'after_receipt' },
+  { label: '评价后', value: 'after_review' }
+]
+const modeOptions = [
+  { label: '全部方式', value: '' },
+  { label: '文本', value: 'text' },
+  { label: '卡密', value: 'card' }
+]
+const recordStatCards = computed(() => {
+  const successCount = rows.value.filter(row => row.deliveryStatusText === '成功' || row.deliveryStatusText === '已完成').length
+  const failedCount = rows.value.filter(row => ['失败', '缺货', '配置错误'].includes(row.deliveryStatusText)).length
+  const cardCount = rows.value.filter(row => row.deliveryModeText === '卡密').length
+  return [
+    { key: 'total', title: '记录总数', value: recordsAvailable.value === true ? total.value : '—', change: '当前筛选分页总数', symbol: '总', tone: 'tone-blue' },
+    { key: 'page', title: '当前页', value: rows.value.length, change: `每页 ${query.size} 条`, symbol: '页', tone: 'tone-green' },
+    { key: 'success', title: '成功记录', value: successCount, change: '当前页成功/已完成', symbol: '成', tone: 'tone-cyan' },
+    { key: 'risk', title: '异常记录', value: failedCount, change: `当前页卡密 ${cardCount} 条`, symbol: '异', tone: 'tone-orange' }
+  ]
+})
 
 function clearNotice() {
   error.value = ''
@@ -351,6 +397,122 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.delivery-records-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.delivery-records-v4-notices {
+  display: grid;
+  gap: 8px;
+}
+
+.delivery-records-v4-hero,
+.delivery-records-v4-filter,
+.delivery-records-v4-table,
+.delivery-records-v4-detail,
+.delivery-records-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.delivery-records-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.delivery-records-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.delivery-records-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.delivery-records-v4-alert {
+  border-radius: 6px;
+}
+
+.delivery-records-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.delivery-records-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.delivery-records-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delivery-records-v4-stat.tone-blue .delivery-records-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.delivery-records-v4-stat.tone-green .delivery-records-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.delivery-records-v4-stat.tone-cyan .delivery-records-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.delivery-records-v4-stat.tone-orange .delivery-records-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+
+.delivery-records-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.delivery-records-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.delivery-records-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.delivery-records-v4-filter :deep(.n-card__content),
+.delivery-records-v4-table :deep(.n-card__content),
+.delivery-records-v4-detail :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.delivery-records-v4-table :deep(.n-card-header),
+.delivery-records-v4-detail :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.delivery-records-v4-filter-grid {
+  display: grid;
+  grid-template-columns: 150px 150px 150px repeat(3, minmax(150px, 1fr)) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.delivery-records-v4-select {
+  min-width: 0;
+}
+
 .wrap {
   flex-wrap: wrap;
 }
@@ -433,6 +595,29 @@ onBeforeUnmount(() => {
 
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
+  .delivery-records-v4 {
+    gap: 12px;
+  }
+
+  .delivery-records-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .delivery-records-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .delivery-records-v4-filter :deep(.n-card__content),
+  .delivery-records-v4-table :deep(.n-card__content),
+  .delivery-records-v4-detail :deep(.n-card__content) {
+    padding: 12px;
+  }
+
+  .delivery-records-v4-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   /* 筛选工具栏：narrow / grow 全宽堆叠 */
   .narrow {
     max-width: 100%;

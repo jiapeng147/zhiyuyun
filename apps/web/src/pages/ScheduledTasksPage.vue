@@ -1,13 +1,46 @@
 <template>
-  <div class="layout-grid">
-    <div>
+  <div class="scheduled-v4">
+    <div class="scheduled-v4-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="success" class="global-notice success">{{ success }}</div>
-      <div class="global-notice scheduler-info" role="status">
-        调度服务支持“同步商品”和“同步订单”。旧任务类型不会执行，可在列表中删除后重新创建。
-      </div>
+    </div>
 
-      <CardPanel title="定时任务">
+    <n-card class="scheduled-v4-hero" :bordered="false">
+      <div>
+        <n-tag size="small" type="success" :bordered="false">Task Scheduler</n-tag>
+        <h2>定时任务编排</h2>
+        <p>统一配置商品同步、订单同步和手动触发执行，旧任务类型会被明确标记为不可用。</p>
+      </div>
+      <n-space :size="8" align="center" wrap>
+        <n-button size="small" :loading="tasksAvailable === null" @click="load">刷新任务</n-button>
+        <n-button size="small" type="primary" @click="reset">创建任务</n-button>
+      </n-space>
+    </n-card>
+
+    <n-alert class="scheduled-v4-alert" type="info" :bordered="false">
+      调度服务支持“同步商品”和“同步订单”。旧任务类型不会执行，可在列表中删除后重新创建。
+    </n-alert>
+
+    <section class="scheduled-v4-stats">
+      <n-card
+        v-for="item in taskStatCards"
+        :key="item.key"
+        class="scheduled-v4-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="scheduled-v4-stat-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </n-card>
+    </section>
+
+    <div class="layout-grid scheduled-v4-grid">
+      <n-card class="scheduled-v4-table-card" :bordered="false">
+        <template #header>定时任务</template>
+        <template #header-extra>
+          <n-tag size="small" :bordered="false">共 {{ tasksAvailable === true ? total : '—' }} 条</n-tag>
+        </template>
         <EmptyState v-if="tasksAvailable === false" icon="⚠️" title="定时任务列表暂不可用" description="当前无法确认是否存在任务，不会把加载失败显示为空列表。">
           <template #actions><AppButton @click="load">重新加载</AppButton></template>
         </EmptyState>
@@ -56,56 +89,51 @@
           </template>
         </BaseTable>
         <Pagination v-if="tasksAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
-      </CardPanel>
-    </div>
+      </n-card>
 
-    <div>
-      <CardPanel :title="form.id ? '编辑任务' : '创建任务'">
+      <n-card class="scheduled-v4-form-card" :bordered="false">
+        <template #header>{{ form.id ? '编辑任务' : '创建任务' }}</template>
         <div class="form-field">
           <label>任务名称</label>
-          <input ref="taskNameInputRef" v-model="form.taskName" class="input" />
+          <n-input ref="taskNameInputRef" v-model:value="form.taskName" />
         </div>
         <div class="form-field">
           <label>账号 ID</label>
-          <input v-model="form.accountId" class="input" inputmode="numeric" placeholder="必填，例如 8" />
+          <n-input v-model:value="form.accountId" inputmode="numeric" placeholder="必填，例如 8" />
           <span v-if="accountError" class="input-error">{{ accountError }}</span>
         </div>
         <div class="form-field">
           <label>任务类型</label>
-          <select v-model="form.taskType" class="input">
-            <option v-for="option in taskTypeOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
+          <n-select v-model:value="form.taskType" :options="taskTypeOptions" />
         </div>
         <div class="form-field">
           <label>Cron 表达式</label>
-          <input v-model="form.cronExpression" class="input" placeholder="*/30 * * * *" />
+          <n-input v-model:value="form.cronExpression" placeholder="*/30 * * * *" />
           <span v-if="cronError" class="input-error">{{ cronError }}</span>
         </div>
         <div class="form-field">
           <label>配置 JSON</label>
-          <textarea v-model="form.configJson" class="textarea" rows="8"></textarea>
+          <n-input v-model:value="form.configJson" type="textarea" :autosize="{ minRows: 8, maxRows: 14 }" />
           <span v-if="jsonError" class="input-error">{{ jsonError }}</span>
         </div>
-        <label class="toggle-row">
-          <input v-model="form.enabled" type="checkbox" />
+        <div class="scheduled-v4-switch-row">
           <span>启用自动调度</span>
-        </label>
-        <div class="inline-actions">
-          <AppButton type="primary" :loading="saving" @click="save">
-            {{ saving ? '保存中...' : '保存任务' }}
-          </AppButton>
-          <AppButton @click="reset">重置</AppButton>
+          <n-switch v-model:value="form.enabled" />
         </div>
-      </CardPanel>
+        <n-space :size="8" align="center" wrap>
+          <n-button type="primary" :loading="saving" @click="save">
+            {{ saving ? '保存中...' : '保存任务' }}
+          </n-button>
+          <n-button @click="reset">重置</n-button>
+        </n-space>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NAlert, NButton, NCard, NInput, NSelect, NSpace, NStatistic, NSwitch, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -184,6 +212,17 @@ const rows = computed(() => tasks.value.map(task => {
     raw: task
   }
 }))
+const taskStatCards = computed(() => {
+  const enabledCount = rows.value.filter(row => row.enabledText === '已启用').length
+  const runningCount = rows.value.filter(row => row.lastStatusText === '执行中').length
+  const failedCount = rows.value.filter(row => ['失败', '超时', '不可用', '类型不可用', '状态保存失败'].includes(row.lastStatusText)).length
+  return [
+    { key: 'total', title: '任务总数', value: tasksAvailable.value === true ? total.value : '—', change: '当前分页任务总量', symbol: '总', tone: 'tone-blue' },
+    { key: 'enabled', title: '已启用', value: enabledCount, change: '当前页启用任务', symbol: '启', tone: 'tone-green' },
+    { key: 'running', title: '执行中', value: runningCount, change: runningTaskId.value ? '有任务正在运行' : '暂无运行任务', symbol: '执', tone: 'tone-cyan' },
+    { key: 'risk', title: '异常', value: failedCount, change: '当前页失败或不可用', symbol: '异', tone: 'tone-orange' }
+  ]
+})
 
 function statusText(status) {
   return {
@@ -382,6 +421,109 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.scheduled-v4 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.scheduled-v4-notices {
+  display: grid;
+  gap: 8px;
+}
+
+.scheduled-v4-hero,
+.scheduled-v4-table-card,
+.scheduled-v4-form-card,
+.scheduled-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.scheduled-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.scheduled-v4-hero h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.scheduled-v4-hero p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.scheduled-v4-alert {
+  border-radius: 6px;
+}
+
+.scheduled-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.scheduled-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.scheduled-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scheduled-v4-stat.tone-blue .scheduled-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.scheduled-v4-stat.tone-green .scheduled-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.scheduled-v4-stat.tone-cyan .scheduled-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.scheduled-v4-stat.tone-orange .scheduled-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+
+.scheduled-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.scheduled-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.scheduled-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.scheduled-v4-table-card :deep(.n-card__content),
+.scheduled-v4-form-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.scheduled-v4-table-card :deep(.n-card-header),
+.scheduled-v4-form-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
 .layout-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
@@ -408,6 +550,21 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 14px;
+}
+
+.scheduled-v4-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 0 16px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .inline-actions {
@@ -458,6 +615,24 @@ onBeforeUnmount(() => {
 
 /* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
+  .scheduled-v4 {
+    gap: 12px;
+  }
+
+  .scheduled-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .scheduled-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scheduled-v4-table-card :deep(.n-card__content),
+  .scheduled-v4-form-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
   .layout-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
