@@ -69,51 +69,90 @@
         @refresh="refreshActivePolishConflict"
       />
 
-      <div class="grid stat-grid products-stat-grid">
-        <StatCard title="商品总数" :value="statsAvailable === true ? goodsStats.total : '—'" :change="statsAvailable === false ? '统计暂不可用' : '全部商品'" icon="record" color="green" />
-        <StatCard title="在售商品" :value="statsAvailable === true ? goodsStats.onSale : '—'" :change="statsAvailable === false ? '统计暂不可用' : '正在售卖'" icon="data" color="green" />
-        <StatCard title="下架/草稿" :value="statsAvailable === true ? goodsStats.offShelfOrDraft : '—'" :change="statsAvailable === false ? '统计暂不可用' : '未上架'" icon="data" color="orange" />
-        <StatCard title="自动发货" :value="statsAvailable === true ? goodsStats.autoDeliveryOn : '—'" :change="statsAvailable === false ? '统计暂不可用' : '已开启商品数'" icon="truck" color="purple" />
-        <StatCard title="自动回复" :value="statsAvailable === true ? goodsStats.autoReplyAccounts : '—'" :change="statsAvailable === false ? '统计暂不可用' : '已开启账号数'" icon="chat" />
-        <StatCard title="当前账号" :value="selectedAccountName" change="可切换账号" icon="shield" color="gray" />
-      </div>
-      <CardPanel class="products-table-card">
-        <div class="products-toolbar">
+      <n-card class="products-v4-hero" :bordered="false">
+        <div class="products-v4-hero-copy">
+          <n-tag size="small" type="success" :bordered="false">Product Operations</n-tag>
+          <h2>商品运营台</h2>
+          <p>按账号同步闲鱼商品，集中处理上下架、自动发货、自动回复、批量删除和商品擦亮。</p>
+        </div>
+        <n-space class="products-v4-hero-actions" :size="8" align="center" wrap>
+          <n-button type="primary" size="small" @click="emit('navigate','product-publish')">发布商品</n-button>
+          <n-button
+            size="small"
+            :disabled="listAvailable === false || syncing || autoSyncState.active"
+            :loading="syncing || autoSyncState.active"
+            @click="syncProducts"
+          >
+            {{ syncing || autoSyncState.active ? (autoSyncState.accountTotal > 1 ? `同步中 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal}...` : '同步中...') : '同步闲鱼商品' }}
+          </n-button>
+          <n-button size="small" tertiary :loading="loading" @click="loadItems">刷新列表</n-button>
+        </n-space>
+      </n-card>
+
+      <section class="products-v4-stats">
+        <n-card
+          v-for="item in productStatCards"
+          :key="item.key"
+          class="products-v4-stat"
+          :class="item.tone"
+          :bordered="false"
+        >
+          <span class="products-v4-stat-icon">{{ item.symbol }}</span>
+          <n-statistic :label="item.title" :value="item.value" />
+          <small>{{ item.change }}</small>
+        </n-card>
+      </section>
+
+      <n-card class="products-table-card products-v4-table-card" :bordered="false">
+        <template #header>商品列表</template>
+        <template #header-extra>
+          <n-tag size="small" :bordered="false">{{ selectedAccountName }}</n-tag>
+        </template>
+        <div class="products-toolbar products-v4-toolbar">
           <div class="toolbar-filter">
             <div class="filter-left">
-              <select v-model="query.xianyuAccountId" class="input toolbar-select" @change="onAccountChange">
-                <option :value="''">全部账号</option>
-                <option v-for="a in accounts" :key="a.id" :value="a.id">{{ accountName(a) }}</option>
-              </select>
-              <div class="tabs products-tabs">
-                <button :class="['tab',{active:query.status === ''}]" @click="setStatus('')">全部</button>
-                <button :class="['tab',{active:query.status === 0}]" @click="setStatus(0)">在售</button>
-                <button :class="['tab',{active:query.status === 1}]" @click="setStatus(1)">下架/草稿</button>
-                <button :class="['tab',{active:query.status === 3}]" @click="setStatus(3)">已删除</button>
-              </div>
+              <n-select
+                v-model:value="query.xianyuAccountId"
+                class="toolbar-select"
+                :options="accountFilterOptions"
+                @update:value="onAccountChange"
+              />
+              <n-space class="products-v4-status-tabs" :size="6" align="center" wrap>
+                <n-button size="small" :type="query.status === '' ? 'primary' : 'default'" :secondary="query.status !== ''" @click="setStatus('')">全部</n-button>
+                <n-button size="small" :type="query.status === 0 ? 'primary' : 'default'" :secondary="query.status !== 0" @click="setStatus(0)">在售</n-button>
+                <n-button size="small" :type="query.status === 1 ? 'primary' : 'default'" :secondary="query.status !== 1" @click="setStatus(1)">下架/草稿</n-button>
+                <n-button size="small" :type="query.status === 3 ? 'primary' : 'default'" :secondary="query.status !== 3" @click="setStatus(3)">已删除</n-button>
+              </n-space>
             </div>
             <div class="filter-search">
-              <input v-model="query.keyword" class="input products-search-input" placeholder="搜索 商品标题 / 商品ID" @keyup.enter="loadItems">
-              <AppButton :loading="loading" @click="loadItems">搜索</AppButton>
-              <AppButton :disabled="loading" @click="resetQuery">重置</AppButton>
+              <n-input
+                v-model:value="query.keyword"
+                clearable
+                class="products-search-input"
+                placeholder="搜索 商品标题 / 商品ID"
+                @keyup.enter="loadItems"
+              />
+              <n-button :loading="loading" @click="loadItems">搜索</n-button>
+              <n-button :disabled="loading" @click="resetQuery">重置</n-button>
             </div>
           </div>
-          <div class="toolbar-actions">
-            <AppButton
-              type="warn"
+          <n-space class="toolbar-actions" :size="8" align="center" wrap>
+            <n-button
+              type="warning"
               :disabled="listAvailable !== true || !query.xianyuAccountId || isPolishScopeBusy(query.xianyuAccountId)"
               :loading="isPolishScopeActionLoading(query.xianyuAccountId)"
-              :loading-text="polishScopeButtonText(query.xianyuAccountId, [], '擦亮当前账号')"
               :title="itemPolishRetryGuidance(currentAccountPolishTask) || currentAccountPolishTask?.message || '擦亮当前账号在售商品'"
               @click="polishCurrentAccount"
             >
               {{ polishScopeButtonText(query.xianyuAccountId, [], '擦亮当前账号') }}
-            </AppButton>
-            <AppButton type="danger" :disabled="listAvailable !== true || selectedKeys.length === 0 || batchDeleting" @click="batchDeleteProducts">
+            </n-button>
+            <n-button type="error" :disabled="listAvailable !== true || selectedKeys.length === 0 || batchDeleting" @click="batchDeleteProducts">
               {{ batchDeleteBtnText }}
-            </AppButton>
-            <AppButton type="primary" :disabled="listAvailable === false || syncing || autoSyncState.active" @click="syncProducts">{{ syncing || autoSyncState.active ? (autoSyncState.accountTotal > 1 ? `同步中 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal}...` : '同步中...') : '同步闲鱼商品' }}</AppButton>
-          </div>
+            </n-button>
+            <n-button type="primary" :disabled="listAvailable === false || syncing || autoSyncState.active" @click="syncProducts">
+              {{ syncing || autoSyncState.active ? (autoSyncState.accountTotal > 1 ? `同步中 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal}...` : '同步中...') : '同步闲鱼商品' }}
+            </n-button>
+          </n-space>
         </div>
         <div v-if="batchDeleteState.active" class="global-notice warn">
           <strong>正在批量删除商品...</strong>
@@ -217,18 +256,17 @@
             <button class="page-no" :disabled="query.pageNum * query.pageSize >= totalCount" @click="nextPage">›</button>
           </div>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="同步任务历史" style="margin-top:16px">
-        <div class="toolbar compact">
-          <select v-model="syncQuery.status" class="input" style="max-width:150px" @change="loadSyncTasks">
-            <option value="">全部状态</option>
-            <option value="queued">排队中</option>
-            <option value="running">运行中</option>
-            <option value="completed">已完成</option>
-            <option value="failed">失败</option>
-          </select>
-          <AppButton :disabled="syncTasksLoading" @click="loadSyncTasks">刷新任务</AppButton>
+      <n-card title="同步任务历史" class="products-v4-sync-card" :bordered="false">
+        <div class="toolbar compact products-v4-sync-toolbar">
+          <n-select
+            v-model:value="syncQuery.status"
+            class="products-v4-sync-select"
+            :options="syncStatusOptions"
+            @update:value="loadSyncTasks"
+          />
+          <n-button :disabled="syncTasksLoading" @click="loadSyncTasks">刷新任务</n-button>
           <span class="muted">展示当前账号最近同步记录，服务重启后仍可恢复查看。</span>
         </div>
         <EmptyState v-if="syncTasksAvailable === false" icon="⚠" title="同步任务历史暂不可用" description="无法读取持久化任务记录，未知状态不会显示为零条任务。">
@@ -242,7 +280,7 @@
           <template #error="{row}"><span :title="row.errorMessage">{{ shortText(row.errorMessage || '-', 30) }}</span></template>
         </BaseTable>
         <div v-if="syncTasksAvailable === true" class="pagination"><span>{{ syncTasksLoading ? '加载中...' : `共 ${syncTaskTotal} 条任务` }}</span><button type="button" class="page-no" :disabled="syncTasksLoading || syncQuery.current <= 1" aria-label="上一页同步任务" @click="prevSyncPage">‹</button><span class="page-no active" aria-current="page">{{ syncQuery.current }}</span><button type="button" class="page-no" :disabled="syncTasksLoading || syncQuery.current * syncQuery.size >= syncTaskTotal" aria-label="下一页同步任务" @click="nextSyncPage">›</button></div>
-      </CardPanel>
+      </n-card>
     </div>
     <div v-if="selected && listAvailable === true" class="right-drawer products-drawer">
       <div class="drawer-header">
@@ -362,7 +400,8 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import StatCard from '../components/StatCard.vue';import CardPanel from '../components/CardPanel.vue';import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import ToggleSwitch from '../components/ToggleSwitch.vue';import AppButton from '../components/AppButton.vue';import EmptyState from '../components/EmptyState.vue'
+import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import CardPanel from '../components/CardPanel.vue';import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import ToggleSwitch from '../components/ToggleSwitch.vue';import AppButton from '../components/AppButton.vue';import EmptyState from '../components/EmptyState.vue'
 import { confirmAction } from '../utils/confirmAction.js'
 import { globalConfirm } from '../composables/confirmState.js'
 import { getAccounts } from '../api/accounts.js'
@@ -473,6 +512,13 @@ const selectedProductPolishReconcileMessage = computed(() => {
 const pageSizes = [50, 100, 200, 300, 500, 1000]
 const cols=[{key:'info',title:'商品信息'},{key:'price',title:'价格'},{key:'stock',title:'库存'},{key:'sku',title:'SKU'},{key:'status',title:'状态'},{key:'type',title:'发货类型'},{key:'delivery',title:'自动发货'},{key:'reply',title:'自动回复'},{key:'onsale',title:'在售'},{key:'time',title:'更新时间'},{key:'op',title:'操作'}]
 const syncCols=[{key:'createdTime',title:'创建时间'},{key:'status',title:'状态'},{key:'progress',title:'进度'},{key:'summary',title:'统计'},{key:'durationSeconds',title:'耗时(s)'},{key:'error',title:'错误'}]
+const syncStatusOptions = [
+  { label: '全部状态', value: '' },
+  { label: '排队中', value: 'queued' },
+  { label: '运行中', value: 'running' },
+  { label: '已完成', value: 'completed' },
+  { label: '失败', value: 'failed' },
+]
 let syncPollCanceled = false
 const statusMap = { 0: '在售', 1: '下架/草稿', 2: '已售出', 3: '已删除' }
 const autoSyncState = reactive({
@@ -581,7 +627,22 @@ const products = computed(() => items.value.map(w => {
     wantCount: formatNumber(item.wantCount)
   }
 }))
-const selectedAccountName = computed(() => accountName(accounts.value.find(a => a.id === Number(query.xianyuAccountId)) || {}))
+const accountFilterOptions = computed(() => [
+  { label: '全部账号', value: '' },
+  ...accounts.value.map(a => ({ label: accountName(a), value: a.id })),
+])
+const selectedAccountName = computed(() => {
+  if (!query.xianyuAccountId) return '全部账号'
+  return accountName(accounts.value.find(a => a.id === Number(query.xianyuAccountId)) || {})
+})
+const productStatCards = computed(() => [
+  { key: 'total', title: '商品总数', value: statsAvailable.value === true ? goodsStats.value.total : '—', change: statsAvailable.value === false ? '统计暂不可用' : '全部商品', symbol: '总', tone: 'tone-blue' },
+  { key: 'onSale', title: '在售商品', value: statsAvailable.value === true ? goodsStats.value.onSale : '—', change: statsAvailable.value === false ? '统计暂不可用' : '正在售卖', symbol: '售', tone: 'tone-green' },
+  { key: 'offShelfOrDraft', title: '下架/草稿', value: statsAvailable.value === true ? goodsStats.value.offShelfOrDraft : '—', change: statsAvailable.value === false ? '统计暂不可用' : '未上架', symbol: '稿', tone: 'tone-orange' },
+  { key: 'autoDeliveryOn', title: '自动发货', value: statsAvailable.value === true ? goodsStats.value.autoDeliveryOn : '—', change: statsAvailable.value === false ? '统计暂不可用' : '已开启商品数', symbol: '发', tone: 'tone-purple' },
+  { key: 'autoReplyAccounts', title: '自动回复', value: statsAvailable.value === true ? goodsStats.value.autoReplyAccounts : '—', change: statsAvailable.value === false ? '统计暂不可用' : '已开启账号数', symbol: '聊', tone: 'tone-cyan' },
+  { key: 'account', title: '当前账号', value: selectedAccountName.value, change: '可切换账号', symbol: '号', tone: 'tone-gray' },
+])
 // AI 客服主开关与读取可用性分开保存；读取失败绝不能等同于“已关闭”。
 const aiCsEnabledCache = ref(null)
 const aiCsAvailable = ref(null)
@@ -1946,6 +2007,100 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   min-width: 0;
   overflow-y: auto;
   padding-right: 4px;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.products-v4-hero,
+.products-v4-table-card,
+.products-v4-sync-card,
+.products-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.products-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.products-v4-hero-copy {
+  min-width: 0;
+}
+.products-v4-hero-copy h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.products-v4-hero-copy p {
+  max-width: 760px;
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.products-v4-hero-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+.products-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+.products-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+.products-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.products-v4-stat.tone-blue .products-v4-stat-icon { background: #eff6ff; color: #2563eb; }
+.products-v4-stat.tone-green .products-v4-stat-icon { background: #ecfdf5; color: #059669; }
+.products-v4-stat.tone-orange .products-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.products-v4-stat.tone-purple .products-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
+.products-v4-stat.tone-cyan .products-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.products-v4-stat.tone-gray .products-v4-stat-icon { background: #f1f5f9; color: #475569; }
+.products-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+.products-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+.products-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.products-v4-table-card :deep(.n-card-header),
+.products-v4-sync-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+.products-v4-table-card :deep(.n-card__content),
+.products-v4-sync-card :deep(.n-card__content) {
+  padding: 16px;
+}
+.products-v4-sync-toolbar {
+  margin-bottom: 14px;
+}
+.products-v4-sync-select {
+  width: 150px;
 }
 .products-stat-grid {
   margin-bottom: 16px;
@@ -2419,6 +2574,10 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 
 @media (max-width: 1280px) {
+  .products-v4-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .products-stat-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2452,6 +2611,21 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   }
   .products-main {
     padding-right: 0;
+    gap: 12px;
+  }
+  .products-v4-hero :deep(.n-card__content) {
+    padding: 14px;
+    flex-direction: column;
+  }
+  .products-v4-hero-copy h2 {
+    font-size: 20px;
+  }
+  .products-v4-hero-actions {
+    justify-content: flex-start;
+  }
+  .products-v4-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
   .products-drawer {
     /* 移动端：恢复全宽自适应，不限制高度 */
@@ -2483,6 +2657,9 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
     gap: 8px;
   }
   .toolbar-select {
+    width: 100%;
+  }
+  .products-v4-sync-select {
     width: 100%;
   }
   .filter-search {
