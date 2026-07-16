@@ -35,17 +35,17 @@
       </n-card>
 
       <n-card class="dashboard-banner-card" :bordered="false">
-        <section v-if="totalSlides > 0" class="hero-card">
-          <div class="hero-viewport">
-            <div class="hero-track" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
+        <section v-if="totalSlides > 0" class="dashboard-carousel">
+          <div class="dashboard-carousel-viewport">
+            <div class="dashboard-carousel-track" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
               <article
                 v-for="(slide, index) in carouselSlides"
                 :key="slide.coverId || slide.id || index"
-                :class="['hero-slide', { clickable: !!slide.linkUrl }]"
+                :class="['dashboard-carousel-slide', { clickable: !!slide.linkUrl }]"
                 @click="clickCarousel(slide)"
               >
                 <img
-                  class="hero-banner"
+                  class="dashboard-carousel-image"
                   :src="slide.imageUrl"
                   :alt="slide.title || `轮播图 ${index + 1}`"
                   decoding="async"
@@ -56,20 +56,20 @@
             </div>
           </div>
 
-          <button class="hero-arrow hero-arrow-left" type="button" :disabled="totalSlides <= 1" aria-label="上一张" @click="prevSlide">
+          <button class="dashboard-carousel-arrow dashboard-carousel-prev" type="button" :disabled="totalSlides <= 1" aria-label="上一张" @click="prevSlide">
             ‹
           </button>
-          <button class="hero-arrow hero-arrow-right" type="button" :disabled="totalSlides <= 1" aria-label="下一张" @click="nextSlide">
+          <button class="dashboard-carousel-arrow dashboard-carousel-next" type="button" :disabled="totalSlides <= 1" aria-label="下一张" @click="nextSlide">
             ›
           </button>
 
-          <div class="hero-dots">
+          <div class="dashboard-carousel-dots">
             <button
               v-for="(_, index) in totalSlides"
               :key="`dot-${index}`"
               type="button"
               :aria-label="`切换到第 ${index + 1} 张`"
-              :class="['hero-dot', { active: currentSlide === index }]"
+              :class="['dashboard-carousel-dot', { active: currentSlide === index }]"
               @click="goToSlide(index)"
             ></button>
           </div>
@@ -85,12 +85,12 @@
       <n-card
         v-for="item in overviewMetrics"
         :key="item.key"
-        class="metric-card"
+        class="dashboard-v4-metric-card"
         :class="`tone-${item.tone}`"
         :bordered="false"
       >
-        <div class="metric-card-head">
-          <span class="metric-icon"><Icon :name="item.icon" /></span>
+        <div class="dashboard-v4-metric-head">
+          <span class="dashboard-v4-metric-icon"><Icon :name="item.icon" /></span>
           <n-tag size="small" :type="item.tagType" :bordered="false">{{ item.state }}</n-tag>
         </div>
         <n-statistic :label="item.label" :value="item.value">
@@ -160,10 +160,10 @@
         </n-card>
 
         <n-card title="功能矩阵" class="dashboard-card" :bordered="false">
-          <div class="feature-grid">
-            <button v-for="item in features" :key="item.t" type="button" class="feature-card" @click="goFeature(item)">
-              <span :class="['feature-icon', item.c]"><Icon :name="item.i" /></span>
-              <span class="feature-text">
+          <div class="dashboard-v4-feature-grid">
+            <button v-for="item in features" :key="item.t" type="button" class="dashboard-v4-feature-card" @click="goFeature(item)">
+              <span :class="['dashboard-v4-feature-icon', item.c]"><Icon :name="item.i" /></span>
+              <span class="dashboard-v4-feature-text">
                 <strong>{{ item.t }}</strong>
                 <small>{{ item.d }}</small>
               </span>
@@ -185,9 +185,9 @@
         </n-card>
 
         <n-card title="系统状态" class="dashboard-card side-panel" :bordered="false">
-          <div class="status-list">
-            <div v-for="item in systemStatus" :key="item.id || item.label" class="status-row" :title="item.message || ''">
-              <span><i :class="['status-dot', { offline: item.ok === false, unknown: item.ok == null }]"></i>{{ item.label }}</span>
+          <div class="dashboard-v4-status-list">
+            <div v-for="item in systemStatus" :key="item.id || item.label" class="dashboard-v4-status-row" :title="item.message || ''">
+              <span><i :class="['dashboard-v4-status-dot', { offline: item.ok === false, unknown: item.ok == null }]"></i>{{ item.label }}</span>
               <strong :class="item.ok === true ? 'status-ok' : (item.ok === false ? 'status-bad' : 'status-unknown')">
                 {{ item.ok === true ? '正常' : (item.ok === false ? '异常' : '未知') }}
               </strong>
@@ -856,21 +856,21 @@ function formatRealtimeType(type) {
 }
 
 const quickStarts = [
-  { t: '添加账号', d: '添加店铺账号，开始管理您的店铺', i: 'users', c: 'blue-bg', to: 'accounts' },
-  { t: 'WebSocket连接', d: '建立实时连接，接收消息和数据', i: 'link', c: 'purple-bg', to: 'connections' },
-  { t: '商品管理', d: '发布管理商品，优化商品信息', i: 'product', c: 'green-bg', to: 'products' },
-  { t: '自动化发货', d: '设置发货规则并查看实际执行结果', i: 'truck', c: 'orange-bg', to: 'auto-delivery' }
+  { t: '添加账号', d: '添加店铺账号，开始管理您的店铺', i: 'users', c: 'dash-tone-blue', to: 'accounts' },
+  { t: 'WebSocket连接', d: '建立实时连接，接收消息和数据', i: 'link', c: 'dash-tone-purple', to: 'connections' },
+  { t: '商品管理', d: '发布管理商品，优化商品信息', i: 'product', c: 'dash-tone-green', to: 'products' },
+  { t: '自动化发货', d: '设置发货规则并查看实际执行结果', i: 'truck', c: 'dash-tone-orange', to: 'auto-delivery' }
 ]
 
 const features = [
-  { t: '多账号管理', d: '集中查看账号、授权与连接状态', i: 'users', c: 'purple-bg', to: 'accounts', targetLabel: '管理账号' },
-  { t: '商品同步', d: '按需同步商品；发布与改价结果以平台确认为准', i: 'product', c: 'green-bg', to: 'products', targetLabel: '商品管理' },
-  { t: '订单管理', d: '按需同步订单并查看后端实际记录状态', i: 'record', c: 'blue-bg', to: 'orders', targetLabel: '订单管理' },
-  { t: '自动发货', d: '按已配置规则处理发货，异常与未知结果需人工复核', i: 'truck', c: 'orange-bg', to: 'auto-delivery', targetLabel: '自动化' },
-  { t: '广告合作', d: '查看商业服务返回的真实套餐；未配置时页面会明确禁用提交与支付。', i: 'opportunity', c: 'purple-bg', to: 'ad-application', targetLabel: '广告申请' },
-  { t: '系统设置', d: '集中管理通用模型、向量模型、RAG 知识库与高德地图配置。', i: 'settings', c: 'cyan-bg', to: 'settings-system', targetLabel: '系统配置' },
-  { t: '卡密仓库', d: '管理卡密资源，安全存储和使用', i: 'key', c: 'orange-bg', to: 'card-warehouse', targetLabel: '卡密仓库' },
-  { t: '数据统计', d: '查看订单、发货与自动回复的实际汇总', i: 'data', c: 'blue-bg', to: 'data', targetLabel: '数据面板' }
+  { t: '多账号管理', d: '集中查看账号、授权与连接状态', i: 'users', c: 'dash-tone-purple', to: 'accounts', targetLabel: '管理账号' },
+  { t: '商品同步', d: '按需同步商品；发布与改价结果以平台确认为准', i: 'product', c: 'dash-tone-green', to: 'products', targetLabel: '商品管理' },
+  { t: '订单管理', d: '按需同步订单并查看后端实际记录状态', i: 'record', c: 'dash-tone-blue', to: 'orders', targetLabel: '订单管理' },
+  { t: '自动发货', d: '按已配置规则处理发货，异常与未知结果需人工复核', i: 'truck', c: 'dash-tone-orange', to: 'auto-delivery', targetLabel: '自动化' },
+  { t: '广告合作', d: '查看商业服务返回的真实套餐；未配置时页面会明确禁用提交与支付。', i: 'opportunity', c: 'dash-tone-purple', to: 'ad-application', targetLabel: '广告申请' },
+  { t: '系统设置', d: '集中管理通用模型、向量模型、RAG 知识库与高德地图配置。', i: 'settings', c: 'dash-tone-cyan', to: 'settings-system', targetLabel: '系统配置' },
+  { t: '卡密仓库', d: '管理卡密资源，安全存储和使用', i: 'key', c: 'dash-tone-orange', to: 'card-warehouse', targetLabel: '卡密仓库' },
+  { t: '数据统计', d: '查看订单、发货与自动回复的实际汇总', i: 'data', c: 'dash-tone-blue', to: 'data', targetLabel: '数据面板' }
 ]
 
 const primaryShortcuts = computed(() => {
@@ -894,915 +894,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.dashboard-page {
-  max-width: 100%;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 368px;
-  gap: 20px;
-  align-items: start;
-}
-
-.dashboard-main {
-  min-width: 0;
-}
-
-.dashboard-side {
-  position: sticky;
-  top: 88px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.dashboard-section {
-  margin-top: 18px;
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 16px 40px rgba(132, 62, 32, 0.05);
-}
-
-.hero-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 22px;
-  border: 1px solid rgba(247, 207, 190, 0.9);
-  background: linear-gradient(180deg, #eff6ff 0%, #f7fbff 100%);
-  box-shadow: 0 18px 48px rgba(171, 80, 41, 0.1);
-  padding: 14px;
-}
-
-.hero-card::before {
-  display: none;
-}
-
-.hero-viewport {
-  position: relative;
-  overflow: hidden;
-  border-radius: 18px;
-  aspect-ratio: 2048 / 646;
-}
-
-.hero-track {
-  display: flex;
-  height: 100%;
-  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.hero-slide {
-  min-width: 100%;
-  position: relative;
-  margin: 0;
-  cursor: default;
-}
-
-.hero-slide.clickable {
-  cursor: pointer;
-}
-
-.hero-banner {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center;
-}
-
-.hero-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.96);
-  color: #33435d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 28px rgba(152, 88, 61, 0.14);
-  z-index: 4;
-}
-
-.hero-arrow:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.hero-arrow-left {
-  left: 28px;
-}
-
-.hero-arrow-right {
-  right: 28px;
-}
-
-.hero-dots {
-  position: absolute;
-  bottom: 26px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  z-index: 4;
-}
-
-.hero-dot {
-  width: 8px;
-  height: 8px;
-  border: 0;
-  border-radius: 999px;
-  padding: 0;
-  background: rgba(197, 138, 112, 0.32);
-}
-
-.hero-dot.active {
-  width: 24px;
-  background: #ff601c;
-}
-
-.quick-start-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.quick-card,
-.feature-card {
-  min-height: 96px;
-  border: 1px solid #edf2fb;
-  border-radius: 18px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 16px;
-  text-align: left;
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.quick-card:hover,
-.feature-card:hover {
-  transform: translateY(-1px);
-  border-color: #ffd9c9;
-  box-shadow: 0 14px 30px rgba(214, 90, 37, 0.08);
-}
-
-.quick-text,
-.feature-text {
-  min-width: 0;
-  flex: 1;
-}
-
-.quick-text strong,
-.feature-text strong {
-  display: block;
-  color: #16233d;
-  font-size: 15px;
-}
-
-.quick-text span,
-.feature-text span {
-  display: block;
-  margin-top: 4px;
-  color: #7a8aa5;
-  font-size: 12px;
-  line-height: 1.65;
-}
-
-.feature-text em {
-  display: block;
-  margin-top: 6px;
-  color: #0f766e;
-  font-style: normal;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.quick-card .circle-ico,
-.feature-card .circle-ico {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  font-size: 20px;
-}
-
-.card-arrow {
-  color: #bdc9db;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.events-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 94px;
-  color: #8ba0bf;
-}
-
-.events-empty p {
-  margin: 0;
-}
-
-.events-box {
-  border: 1px solid #eef3fb;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.event-row {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) 120px;
-  gap: 10px;
-  align-items: center;
-  min-height: 56px;
-  padding: 0 18px;
-  font-size: 13px;
-}
-
-.event-row + .event-row {
-  border-top: 1px solid #f1f5fa;
-}
-
-.event-row strong {
-  color: #664131;
-}
-
-.event-row span {
-  color: #6e7f9b;
-}
-
-.event-row em {
-  color: #9aa7bb;
-  font-style: normal;
-  text-align: right;
-}
-
-.side-panel {
-  border-radius: 18px;
-  padding: 20px 18px;
-  box-shadow: 0 16px 40px rgba(132, 62, 32, 0.06);
-}
-
-.side-link {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #f66b2f;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.side-link:disabled {
-  color: #94a3b8;
-  cursor: not-allowed;
-}
-
-.ad-side-panel {
-  background:
-    radial-gradient(circle at top right, rgba(255, 155, 112, 0.16), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #FAFAFA 100%);
-}
-
-.ad-side-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.ad-side-copy strong {
-  color: #15243f;
-  font-size: 15px;
-}
-
-.ad-side-copy span {
-  color: #667892;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.ad-text-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.ad-text-item {
-  width: 100%;
-  padding: 14px 14px 15px;
-  border: 1px solid #f8e4dc;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.94);
-  text-align: left;
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.ad-text-item:hover {
-  transform: translateY(-1px);
-  border-color: #ffba9d;
-  box-shadow: 0 14px 28px rgba(180, 81, 39, 0.1);
-}
-
-.ad-text-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.ad-text-head strong {
-  color: #522917;
-  font-size: 13px;
-}
-
-.ad-text-head i {
-  display: inline-flex;
-  align-items: center;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #edf5ff;
-  color: #f66b2f;
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 800;
-}
-
-.ad-text-item p {
-  margin: 8px 0 0;
-  color: #63758f;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.guide-section h4 {
-  margin: 0;
-  color: #192742;
-  font-size: 15px;
-}
-
-.guide-section p {
-  margin: 10px 0 0;
-  color: #6d7f9d;
-  font-size: 13px;
-  line-height: 1.75;
-}
-
-.guide-list {
-  margin: 12px 0 0;
-  padding: 0 0 0 18px;
-  color: #536682;
-}
-
-.guide-list li + li {
-  margin-top: 8px;
-}
-
-.guide-step-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.guide-list strong {
-  display: block;
-  color: #4b2b1d;
-}
-
-.guide-list span {
-  display: block;
-  margin-top: 4px;
-  color: #6d7f9d;
-}
-
-.guide-step-status {
-  flex: 0 0 auto;
-  height: 22px;
-  padding: 0 10px;
-  border-radius: 999px;
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.guide-step-status.done {
-  background: #e9f8f1;
-  color: #179866;
-}
-
-.guide-step-status.progress {
-  background: #fff4e5;
-  color: #d97706;
-}
-
-.guide-step-status.todo,
-.guide-step-status.suggest {
-  background: #edf4ff;
-  color: #e76127;
-}
-
-.guide-doc-link {
-  margin-top: 12px;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #0f766e;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.guide-collapse-list {
-  margin-top: 12px;
-  border-top: 1px solid #eef2f8;
-}
-
-.guide-collapse-block + .guide-collapse-block {
-  border-top: 1px solid #eef2f8;
-}
-
-.guide-collapse-item {
-  width: 100%;
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #59392c;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.collapse-chevron {
-  color: #98a7bc;
-  transition: transform .18s ease;
-}
-
-.collapse-chevron.open {
-  transform: rotate(180deg);
-}
-
-.guide-collapse-panel {
-  padding: 0 0 14px;
-}
-
-.guide-collapse-panel p {
-  margin: 0;
-  color: #6d7f9d;
-  font-size: 12px;
-  line-height: 1.8;
-}
-
-.guide-collapse-points {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  color: #5b6d88;
-  font-size: 12px;
-  line-height: 1.75;
-}
-
-.guide-collapse-points li + li {
-  margin-top: 6px;
-}
-
-.guide-inline-link {
-  margin-top: 10px;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.side-empty {
-  padding: 12px 0;
-  color: #93a2b7;
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.side-empty strong {
-  color: #445874;
-}
-
-.side-empty span {
-  line-height: 1.7;
-}
-
-.side-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.notice-item + .notice-item {
-  border-top: 1px solid #eef2f8;
-}
-
-.notice-item {
-  padding: 12px 0;
-}
-
-.notice-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.notice-head strong {
-  color: #1c2a44;
-  font-size: 13px;
-}
-
-.notice-head span {
-  color: #99a8bd;
-  font-size: 11px;
-}
-
-.notice-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.notice-tag {
-  display: inline-flex;
-  align-items: center;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 800;
-}
-
-.notice-tag-system {
-  background: #edf4ff;
-  color: #e76127;
-}
-
-.notice-tag-warning {
-  background: #fff4e5;
-  color: #d97706;
-}
-
-.notice-tag-info {
-  background: #f3f6fb;
-  color: #60718c;
-}
-
-.notice-state {
-  color: #97a6bb;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.notice-state.unread {
-  color: #f97316;
-}
-
-.notice-item p {
-  margin: 6px 0 0;
-  color: #6e809b;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.status-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.status-row {
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #eef2f8;
-}
-
-.status-row span {
-  color: #41516b;
-  display: flex;
-  align-items: center;
-}
-
-.status-row .status-ok {
-  color: #16a26d;
-}
-
-.status-row .status-bad {
-  color: #ef4444;
-}
-
-.status-row .status-unknown,
-.status-unknown {
-  color: #8a6a13;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #19b16f;
-  display: inline-block;
-  margin-right: 8px;
-}
-
-.status-dot.offline {
-  background: #ef4444;
-}
-
-.status-dot.unknown {
-  background: #d6a629;
-}
-
-.status-footer {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #93a2b7;
-}
-
-.status-success {
-  color: #17a36b;
-}
-
-.status-error {
-  color: #ef4444;
-}
-
-@media (max-width: 1500px) {
-  .quick-start-grid,
-  .feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1180px) {
-  .dashboard-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dashboard-side {
-    position: static;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero-viewport {
-    aspect-ratio: 16 / 5;
-  }
-
-  /* Hero 卡片内边距 + 圆角收敛 */
-  .hero-card {
-    padding: 8px;
-    border-radius: 14px;
-  }
-
-  .hero-viewport {
-    border-radius: 12px;
-  }
-
-  /* Hero 翻页箭头缩小并贴近边缘 */
-  .hero-arrow {
-    width: 36px;
-    height: 36px;
-  }
-
-  .hero-arrow-left {
-    left: 12px;
-  }
-
-  .hero-arrow-right {
-    right: 12px;
-  }
-
-  .hero-dots {
-    bottom: 12px;
-    gap: 6px;
-  }
-
-  /* 仪表盘网格间距收敛 */
-  .dashboard-grid {
-    gap: 12px;
-  }
-
-  .dashboard-side {
-    gap: 12px;
-  }
-
-  /* 各 Section 内边距收敛 */
-  .dashboard-section {
-    margin-top: 12px;
-    border-radius: 14px;
-    padding: 14px;
-  }
-
-  /* 快速开始 / 功能特性：小屏 1 列堆叠 */
-  .quick-start-grid,
-  .feature-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .quick-card,
-  .feature-card {
-    min-height: 0;
-    padding: 12px;
-    border-radius: 14px;
-    gap: 12px;
-  }
-
-  .quick-card .circle-ico,
-  .feature-card .circle-ico {
-    width: 38px;
-    height: 38px;
-    flex: 0 0 38px;
-    font-size: 18px;
-  }
-
-  .quick-text strong,
-  .feature-text strong {
-    font-size: 14px;
-  }
-
-  .quick-text span,
-  .feature-text span {
-    margin-top: 3px;
-    font-size: 11px;
-    line-height: 1.55;
-  }
-
-  .feature-text em {
-    margin-top: 4px;
-    font-size: 11px;
-  }
-
-  .card-arrow {
-    font-size: 18px;
-  }
-
-  /* 实时事件行：横向网格 → 纵向堆叠 */
-  .event-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-    padding: 12px 14px;
-    min-height: 0;
-  }
-  .dashboard-grid > *,
-  .quick-start-grid > *,
-  .feature-grid > *,
-  .event-row > * {
-    min-width: 0;
-  }
-
-  .event-row + .event-row {
-    border-top: 1px solid #f1f5fa;
-  }
-
-  .event-row strong {
-    font-size: 13px;
-  }
-
-  .event-row span {
-    font-size: 12px;
-    line-height: 1.6;
-  }
-
-  .event-row em {
-    text-align: left;
-    font-size: 11px;
-  }
-
-  /* 右侧面板内边距收敛 */
-  .side-panel {
-    border-radius: 14px;
-    padding: 14px 12px;
-  }
-
-  /* 广告位条目收敛 */
-  .ad-side-copy {
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-
-  .ad-side-copy strong {
-    font-size: 14px;
-  }
-
-  .ad-side-copy span {
-    font-size: 12px;
-    line-height: 1.65;
-  }
-
-  .ad-text-item {
-    padding: 10px;
-    border-radius: 12px;
-  }
-
-  .ad-text-head strong {
-    font-size: 12px;
-  }
-
-  .ad-text-item p {
-    margin-top: 6px;
-    font-size: 11px;
-    line-height: 1.6;
-  }
-
-  /* 指南区收敛 */
-  .guide-section h4 {
-    font-size: 14px;
-  }
-
-  .guide-section p {
-    margin-top: 8px;
-    font-size: 12px;
-    line-height: 1.7;
-  }
-
-  .guide-list {
-    margin-top: 10px;
-    padding-left: 16px;
-  }
-
-  .guide-step-head {
-    gap: 8px;
-  }
-
-  .guide-list span {
-    margin-top: 3px;
-    font-size: 11px;
-    line-height: 1.65;
-  }
-
-  .guide-collapse-item {
-    min-height: 40px;
-    font-size: 12px;
-  }
-
-  .guide-collapse-panel p {
-    font-size: 11px;
-    line-height: 1.7;
-  }
-
-  .guide-collapse-points {
-    font-size: 11px;
-    line-height: 1.7;
-  }
-
-  /* 通知项收敛 */
-  .notice-item {
-    padding: 10px 0;
-  }
-
-  .notice-head strong {
-    font-size: 12px;
-  }
-
-  .notice-head span {
-    font-size: 10px;
-  }
-
-  .notice-item p {
-    margin-top: 4px;
-    font-size: 11px;
-    line-height: 1.65;
-  }
-
-  /* 系统状态行收敛 */
-  .status-row {
-    min-height: 36px;
-  }
-
-  .status-footer {
-    min-height: 40px;
-  }
-
-  /* 空状态收敛 */
-  .events-empty {
-    min-height: 70px;
-  }
-}
 /* Stage 3 dashboard shell */
 .dashboard-admin {
   max-width: 100%;
@@ -1950,7 +1041,7 @@ onBeforeUnmount(() => {
   padding: 10px;
 }
 
-.dashboard-admin .hero-card {
+.dashboard-admin .dashboard-carousel {
   height: 100%;
   min-height: 224px;
   padding: 0;
@@ -1958,24 +1049,53 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: #f8fafc;
   box-shadow: none;
+  position: relative;
+  overflow: hidden;
 }
 
-.dashboard-admin .hero-viewport {
+.dashboard-admin .dashboard-carousel-viewport {
   height: 100%;
   min-height: 224px;
   aspect-ratio: auto;
   border-radius: 6px;
+  overflow: hidden;
 }
 
-.dashboard-admin .hero-track,
-.dashboard-admin .hero-slide,
-.dashboard-admin .hero-banner {
+.dashboard-admin .dashboard-carousel-track,
+.dashboard-admin .dashboard-carousel-slide,
+.dashboard-admin .dashboard-carousel-image {
   height: 100%;
 }
 
-.dashboard-admin .hero-arrow {
+.dashboard-admin .dashboard-carousel-track {
+  display: flex;
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.dashboard-admin .dashboard-carousel-slide {
+  min-width: 100%;
+  position: relative;
+  cursor: default;
+}
+
+.dashboard-admin .dashboard-carousel-slide.clickable {
+  cursor: pointer;
+}
+
+.dashboard-admin .dashboard-carousel-image {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.dashboard-admin .dashboard-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 30px;
   height: 30px;
+  padding: 0;
   border: 1px solid rgba(15, 23, 42, .08);
   border-radius: 6px;
   background: rgba(255, 255, 255, .92);
@@ -1985,25 +1105,39 @@ onBeforeUnmount(() => {
   box-shadow: 0 6px 16px rgba(15, 23, 42, .10);
 }
 
-.dashboard-admin .hero-arrow-left {
+.dashboard-admin .dashboard-carousel-arrow:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.dashboard-admin .dashboard-carousel-prev {
   left: 10px;
 }
 
-.dashboard-admin .hero-arrow-right {
+.dashboard-admin .dashboard-carousel-next {
   right: 10px;
 }
 
-.dashboard-admin .hero-dots {
+.dashboard-admin .dashboard-carousel-dots {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
-.dashboard-admin .hero-dot {
+.dashboard-admin .dashboard-carousel-dot {
   width: 7px;
   height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
   background: rgba(255, 255, 255, .62);
 }
 
-.dashboard-admin .hero-dot.active {
+.dashboard-admin .dashboard-carousel-dot.active {
   width: 20px;
   background: #18a058;
 }
@@ -2038,16 +1172,16 @@ onBeforeUnmount(() => {
   gap: 16px;
 }
 
-.metric-card {
+.dashboard-v4-metric-card {
   border: 1px solid #e5e7eb;
   background: #fff;
 }
 
-.metric-card :deep(.n-card__content) {
+.dashboard-v4-metric-card :deep(.n-card__content) {
   padding: 16px;
 }
 
-.metric-card-head {
+.dashboard-v4-metric-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2055,7 +1189,7 @@ onBeforeUnmount(() => {
   margin-bottom: 12px;
 }
 
-.metric-icon {
+.dashboard-v4-metric-icon {
   width: 38px;
   height: 38px;
   border-radius: 6px;
@@ -2064,52 +1198,52 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.metric-icon :deep(.ui-icon) {
+.dashboard-v4-metric-icon :deep(.ui-icon) {
   width: 20px;
   height: 20px;
 }
 
-.tone-blue .metric-icon,
-.dashboard-admin .blue-bg {
+.tone-blue .dashboard-v4-metric-icon,
+.dashboard-admin .dash-tone-blue {
   background: #eff6ff;
   color: #2563eb;
 }
 
-.tone-green .metric-icon,
-.dashboard-admin .green-bg {
+.tone-green .dashboard-v4-metric-icon,
+.dashboard-admin .dash-tone-green {
   background: #ecfdf5;
   color: #059669;
 }
 
-.tone-orange .metric-icon,
-.dashboard-admin .orange-bg {
+.tone-orange .dashboard-v4-metric-icon,
+.dashboard-admin .dash-tone-orange {
   background: #fff7ed;
   color: #ea580c;
 }
 
-.tone-purple .metric-icon,
-.dashboard-admin .purple-bg {
+.tone-purple .dashboard-v4-metric-icon,
+.dashboard-admin .dash-tone-purple {
   background: #f5f3ff;
   color: #7c3aed;
 }
 
-.dashboard-admin .cyan-bg {
+.dashboard-admin .dash-tone-cyan {
   background: #ecfeff;
   color: #0891b2;
 }
 
-.metric-card :deep(.n-statistic .n-statistic-value) {
+.dashboard-v4-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 28px;
   font-weight: 700;
 }
 
-.metric-card :deep(.n-statistic .n-statistic-label) {
+.dashboard-v4-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 13px;
 }
 
-.metric-card p {
+.dashboard-v4-metric-card p {
   margin: 8px 0 0;
   color: #64748b;
   font-size: 12px;
@@ -2174,7 +1308,7 @@ onBeforeUnmount(() => {
 
 .progress-item:hover,
 .shortcut-card:hover,
-.feature-card:hover,
+.dashboard-v4-feature-card:hover,
 .todo-item:hover,
 .ad-text-item:hover {
   transform: translateY(-1px);
@@ -2190,7 +1324,7 @@ onBeforeUnmount(() => {
 
 .progress-icon,
 .shortcut-icon,
-.feature-icon {
+.dashboard-v4-feature-icon {
   width: 34px;
   height: 34px;
   border-radius: 6px;
@@ -2207,7 +1341,7 @@ onBeforeUnmount(() => {
 
 .progress-item strong,
 .shortcut-card strong,
-.feature-card strong,
+.dashboard-v4-feature-card strong,
 .todo-item strong {
   display: block;
   color: #111827;
@@ -2218,7 +1352,7 @@ onBeforeUnmount(() => {
 
 .progress-item span,
 .shortcut-card span,
-.feature-card small,
+.dashboard-v4-feature-card small,
 .todo-item small {
   color: #64748b;
   font-size: 12px;
@@ -2253,13 +1387,13 @@ onBeforeUnmount(() => {
   -webkit-box-orient: vertical;
 }
 
-.dashboard-admin .feature-grid {
+.dashboard-admin .dashboard-v4-feature-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-.dashboard-admin .feature-card {
+.dashboard-admin .dashboard-v4-feature-card {
   min-height: 72px;
   padding: 12px;
   border: 1px solid #edf0f5;
@@ -2274,11 +1408,11 @@ onBeforeUnmount(() => {
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
-.feature-text {
+.dashboard-v4-feature-text {
   min-width: 0;
 }
 
-.feature-text small {
+.dashboard-v4-feature-text small {
   display: block;
   margin-top: 3px;
   white-space: nowrap;
@@ -2286,7 +1420,7 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
 }
 
-.dashboard-admin .feature-card em {
+.dashboard-admin .dashboard-v4-feature-card em {
   color: #18a058;
   font-size: 12px;
   font-style: normal;
@@ -2356,11 +1490,11 @@ onBeforeUnmount(() => {
   color: #64748b;
 }
 
-.dashboard-admin .status-list {
+.dashboard-admin .dashboard-v4-status-list {
   display: grid;
 }
 
-.dashboard-admin .status-row {
+.dashboard-admin .dashboard-v4-status-row {
   min-height: 38px;
   border-bottom: 1px solid #edf0f5;
   display: flex;
@@ -2369,11 +1503,11 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
-.dashboard-admin .status-row:last-child {
+.dashboard-admin .dashboard-v4-status-row:last-child {
   border-bottom: 0;
 }
 
-.dashboard-admin .status-row span {
+.dashboard-admin .dashboard-v4-status-row span {
   color: #334155;
   font-size: 13px;
   display: inline-flex;
@@ -2381,12 +1515,12 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.dashboard-admin .status-row strong {
+.dashboard-admin .dashboard-v4-status-row strong {
   flex: 0 0 auto;
   font-size: 12px;
 }
 
-.dashboard-admin .status-dot {
+.dashboard-admin .dashboard-v4-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -2395,11 +1529,11 @@ onBeforeUnmount(() => {
   margin-right: 8px;
 }
 
-.dashboard-admin .status-dot.offline {
+.dashboard-admin .dashboard-v4-status-dot.offline {
   background: #d03050;
 }
 
-.dashboard-admin .status-dot.unknown {
+.dashboard-admin .dashboard-v4-status-dot.unknown {
   background: #f0a020;
 }
 
@@ -2518,7 +1652,7 @@ onBeforeUnmount(() => {
 
   .dashboard-welcome-card :deep(.n-card__content),
   .dashboard-card :deep(.n-card__content),
-  .metric-card :deep(.n-card__content) {
+  .dashboard-v4-metric-card :deep(.n-card__content) {
     padding: 14px;
   }
 
@@ -2530,21 +1664,21 @@ onBeforeUnmount(() => {
   .dashboard-admin .metric-grid,
   .shortcut-grid,
   .progress-grid,
-  .dashboard-admin .feature-grid {
+  .dashboard-admin .dashboard-v4-feature-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .dashboard-admin .hero-card,
-  .dashboard-admin .hero-viewport,
+  .dashboard-admin .dashboard-carousel,
+  .dashboard-admin .dashboard-carousel-viewport,
   .banner-empty {
     min-height: 150px;
   }
 
-  .dashboard-admin .feature-card {
+  .dashboard-admin .dashboard-v4-feature-card {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .dashboard-admin .feature-card em {
+  .dashboard-admin .dashboard-v4-feature-card em {
     display: none;
   }
 }
