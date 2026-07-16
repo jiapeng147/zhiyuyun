@@ -227,127 +227,8 @@
       </div>
     </section>
 
-    <!-- 快捷操作 -->
-    <section class="drawer-section quick-section">
-      <h4>快捷操作</h4>
-
-      <div class="quick-actions">
-        <button
-          type="button"
-          @click="openCookieEdit(selected)"
-        >
-          <span>✎</span>
-          编辑Cookie
-        </button>
-
-        <button
-          type="button"
-          @click="refreshProfile(selected.id)"
-        >
-          <span>↻</span>
-          刷新资料
-        </button>
-
-        <button
-          type="button"
-          @click="dispatchAccountAction('sync-products')"
-        >
-          <span>◇</span>
-          同步商品
-        </button>
-
-        <button
-          type="button"
-          :disabled="isPolishBusy(selected)"
-          :aria-busy="isPolishActionLoading(selected)"
-          :title="itemPolishRetryGuidance(selectedPolishTask) || selectedPolishTask?.message || '对当前账号在售商品执行安全擦亮任务'"
-          @click="handleItemPolish(selected)"
-        >
-          <span>↥</span>
-          {{ polishButtonText(selected) }}
-        </button>
-
-        <button
-          type="button"
-          @click="emit('navigate', 'auto-reply')"
-        >
-          <span>↻</span>
-          自动回复
-        </button>
-
-        <button
-          type="button"
-          @click="emit('navigate', 'auto-delivery')"
-        >
-          <span>⇪</span>
-          自动发货
-        </button>
-
-        <button
-          type="button"
-          @click="emit('navigate', 'connections')"
-        >
-          <span>⇄</span>
-          连接管理
-        </button>
-
-        <button
-          type="button"
-          @click="emit('navigate', 'messages')"
-        >
-          <span>✉</span>
-          在线消息
-        </button>
-
-        <button
-          type="button"
-          @click="checkSelectedAuth"
-        >
-          <span>ⓘ</span>
-          登录验证
-        </button>
-        <button
-          type="button"
-          @click="openRescanModal(selected)"
-        >
-          <span>◫</span>
-          重新扫码
-        </button>
-
-        <button
-          type="button"
-          @click="openAutoRateModal(selected)"
-        >
-          <span>✦</span>
-          自动评价
-        </button>
-
-        <button
-          type="button"
-          @click="openStrategyModal(selected)"
-        >
-          <span>⌛</span>
-          消息等待
-        </button>
-
-        <button
-          type="button"
-          title="求小红花配置在消息等待弹窗中"
-          @click="openStrategyModal(selected)"
-        >
-          <span>❀</span>
-          求小红花
-        </button>
-
-        <button
-          type="button"
-          @click="openUnifiedConfigModal"
-        >
-          <span>≡</span>
-          批量设置
-        </button>
-</div>
-      <div v-if="selectedPolishTask" class="polish-status-card" role="status">
+    <section v-if="selectedPolishTask" class="drawer-section polish-task-section">
+      <div class="polish-status-card" role="status">
         <div class="polish-status-head">
           <strong>商品擦亮任务</strong>
           <Badge :type="polishBadgeType(selectedPolishTask.status)">{{ polishButtonText(selected) }}</Badge>
@@ -391,10 +272,6 @@
         <small v-else-if="selectedPolishTask.status === 'needs_verification'" class="polish-recovery warn">
           请先在闲鱼 App 完成安全验证，再回到账号页手动继续；系统不会自动重试。
         </small>
-      </div>
-      <div class="retired-feature-note">
-        <Icon name="help" />
-        自动评价和消息等待配置已保存到账号级策略，后续运行时执行器将复用这些参数。闲鱼授权请使用扫码或 Cookie。
       </div>
     </section>
   </template>
@@ -768,7 +645,6 @@ import { useDebouncedRef } from '../composables/useDebouncedRef.js'
 import { useItemPolish } from '../composables/useItemPolish.js'
 import ItemPolishConflictCard from '../components/ItemPolishConflictCard.vue'
 import ItemPolishUnknownReconcile from '../components/ItemPolishUnknownReconcile.vue'
-const emit = defineEmits(['navigate'])
 import { generateQrLogin, getQrLoginStatus, cleanupQrLogin } from '../api/qrlogin.js'
 import { accountName } from '../utils/format.js'
 import { accountAuthState, accountCookieBadgeType, accountCookieLabel, accountCookieStatus, accountLoginHint } from '../utils/accountAuth.js'
@@ -929,22 +805,6 @@ function closeDetail() {
   polishConflictAccountId.value = null
   setPolishNotice('', '')
   selected.value = null
-}
-
-function dispatchAccountAction(action) {
-  if (!selected.value) return
-  switch (action) {
-    case 'sync-products':
-      emit('navigate', 'products')
-      break
-    case 'activity-list':
-      emit('navigate', 'logs')
-      break
-    default:
-      if (import.meta.env.DEV) {
-        console.warn('[AccountsPage] 未知的账号操作:', action)
-      }
-  }
 }
 
 function polishTaskFor(account) {
@@ -1216,29 +1076,6 @@ function strategyConfigOf(res) {
   return { ...data, messageExpireTime }
 }
 
-async function openAutoRateModal(account = selected.value) {
-  if (!account?.id) return
-  modal.value = 'autoRate'
-  autoRateError.value = ''
-  autoRateSaving.value = false
-  autoRateLoaded.value = false
-  autoRateForm.enabled = false
-  autoRateForm.rateType = 'text'
-  autoRateForm.textContent = ''
-  autoRateForm.apiUrl = ''
-  try {
-    const res = await getAccountAutoRateConfig(account.id)
-    const data = autoRateConfigOf(res)
-    autoRateForm.enabled = data.enabled
-    autoRateForm.rateType = data.rateType
-    autoRateForm.textContent = data.textContent
-    autoRateForm.apiUrl = data.apiUrl
-    autoRateLoaded.value = true
-  } catch (e) {
-    autoRateError.value = e.message || '加载自动评价配置失败'
-  }
-}
-
 async function saveAutoRateConfig() {
   if (!selected.value?.id || !autoRateLoaded.value || autoRateSaving.value) return
   autoRateError.value = ''
@@ -1270,29 +1107,6 @@ async function saveAutoRateConfig() {
   }
 }
 
-async function openStrategyModal(account = selected.value) {
-  if (!account?.id) return
-  modal.value = 'strategy'
-  strategyError.value = ''
-  strategySaving.value = false
-  strategyLoaded.value = false
-  strategyForm.messageExpireTime = 3600
-  strategyForm.scheduledRedelivery = false
-  strategyForm.autoPolish = false
-  strategyForm.requestRedFlower = false
-  try {
-    const res = await getAccountStrategyConfig(account.id)
-    const data = strategyConfigOf(res)
-    strategyForm.messageExpireTime = data.messageExpireTime
-    strategyForm.scheduledRedelivery = data.scheduledRedelivery
-    strategyForm.autoPolish = data.autoPolish
-    strategyForm.requestRedFlower = data.requestRedFlower === true
-    strategyLoaded.value = true
-  } catch (e) {
-    strategyError.value = e.message || '加载账号策略配置失败'
-  }
-}
-
 async function saveStrategyConfig() {
   if (!selected.value?.id || !strategyLoaded.value || strategySaving.value) return
   strategyError.value = ''
@@ -1319,15 +1133,6 @@ async function saveStrategyConfig() {
   } finally {
     strategySaving.value = false
   }
-}
-
-function openUnifiedConfigModal() {
-  if (!selected.value?.id) return
-  unifiedConfigError.value = ''
-  unifiedConfigSuccess.value = ''
-  unifiedConfigTaskText.value = ''
-  unifiedConfigBusy.value = false
-  modal.value = 'unifiedConfig'
 }
 
 function visibleAccountsForUnifiedConfig() {
@@ -1608,32 +1413,6 @@ async function loadWsStatus(accountId, options = {}) {
       refreshError: e.message || '连接状态探测失败'
     }
     throw e
-  }
-}
-
-async function checkSelectedAuth() {
-  if (!selected.value?.id) return
-  try {
-    const res = await checkAccountAuth(selected.value.id)
-    const data = res.data || {}
-    const account = accounts.value.find(item => item.id === selected.value.id)
-    if (account) {
-      account.cookieStatus = data.cookieStatus
-      account.authUsable = data.usable
-      account.loginStatusCode = data.loginStatusCode
-      account.loginStatusMessage = data.loginStatusMessage
-      account.loginCheckTime = data.checkedAt
-    }
-    if (selected.value?.id === account?.id) {
-      selected.value = { ...selected.value, ...account }
-    }
-    qrSuccessMsg.value = data.loginStatusMessage || '登录校验已完成'
-    setTimeout(() => {
-      if (qrSuccessMsg.value === (data.loginStatusMessage || '登录校验已完成')) qrSuccessMsg.value = ''
-    }, 4000)
-    await loadAccounts()
-  } catch (e) {
-    error.value = e.message || '登录校验失败'
   }
 }
 
@@ -2280,8 +2059,7 @@ onBeforeUnmount(() => {
 .detail-title-row,
 .account-summary,
 .account-name-row,
-.health-footer,
-.quick-actions button {
+.health-footer {
   display: flex;
   align-items: center;
 }
@@ -2594,50 +2372,6 @@ onBeforeUnmount(() => {
 
 .activity-more {
   padding: 7px 0 0;
-}
-
-.quick-section {
-  margin-top: 11px;
-  padding-top: 15px;
-  border-top: 1px solid #eef2f6;
-}
-
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-  position: relative;
-}
-
-.quick-actions button {
-  justify-content: center;
-  gap: 7px;
-  min-width: 0;
-  height: 38px;
-  padding: 0 5px;
-  border: 1px solid #f2e6e1;
-  border-radius: 5px;
-  background: #fff;
-  color: #53627a;
-  font-size: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.quick-actions button:hover {
-  border-color: #99f6e4;
-  color: #ff7033;
-}
-
-.quick-actions button span {
-  color: #5d7190;
-  font-size: 17px;
-  line-height: 1;
-}
-
-.quick-actions .more-action {
-  grid-column: 3;
 }
 
 .modal-subtitle {
@@ -3133,22 +2867,6 @@ onBeforeUnmount(() => {
   .activity-list div {
     grid-template-columns: 80px minmax(0, 1fr);
     gap: 8px;
-  }
-
-  /* 快捷操作：3列 → 3列保持（按钮多）但减小内边距 */
-  .quick-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .quick-actions button {
-    height: 40px;
-    padding: 0 4px;
-    font-size: 11px;
-  }
-
-  .quick-actions button span {
-    font-size: 15px;
   }
 
   /* 闲鱼主页资料：4列 → 2列 */

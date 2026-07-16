@@ -185,35 +185,6 @@
                 </article>
               </div>
             </section>
-
-            <section class="card-panel quick-panel">
-              <div class="panel-head">
-                <div class="panel-title">
-                  <span class="panel-head-mark mint" aria-hidden="true">
-                    <img class="panel-head-icon" src="/xya/profile-center/icons/workflow.png" alt="" />
-                  </span>
-                  <h3>快捷操作</h3>
-                </div>
-              </div>
-
-              <div class="quick-grid-2col">
-                <button
-                  v-for="item in quickActionItems"
-                  :key="item.title"
-                  type="button"
-                  class="quick-card quick-action-btn"
-                  @click="handleQuickAction(item.action)"
-                >
-                  <div :class="['circle-ico', item.tone]">
-                    <img class="quick-icon-img" :src="item.iconSrc" alt="" />
-                  </div>
-                  <div class="quick-card-copy">
-                    <b>{{ item.title }}</b>
-                    <span>{{ item.desc }}</span>
-                  </div>
-                </button>
-              </div>
-            </section>
           </div>
         </div>
 
@@ -419,12 +390,6 @@ const memberBenefits = [
   { label: '智能客服', iconSrc: '/xya/profile-center/icons/shield.png' },
   { label: '自动化', iconSrc: '/xya/profile-center/icons/workflow.png' },
   { label: '发布商品', iconSrc: '/xya/profile-center/icons/bag.png' }
-]
-
-const quickActionItems = [
-  { title: '账户安全', desc: '固定账号密码与密码修改', iconSrc: '/xya/profile-center/icons/shield.png', tone: 'blue-bg', action: 'security' },
-  { title: '商品管理', desc: '查看商品、发布商品', iconSrc: '/xya/profile-center/icons/bag.png', tone: 'green-bg', action: 'products' },
-  { title: 'AI 服务配置', desc: '接入当前部署使用的模型与凭据', iconSrc: '/xya/profile-center/icons/audit.png', tone: 'orange-bg', action: 'settings-model' }
 ]
 
 const securityAdviceList = [

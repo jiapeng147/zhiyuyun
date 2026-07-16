@@ -154,54 +154,6 @@
         <div v-else-if="trendError" class="m-section m-empty-desc" role="status">{{ trendError }}</div>
         <div v-else-if="trendAvailable" class="m-section m-empty-desc">所选范围暂无发货成功趋势记录。</div>
 
-        <div class="m-section m-quick-section">
-          <div class="m-section-header">
-            <h2>快捷操作</h2>
-          </div>
-          <div class="m-quick-grid">
-            <div class="m-quick-item" @click="$emit('navigate', 'products')">
-              <div class="m-quick-icon m-quick-blue">
-                <MIcon name="bag" :size="26" />
-              </div>
-              <div class="m-quick-info">
-                <div class="m-quick-title">商品管理</div>
-                <div class="m-quick-desc">商品上下架与编辑</div>
-              </div>
-              <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-            </div>
-            <div class="m-quick-item" @click="$emit('navigate', 'messages')">
-              <div class="m-quick-icon m-quick-green">
-                <MIcon name="chat" :size="26" />
-              </div>
-              <div class="m-quick-info">
-                <div class="m-quick-title">在线消息</div>
-                <div class="m-quick-desc">查看买家会话</div>
-              </div>
-              <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-            </div>
-            <div class="m-quick-item" @click="$emit('navigate', 'auto-delivery')">
-              <div class="m-quick-icon m-quick-purple">
-                <MIcon name="truck" :size="26" />
-              </div>
-              <div class="m-quick-info">
-                <div class="m-quick-title">自动发货</div>
-                <div class="m-quick-desc">配置发货规则</div>
-              </div>
-              <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-            </div>
-            <div class="m-quick-item" @click="$emit('navigate', 'delivery-records')">
-              <div class="m-quick-icon m-quick-orange">
-                <MIcon name="package" :size="26" />
-              </div>
-              <div class="m-quick-info">
-                <div class="m-quick-title">发货记录</div>
-                <div class="m-quick-desc">查询发货明细</div>
-              </div>
-              <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-            </div>
-          </div>
-        </div>
-
         <div class="m-pc-notice">
           <div class="m-pc-notice-icon">
             <MIcon name="monitor" :size="24" />

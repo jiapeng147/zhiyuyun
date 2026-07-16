@@ -32,7 +32,6 @@
         <div v-for="n in logs" :key="n.t+n.time" class="option-line"><div><b>{{ n.t }}</b><p class="subtle" style="margin:4px 0 0">{{ n.d }}</p></div><span class="subtle">{{ n.time }}</span></div>
       </CardPanel>
     </div>
-    <CardPanel title="快捷操作" style="margin-top:16px"><div class="grid quick-grid"><button v-for="q in quick" :key="q.key" type="button" class="quick-card" @click="$emit('navigate', q.key)"><span class="circle-ico blue-bg" aria-hidden="true">＋</span><span><b>{{ q.label }}</b><span>快速进入常用功能</span></span></button></div></CardPanel>
   </div>
 </template>
 <script setup>
@@ -40,7 +39,6 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import StatCard from '../components/StatCard.vue'; import CardPanel from '../components/CardPanel.vue'; import MiniLineChart from '../components/MiniLineChart.vue'; import DonutChart from '../components/DonutChart.vue'; import BaseTable from '../components/BaseTable.vue'; import AppButton from '../components/AppButton.vue'; import EmptyState from '../components/EmptyState.vue'
 import { getDashboardSummary, getDashboardSalesTrend } from '../api/dashboard.js'
 import { shortText } from '../utils/format.js'
-defineEmits(['navigate'])
 const stats = ref({ orderCount:0, deliverySuccessCount:0, deliveryFailCount:0, pendingDeliveryCount:0, aiReplyCount:0, hasData:false })
 const trend = ref({ dates:[], deliverySuccess:[], deliveryFail:[], aiReplies:[] })
 const updatedAt = ref('-')
@@ -59,7 +57,6 @@ const deliveryItems = computed(() => [{label:'成功', value:String(stats.value.
 const replyItems = computed(() => [{label:'AI回复', value:String(totalReplies.value)}])
 const trendCols=[{key:'date',title:'日期'},{key:'success',title:'发货成功'},{key:'fail',title:'发货失败'},{key:'reply',title:'AI回复'}]
 const trendRows = computed(() => (trend.value.dates || []).map((d,i)=>({date:d, success:trend.value.deliverySuccess?.[i] || 0, fail:trend.value.deliveryFail?.[i] || 0, reply:trend.value.aiReplies?.[i] || 0})))
-const quick=[{label:'添加闲鱼账号',key:'accounts'},{label:'发布新商品',key:'product-publish'},{label:'同步商品',key:'products'},{label:'配置自动发货',key:'auto-delivery'},{label:'广告申请',key:'ad-application'},{label:'卡密管理',key:'card-warehouse'},{label:'反馈建议',key:'feedback'},{label:'更多功能',key:'settings-system'}]
 function metricValue(value) { return dataAvailable.value ? value : '—' }
 async function load(){
   if (loading.value) return

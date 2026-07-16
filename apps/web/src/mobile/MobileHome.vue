@@ -97,63 +97,6 @@
 
     <div class="m-section">
       <div class="m-section-header">
-        <h2>快捷功能</h2>
-        <button class="m-section-more" @click="emit('force-desktop')">全部功能 <MIcon name="chevronRight" :size="14" /></button>
-      </div>
-      <div class="m-quick-grid">
-        <div class="m-quick-item" @click="navigate('data')">
-          <div class="m-quick-icon m-quick-blue"><MIcon name="chart" :size="26" /></div>
-          <div class="m-quick-info">
-            <div class="m-quick-title">数据看板</div>
-            <div class="m-quick-desc">查看订单、发货和自动化概况</div>
-          </div>
-          <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-        </div>
-        <div class="m-quick-item" @click="tabChange('message')">
-          <div class="m-quick-icon m-quick-green"><MIcon name="chat" :size="26" /></div>
-          <div class="m-quick-info">
-            <div class="m-quick-title">在线消息</div>
-            <div class="m-quick-desc">快速进入买家会话处理入口</div>
-          </div>
-          <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-        </div>
-        <div class="m-quick-item" @click="navigate('accounts')">
-          <div class="m-quick-icon m-quick-purple"><MIcon name="shield" :size="26" /></div>
-          <div class="m-quick-info">
-            <div class="m-quick-title">账号状态</div>
-            <div class="m-quick-desc">检查 Cookie、连接和验证状态</div>
-          </div>
-          <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-        </div>
-        <div class="m-quick-item" @click="navigate('products')">
-          <div class="m-quick-icon m-quick-blue2"><MIcon name="bag" :size="26" /></div>
-          <div class="m-quick-info">
-            <div class="m-quick-title">商品管理</div>
-            <div class="m-quick-desc">商品查看、发布、改价与状态管理</div>
-          </div>
-          <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-        </div>
-        <div class="m-quick-item" @click="navigate('settings-notify')">
-          <div class="m-quick-icon m-quick-orange"><MIcon name="bell" :size="26" /></div>
-          <div class="m-quick-info">
-            <div class="m-quick-title">通知设置</div>
-            <div class="m-quick-desc">配置异常提醒和应用内通知</div>
-          </div>
-          <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-        </div>
-        <div class="m-quick-item" @click="navigate('auto-delivery')">
-          <div class="m-quick-icon m-quick-purple2"><MIcon name="package" :size="26" /></div>
-          <div class="m-quick-info">
-            <div class="m-quick-title">自动发货</div>
-            <div class="m-quick-desc">设置发货规则并查看实际执行结果</div>
-          </div>
-          <MIcon name="chevronRight" :size="18" class="m-quick-arrow" />
-        </div>
-      </div>
-    </div>
-
-    <div class="m-section">
-      <div class="m-section-header">
         <h2>新手快速开始</h2>
         <button class="m-section-more" @click="emit('force-desktop')">查看全部 <MIcon name="chevronRight" :size="14" /></button>
       </div>

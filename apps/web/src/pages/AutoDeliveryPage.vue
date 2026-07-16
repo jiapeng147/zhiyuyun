@@ -60,13 +60,6 @@
           <AppButton type="primary" style="width:100%;margin-top:8px" @click="applyFilter">应用筛选</AppButton>
           <AppButton style="width:100%;margin-top:6px" @click="resetFilter">重置筛选</AppButton>
         </CardPanel>
-
-        <CardPanel title="快捷操作" style="margin-top:12px">
-          <AppButton type="primary" style="width:100%;margin-bottom:8px" :disabled="!goodsAvailable || filteredConfigUnknownCount > 0" @click="showBatchDialog = true">批量设置</AppButton>
-          <AppButton style="width:100%;margin-bottom:8px" @click="goSourceLibrary">打开货源库</AppButton>
-          <AppButton type="danger" style="width:100%;margin-bottom:8px" :disabled="!goodsAvailable || filteredConfigUnknownCount > 0" @click="batchDelete">批量删除配置</AppButton>
-          <AppButton style="width:100%" @click="scanPendingOrders">扫描待发货订单</AppButton>
-        </CardPanel>
       </div>
 
       <div class="main-content">
@@ -339,13 +332,11 @@ import { getAccounts } from '../api/accounts.js'
 import { getGoods } from '../api/goods.js'
 import { getCards, createCard, batchCreateCardItems } from '../api/cards.js'
 import {
-  batchDeleteDeliveryRules,
   batchSetDeliveryRules,
   getDeliverySources,
   getDeliveryStats,
   getGoodsDeliveryConfigs,
   saveGoodsDeliveryConfig,
-  scanPendingOrders as scanApi
 } from '../api/autoDelivery.js'
 import { accountName } from '../utils/format.js'
 import { recordsOf } from '../utils/apiData.js'
@@ -866,36 +857,6 @@ async function submitBatch() {
     error.value = e.message || '批量配置失败'
   } finally {
     batchLoading.value = false
-  }
-}
-
-async function batchDelete() {
-  if (!goodsAvailable.value || filteredConfigUnknownCount.value > 0 || !filteredGoods.value.length) {
-    appendError('商品或发货配置状态不完整，批量删除已取消。')
-    return
-  }
-  if (!await confirmAction({
-    title: '确认批量删除发货配置？',
-    description: `将删除当前筛选出的 ${filteredGoods.value.length} 个商品配置。`,
-    dangerous: true,
-    confirmText: '删除'
-  })) return
-  try {
-    await batchDeleteDeliveryRules({ goodsIds: filteredGoods.value.map(goods => goods.id) })
-    success.value = '批量删除完成'
-    await Promise.all([loadGoods(), loadStats()])
-  } catch (e) {
-    error.value = e.message || '删除失败'
-  }
-}
-
-async function scanPendingOrders() {
-  try {
-    await scanApi()
-    await loadStats()
-    success.value = '已触发待发货订单扫描，请前往发货记录页查看结果。'
-  } catch (e) {
-    error.value = e.message || '扫描失败'
   }
 }
 
