@@ -60,6 +60,15 @@ async def owned_account_ids(
     return [int(r) for r in rows]
 
 
+def owned_account_id_subquery(current_user: dict | None):
+    """当前用户可见的闲鱼账号ID 子查询(保留 deleted==0)。超管不限。
+    用于 Model.account_id.in_(owned_account_id_subquery(cu)) —— 传他人account_id会被IN过滤掉。"""
+    stmt = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+    if current_user is None or is_superadmin(current_user):
+        return stmt  # 内部服务(None)或超管: 不限制
+    return stmt.where(XianyuAccount.owner_user_id == current_uid(current_user))
+
+
 def scope_by_account(stmt, account_id_column, account_ids: Optional[list[int]]):
     """按用户账号集合过滤带 account_id 的查询。
 

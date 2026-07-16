@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from ....core.database import get_db
+from ....core.tenancy import scope_by_owner, current_uid
 from ....core.response import ResultObject
 from ....models.entities import CardGroup, CardItem
 from ....schemas.common import (
@@ -55,7 +56,7 @@ async def list_kami_configs(
 ):
     try:
         result = await db.execute(
-            select(CardGroup).where(CardGroup.deleted == 0)
+            scope_by_owner(select(CardGroup).where(CardGroup.deleted == 0), CardGroup.owner_user_id, current_user)
             .order_by(CardGroup.id.desc())
         )
         configs = result.scalars().all()
@@ -73,6 +74,7 @@ async def save_kami_config(
 ):
     try:
         config = CardGroup(
+            owner_user_id=current_uid(current_user),
             group_name=req.config_name or "默认卡密组",
             group_type=req.delivery_type or "kami",
             status=1,

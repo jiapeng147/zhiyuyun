@@ -29,6 +29,7 @@ from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
+from ....core.tenancy import scope_by_owner, current_uid
 from ....core.config import settings
 from ....core.response import ResultObject
 from ....core.upload_security import (
@@ -373,8 +374,9 @@ async def list_knowledge_bases(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        stmt = select(RagKnowledgeBase).where(
-            RagKnowledgeBase.deleted == 0
+        stmt = scope_by_owner(
+            select(RagKnowledgeBase).where(RagKnowledgeBase.deleted == 0),
+            RagKnowledgeBase.owner_user_id, current_user,
         ).order_by(RagKnowledgeBase.id.desc())
         result = await db.execute(stmt)
         rows = result.scalars().all()
@@ -393,6 +395,7 @@ async def create_knowledge_base(
     embedding_base_url = await _validated_embedding_base_url(req.embedding_base_url)
     try:
         kb = RagKnowledgeBase(
+            owner_user_id=current_uid(current_user),
             name=req.name,
             description=req.description,
             embedding_model=req.embedding_model,
@@ -421,9 +424,11 @@ async def get_knowledge_base(
 ):
     try:
         result = await db.execute(
-            select(RagKnowledgeBase).where(
-                RagKnowledgeBase.id == kb_id,
-                RagKnowledgeBase.deleted == 0,
+            scope_by_owner(
+                select(RagKnowledgeBase).where(
+                    RagKnowledgeBase.id == kb_id,
+                    RagKnowledgeBase.deleted == 0,
+                ), RagKnowledgeBase.owner_user_id, current_user,
             )
         )
         kb = result.scalar_one_or_none()
@@ -449,9 +454,11 @@ async def update_knowledge_base(
     )
     try:
         result = await db.execute(
-            select(RagKnowledgeBase).where(
-                RagKnowledgeBase.id == kb_id,
-                RagKnowledgeBase.deleted == 0,
+            scope_by_owner(
+                select(RagKnowledgeBase).where(
+                    RagKnowledgeBase.id == kb_id,
+                    RagKnowledgeBase.deleted == 0,
+                ), RagKnowledgeBase.owner_user_id, current_user,
             )
         )
         kb = result.scalar_one_or_none()
@@ -499,9 +506,11 @@ async def delete_knowledge_base(
 ):
     try:
         result = await db.execute(
-            select(RagKnowledgeBase).where(
-                RagKnowledgeBase.id == kb_id,
-                RagKnowledgeBase.deleted == 0,
+            scope_by_owner(
+                select(RagKnowledgeBase).where(
+                    RagKnowledgeBase.id == kb_id,
+                    RagKnowledgeBase.deleted == 0,
+                ), RagKnowledgeBase.owner_user_id, current_user,
             )
         )
         kb = result.scalar_one_or_none()
@@ -565,9 +574,11 @@ async def upload_document(
     """
     try:
         kb_result = await db.execute(
-            select(RagKnowledgeBase).where(
-                RagKnowledgeBase.id == kb_id,
-                RagKnowledgeBase.deleted == 0,
+            scope_by_owner(
+                select(RagKnowledgeBase).where(
+                    RagKnowledgeBase.id == kb_id,
+                    RagKnowledgeBase.deleted == 0,
+                ), RagKnowledgeBase.owner_user_id, current_user,
             )
         )
         kb = kb_result.scalar_one_or_none()

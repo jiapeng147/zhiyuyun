@@ -9,6 +9,7 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
+from ....core.tenancy import owned_account_id_subquery
 from ....core.response import ResultObject
 from ....schemas.order import ManualDeliveryReqDTO
 from ....services.manual_delivery import (
@@ -508,7 +509,7 @@ async def list_goods(
     _: dict = Depends(get_current_user),
 ):
     account_filter = account_id if account_id is not None else xianyu_account_id
-    valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+    valid_account_ids = owned_account_id_subquery(current_user)
     query = select(XianyuGoods).where(
         XianyuGoods.deleted == 0,
         XianyuGoods.account_id.in_(valid_account_ids),
@@ -565,7 +566,7 @@ async def goods_stats(
 ):
     account_filter = account_id if account_id is not None else xianyu_account_id
     # 仅统计有效账号（deleted=0）的商品，已退出账号的旧商品不在前台展示
-    valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+    valid_account_ids = owned_account_id_subquery(current_user)
     goods_filters = [XianyuGoods.deleted == 0, XianyuGoods.account_id.in_(valid_account_ids)]
     if account_filter is not None:
         goods_filters.append(XianyuGoods.account_id == account_filter)

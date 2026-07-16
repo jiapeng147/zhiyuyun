@@ -6,7 +6,7 @@ import hashlib
 import json
 import datetime
 from decimal import Decimal, ROUND_DOWN
-from typing import Literal
+from typing import Literal, Optional
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
@@ -22,6 +22,8 @@ from ....schemas.common import (
     ItemOperateReqDTO, ItemBatchOperateReqDTO, UpdateItemPriceReqDTO,
 )
 from .internal import verify_internal_or_current_user as verify_internal_token
+from .internal import resolve_internal_or_current_user
+from ....core.tenancy import owned_account_id_subquery
 from ..deps import get_current_user
 from ....services.xianyu_goods_sync import XianyuItemOperator
 from ....services.remote_goods_delete import (
@@ -244,12 +246,12 @@ def normalize_price(price: str) -> str:
 async def list_items(
     req: ItemListReqDTO,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     try:
         page_num = max(req.page_num or 1, 1)
         page_size = max(min(req.page_size or 20, 100), 1)
-        valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+        valid_account_ids = owned_account_id_subquery(current_user)
         query = select(XianyuGoods).where(XianyuGoods.account_id.in_(valid_account_ids))
         if req.xianyu_account_id is not None:
             query = query.where(XianyuGoods.account_id == req.xianyu_account_id)
@@ -274,10 +276,12 @@ async def list_items(
 async def get_item_detail(
     req: ItemReqDTO,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     try:
-        query = select(XianyuGoods)
+        query = select(XianyuGoods).where(
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user))
+        )
         if req.xy_goods_id:
             query = query.where(XianyuGoods.external_goods_id == req.xy_goods_id)
         if req.xianyu_account_id is not None:

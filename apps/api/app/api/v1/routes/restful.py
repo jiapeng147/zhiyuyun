@@ -10,7 +10,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
 from ....core.database import get_db
-from ....core.tenancy import current_uid
+from ....core.tenancy import current_uid, owned_account_id_subquery
 from ....core.response import ResultObject
 from ....core.unavailable_features import (
     ACCOUNT_LOGIN_CREDENTIAL_UNAVAILABLE,
@@ -544,7 +544,7 @@ async def restful_get_goods(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+        valid_account_ids = owned_account_id_subquery(current_user)
         query = select(XianyuGoods).where(XianyuGoods.account_id.in_(valid_account_ids))
         if account_id is not None:
             query = query.where(XianyuGoods.account_id == account_id)
@@ -757,7 +757,7 @@ async def restful_get_dashboard(
             select(func.count()).select_from(order_query.subquery())
         )).scalar() or 0
         # Goods counts — 仅统计有效账号（deleted=0）的商品，已退出账号的旧商品不在前台展示
-        valid_account_ids = select(XianyuAccount.id).where(XianyuAccount.deleted == 0)
+        valid_account_ids = owned_account_id_subquery(current_user)
         goods_query = select(XianyuGoods).where(
             XianyuGoods.deleted == 0,
             XianyuGoods.account_id.in_(valid_account_ids),

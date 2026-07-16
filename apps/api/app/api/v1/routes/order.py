@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
+from ....core.tenancy import owned_account_id_subquery
 from ....core.response import ResultObject
 from ....models.entities import XianyuTradeOrder
 from ....schemas.order import (
@@ -50,7 +51,9 @@ async def list_orders(
     try:
         page_num = max(req.page_num or 1, 1)
         page_size = max(min(req.page_size or 20, 100), 1)
-        query = select(XianyuTradeOrder)
+        query = select(XianyuTradeOrder).where(
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user))
+        )
         if req.xianyu_account_id is not None:
             query = query.where(XianyuTradeOrder.account_id == req.xianyu_account_id)
         if req.xy_goods_id:

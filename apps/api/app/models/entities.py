@@ -192,6 +192,7 @@ class DeliveryRule(Base):
 class CardGroup(Base):
     __tablename__ = "card_group"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户(多租户隔离)")
     group_name = Column(String(200), nullable=False)
     group_type = Column(String(50), default="kami")
     total_count = Column(Integer, default=0)
@@ -511,6 +512,7 @@ class RagKnowledgeBase(Base):
     """RAG 知识库"""
     __tablename__ = "rag_knowledge_base"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户(多租户隔离)")
     name = Column(String(200), nullable=False, comment="知识库名称")
     description = Column(Text, nullable=True, comment="描述说明")
     embedding_model = Column(String(200), nullable=True, comment="向量模型名")
@@ -583,6 +585,7 @@ class ScheduledTask(Base):
     """
     __tablename__ = "scheduled_task"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户(多租户隔离)")
     task_name = Column(String(200), nullable=True, comment="任务名称")
     task_type = Column(String(80), nullable=True, comment="sync_goods/sync_orders")
     cron_expr = Column(String(120), nullable=True, comment="cron 表达式")

@@ -34,6 +34,17 @@ async def verify_internal_or_current_user(
     verify_internal_token(x_internal_token)
 
 
+async def resolve_internal_or_current_user(
+    current_user: Optional[dict] = Depends(get_current_user_optional),
+    x_internal_token: Optional[str] = Header(None),
+) -> Optional[dict]:
+    """返回当前用户(普通/超管)或 None(内部服务令牌)。用于按 owner 隔离但兼容内部调用。"""
+    if current_user is not None:
+        return current_user
+    verify_internal_token(x_internal_token)
+    return None
+
+
 @router.get("/health")
 async def internal_health(_: None = Depends(verify_internal_token)):
     return ResultObject.success({
