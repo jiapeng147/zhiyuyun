@@ -31,10 +31,17 @@ class CreateBillingOrderReqDTO(CamelModel):
     plan_code: str
     duration_days: int = 30
     payment_method: Optional[str] = "manual"
+    coupon_code: Optional[str] = ""
 
 
 class CloseBillingOrderReqDTO(CamelModel):
     reason: Optional[str] = "user_cancel"
+
+
+class PreviewCouponReqDTO(CamelModel):
+    plan_code: str
+    duration_days: int = 30
+    coupon_code: str
 
 
 def _dt(value) -> str:
@@ -42,11 +49,16 @@ def _dt(value) -> str:
 
 
 def _order_payload(order: AppBillingOrder) -> dict:
+    meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
     return {
         "id": int(order.id),
         "orderNo": order.order_no,
         "planCode": order.plan_code,
         "orderType": order.order_type,
+        "listAmountCents": int(meta.get("listAmountCents") or order.amount_cents or 0),
+        "discountCents": int(meta.get("discountCents") or 0),
+        "couponCode": str(meta.get("couponCode") or ""),
+        "couponName": str(meta.get("couponName") or ""),
         "amountCents": int(order.amount_cents or 0),
         "durationDays": int(order.duration_days or 0),
         "status": order.status,
@@ -82,6 +94,26 @@ async def list_billing_plans(db: AsyncSession = Depends(get_db)):
         )
     ).scalars().all()
     return ResultObject.success([plan_payload(row) for row in rows])
+
+
+@router.post("/coupons/preview", response_model=ResultObject[dict])
+async def preview_coupon(
+    req: PreviewCouponReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    try:
+        from ....services.billing import preview_billing_coupon
+
+        return ResultObject.success(await preview_billing_coupon(
+            db,
+            user_id=current_uid(current_user),
+            plan_code=req.plan_code,
+            duration_days=req.duration_days,
+            coupon_code=req.coupon_code,
+        ))
+    except BillingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/usage-daily", response_model=ResultObject[dict])
@@ -161,6 +193,7 @@ async def create_my_billing_order(
             duration_days=req.duration_days,
             payment_method=req.payment_method or "manual",
             expire_minutes=int(payment_config.get("orderExpireMinutes") or 1440),
+            coupon_code=req.coupon_code or "",
         )
         await db.commit()
         await db.refresh(order)

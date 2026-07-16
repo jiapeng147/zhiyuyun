@@ -128,15 +128,21 @@
     <n-card class="billing-card" :bordered="false">
       <template #header>可选套餐</template>
       <template #header-extra>
-        <label class="duration-picker">
-          <span>周期</span>
-          <select v-model.number="durationDays">
-            <option :value="30">1 个月</option>
-            <option :value="90">3 个月</option>
-            <option :value="180">6 个月</option>
-            <option :value="365">12 个月</option>
-          </select>
-        </label>
+        <div class="order-options">
+          <label class="duration-picker">
+            <span>周期</span>
+            <select v-model.number="durationDays" @change="clearCouponPreview">
+              <option :value="30">1 个月</option>
+              <option :value="90">3 个月</option>
+              <option :value="180">6 个月</option>
+              <option :value="365">12 个月</option>
+            </select>
+          </label>
+          <label class="coupon-picker">
+            <span>优惠码</span>
+            <input v-model.trim="couponCode" type="text" placeholder="可选" @input="clearCouponPreview" />
+          </label>
+        </div>
       </template>
       <div class="plan-catalog">
         <div v-for="plan in plans" :key="plan.code" class="plan-item">
@@ -145,7 +151,16 @@
               <strong>{{ plan.name }}</strong>
               <code>{{ plan.code }}</code>
             </div>
-            <div class="price">{{ money(plan.priceCents) }}<span>/ 月</span></div>
+            <div class="price">
+              <template v-if="previewFor(plan)">
+                <em>{{ money(previewFor(plan).listAmountCents) }}</em>
+                {{ money(previewFor(plan).payableAmountCents) }}
+                <span>/ 当前周期</span>
+              </template>
+              <template v-else>
+                {{ money(plan.priceCents) }}<span>/ 月</span>
+              </template>
+            </div>
           </div>
           <p>{{ plan.description || '适合标准闲鱼运营场景，可按需升级。' }}</p>
           <div class="plan-features">
@@ -161,14 +176,29 @@
               {{ feature.label }}
             </span>
           </div>
-          <button
-            class="billing-btn primary"
-            type="button"
-            :disabled="orderBusy || currentPlanCode === plan.code"
-            @click="createOrder(plan)"
-          >
-            {{ currentPlanCode === plan.code ? '当前套餐' : (plan.priceCents > 0 ? '创建订阅订单' : '启用免费套餐') }}
-          </button>
+          <div v-if="previewFor(plan)" class="coupon-result">
+            <span>{{ previewFor(plan).couponCode }}</span>
+            已抵扣 {{ money(previewFor(plan).discountCents) }}
+          </div>
+          <div class="plan-actions">
+            <button
+              v-if="couponCode && plan.priceCents > 0"
+              class="billing-btn"
+              type="button"
+              :disabled="couponBusy === plan.code || orderBusy"
+              @click="previewCoupon(plan)"
+            >
+              {{ couponBusy === plan.code ? '试算中...' : '试算优惠' }}
+            </button>
+            <button
+              class="billing-btn primary"
+              type="button"
+              :disabled="orderBusy || currentPlanCode === plan.code"
+              @click="createOrder(plan)"
+            >
+              {{ currentPlanCode === plan.code ? '当前套餐' : (plan.priceCents > 0 ? '创建订阅订单' : '启用免费套餐') }}
+            </button>
+          </div>
         </div>
       </div>
     </n-card>
@@ -215,6 +245,7 @@
             <tr>
               <th>订单号</th>
               <th>套餐</th>
+              <th>优惠</th>
               <th>金额</th>
               <th>周期</th>
               <th>状态</th>
@@ -225,11 +256,12 @@
           </thead>
           <tbody>
             <tr v-if="orders.length === 0">
-              <td colspan="8" class="empty-cell">暂无订单</td>
+              <td colspan="9" class="empty-cell">暂无订单</td>
             </tr>
             <tr v-for="order in orders" :key="order.id">
               <td><code>{{ order.orderNo }}</code></td>
               <td>{{ order.planCode }}</td>
+              <td>{{ order.discountCents ? `${order.couponCode || '优惠'} -${money(order.discountCents)}` : '—' }}</td>
               <td>{{ money(order.amountCents) }}</td>
               <td>{{ order.durationDays }} 天</td>
               <td><span :class="['status-pill', order.status]">{{ statusText(order.status) }}</span></td>
@@ -268,6 +300,7 @@ import {
   listMyQuotaEvents,
   listMyUsageDaily,
   listBillingOrders,
+  previewBillingCoupon,
 } from '../api/billing.js'
 
 const state = ref(null)
@@ -279,6 +312,9 @@ const paymentConfig = ref({})
 const loading = ref(false)
 const orderBusy = ref(false)
 const durationDays = ref(30)
+const couponCode = ref('')
+const couponPreview = ref(null)
+const couponBusy = ref('')
 const notice = ref('')
 const noticeType = ref('success')
 
@@ -306,6 +342,14 @@ function fmt(value) {
 
 function money(cents) {
   return `¥${(Number(cents || 0) / 100).toFixed(2)}`
+}
+
+function clearCouponPreview() {
+  couponPreview.value = null
+}
+
+function previewFor(plan) {
+  return couponPreview.value?.planCode === plan.code ? couponPreview.value : null
 }
 
 function displayLimit(value) {
@@ -375,6 +419,7 @@ async function createOrder(plan) {
       planCode: plan.code,
       durationDays: durationDays.value || 30,
       paymentMethod: 'manual',
+      couponCode: couponCode.value || '',
     })
     if (res.data?.paymentConfig) paymentConfig.value = res.data.paymentConfig
     flash(res.data?.message || '订单已创建')
@@ -383,6 +428,25 @@ async function createOrder(plan) {
     flash(friendlyError(error, '创建订单失败'), 'error')
   } finally {
     orderBusy.value = false
+  }
+}
+
+async function previewCoupon(plan) {
+  if (!plan || !couponCode.value || couponBusy.value) return
+  couponBusy.value = plan.code
+  try {
+    const res = await previewBillingCoupon({
+      planCode: plan.code,
+      durationDays: durationDays.value || 30,
+      couponCode: couponCode.value,
+    })
+    couponPreview.value = res.data || null
+    flash(`优惠码已抵扣 ${money(couponPreview.value?.discountCents)}`)
+  } catch (error) {
+    couponPreview.value = null
+    flash(friendlyError(error, '优惠码不可用'), 'error')
+  } finally {
+    couponBusy.value = ''
   }
 }
 
@@ -472,13 +536,34 @@ onMounted(loadAll)
   font-size: 13px;
 }
 
-.duration-picker select {
+.order-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.coupon-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.duration-picker select,
+.coupon-picker input {
   height: 30px;
   padding: 0 8px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background: #fff;
   color: #111827;
+}
+
+.coupon-picker input {
+  width: 138px;
+  text-transform: uppercase;
 }
 
 .billing-grid {
@@ -630,6 +715,36 @@ onMounted(loadAll)
   color: #64748b;
   font-size: 12px;
   font-weight: 400;
+}
+
+.price em {
+  display: block;
+  color: #94a3b8;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.coupon-result {
+  padding: 8px 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+}
+
+.coupon-result span {
+  margin-right: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
+}
+
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .plan-features {

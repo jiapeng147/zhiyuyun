@@ -100,6 +100,48 @@
       </div>
     </n-card>
 
+    <!-- 优惠码管理 -->
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>优惠码管理</template>
+      <template #header-extra><span class="user-v4-desc">配置订阅订单折扣、适用套餐和使用次数限制。</span></template>
+      <div class="plan-toolbar">
+        <button class="btn primary" type="button" :disabled="couponBusy" @click="openCreateCoupon">+ 新建优惠码</button>
+        <span class="muted">共 {{ coupons.length }} 个优惠码</span>
+      </div>
+      <div class="table-wrap">
+        <table class="table coupon-table">
+          <thead>
+            <tr>
+              <th>优惠码</th><th>名称</th><th>优惠</th><th>门槛</th><th>适用套餐</th>
+              <th>使用</th><th>有效期</th><th>状态</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="coupons.length === 0">
+              <td colspan="9" class="empty-cell">暂无优惠码</td>
+            </tr>
+            <tr v-for="c in coupons" :key="c.id">
+              <td><code>{{ c.code }}</code></td>
+              <td>{{ c.name }}</td>
+              <td>{{ couponDiscountText(c) }}</td>
+              <td>{{ c.minAmountCents ? money(c.minAmountCents) : '无门槛' }}</td>
+              <td>{{ couponScopeText(c.planScope) }}</td>
+              <td>{{ c.redeemedCount }} / {{ c.maxRedemptions || '不限' }}</td>
+              <td class="dim">{{ couponPeriodText(c) }}</td>
+              <td>
+                <span :class="['status-dot', c.status === 1 ? 'ok' : 'off']"></span>
+                {{ c.status === 1 ? '启用' : '停用' }}
+              </td>
+              <td class="actions">
+                <button class="btn small" type="button" :disabled="couponBusy" @click="openEditCoupon(c)">编辑</button>
+                <button class="btn small danger" type="button" :disabled="couponBusy" @click="onDeleteCoupon(c)">删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </n-card>
+
     <!-- 订阅与账单 -->
     <n-card class="dashboard-section user-v4-card" :bordered="false">
       <template #header>订阅与账单</template>
@@ -725,6 +767,88 @@
         </div>
       </div>
     </div>
+
+    <!-- 优惠码编辑模态 -->
+    <div v-if="editingCoupon" class="modal-mask" @click.self="editingCoupon = null">
+      <div class="modal-card coupon-modal">
+        <div class="modal-head">
+          <h3>{{ editingCoupon.id ? '编辑优惠码' : '新建优惠码' }}</h3>
+          <button class="modal-close" type="button" aria-label="关闭" @click="editingCoupon = null">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label class="field">
+              <span>优惠码 *</span>
+              <input v-model.trim="editingCoupon.code" class="input coupon-code-input" placeholder="如 NEWUSER30" />
+            </label>
+            <label class="field">
+              <span>名称 *</span>
+              <input v-model.trim="editingCoupon.name" class="input" placeholder="如 新用户七折" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label class="field">
+              <span>优惠类型</span>
+              <select v-model="editingCoupon.discountType" class="input">
+                <option value="fixed">固定金额</option>
+                <option value="percent">百分比</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>{{ editingCoupon.discountType === 'percent' ? '折扣百分比' : '抵扣金额（分）' }}</span>
+              <input v-model.number="editingCoupon.discountValue" class="input" type="number" min="1" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label class="field">
+              <span>最高抵扣（分，百分比可用）</span>
+              <input v-model.number="editingCoupon.maxDiscountCents" class="input" type="number" min="0" />
+            </label>
+            <label class="field">
+              <span>最低订单原价（分）</span>
+              <input v-model.number="editingCoupon.minAmountCents" class="input" type="number" min="0" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label class="field">
+              <span>总可用次数（0=不限）</span>
+              <input v-model.number="editingCoupon.maxRedemptions" class="input" type="number" min="0" />
+            </label>
+            <label class="field">
+              <span>单用户次数（0=不限）</span>
+              <input v-model.number="editingCoupon.perUserLimit" class="input" type="number" min="0" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label class="field">
+              <span>开始时间</span>
+              <input v-model="editingCoupon.startsAt" class="input" type="datetime-local" />
+            </label>
+            <label class="field">
+              <span>结束时间</span>
+              <input v-model="editingCoupon.endsAt" class="input" type="datetime-local" />
+            </label>
+          </div>
+          <label class="field check">
+            <input v-model="editingCoupon.statusBool" type="checkbox" />
+            <span>启用优惠码</span>
+          </label>
+          <div class="feature-editor coupon-plan-scope">
+            <span class="feature-editor-title">适用套餐（不勾选表示全部套餐）</span>
+            <label v-for="plan in plans" :key="plan.code" class="feature-check">
+              <input v-model="editingCoupon.planScopeMap[plan.code]" type="checkbox" />
+              <span>{{ plan.name }} ({{ plan.code }})</span>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="button" @click="editingCoupon = null">取消</button>
+            <button class="btn primary" type="button" :disabled="couponBusy" @click="onSaveCoupon">
+              {{ couponBusy ? '保存中...' : '保存优惠码' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -739,6 +863,7 @@ import {
   adminListSubscriptions, adminListBillingOrders, adminActivateSubscription, adminMarkBillingOrderPaid,
   adminCloseBillingOrder, adminGetBillingOverview, adminGetBillingSettings, adminSetBillingSettings,
   adminListUsageDaily, adminListQuotaEvents, adminGetUserProfile,
+  adminListBillingCoupons, adminCreateBillingCoupon, adminUpdateBillingCoupon, adminDeleteBillingCoupon,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
 } from '../../api/admin.js'
 
@@ -750,6 +875,7 @@ const regBusy = ref(false)
 const emailBusy = ref(false)
 const createBusy = ref(false)
 const planBusy = ref(false)
+const couponBusy = ref(false)
 const billingBusy = ref(false)
 const rowBusy = ref(0)
 const emailConfigured = ref(false)
@@ -759,6 +885,7 @@ const billingOrders = ref([])
 const billingOverview = ref({})
 const usageDailyRows = ref([])
 const quotaEventRows = ref([])
+const coupons = ref([])
 const billingSettings = reactive({
   enabled: false,
   orderExpireMinutes: 1440,
@@ -780,6 +907,7 @@ const profileData = ref(null)
 const profileLoading = ref(false)
 
 const editingPlan = ref(null)
+const editingCoupon = ref(null)
 
 const notice = ref('')
 const noticeType = ref('success')
@@ -837,13 +965,43 @@ function featureSummary(features = {}) {
   const enabled = featureCatalog.filter(item => defaultFeatures(features)[item.key])
   return `${enabled.length}/${featureCatalog.length}`
 }
+function couponDiscountText(coupon) {
+  if (!coupon) return '—'
+  if (coupon.discountType === 'percent') {
+    const cap = Number(coupon.maxDiscountCents || 0) > 0 ? `，最高 ${money(coupon.maxDiscountCents)}` : ''
+    return `${coupon.discountValue}%${cap}`
+  }
+  return `减 ${money(coupon.discountValue)}`
+}
+function couponScopeText(scope = []) {
+  return Array.isArray(scope) && scope.length ? scope.join(', ') : '全部套餐'
+}
+function couponPeriodText(coupon) {
+  if (!coupon?.startsAt && !coupon?.endsAt) return '长期'
+  return `${coupon.startsAt ? fmt(coupon.startsAt) : '现在'} ~ ${coupon.endsAt ? fmt(coupon.endsAt) : '长期'}`
+}
+function toDatetimeLocal(value) {
+  if (!value) return ''
+  return String(value).replace('T', ' ').slice(0, 16).replace(' ', 'T')
+}
+function couponScopeMap(scope = []) {
+  const selected = new Set(Array.isArray(scope) ? scope : [])
+  return Object.fromEntries(plans.value.map(plan => [plan.code, selected.has(plan.code)]))
+}
+function couponScopeFromMap(map = {}) {
+  return Object.entries(map).filter(([, enabled]) => enabled).map(([code]) => code)
+}
 
 async function loadAll() {
   try {
-    const [uRes, pRes, rRes, eRes, oRes, sRes, boRes, billingOvRes, billingSettingsRes, usageRes, eventRes] = await Promise.all([
+    const [
+      uRes, pRes, rRes, eRes, oRes, sRes, boRes, billingOvRes,
+      billingSettingsRes, usageRes, eventRes, couponRes,
+    ] = await Promise.all([
       listUsers(), adminListPlans(), getRegistration(), getEmailConfig(), getOverview(),
       adminListSubscriptions(), adminListBillingOrders(), adminGetBillingOverview(), adminGetBillingSettings(),
       adminListUsageDaily({ current: 1, size: 30 }), adminListQuotaEvents({ current: 1, size: 30 }),
+      adminListBillingCoupons(),
     ])
     users.value = uRes.data || []
     plans.value = pRes.data || []
@@ -852,6 +1010,7 @@ async function loadAll() {
     billingOverview.value = billingOvRes.data || {}
     usageDailyRows.value = usageRes.data?.records || []
     quotaEventRows.value = eventRes.data?.records || []
+    coupons.value = couponRes.data || []
     Object.assign(billingSettings, {
       enabled: !!billingSettingsRes.data?.enabled,
       orderExpireMinutes: Number(billingSettingsRes.data?.orderExpireMinutes || 1440),
@@ -977,6 +1136,91 @@ async function onDeletePlan(p) {
   planBusy.value = true
   try { const r = await adminDeletePlan(p.id); flash(r.data || '已删除'); await loadAll() }
   catch (e) { flash(friendlyError(e, '删除失败'), 'error') } finally { planBusy.value = false }
+}
+
+function openCreateCoupon() {
+  editingCoupon.value = {
+    id: 0,
+    code: '',
+    name: '',
+    discountType: 'fixed',
+    discountValue: 1000,
+    maxDiscountCents: 0,
+    minAmountCents: 0,
+    maxRedemptions: 0,
+    perUserLimit: 1,
+    startsAt: '',
+    endsAt: '',
+    statusBool: true,
+    planScopeMap: couponScopeMap([]),
+  }
+}
+
+function openEditCoupon(coupon) {
+  editingCoupon.value = {
+    id: coupon.id,
+    code: coupon.code,
+    name: coupon.name,
+    discountType: coupon.discountType || 'fixed',
+    discountValue: coupon.discountValue || 0,
+    maxDiscountCents: coupon.maxDiscountCents || 0,
+    minAmountCents: coupon.minAmountCents || 0,
+    maxRedemptions: coupon.maxRedemptions || 0,
+    perUserLimit: coupon.perUserLimit ?? 1,
+    startsAt: toDatetimeLocal(coupon.startsAt),
+    endsAt: toDatetimeLocal(coupon.endsAt),
+    statusBool: coupon.status === 1,
+    planScopeMap: couponScopeMap(coupon.planScope || []),
+  }
+}
+
+async function onSaveCoupon() {
+  if (!editingCoupon.value || couponBusy.value) return
+  couponBusy.value = true
+  try {
+    const ec = editingCoupon.value
+    const payload = {
+      code: ec.code,
+      name: ec.name,
+      discountType: ec.discountType,
+      discountValue: Number(ec.discountValue || 0),
+      maxDiscountCents: Number(ec.maxDiscountCents || 0),
+      minAmountCents: Number(ec.minAmountCents || 0),
+      planScope: couponScopeFromMap(ec.planScopeMap),
+      maxRedemptions: Number(ec.maxRedemptions || 0),
+      perUserLimit: Number(ec.perUserLimit || 0),
+      status: ec.statusBool ? 1 : 0,
+      startsAt: ec.startsAt || null,
+      endsAt: ec.endsAt || null,
+    }
+    if (ec.id) {
+      await adminUpdateBillingCoupon(ec.id, payload)
+      flash(`已更新优惠码 ${ec.code}`)
+    } else {
+      await adminCreateBillingCoupon(payload)
+      flash(`已创建优惠码 ${ec.code}`)
+    }
+    editingCoupon.value = null
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '保存优惠码失败'), 'error')
+  } finally {
+    couponBusy.value = false
+  }
+}
+
+async function onDeleteCoupon(coupon) {
+  if (!window.confirm(`确认删除优惠码 ${coupon.code}？已有使用记录的优惠码会改为停用。`)) return
+  couponBusy.value = true
+  try {
+    const res = await adminDeleteBillingCoupon(coupon.id)
+    flash(res.data || '已删除')
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '删除优惠码失败'), 'error')
+  } finally {
+    couponBusy.value = false
+  }
 }
 
 function orderStatus(status) {
@@ -1149,6 +1393,7 @@ onMounted(loadAll)
 .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .panel-title strong { color: #111827; font-size: 14px; }
 .billing-admin-table { min-width: 640px; }
+.coupon-table { min-width: 920px; }
 .usage-audit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 16px 0 10px; }
 .usage-audit-head strong { color: #111827; font-size: 14px; }
 .audit-table { min-width: 760px; font-size: 12px; }
@@ -1165,9 +1410,9 @@ onMounted(loadAll)
 /* 套餐管理 */
 .plan-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .table-wrap { overflow-x: auto; }
-.plan-table, .user-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.plan-table th, .plan-table td, .user-table th, .user-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--line, #e5e5e5); white-space: nowrap; }
-.plan-table th, .user-table th { color: var(--muted, #6b6b6b); font-weight: 600; }
+.plan-table, .user-table, .coupon-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.plan-table th, .plan-table td, .user-table th, .user-table td, .coupon-table th, .coupon-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--line, #e5e5e5); white-space: nowrap; }
+.plan-table th, .user-table th, .coupon-table th { color: var(--muted, #6b6b6b); font-weight: 600; }
 .empty-cell { text-align: center; color: var(--muted, #6b6b6b); padding: 28px 0; }
 .plan-table code { background: #f2f2f2; padding: 1px 6px; border-radius: 4px; }
 .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
@@ -1203,6 +1448,7 @@ onMounted(loadAll)
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal-card { background: #fff; border-radius: 6px; padding: 20px; width: min(520px, 92vw); box-shadow: 0 16px 48px rgba(0,0,0,.18); }
 .modal-card.small { width: min(420px, 92vw); }
+.modal-card.coupon-modal { width: min(720px, 94vw); }
 .modal-card.profile-card { width: min(1180px, 94vw); max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .modal-head h3 { margin: 0; font-size: 16px; }
@@ -1243,6 +1489,8 @@ onMounted(loadAll)
 
 /* role / status */
 .plan-select { padding: 5px 8px; min-width: 96px; }
+.coupon-code-input { text-transform: uppercase; }
+.coupon-plan-scope { max-height: 180px; overflow: auto; }
 .role-tag { padding: 2px 8px; border-radius: 6px; font-size: 12px; }
 .role-tag.superadmin { background: rgba(20, 184, 166,.1); color: #0f766e; }
 .role-tag.user { background: #f0f0f0; color: #555; }

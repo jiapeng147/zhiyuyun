@@ -1267,6 +1267,52 @@ class AppBillingOrder(Base):
     updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
 
 
+class AppBillingCoupon(Base):
+    """订阅优惠码。"""
+
+    __tablename__ = "app_billing_coupon"
+    __table_args__ = (
+        Index("idx_app_billing_coupon_status", "status"),
+        Index("idx_app_billing_coupon_ends", "ends_at"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    code = Column(String(64), nullable=False, unique=True, index=True)
+    name = Column(String(100), nullable=False)
+    discount_type = Column(String(20), nullable=False, default="fixed")
+    discount_value = Column(Integer, nullable=False, default=0)
+    max_discount_cents = Column(Integer, nullable=False, default=0)
+    min_amount_cents = Column(Integer, nullable=False, default=0)
+    plan_scope = Column(JSON, nullable=True)
+    max_redemptions = Column(Integer, nullable=False, default=0)
+    per_user_limit = Column(Integer, nullable=False, default=1)
+    redeemed_count = Column(Integer, nullable=False, default=0)
+    status = Column(SmallInteger, nullable=False, default=1)
+    starts_at = Column(DateTime, nullable=True)
+    ends_at = Column(DateTime, nullable=True)
+    created_time = Column(DateTime, default=func.now())
+    updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AppBillingCouponRedemption(Base):
+    """订阅优惠码兑换记录。"""
+
+    __tablename__ = "app_billing_coupon_redemption"
+    __table_args__ = (
+        UniqueConstraint("order_id", name="uk_app_billing_coupon_order"),
+        Index("idx_app_billing_coupon_user", "coupon_id", "user_id"),
+        Index("idx_app_billing_coupon_code_user", "coupon_code", "user_id"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    coupon_id = Column(BigInteger, nullable=False)
+    coupon_code = Column(String(64), nullable=False)
+    user_id = Column(BigInteger, nullable=False)
+    order_id = Column(BigInteger, nullable=False)
+    discount_cents = Column(Integer, nullable=False, default=0)
+    created_time = Column(DateTime, default=func.now())
+
+
 class AppUsageDaily(Base):
     """用户级每日用量汇总。"""
 

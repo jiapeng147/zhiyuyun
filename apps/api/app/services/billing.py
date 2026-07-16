@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -14,6 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.tenancy import current_uid, is_superadmin
 from ..models.entities import (
     AdminUser,
+    AppBillingCoupon,
+    AppBillingCouponRedemption,
     AppBillingOrder,
     AppPlan,
     AppQuotaEvent,
@@ -26,6 +29,7 @@ from ..models.entities import (
 METRIC_ACCOUNTS = "accounts"
 METRIC_AI_CALLS = "ai_calls"
 BILLING_PAYMENT_CONFIG_KEY = "billing_payment_config"
+_COUPON_CODE_RE = re.compile(r"[^A-Z0-9_-]+")
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +105,10 @@ def _order_no() -> str:
     return "B" + utcnow().strftime("%Y%m%d%H%M%S") + uuid.uuid4().hex[:10].upper()
 
 
+def normalize_coupon_code(value: Any) -> str:
+    return _COUPON_CODE_RE.sub("", str(value or "").strip().upper())[:64]
+
+
 def normalize_feature_flags(raw: Any = None) -> dict[str, bool]:
     result = dict(DEFAULT_FEATURE_FLAGS)
     if isinstance(raw, dict):
@@ -140,6 +148,33 @@ def plan_payload(plan: AppPlan) -> dict[str, Any]:
         "description": plan.description or "",
         "features": flags,
         "featureItems": feature_items(flags),
+    }
+
+
+def coupon_plan_scope(raw: Any) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    return [str(item or "").strip() for item in raw if str(item or "").strip()][:100]
+
+
+def billing_coupon_payload(coupon: AppBillingCoupon) -> dict[str, Any]:
+    return {
+        "id": int(coupon.id),
+        "code": coupon.code,
+        "name": coupon.name,
+        "discountType": coupon.discount_type,
+        "discountValue": int(coupon.discount_value or 0),
+        "maxDiscountCents": int(coupon.max_discount_cents or 0),
+        "minAmountCents": int(coupon.min_amount_cents or 0),
+        "planScope": coupon_plan_scope(coupon.plan_scope),
+        "maxRedemptions": int(coupon.max_redemptions or 0),
+        "perUserLimit": int(coupon.per_user_limit or 0),
+        "redeemedCount": int(coupon.redeemed_count or 0),
+        "status": int(coupon.status or 0),
+        "startsAt": _dt(coupon.starts_at),
+        "endsAt": _dt(coupon.ends_at),
+        "createdTime": _dt(coupon.created_time),
+        "updatedTime": _dt(coupon.updated_time),
     }
 
 
@@ -651,6 +686,151 @@ async def record_usage_delta(
         logger.warning("usage threshold notification failed", exc_info=True)
 
 
+async def list_billing_coupons(db: AsyncSession) -> list[dict[str, Any]]:
+    rows = (
+        await db.execute(
+            select(AppBillingCoupon).order_by(AppBillingCoupon.id.desc())
+        )
+    ).scalars().all()
+    return [billing_coupon_payload(row) for row in rows]
+
+
+async def load_coupon(db: AsyncSession, code: str, *, for_update: bool = False) -> AppBillingCoupon:
+    normalized = normalize_coupon_code(code)
+    if not normalized:
+        raise BillingError("优惠码不能为空", code="coupon_required")
+    statement = select(AppBillingCoupon).where(AppBillingCoupon.code == normalized)
+    if for_update:
+        statement = statement.with_for_update()
+    coupon = (
+        await db.execute(statement)
+    ).scalar_one_or_none()
+    if not coupon:
+        raise BillingError("优惠码不存在", code="coupon_not_found")
+    return coupon
+
+
+def _discount_amount(coupon: AppBillingCoupon, base_amount: int) -> int:
+    base = max(int(base_amount or 0), 0)
+    if base <= 0:
+        return 0
+    discount_type = str(coupon.discount_type or "fixed").strip().lower()
+    value = max(int(coupon.discount_value or 0), 0)
+    if discount_type == "percent":
+        discount = math.floor(base * min(value, 100) / 100)
+        cap = int(coupon.max_discount_cents or 0)
+        if cap > 0:
+            discount = min(discount, cap)
+    else:
+        discount = value
+    return max(0, min(base, int(discount or 0)))
+
+
+async def _validate_coupon_for_order(
+    db: AsyncSession,
+    *,
+    coupon_code: str,
+    user_id: int,
+    plan: AppPlan,
+    base_amount: int,
+    for_update: bool = False,
+) -> tuple[AppBillingCoupon, int]:
+    if int(base_amount or 0) <= 0:
+        raise BillingError("免费套餐无需使用优惠码", code="coupon_not_needed")
+    coupon = await load_coupon(db, coupon_code, for_update=for_update)
+    now = utcnow()
+    if int(coupon.status or 0) != 1:
+        raise BillingError("优惠码已停用", code="coupon_inactive")
+    if coupon.starts_at and coupon.starts_at > now:
+        raise BillingError("优惠码尚未开始", code="coupon_not_started")
+    if coupon.ends_at and coupon.ends_at < now:
+        raise BillingError("优惠码已过期", code="coupon_expired")
+    scope = coupon_plan_scope(coupon.plan_scope)
+    if scope and plan.code not in scope:
+        raise BillingError("优惠码不适用于当前套餐", code="coupon_plan_mismatch")
+    if int(coupon.min_amount_cents or 0) > int(base_amount or 0):
+        raise BillingError("订单金额未达到优惠码最低使用门槛", code="coupon_min_amount")
+    if int(coupon.max_redemptions or 0) > 0 and int(coupon.redeemed_count or 0) >= int(coupon.max_redemptions or 0):
+        raise BillingError("优惠码已被使用完", code="coupon_exhausted")
+    if int(coupon.per_user_limit or 0) > 0:
+        used_by_user = int((
+            await db.execute(
+                select(func.count()).select_from(AppBillingCouponRedemption).where(
+                    AppBillingCouponRedemption.coupon_id == int(coupon.id),
+                    AppBillingCouponRedemption.user_id == int(user_id),
+                )
+            )
+        ).scalar() or 0)
+        if used_by_user >= int(coupon.per_user_limit or 0):
+            raise BillingError("该优惠码你已使用过", code="coupon_user_limit")
+    discount = _discount_amount(coupon, int(base_amount or 0))
+    if discount <= 0:
+        raise BillingError("优惠码未产生有效抵扣", code="coupon_no_discount")
+    return coupon, discount
+
+
+async def build_order_pricing(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    plan: AppPlan,
+    duration_days: int,
+    coupon_code: str = "",
+    lock_coupon: bool = False,
+) -> tuple[dict[str, Any], AppBillingCoupon | None]:
+    days = _clean_int(duration_days, 30, 1, 3650)
+    month_units = max(1, math.ceil(days / 30))
+    list_amount = int(plan.price_cents or 0) * month_units
+    coupon: AppBillingCoupon | None = None
+    discount = 0
+    normalized_code = normalize_coupon_code(coupon_code)
+    if normalized_code:
+        coupon, discount = await _validate_coupon_for_order(
+            db,
+            coupon_code=normalized_code,
+            user_id=int(user_id),
+            plan=plan,
+            base_amount=list_amount,
+            for_update=lock_coupon,
+        )
+    amount = max(0, list_amount - discount)
+    return {
+        "durationDays": days,
+        "monthUnits": month_units,
+        "listAmountCents": list_amount,
+        "discountCents": discount,
+        "amountCents": amount,
+        "couponCode": coupon.code if coupon else "",
+        "couponId": int(coupon.id) if coupon else 0,
+        "couponName": coupon.name if coupon else "",
+    }, coupon
+
+
+async def preview_billing_coupon(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    plan_code: str,
+    duration_days: int = 30,
+    coupon_code: str = "",
+) -> dict[str, Any]:
+    plan = await load_plan(db, plan_code)
+    pricing, _coupon = await build_order_pricing(
+        db,
+        user_id=int(user_id),
+        plan=plan,
+        duration_days=duration_days,
+        coupon_code=coupon_code,
+        lock_coupon=False,
+    )
+    return {
+        **pricing,
+        "planCode": plan.code,
+        "planName": plan.name,
+        "payableAmountCents": pricing["amountCents"],
+    }
+
+
 async def create_billing_order(
     db: AsyncSession,
     *,
@@ -660,13 +840,20 @@ async def create_billing_order(
     order_type: str = "subscription",
     payment_method: str = "manual",
     expire_minutes: int = 1440,
+    coupon_code: str = "",
 ) -> AppBillingOrder:
     plan = await load_plan(db, plan_code)
     if int(plan.status or 0) != 1:
         raise BillingError("套餐已下架，不能购买", code="plan_inactive")
-    days = _clean_int(duration_days, 30, 1, 3650)
-    month_units = max(1, math.ceil(days / 30))
-    amount = int(plan.price_cents or 0) * month_units
+    pricing, coupon = await build_order_pricing(
+        db,
+        user_id=int(user_id),
+        plan=plan,
+        duration_days=duration_days,
+        coupon_code=coupon_code,
+        lock_coupon=True,
+    )
+    amount = int(pricing["amountCents"])
     expires_in = _clean_int(expire_minutes, 1440, 5, 30 * 24 * 60)
     order = AppBillingOrder(
         order_no=_order_no(),
@@ -674,15 +861,33 @@ async def create_billing_order(
         plan_code=plan.code,
         order_type=order_type,
         amount_cents=amount,
-        duration_days=days,
+        duration_days=int(pricing["durationDays"]),
         status="pending",
         payment_provider="internal",
         payment_method=payment_method,
         expire_time=utcnow() + timedelta(minutes=expires_in),
-        metadata_json={"monthUnits": month_units, "expireMinutes": expires_in},
+        metadata_json={
+            "monthUnits": pricing["monthUnits"],
+            "expireMinutes": expires_in,
+            "listAmountCents": pricing["listAmountCents"],
+            "discountCents": pricing["discountCents"],
+            "couponCode": pricing["couponCode"],
+            "couponId": pricing["couponId"],
+            "couponName": pricing["couponName"],
+        },
     )
     db.add(order)
     await db.flush()
+    if coupon and int(pricing["discountCents"] or 0) > 0:
+        db.add(AppBillingCouponRedemption(
+            coupon_id=int(coupon.id),
+            coupon_code=coupon.code,
+            user_id=int(user_id),
+            order_id=int(order.id),
+            discount_cents=int(pricing["discountCents"] or 0),
+        ))
+        coupon.redeemed_count = int(coupon.redeemed_count or 0) + 1
+        await db.flush()
     if amount == 0:
         await activate_order(db, order, operator="system")
     else:

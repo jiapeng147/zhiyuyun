@@ -15,6 +15,7 @@ from ....core.database import get_db
 from ....core.response import ResultObject
 from ....models.entities import (
     AdminUser,
+    AppBillingCoupon,
     AppBillingOrder,
     AppPlan,
     AppSubscription,
@@ -27,13 +28,16 @@ from ....models.entities import (
 from ....services.billing import (
     BillingError,
     activate_order,
+    billing_coupon_payload,
     billing_overview,
     billing_state_for_user,
     close_billing_order,
     create_billing_order,
+    list_billing_coupons,
     list_quota_events,
     list_usage_daily,
     load_payment_config,
+    normalize_coupon_code,
     normalize_feature_flags,
     feature_items,
     reconcile_billing_lifecycle,
@@ -92,6 +96,16 @@ def _dt(v) -> str:
         return ""
 
 
+def _parse_optional_dt(value: str | None) -> datetime | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).replace(tzinfo=None)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="时间格式无效，请使用 YYYY-MM-DD HH:mm 或 ISO 时间") from exc
+
+
 class UserRespDTO(CamelModel):
     id: int
     username: str
@@ -133,6 +147,21 @@ class PlanReqDTO(CamelModel):
     status: int = 1
     description: Optional[str] = None
     features: Optional[dict[str, bool]] = None
+
+
+class CouponReqDTO(CamelModel):
+    code: str
+    name: str
+    discount_type: str = "fixed"
+    discount_value: int = 0
+    max_discount_cents: int = 0
+    min_amount_cents: int = 0
+    plan_scope: Optional[list[str]] = None
+    max_redemptions: int = 0
+    per_user_limit: int = 1
+    status: int = 1
+    starts_at: Optional[str] = None
+    ends_at: Optional[str] = None
 
 
 class PlanRespDTO(CamelModel):
@@ -188,6 +217,42 @@ class BillingPaymentConfigReqDTO(CamelModel):
     bank_account: Optional[str] = None
 
 
+def _normalize_coupon_payload(req: CouponReqDTO) -> dict[str, Any]:
+    code = normalize_coupon_code(req.code)
+    if not code:
+        raise HTTPException(status_code=400, detail="优惠码不能为空")
+    name = (req.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="优惠码名称不能为空")
+    discount_type = str(req.discount_type or "fixed").strip().lower()
+    if discount_type not in ("fixed", "percent"):
+        raise HTTPException(status_code=400, detail="优惠类型必须是 fixed 或 percent")
+    discount_value = max(int(req.discount_value or 0), 0)
+    if discount_type == "percent":
+        discount_value = min(discount_value, 100)
+    if discount_value <= 0:
+        raise HTTPException(status_code=400, detail="优惠值必须大于 0")
+    plan_scope = [str(item or "").strip() for item in (req.plan_scope or []) if str(item or "").strip()]
+    starts_at = _parse_optional_dt(req.starts_at)
+    ends_at = _parse_optional_dt(req.ends_at)
+    if starts_at and ends_at and starts_at >= ends_at:
+        raise HTTPException(status_code=400, detail="结束时间必须晚于开始时间")
+    return {
+        "code": code,
+        "name": name[:100],
+        "discount_type": discount_type,
+        "discount_value": discount_value,
+        "max_discount_cents": max(int(req.max_discount_cents or 0), 0),
+        "min_amount_cents": max(int(req.min_amount_cents or 0), 0),
+        "plan_scope": plan_scope,
+        "max_redemptions": max(int(req.max_redemptions or 0), 0),
+        "per_user_limit": max(int(req.per_user_limit or 0), 0),
+        "status": 1 if int(req.status or 0) == 1 else 0,
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+    }
+
+
 def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
     flags = normalize_feature_flags(p.feature_flags)
     return PlanRespDTO(
@@ -201,6 +266,7 @@ def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
 
 
 def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None) -> dict:
+    meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
     return {
         "id": int(order.id),
         "orderNo": order.order_no,
@@ -208,6 +274,10 @@ def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None
         "username": user.username if user else "",
         "planCode": order.plan_code,
         "orderType": order.order_type,
+        "listAmountCents": int(meta.get("listAmountCents") or order.amount_cents or 0),
+        "discountCents": int(meta.get("discountCents") or 0),
+        "couponCode": str(meta.get("couponCode") or ""),
+        "couponName": str(meta.get("couponName") or ""),
         "amountCents": int(order.amount_cents or 0),
         "durationDays": int(order.duration_days or 0),
         "status": order.status,
@@ -686,6 +756,84 @@ async def delete_plan(
         await db.commit()
         return ResultObject.success(f"套餐已被 {in_use} 个用户引用,已下架(未删除)")
     await db.delete(plan)
+    await db.commit()
+    return ResultObject.success("已删除")
+
+
+# ============================================================
+# 优惠码管理
+# ============================================================
+
+@router.get("/billing-coupons", response_model=ResultObject[list[dict]])
+async def list_coupons(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await list_billing_coupons(db))
+
+
+@router.post("/billing-coupons", response_model=ResultObject[dict])
+async def create_coupon(
+    req: CouponReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    data = _normalize_coupon_payload(req)
+    clash = (
+        await db.execute(select(AppBillingCoupon).where(AppBillingCoupon.code == data["code"]))
+    ).scalar_one_or_none()
+    if clash:
+        raise HTTPException(status_code=409, detail="优惠码已存在")
+    coupon = AppBillingCoupon(**data)
+    db.add(coupon)
+    await db.commit()
+    await db.refresh(coupon)
+    return ResultObject.success(billing_coupon_payload(coupon))
+
+
+@router.put("/billing-coupons/{coupon_id}", response_model=ResultObject[dict])
+async def update_coupon(
+    coupon_id: int,
+    req: CouponReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    coupon = (
+        await db.execute(select(AppBillingCoupon).where(AppBillingCoupon.id == coupon_id))
+    ).scalar_one_or_none()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="优惠码不存在")
+    data = _normalize_coupon_payload(req)
+    if data["code"] != coupon.code:
+        clash = (
+            await db.execute(
+                select(AppBillingCoupon).where(
+                    AppBillingCoupon.code == data["code"],
+                    AppBillingCoupon.id != coupon_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if clash:
+            raise HTTPException(status_code=409, detail="优惠码已存在")
+    for key, value in data.items():
+        setattr(coupon, key, value)
+    await db.commit()
+    await db.refresh(coupon)
+    return ResultObject.success(billing_coupon_payload(coupon))
+
+
+@router.delete("/billing-coupons/{coupon_id}", response_model=ResultObject[str])
+async def delete_coupon(
+    coupon_id: int,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    coupon = (
+        await db.execute(select(AppBillingCoupon).where(AppBillingCoupon.id == coupon_id))
+    ).scalar_one_or_none()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="优惠码不存在")
+    if int(coupon.redeemed_count or 0) > 0:
+        coupon.status = 0
+        await db.commit()
+        return ResultObject.success("优惠码已有使用记录，已改为停用")
+    await db.delete(coupon)
     await db.commit()
     return ResultObject.success("已删除")
 
