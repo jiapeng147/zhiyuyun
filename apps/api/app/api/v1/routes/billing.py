@@ -16,6 +16,8 @@ from ....services.billing import (
     billing_state_for_user,
     close_billing_order,
     create_billing_order,
+    list_quota_events,
+    list_usage_daily,
     load_payment_config,
     plan_payload,
     reconcile_billing_lifecycle,
@@ -80,6 +82,40 @@ async def list_billing_plans(db: AsyncSession = Depends(get_db)):
         )
     ).scalars().all()
     return ResultObject.success([plan_payload(row) for row in rows])
+
+
+@router.get("/usage-daily", response_model=ResultObject[dict])
+async def list_my_usage_daily(
+    metric: Optional[str] = Query(default=None),
+    current: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return ResultObject.success(await list_usage_daily(
+        db,
+        user_id=current_uid(current_user),
+        metric=metric,
+        current=current,
+        size=size,
+    ))
+
+
+@router.get("/quota-events", response_model=ResultObject[dict])
+async def list_my_quota_events(
+    metric: Optional[str] = Query(default=None),
+    current: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return ResultObject.success(await list_quota_events(
+        db,
+        user_id=current_uid(current_user),
+        metric=metric,
+        current=current,
+        size=size,
+    ))
 
 
 @router.get("/orders", response_model=ResultObject[dict])

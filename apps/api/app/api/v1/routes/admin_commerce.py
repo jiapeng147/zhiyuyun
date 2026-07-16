@@ -30,6 +30,8 @@ from ....services.billing import (
     billing_state_for_user,
     close_billing_order,
     create_billing_order,
+    list_quota_events,
+    list_usage_daily,
     load_payment_config,
     normalize_feature_flags,
     feature_items,
@@ -557,6 +559,42 @@ async def get_billing_overview(
     db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
 ):
     return ResultObject.success(await billing_overview(db))
+
+
+@router.get("/usage-daily", response_model=ResultObject[dict])
+async def admin_list_usage_daily(
+    user_id: Optional[int] = Query(default=None, alias="userId"),
+    metric: Optional[str] = Query(default=None),
+    current: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await list_usage_daily(
+        db,
+        user_id=user_id,
+        metric=metric,
+        current=current,
+        size=size,
+    ))
+
+
+@router.get("/quota-events", response_model=ResultObject[dict])
+async def admin_list_quota_events(
+    user_id: Optional[int] = Query(default=None, alias="userId"),
+    metric: Optional[str] = Query(default=None),
+    current: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await list_quota_events(
+        db,
+        user_id=user_id,
+        metric=metric,
+        current=current,
+        size=size,
+    ))
 
 
 @router.get("/billing-settings", response_model=ResultObject[dict])

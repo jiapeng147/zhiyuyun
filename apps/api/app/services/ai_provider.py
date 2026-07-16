@@ -363,6 +363,7 @@ async def generate_text(
         try:
             from app.services.billing import (
                 METRIC_AI_CALLS,
+                audit_quota_rejection,
                 load_user,
                 record_usage_delta,
                 resolve_entitlement,
@@ -373,13 +374,22 @@ async def generate_text(
             entitlement = await resolve_entitlement(db, billing_user)
             used_today = await usage_count_today(db, billing_user_id, METRIC_AI_CALLS)
             if used_today >= int(entitlement.ai_daily_quota or 0):
+                message = (
+                    f"当前套餐每日 AI 调用额度为 {entitlement.ai_daily_quota} 次，"
+                    f"今日已使用 {used_today} 次，请升级套餐或明日再试。"
+                )
+                await audit_quota_rejection(
+                    db,
+                    user_id=billing_user_id,
+                    metric=METRIC_AI_CALLS,
+                    source_type="quota_block",
+                    source_id=scene,
+                    reason=message,
+                )
                 result.update({
                     "ok": False,
                     "errorCode": "AI_QUOTA_EXHAUSTED",
-                    "error": (
-                        f"当前套餐每日 AI 调用额度为 {entitlement.ai_daily_quota} 次，"
-                        f"今日已使用 {used_today} 次，请升级套餐或明日再试。"
-                    ),
+                    "error": message,
                     "quota": {
                         "used": used_today,
                         "limit": int(entitlement.ai_daily_quota or 0),

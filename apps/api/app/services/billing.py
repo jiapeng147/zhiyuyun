@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import json
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -25,6 +26,8 @@ from ..models.entities import (
 METRIC_ACCOUNTS = "accounts"
 METRIC_AI_CALLS = "ai_calls"
 BILLING_PAYMENT_CONFIG_KEY = "billing_payment_config"
+
+logger = logging.getLogger(__name__)
 
 FEATURE_CATALOG: tuple[dict[str, str], ...] = (
     {"key": "accounts", "label": "闲鱼账号"},
@@ -90,6 +93,10 @@ def _dt(value: datetime | None) -> str:
     return value.isoformat() if value else ""
 
 
+def _date(value: date | None) -> str:
+    return value.isoformat() if value else ""
+
+
 def _order_no() -> str:
     return "B" + utcnow().strftime("%Y%m%d%H%M%S") + uuid.uuid4().hex[:10].upper()
 
@@ -109,6 +116,14 @@ def feature_items(flags: dict[str, bool] | None = None) -> list[dict[str, Any]]:
         {"key": item["key"], "label": item["label"], "enabled": bool(normalized.get(item["key"], True))}
         for item in FEATURE_CATALOG
     ]
+
+
+def metric_label(metric: str) -> str:
+    if metric == METRIC_ACCOUNTS:
+        return "闲鱼账号"
+    if metric == METRIC_AI_CALLS:
+        return "AI 调用"
+    return next((item["label"] for item in FEATURE_CATALOG if item["key"] == metric), metric or "未知指标")
 
 
 def plan_payload(plan: AppPlan) -> dict[str, Any]:
@@ -267,6 +282,114 @@ async def resolve_entitlement(db: AsyncSession, user: AdminUser) -> BillingEntit
     )
 
 
+def usage_daily_payload(row: AppUsageDaily, user: AdminUser | None = None) -> dict[str, Any]:
+    return {
+        "id": int(row.id),
+        "userId": int(row.user_id),
+        "username": user.username if user else "",
+        "usageDate": _date(row.usage_date),
+        "metric": row.metric,
+        "metricLabel": metric_label(row.metric),
+        "usedCount": int(row.used_count or 0),
+        "limitCount": int(row.limit_count or 0),
+        "createdTime": _dt(row.created_time),
+        "updatedTime": _dt(row.updated_time),
+    }
+
+
+def quota_event_payload(row: AppQuotaEvent, user: AdminUser | None = None) -> dict[str, Any]:
+    return {
+        "id": int(row.id),
+        "userId": int(row.user_id),
+        "username": user.username if user else "",
+        "metric": row.metric,
+        "metricLabel": metric_label(row.metric),
+        "delta": int(row.delta or 0),
+        "sourceType": row.source_type or "",
+        "sourceId": row.source_id or "",
+        "reason": row.reason or "",
+        "createdTime": _dt(row.created_time),
+    }
+
+
+def _page(current: int, size: int) -> tuple[int, int]:
+    return max(int(current or 1), 1), min(max(int(size or 20), 1), 200)
+
+
+async def list_usage_daily(
+    db: AsyncSession,
+    *,
+    user_id: int | None = None,
+    metric: str | None = None,
+    current: int = 1,
+    size: int = 20,
+) -> dict[str, Any]:
+    current, size = _page(current, size)
+    filters = []
+    if user_id:
+        filters.append(AppUsageDaily.user_id == int(user_id))
+    if metric:
+        filters.append(AppUsageDaily.metric == str(metric).strip())
+
+    total_stmt = select(func.count()).select_from(AppUsageDaily)
+    statement = select(AppUsageDaily, AdminUser).outerjoin(AdminUser, AdminUser.id == AppUsageDaily.user_id)
+    if filters:
+        total_stmt = total_stmt.where(*filters)
+        statement = statement.where(*filters)
+    rows = (
+        await db.execute(
+            statement
+            .order_by(AppUsageDaily.usage_date.desc(), AppUsageDaily.id.desc())
+            .offset((current - 1) * size)
+            .limit(size)
+        )
+    ).all()
+    total = int((await db.execute(total_stmt)).scalar() or 0)
+    return {
+        "records": [usage_daily_payload(row, user) for row, user in rows],
+        "total": total,
+        "current": current,
+        "size": size,
+    }
+
+
+async def list_quota_events(
+    db: AsyncSession,
+    *,
+    user_id: int | None = None,
+    metric: str | None = None,
+    current: int = 1,
+    size: int = 20,
+) -> dict[str, Any]:
+    current, size = _page(current, size)
+    filters = []
+    if user_id:
+        filters.append(AppQuotaEvent.user_id == int(user_id))
+    if metric:
+        filters.append(AppQuotaEvent.metric == str(metric).strip())
+
+    total_stmt = select(func.count()).select_from(AppQuotaEvent)
+    statement = select(AppQuotaEvent, AdminUser).outerjoin(AdminUser, AdminUser.id == AppQuotaEvent.user_id)
+    if filters:
+        total_stmt = total_stmt.where(*filters)
+        statement = statement.where(*filters)
+    rows = (
+        await db.execute(
+            statement
+            .order_by(AppQuotaEvent.id.desc())
+            .offset((current - 1) * size)
+            .limit(size)
+        )
+    ).all()
+    total = int((await db.execute(total_stmt)).scalar() or 0)
+    return {
+        "records": [quota_event_payload(row, user) for row, user in rows],
+        "total": total,
+        "current": current,
+        "size": size,
+    }
+
+
 async def count_user_accounts(db: AsyncSession, user_id: int) -> int:
     return int((
         await db.execute(
@@ -363,8 +486,17 @@ async def ensure_feature_available(
     entitlement = await resolve_entitlement(db, user)
     if entitlement.features.get(feature_key, True) is False:
         label = next((item["label"] for item in FEATURE_CATALOG if item["key"] == feature_key), feature_key)
+        message = f"当前套餐未包含「{label}」功能，请升级套餐或联系管理员开通。"
+        await audit_quota_rejection(
+            db,
+            user_id=uid,
+            metric=feature_key,
+            source_type="feature_block",
+            source_id=entitlement.plan_code,
+            reason=message,
+        )
         raise BillingLimitError(
-            f"当前套餐未包含「{label}」功能，请升级套餐或联系管理员开通。",
+            message,
             code="feature_not_in_plan",
         )
 
@@ -387,10 +519,65 @@ async def ensure_account_quota_available(
     used = await count_user_accounts(db, uid)
     if used >= entitlement.max_accounts:
         action = "恢复" if restoring_existing else "添加"
+        message = f"当前套餐最多绑定 {entitlement.max_accounts} 个闲鱼账号，已绑定 {used} 个，不能继续{action}。请升级套餐或删除不用的账号。"
+        await audit_quota_rejection(
+            db,
+            user_id=uid,
+            metric=METRIC_ACCOUNTS,
+            source_type="quota_block",
+            source_id=entitlement.plan_code,
+            reason=message,
+        )
         raise BillingLimitError(
-            f"当前套餐最多绑定 {entitlement.max_accounts} 个闲鱼账号，已绑定 {used} 个，不能继续{action}。请升级套餐或删除不用的账号。",
+            message,
             code="account_quota_exhausted",
         )
+
+
+async def record_quota_event(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    metric: str,
+    delta: int = 0,
+    source_type: str = "",
+    source_id: str = "",
+    reason: str = "",
+) -> None:
+    db.add(AppQuotaEvent(
+        user_id=int(user_id),
+        metric=str(metric or ""),
+        delta=int(delta or 0),
+        source_type=source_type or None,
+        source_id=source_id or None,
+        reason=(reason or "")[:255] or None,
+    ))
+    await db.flush()
+
+
+async def audit_quota_rejection(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    metric: str,
+    source_type: str,
+    source_id: str = "",
+    reason: str = "",
+) -> None:
+    try:
+        await record_quota_event(
+            db,
+            user_id=user_id,
+            metric=metric,
+            delta=0,
+            source_type=source_type,
+            source_id=source_id,
+            reason=reason,
+        )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        logger.warning("quota rejection audit failed", exc_info=True)
 
 
 async def record_usage_delta(

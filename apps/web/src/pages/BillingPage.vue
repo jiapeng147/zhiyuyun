@@ -58,6 +58,73 @@
       </n-card>
     </div>
 
+    <n-card class="billing-card audit-card" :bordered="false">
+      <template #header>用量与配额事件</template>
+      <template #header-extra><span class="muted">最近 20 条记录</span></template>
+      <div class="audit-grid">
+        <section class="audit-panel">
+          <div class="audit-title">
+            <strong>每日用量</strong>
+            <span>{{ usageDailyRows.length }} 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="billing-table compact">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>指标</th>
+                  <th>已用</th>
+                  <th>上限</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="usageDailyRows.length === 0">
+                  <td colspan="4" class="empty-cell">暂无用量记录</td>
+                </tr>
+                <tr v-for="row in usageDailyRows" :key="row.id">
+                  <td>{{ row.usageDate || '—' }}</td>
+                  <td>{{ row.metricLabel || row.metric }}</td>
+                  <td>{{ row.usedCount }}</td>
+                  <td>{{ displayLimit(row.limitCount) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="audit-panel">
+          <div class="audit-title">
+            <strong>配额事件</strong>
+            <span>{{ quotaEventRows.length }} 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="billing-table compact">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>指标</th>
+                  <th>变化</th>
+                  <th>来源</th>
+                  <th>原因</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="quotaEventRows.length === 0">
+                  <td colspan="5" class="empty-cell">暂无配额事件</td>
+                </tr>
+                <tr v-for="row in quotaEventRows" :key="row.id">
+                  <td>{{ fmt(row.createdTime) }}</td>
+                  <td>{{ row.metricLabel || row.metric }}</td>
+                  <td><span :class="['delta-pill', Number(row.delta || 0) > 0 ? 'plus' : 'zero']">{{ eventDelta(row.delta) }}</span></td>
+                  <td>{{ sourceText(row.sourceType) }}</td>
+                  <td class="reason-cell">{{ row.reason || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </n-card>
+
     <n-card class="billing-card" :bordered="false">
       <template #header>可选套餐</template>
       <template #header-extra>
@@ -198,12 +265,16 @@ import {
   getBillingPlans,
   getMyBilling,
   getPaymentConfig,
+  listMyQuotaEvents,
+  listMyUsageDaily,
   listBillingOrders,
 } from '../api/billing.js'
 
 const state = ref(null)
 const plans = ref([])
 const orders = ref([])
+const usageDailyRows = ref([])
+const quotaEventRows = ref([])
 const paymentConfig = ref({})
 const loading = ref(false)
 const orderBusy = ref(false)
@@ -257,20 +328,38 @@ function statusText(status) {
   return map[status] || status || '未知'
 }
 
+function eventDelta(delta) {
+  const n = Number(delta || 0)
+  return n > 0 ? `+${n}` : String(n)
+}
+
+function sourceText(sourceType) {
+  const map = {
+    ai: 'AI 调用',
+    quota_block: '配额拦截',
+    feature_block: '权益拦截',
+  }
+  return map[sourceType] || sourceType || '系统'
+}
+
 async function loadAll() {
   if (loading.value) return
   loading.value = true
   try {
-    const [billingRes, plansRes, ordersRes, paymentRes] = await Promise.all([
+    const [billingRes, plansRes, ordersRes, paymentRes, usageRes, eventRes] = await Promise.all([
       getMyBilling(),
       getBillingPlans(),
       listBillingOrders({ current: 1, size: 50 }),
       getPaymentConfig(),
+      listMyUsageDaily({ current: 1, size: 20 }),
+      listMyQuotaEvents({ current: 1, size: 20 }),
     ])
     state.value = billingRes.data || null
     plans.value = plansRes.data || []
     orders.value = ordersRes.data?.records || []
     paymentConfig.value = paymentRes.data || {}
+    usageDailyRows.value = usageRes.data?.records || []
+    quotaEventRows.value = eventRes.data?.records || []
   } catch (error) {
     flash(friendlyError(error, '套餐账单加载失败'), 'error')
   } finally {
@@ -621,6 +710,38 @@ onMounted(loadAll)
   background: #fff;
 }
 
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.audit-panel {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fbfdff;
+}
+
+.audit-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.audit-title strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.audit-title span {
+  color: #64748b;
+  font-size: 12px;
+}
+
 .billing-btn {
   height: 32px;
   padding: 0 14px;
@@ -671,6 +792,37 @@ onMounted(loadAll)
   font-weight: 650;
 }
 
+.billing-table.compact {
+  font-size: 12px;
+}
+
+.billing-table.compact th,
+.billing-table.compact td {
+  padding: 9px 8px;
+}
+
+.reason-cell {
+  max-width: 220px;
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+.delta-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.delta-pill.plus {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .empty-cell {
   color: #64748b;
   text-align: center;
@@ -711,6 +863,10 @@ onMounted(loadAll)
 
   .payment-qr-list {
     justify-content: flex-start;
+  }
+
+  .audit-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

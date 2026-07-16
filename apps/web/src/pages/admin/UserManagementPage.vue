@@ -236,6 +236,69 @@
           </div>
         </section>
       </div>
+
+      <div class="usage-audit-head">
+        <strong>用量审计</strong>
+        <span class="muted">每日用量与配额/权益拦截事件，最近各 30 条</span>
+      </div>
+      <div class="billing-admin-grid usage-audit-grid">
+        <section class="billing-admin-panel">
+          <div class="panel-title">
+            <strong>每日用量</strong>
+            <span class="muted">{{ usageDailyRows.length }} 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table billing-admin-table audit-table">
+              <thead>
+                <tr>
+                  <th>用户</th><th>日期</th><th>指标</th><th>已用</th><th>上限</th><th>更新时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="usageDailyRows.length === 0">
+                  <td colspan="6" class="empty-cell">暂无用量记录</td>
+                </tr>
+                <tr v-for="row in usageDailyRows" :key="row.id">
+                  <td>{{ row.username || `#${row.userId}` }}</td>
+                  <td>{{ row.usageDate || '—' }}</td>
+                  <td>{{ row.metricLabel || row.metric }}</td>
+                  <td>{{ row.usedCount }}</td>
+                  <td>{{ displayLimit(row.limitCount) }}</td>
+                  <td class="dim">{{ fmt(row.updatedTime) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="billing-admin-panel">
+          <div class="panel-title">
+            <strong>配额事件</strong>
+            <span class="muted">{{ quotaEventRows.length }} 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table billing-admin-table audit-table">
+              <thead>
+                <tr>
+                  <th>用户</th><th>指标</th><th>变化</th><th>来源</th><th>原因</th><th>时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="quotaEventRows.length === 0">
+                  <td colspan="6" class="empty-cell">暂无配额事件</td>
+                </tr>
+                <tr v-for="row in quotaEventRows" :key="row.id">
+                  <td>{{ row.username || `#${row.userId}` }}</td>
+                  <td>{{ row.metricLabel || row.metric }}</td>
+                  <td><span :class="['event-delta', Number(row.delta || 0) > 0 ? 'plus' : 'zero']">{{ eventDelta(row.delta) }}</span></td>
+                  <td>{{ sourceText(row.sourceType) }}</td>
+                  <td class="reason-cell">{{ row.reason || '—' }}</td>
+                  <td class="dim">{{ fmt(row.createdTime) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </n-card>
 
     <!-- 手动建用户 -->
@@ -488,6 +551,7 @@ import {
   getOverview, adminListPlans, adminCreatePlan, adminUpdatePlan, adminDeletePlan,
   adminListSubscriptions, adminListBillingOrders, adminActivateSubscription, adminMarkBillingOrderPaid,
   adminCloseBillingOrder, adminGetBillingOverview, adminGetBillingSettings, adminSetBillingSettings,
+  adminListUsageDaily, adminListQuotaEvents,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
 } from '../../api/admin.js'
 
@@ -506,6 +570,8 @@ const email = reactive({ smtpHost: '', smtpPort: 465, smtpUser: '', smtpPass: ''
 const subscriptions = ref([])
 const billingOrders = ref([])
 const billingOverview = ref({})
+const usageDailyRows = ref([])
+const quotaEventRows = ref([])
 const billingSettings = reactive({
   enabled: false,
   orderExpireMinutes: 1440,
@@ -545,6 +611,22 @@ const featureCatalog = [
 function flash(msg, type = 'success') { notice.value = msg; noticeType.value = type; setTimeout(() => { if (notice.value === msg) notice.value = '' }, 4000) }
 function fmt(v) { if (!v) return '—'; return String(v).replace('T', ' ').slice(0, 16) }
 function money(cents) { return `¥${(Number(cents || 0) / 100).toFixed(2)}` }
+function displayLimit(value) {
+  const n = Number(value || 0)
+  return n >= 999999 ? '不限' : n
+}
+function eventDelta(delta) {
+  const n = Number(delta || 0)
+  return n > 0 ? `+${n}` : String(n)
+}
+function sourceText(sourceType) {
+  const map = {
+    ai: 'AI 调用',
+    quota_block: '配额拦截',
+    feature_block: '权益拦截',
+  }
+  return map[sourceType] || sourceType || '系统'
+}
 function defaultFeatures(source = {}) {
   return Object.fromEntries(featureCatalog.map(item => [item.key, source[item.key] !== false]))
 }
@@ -555,15 +637,18 @@ function featureSummary(features = {}) {
 
 async function loadAll() {
   try {
-    const [uRes, pRes, rRes, eRes, oRes, sRes, boRes, billingOvRes, billingSettingsRes] = await Promise.all([
+    const [uRes, pRes, rRes, eRes, oRes, sRes, boRes, billingOvRes, billingSettingsRes, usageRes, eventRes] = await Promise.all([
       listUsers(), adminListPlans(), getRegistration(), getEmailConfig(), getOverview(),
       adminListSubscriptions(), adminListBillingOrders(), adminGetBillingOverview(), adminGetBillingSettings(),
+      adminListUsageDaily({ current: 1, size: 30 }), adminListQuotaEvents({ current: 1, size: 30 }),
     ])
     users.value = uRes.data || []
     plans.value = pRes.data || []
     subscriptions.value = sRes.data || []
     billingOrders.value = boRes.data || []
     billingOverview.value = billingOvRes.data || {}
+    usageDailyRows.value = usageRes.data?.records || []
+    quotaEventRows.value = eventRes.data?.records || []
     Object.assign(billingSettings, {
       enabled: !!billingSettingsRes.data?.enabled,
       orderExpireMinutes: Number(billingSettingsRes.data?.orderExpireMinutes || 1440),
@@ -839,6 +924,12 @@ onMounted(loadAll)
 .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .panel-title strong { color: #111827; font-size: 14px; }
 .billing-admin-table { min-width: 640px; }
+.usage-audit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 16px 0 10px; }
+.usage-audit-head strong { color: #111827; font-size: 14px; }
+.audit-table { min-width: 760px; font-size: 12px; }
+.event-delta { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 2px 7px; border-radius: 999px; background: #f1f5f9; color: #64748b; }
+.event-delta.plus { background: #dcfce7; color: #15803d; }
+.reason-cell { max-width: 260px; white-space: normal !important; word-break: break-word; }
 .status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; background: #eef2f7; color: #334155; font-size: 12px; }
 .status-pill.active,
 .status-pill.paid { background: #dcfce7; color: #15803d; }
