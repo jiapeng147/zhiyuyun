@@ -86,14 +86,14 @@ const tabs = settingsTabs
 
 .config-link:hover {
   background: #f3f8ff;
-  color: #eb6025;
+  color: #0f766e;
   transform: translateX(1px);
 }
 
 .config-link.active {
   background: linear-gradient(135deg, #edf4ff, #e7f0ff);
-  color: #FF4F00;
-  box-shadow: inset 0 0 0 1px rgba(255, 79, 0, 0.12), 0 8px 20px rgba(255, 79, 0, 0.08);
+  color: #0f766e;
+  box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.12), 0 8px 20px rgba(20, 184, 166, 0.08);
 }
 
 .config-link span {

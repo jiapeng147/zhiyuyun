@@ -254,7 +254,7 @@ onMounted(() => {
   border-radius: 100px;
   flex-shrink: 0;
 }
-.m-back-btn:active { background: rgba(255,79,0,0.08); }
+.m-back-btn:active { background: rgba(20, 184, 166,0.08); }
 
 .m-sub-title {
   flex: 1;
@@ -280,7 +280,7 @@ onMounted(() => {
   cursor: pointer;
   flex-shrink: 0;
 }
-.m-desktop-btn:active { background: rgba(255,79,0,0.08); }
+.m-desktop-btn:active { background: rgba(20, 184, 166,0.08); }
 
 .m-brand {
   display: flex;
@@ -307,13 +307,13 @@ onMounted(() => {
   width: 12px;
   height: 43px;
   border-radius: 8px;
-  background: linear-gradient(180deg, #ff560d, #ff5c16);
+  background: linear-gradient(180deg, #14b8a6, #0f766e);
   transform: rotate(42deg);
-  box-shadow: 0 4px 12px rgba(255,79,0,0.25);
+  box-shadow: 0 4px 12px rgba(20, 184, 166,0.25);
 }
 .m-brand-mark span + span {
   transform: rotate(-42deg);
-  background: linear-gradient(180deg, #ff6625, #f44b03);
+  background: linear-gradient(180deg, #14b8a6, #f44b03);
 }
 .m-brand-name {
   font-size: 17px;
@@ -411,7 +411,7 @@ onMounted(() => {
 }
 .m-tab :deep(svg) { transition: transform 0.2s; }
 .m-tab.active {
-  color: #FF4F00;
+  color: #0f766e;
 }
 .m-tab.active :deep(svg) {
   transform: scale(1.08);
@@ -424,7 +424,7 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 24px;
   height: 3px;
-  background: linear-gradient(90deg, #FF4F00, #ff763b);
+  background: linear-gradient(90deg, #0f766e, #14b8a6);
   border-radius: 0 0 3px 3px;
 }
 </style>

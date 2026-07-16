@@ -225,7 +225,7 @@ function onHeaderAction(event) {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -316,7 +316,7 @@ function onHeaderAction(event) {
   align-items: center;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -367,7 +367,7 @@ function onHeaderAction(event) {
   height: 30px;
   border-radius: 10px;
   background: #edf4ff;
-  color: #FF4F00;
+  color: #0f766e;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -396,7 +396,7 @@ function onHeaderAction(event) {
 }
 
 .hint-list code {
-  background: rgba(235, 96, 37, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   padding: 1px 6px;
   border-radius: 6px;

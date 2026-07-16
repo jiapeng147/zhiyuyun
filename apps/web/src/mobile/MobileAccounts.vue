@@ -367,7 +367,7 @@ onMounted(() => {
 }
 .m-acc-stat-icon-blue {
   background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #FF4F00;
+  color: #0f766e;
 }
 .m-acc-stat-icon-green {
   background: linear-gradient(135deg, #e2f8ee, #cdf2df);
@@ -397,7 +397,7 @@ onMounted(() => {
   margin: 0 auto 16px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #FF4F00;
+  color: #0f766e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -451,7 +451,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #FF4F00;
+  color: #0f766e;
 }
 .m-acc-status-dot {
   position: absolute;
@@ -645,7 +645,7 @@ onMounted(() => {
   margin-top: 12px;
   border: 1px solid #f2dacf;
   border-radius: 12px;
-  color: #FF4F00;
+  color: #0f766e;
   background: #fff;
   font-weight: 600;
 }
@@ -665,7 +665,7 @@ onMounted(() => {
 .m-acc-tip :deep(svg) { color: #ff9f22; flex-shrink: 0; }
 .m-tip-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #FF4F00, #ff6625);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
   border-radius: 100px;

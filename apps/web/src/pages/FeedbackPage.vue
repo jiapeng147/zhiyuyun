@@ -956,7 +956,7 @@ onMounted(() => {
   border-radius: 26px;
   border: 1px solid rgba(231, 237, 247, 0.96);
   background:
-    radial-gradient(circle at top left, rgba(255, 79, 0, 0.12), transparent 32%),
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 32%),
     radial-gradient(circle at top right, rgba(22, 191, 120, 0.08), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 255, 0.96));
   box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
@@ -972,7 +972,7 @@ onMounted(() => {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -1048,7 +1048,7 @@ onMounted(() => {
 
 .fbk-stat-card.active {
   border-color: #fbd1bf;
-  box-shadow: 0 0 0 3px rgba(255, 79, 0, 0.08);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.08);
 }
 
 .fbk-stat-card small {
@@ -1075,7 +1075,7 @@ onMounted(() => {
 }
 
 .fbk-stat-card.is-total strong {
-  color: #FF4F00;
+  color: #0f766e;
 }
 
 .fbk-stat-card.is-open strong {
@@ -1122,7 +1122,7 @@ onMounted(() => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -1174,13 +1174,13 @@ onMounted(() => {
 
 .fbk-pill:hover {
   background: #eef4ff;
-  color: #FF4F00;
+  color: #0f766e;
 }
 
 .fbk-pill.active {
   background: #eaf2ff;
   border-color: #fdd6c6;
-  color: #FF4F00;
+  color: #0f766e;
 }
 
 .fbk-pill-count {
@@ -1217,7 +1217,7 @@ onMounted(() => {
 
 .fbk-icon-btn:hover {
   background: #F6F6F6;
-  color: #FF4F00;
+  color: #0f766e;
   border-color: #fbd1bf;
   transform: rotate(90deg);
 }
@@ -1386,7 +1386,7 @@ onMounted(() => {
 }
 
 .fbk-row-link {
-  color: #FF4F00;
+  color: #0f766e;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1408,7 +1408,7 @@ onMounted(() => {
 
 .fbk-side-card.emphasis {
   background:
-    radial-gradient(circle at top right, rgba(255, 79, 0, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.14), transparent 30%),
     linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(255, 255, 255, 0.98));
 }
 
@@ -1418,7 +1418,7 @@ onMounted(() => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -1442,7 +1442,7 @@ onMounted(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #FF4F00;
+  color: #0f766e;
   font-weight: 800;
 }
 
@@ -1493,7 +1493,7 @@ onMounted(() => {
   height: 30px;
   border-radius: 10px;
   background: #edf4ff;
-  color: #FF4F00;
+  color: #0f766e;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1575,10 +1575,10 @@ onMounted(() => {
 }
 
 .fbk-btn-primary {
-  background: linear-gradient(90deg, #f44f08, #ff5a14);
-  border: 1px solid #f44f08;
+  background: linear-gradient(90deg, #0f766e, #14b8a6);
+  border: 1px solid #0f766e;
   color: #fff;
-  box-shadow: 0 10px 22px rgba(255, 79, 0, 0.2);
+  box-shadow: 0 10px 22px rgba(20, 184, 166, 0.2);
 }
 
 .fbk-btn-primary:hover:not(:disabled) {
@@ -1594,7 +1594,7 @@ onMounted(() => {
 .fbk-btn-ghost:hover:not(:disabled) {
   background: #F6F6F6;
   border-color: #fbd1bf;
-  color: #FF4F00;
+  color: #0f766e;
 }
 
 .fbk-btn-primary:active:not(:disabled),
@@ -1668,7 +1668,7 @@ onMounted(() => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -1791,8 +1791,8 @@ onMounted(() => {
 
 .fbk-cat-btn.active {
   background: #eaf2ff;
-  border-color: #FF4F00;
-  color: #FF4F00;
+  border-color: #0f766e;
+  color: #0f766e;
 }
 
 .fbk-input,
@@ -1816,8 +1816,8 @@ onMounted(() => {
 .fbk-input:focus,
 .fbk-textarea:focus {
   outline: none;
-  border-color: #FF4F00;
-  box-shadow: 0 0 0 4px rgba(255, 79, 0, 0.11);
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.11);
 }
 
 .fbk-textarea {
@@ -1885,7 +1885,7 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8c5a, #FF4F00);
+  background: linear-gradient(135deg, #2dd4bf, #0f766e);
   color: #fff;
   font-size: 12px;
   font-weight: 700;

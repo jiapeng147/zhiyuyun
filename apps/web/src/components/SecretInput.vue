@@ -46,8 +46,8 @@ const revealed = ref(false)
 }
 
 .secret-input:focus-within {
-  border-color: var(--primary, #FF4F00);
-  box-shadow: 0 0 0 3px rgba(255, 79, 0, .12);
+  border-color: var(--primary, #0f766e);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, .12);
 }
 
 .secret-input-control {
@@ -92,7 +92,7 @@ const revealed = ref(false)
 
 .secret-input-toggle:hover {
   background: #eaf2ff;
-  color: #d8551d;
+  color: #0f766e;
 }
 
 .secret-input-toggle:active {

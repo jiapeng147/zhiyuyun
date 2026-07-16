@@ -400,7 +400,7 @@ function exportDiagnostics() {
   padding: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 0% 0%, rgba(235, 96, 37, 0.08), transparent 36%),
+    radial-gradient(circle at 0% 0%, rgba(20, 184, 166, 0.08), transparent 36%),
     radial-gradient(circle at 100% 0%, rgba(246, 138, 92, 0.08), transparent 34%),
     rgba(255, 255, 255, 0.98);
 }
@@ -456,11 +456,11 @@ function exportDiagnostics() {
   width: 22px;
   height: 76px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #ff560d, #ff5c16);
+  background: linear-gradient(180deg, #14b8a6, #0f766e);
   transform: rotate(42deg);
-  box-shadow: 0 8px 22px rgba(255, 79, 0, 0.32);
+  box-shadow: 0 8px 22px rgba(20, 184, 166, 0.32);
 }
-.brand-mark span + span { transform: rotate(-42deg); background: linear-gradient(180deg, #ff6625, #f44b03); }
+.brand-mark span + span { transform: rotate(-42deg); background: linear-gradient(180deg, #14b8a6, #f44b03); }
 .hero-text { min-width: 0; }
 .hero-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .hero-title-row h1 { margin: 0; font-size: 24px; line-height: 1.15; font-weight: 900; color: #13213d; }
@@ -489,7 +489,7 @@ function exportDiagnostics() {
   align-items: center;
   justify-content: center;
 }
-.metric-tile-blue .metric-icon { background: #eef4ff; color: #eb6025; }
+.metric-tile-blue .metric-icon { background: #eef4ff; color: #0f766e; }
 .metric-tile-green .metric-icon { background: #ecfdf3; color: #16a34a; }
 .metric-tile-purple .metric-icon { background: #f4efff; color: #f68a5c; }
 .metric-icon :deep(.ui-icon), .metric-icon :deep(.ui-icon-img) { width: 20px; height: 20px; }
@@ -502,11 +502,11 @@ function exportDiagnostics() {
 .changelog { display: flex; flex-direction: column; gap: 4px; }
 .log-item { display: flex; gap: 14px; padding: 8px 0; }
 .log-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 4px; }
-.log-dot { width: 12px; height: 12px; border-radius: 50%; background: #eb6025; box-shadow: 0 0 0 2px rgba(235, 96, 37, 0.18); }
+.log-dot { width: 12px; height: 12px; border-radius: 50%; background: #0f766e; box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.18); }
 .log-line { flex: 1; width: 2px; background: #f3e7e2; margin-top: 4px; min-height: 18px; }
 .log-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .log-head { display: flex; align-items: center; gap: 10px; }
-.log-ver { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #eef4ff; color: #eb6025; }
+.log-ver { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #eef4ff; color: #0f766e; }
 .log-date { font-size: 11px; color: #99a4b4; font-weight: 600; }
 .log-desc { margin: 0; font-size: 13px; color: #3a4a63; line-height: 1.72; }
 .log-sections { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -514,7 +514,7 @@ function exportDiagnostics() {
 .log-section-title {
   flex-shrink: 0;
   font-weight: 700;
-  color: #eb6025;
+  color: #0f766e;
   padding: 1px 8px;
   border-radius: 5px;
   background: #eef4ff;
@@ -547,8 +547,8 @@ function exportDiagnostics() {
 }
 .support-card:hover {
   transform: translateY(-2px);
-  border-color: #ffd0bc;
-  box-shadow: 0 8px 20px rgba(235, 96, 37, 0.1);
+  border-color: #99f6e4;
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.1);
 }
 .support-icon {
   width: 38px;
@@ -559,7 +559,7 @@ function exportDiagnostics() {
   align-items: center;
   justify-content: center;
 }
-.support-icon.blue { background: linear-gradient(135deg, #e8f0ff, #ffe2d6); color: #eb6025; }
+.support-icon.blue { background: linear-gradient(135deg, #e8f0ff, #ffe2d6); color: #0f766e; }
 .support-icon.green { background: linear-gradient(135deg, #e6f7ee, #d2f1e2); color: #16a34a; }
 .support-icon.orange { background: linear-gradient(135deg, #fff1e0, #ffe5c2); color: #ea8a00; }
 .support-icon.violet { background: linear-gradient(135deg, #f1e8ff, #ffe2d6); color: #ed703a; }
@@ -658,7 +658,7 @@ function exportDiagnostics() {
 }
 .community-media.placeholder {
   background:
-    linear-gradient(135deg, rgba(235, 96, 37, 0.06), rgba(235, 96, 37, 0)),
+    linear-gradient(135deg, rgba(20, 184, 166, 0.06), rgba(20, 184, 166, 0)),
     linear-gradient(90deg, rgba(17, 24, 39, 0.08) 50%, transparent 50%),
     linear-gradient(rgba(17, 24, 39, 0.08) 50%, transparent 50%);
   background-size: auto, 12px 12px, 12px 12px;

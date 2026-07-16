@@ -1651,7 +1651,7 @@ onBeforeUnmount(() => {
 }
 
 .plan-price {
-  color: #FF4F00;
+  color: #0f766e;
   font-size: 18px;
 }
 
@@ -1908,8 +1908,8 @@ onBeforeUnmount(() => {
 
 .ads-btn-primary {
   color: #fff;
-  background: linear-gradient(90deg, #ff560d, #ff5f1b);
-  box-shadow: 0 14px 30px rgba(255, 79, 0, 0.2);
+  background: linear-gradient(90deg, #14b8a6, #ff5f1b);
+  box-shadow: 0 14px 30px rgba(20, 184, 166, 0.2);
 }
 
 .ads-btn-danger {
@@ -2091,7 +2091,7 @@ onBeforeUnmount(() => {
 }
 
 .application-status.is-pending-payment {
-  color: #FF4F00;
+  color: #0f766e;
   background: #edf4ff;
 }
 

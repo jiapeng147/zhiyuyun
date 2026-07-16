@@ -3033,7 +3033,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   padding: 0 10px;
   height: 24px;
   background: #e9f1ff;
-  color: #eb6025;
+  color: #0f766e;
 }
 
 .xya-msg-realtime-badge {
@@ -3145,10 +3145,10 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-editor-tabs button.active,
 .xya-msg-send-btn,
 .xya-msg-image-url-send {
-  background: linear-gradient(135deg, #eb6025, #f6733b);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 10px 24px rgba(235, 96, 37, 0.22);
+  box-shadow: 0 10px 24px rgba(20, 184, 166, 0.22);
 }
 
 .xya-msg-tabs button:hover,
@@ -3273,7 +3273,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-conversation:hover,
 .xya-msg-conversation.active {
-  background: linear-gradient(135deg, rgba(235, 96, 37, 0.08), rgba(246, 115, 59, 0.03));
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(20, 184, 166, 0.03));
 }
 
 .xya-msg-avatar-wrap {
@@ -3284,7 +3284,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   width: 44px;
   height: 44px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #eb6025, #fa8e60);
+  background: linear-gradient(135deg, #0f766e, #2dd4bf);
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -3356,7 +3356,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-buyer-tag {
   padding: 4px 9px;
   background: #eff6ff;
-  color: #eb6025;
+  color: #0f766e;
 }
 
 .xya-msg-conversation-time,
@@ -3548,7 +3548,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 .xya-msg-bubble.me {
-  background: linear-gradient(135deg, #eb6025, #f6733b);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
 }
@@ -3847,13 +3847,13 @@ watch(() => selected.value?.xyGoodsId, () => {
   border-radius: 50%;
 }
 .xya-msg-switch input:checked + .xya-msg-switch-slider {
-  background: linear-gradient(135deg, #eb6025, #f6733b);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
 }
 .xya-msg-switch input:checked + .xya-msg-switch-slider:before {
   transform: translateX(18px);
 }
 .xya-msg-switch input:focus-visible + .xya-msg-switch-slider {
-  box-shadow: 0 0 0 3px rgba(235, 96, 37, 0.22);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
 }
 .xya-msg-switch input:disabled + .xya-msg-switch-slider {
   cursor: not-allowed;
@@ -3916,7 +3916,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   outline: none;
 }
 .xya-msg-modal-input:focus {
-  border-color: #eb6025;
+  border-color: #0f766e;
 }
 .xya-msg-modal-textarea {
   padding: 8px 12px;
@@ -3928,7 +3928,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   font-family: inherit;
 }
 .xya-msg-modal-textarea:focus {
-  border-color: #eb6025;
+  border-color: #0f766e;
 }
 .xya-msg-template-edit-actions {
   display: flex;

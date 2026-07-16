@@ -456,7 +456,7 @@ onMounted(loadAll)
 .plan-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line, #e5e5e5); font-size: 13px; }
 .plan-list li:last-child { border-bottom: 0; }
 .plan-list .plan-code { font-family: ui-monospace, monospace; color: var(--text, #111); }
-.plan-list .plan-count { color: #ff4f00; font-weight: 600; }
+.plan-list .plan-count { color: #0f766e; font-weight: 600; }
 
 /* 套餐管理 */
 .plan-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -503,14 +503,14 @@ onMounted(loadAll)
 /* role / status */
 .plan-select { padding: 5px 8px; min-width: 96px; }
 .role-tag { padding: 2px 8px; border-radius: 6px; font-size: 12px; }
-.role-tag.superadmin { background: rgba(255,79,0,.1); color: #ff4f00; }
+.role-tag.superadmin { background: rgba(20, 184, 166,.1); color: #0f766e; }
 .role-tag.user { background: #f0f0f0; color: #555; }
 .dim { color: var(--muted, #999); }
 
 /* buttons */
 .btn { padding: 6px 14px; border: 1px solid var(--line, #d0d0d0); background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; }
 .btn:hover { border-color: #b0b0b0; }
-.btn.primary { background: #ff4f00; color: #fff; border-color: #ff4f00; }
+.btn.primary { background: #0f766e; color: #fff; border-color: #0f766e; }
 .btn.primary:hover { background: #d93f00; border-color: #d93f00; }
 .btn.danger { color: #c0392b; border-color: rgba(192,57,43,.3); }
 .btn.small { padding: 4px 10px; font-size: 12px; }

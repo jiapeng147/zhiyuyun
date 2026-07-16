@@ -48,8 +48,8 @@ import CardPanel from '../../components/CardPanel.vue'
 .po-save-btn {
   padding: 10px 20px; border-radius: 12px; border: 0; cursor: pointer;
   font-size: 13px; font-weight: 700;
-  background: linear-gradient(135deg, #eb6025, #f6733b); color: #fff;
-  box-shadow: 0 8px 20px rgba(235,96,37,.22);
+  background: linear-gradient(135deg, #0f766e, #14b8a6); color: #fff;
+  box-shadow: 0 8px 20px rgba(20, 184, 166,.22);
 }
 .po-save-btn:hover:not(:disabled) { transform: translateY(-1px); }
 .po-save-btn:disabled { opacity: .6; cursor: not-allowed; }

@@ -1009,7 +1009,7 @@ onBeforeUnmount(() => {
 .feature-text em {
   display: block;
   margin-top: 6px;
-  color: #FF4F00;
+  color: #0f766e;
   font-style: normal;
   font-size: 12px;
   font-weight: 700;
@@ -1247,7 +1247,7 @@ onBeforeUnmount(() => {
   border: 0;
   padding: 0;
   background: transparent;
-  color: #FF4F00;
+  color: #0f766e;
   font-size: 13px;
   font-weight: 800;
 }
@@ -1311,7 +1311,7 @@ onBeforeUnmount(() => {
   border: 0;
   padding: 0;
   background: transparent;
-  color: #FF4F00;
+  color: #0f766e;
   font-size: 12px;
   font-weight: 800;
 }

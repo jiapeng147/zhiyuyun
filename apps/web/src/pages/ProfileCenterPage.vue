@@ -64,8 +64,8 @@
                 <svg viewBox="0 0 64 64" width="64" height="64">
                   <defs>
                     <linearGradient id="avG" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#ff8c5a" />
-                      <stop offset="100%" stop-color="#FF4F00" />
+                      <stop offset="0%" stop-color="#2dd4bf" />
+                      <stop offset="100%" stop-color="#0f766e" />
                     </linearGradient>
                   </defs>
                   <circle cx="32" cy="32" r="30" fill="url(#avG)" opacity="0.12" />
@@ -568,7 +568,7 @@ onBeforeUnmount(() => {
   position: relative;
   padding: 12px;
   background:
-    radial-gradient(circle at top left, rgba(255, 79, 0, 0.06), transparent 34%),
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.06), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
 }
 
@@ -614,19 +614,19 @@ onBeforeUnmount(() => {
 
 .profile-side-tab:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 79, 0, 0.22);
-  box-shadow: 0 12px 28px rgba(255, 79, 0, 0.08);
+  border-color: rgba(20, 184, 166, 0.22);
+  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.08);
 }
 
 .profile-side-tab.active {
-  color: #FF4F00;
-  border-color: rgba(255, 79, 0, 0.2);
+  color: #0f766e;
+  border-color: rgba(20, 184, 166, 0.2);
   background: linear-gradient(135deg, #FAFAFA 0%, #eef5ff 100%);
-  box-shadow: 0 16px 36px rgba(255, 79, 0, 0.12);
+  box-shadow: 0 16px 36px rgba(20, 184, 166, 0.12);
 }
 
 .profile-side-tab.active::before {
-  background: linear-gradient(180deg, #ffa37c 0%, #FF4F00 100%);
+  background: linear-gradient(180deg, #ffa37c 0%, #0f766e 100%);
 }
 
 .profile-side-tab-icon {
@@ -637,7 +637,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 10px;
   background: #eef4ff;
-  color: #FF4F00;
+  color: #0f766e;
   flex: 0 0 auto;
 }
 
@@ -649,7 +649,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-side-tab.active .profile-side-tab-icon {
-  background: linear-gradient(145deg, #dbeafe 0%, #fed2bf 100%);
+  background: linear-gradient(145deg, #dbeafe 0%, #99f6e4 100%);
 }
 
 .profile-side-tab-label {
@@ -764,7 +764,7 @@ onBeforeUnmount(() => {
 }
 
 .plan-chip {
-  color: #ff5c16;
+  color: #0f766e;
   border-color: rgba(255, 255, 255, 0.36);
   background: linear-gradient(135deg, rgba(244, 250, 255, 0.98) 0%, rgba(223, 238, 255, 0.94) 100%);
 }
@@ -831,7 +831,7 @@ onBeforeUnmount(() => {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(94, 50, 31, 0.04), 0 16px 32px rgba(94, 50, 31, 0.08);
-  border-color: rgba(255, 79, 0, 0.16);
+  border-color: rgba(20, 184, 166, 0.16);
 }
 
 .stat-card-main {
@@ -848,7 +848,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(145deg, #edf4ff 0%, #dbeafe 100%);
-  color: #FF4F00;
+  color: #0f766e;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
@@ -1242,7 +1242,7 @@ onBeforeUnmount(() => {
 
 .quick-action-btn:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 79, 0, 0.16);
+  border-color: rgba(20, 184, 166, 0.16);
   box-shadow: 0 16px 30px rgba(94, 50, 31, 0.07);
 }
 
@@ -1316,7 +1316,7 @@ onBeforeUnmount(() => {
 .security-card.enhanced:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(94, 50, 31, 0.04), 0 16px 32px rgba(94, 50, 31, 0.1);
-  border-color: rgba(255, 79, 0, 0.25);
+  border-color: rgba(20, 184, 166, 0.25);
 }
 
 .security-card-head {
@@ -1367,7 +1367,7 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   font-size: 15px;
   font-weight: 800;
-  box-shadow: 0 14px 24px rgba(255, 79, 0, 0.2);
+  box-shadow: 0 14px 24px rgba(20, 184, 166, 0.2);
 }
 
 .security-card-note {
@@ -1703,7 +1703,7 @@ onBeforeUnmount(() => {
 }
 
 .security-link-hint {
-  color: #FF4F00;
+  color: #0f766e;
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
@@ -1856,7 +1856,7 @@ onBeforeUnmount(() => {
   stroke-linejoin: round;
 }
 
-.security-tip-icon.blue { background: linear-gradient(145deg, #eef5ff 0%, #dbeafe 100%); color: #FF4F00; }
+.security-tip-icon.blue { background: linear-gradient(145deg, #eef5ff 0%, #dbeafe 100%); color: #0f766e; }
 .security-tip-icon.mint { background: linear-gradient(145deg, #ecfbf3 0%, #d8f7e7 100%); color: #16bf78; }
 .security-tip-icon.violet { background: linear-gradient(145deg, #f5ecff 0%, #e9dcff 100%); color: #f68a5c; }
 .security-tip-icon.sky { background: linear-gradient(145deg, #edf9ff 0%, #d8efff 100%); color: #ff844f; }
@@ -1906,7 +1906,7 @@ onBeforeUnmount(() => {
   align-self: flex-start;
   border-radius: 12px;
   font-size: 14px;
-  box-shadow: 0 10px 20px rgba(255, 79, 0, 0.18);
+  box-shadow: 0 10px 20px rgba(20, 184, 166, 0.18);
 }
 
 .profile-side-card {
@@ -1916,7 +1916,7 @@ onBeforeUnmount(() => {
   border-radius: 24px;
   border: 1px solid rgba(229, 236, 247, 0.96);
   background:
-    radial-gradient(circle at top left, rgba(255, 79, 0, 0.06), transparent 34%),
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.06), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
   box-shadow: 0 12px 34px rgba(87, 46, 29, 0.05);
 }
@@ -2285,7 +2285,7 @@ onBeforeUnmount(() => {
 
 .profile-form input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(255, 79, 0, 0.08);
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
 }
 
 .code-row {
@@ -2435,7 +2435,7 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-.page-jump input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 79, 0, 0.1); }
+.page-jump input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
 
 .total-count { color: #5d6c86; font-size: 12px; font-weight: 700; }
 
@@ -2452,10 +2452,10 @@ onBeforeUnmount(() => {
 }
 
 .page-number.active {
-  background: linear-gradient(180deg, #ff5e19 0%, #FF4F00 100%);
-  border-color: #FF4F00;
+  background: linear-gradient(180deg, #ff5e19 0%, #0f766e 100%);
+  border-color: #0f766e;
   color: #fff;
-  box-shadow: 0 12px 20px rgba(255, 79, 0, 0.2);
+  box-shadow: 0 12px 20px rgba(20, 184, 166, 0.2);
 }
 
 .page-ellipsis {

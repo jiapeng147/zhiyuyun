@@ -109,7 +109,7 @@ defineProps({
   min-height: 24px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(255, 79, 0, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
   font-weight: 800;
@@ -160,8 +160,8 @@ defineProps({
 .admin-config-field-control :deep(.config-textarea:focus),
 .admin-config-field-control :deep(.config-textarea:focus-visible) {
   outline: none;
-  border-color: #FF4F00;
-  box-shadow: 0 0 0 4px rgba(255, 79, 0, 0.11);
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.11);
   background: #fff;
 }
 

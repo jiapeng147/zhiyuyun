@@ -152,7 +152,7 @@ function onRowSelectClick(row, idx, e) {
   vertical-align: middle;
 }
 .base-table tbody tr[tabindex="0"]:focus-visible {
-  outline: 3px solid rgba(235, 96, 37, 0.3);
+  outline: 3px solid rgba(20, 184, 166, 0.3);
   outline-offset: -3px;
 }
 </style>

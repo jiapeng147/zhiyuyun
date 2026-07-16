@@ -352,7 +352,7 @@ onMounted(async () => {
   transition: all 0.15s;
 }
 .m-prod-refresh:active { transform: scale(0.96); }
-.m-prod-refresh :deep(svg) { color: #FF4F00; flex-shrink: 0; }
+.m-prod-refresh :deep(svg) { color: #0f766e; flex-shrink: 0; }
 .m-prod-refresh:disabled { opacity: 0.65; cursor: wait; }
 
 .m-data-warning {
@@ -393,7 +393,7 @@ onMounted(async () => {
 }
 .m-prod-stat-icon-blue {
   background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #FF4F00;
+  color: #0f766e;
 }
 .m-prod-stat-icon-green {
   background: linear-gradient(135deg, #e2f8ee, #cdf2df);
@@ -443,10 +443,10 @@ onMounted(async () => {
 .m-prod-chip :deep(svg) { flex-shrink: 0; }
 .m-prod-chip:active { transform: scale(0.96); }
 .m-prod-chip-active {
-  background: linear-gradient(135deg, #FF4F00, #ff6625);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
 }
 
 .m-loading { text-align: center; padding: 40px; color: #8c98ae; font-size: 14px; }
@@ -461,7 +461,7 @@ onMounted(async () => {
   margin: 0 auto 16px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #FF4F00;
+  color: #0f766e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -472,7 +472,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: linear-gradient(135deg, #FF4F00, #ff6625);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
   border-radius: 100px;
@@ -480,12 +480,12 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
 }
 .m-empty-btn :deep(svg) { flex-shrink: 0; }
 .m-load-more {
   width: 100%; min-height: 44px; margin-top: 12px; border: 1px solid #fbe2d7;
-  border-radius: 14px; color: #FF4F00; background: #f5f9ff; font-weight: 600;
+  border-radius: 14px; color: #0f766e; background: #f5f9ff; font-weight: 600;
   cursor: pointer;
 }
 .m-load-more:disabled { opacity: 0.65; cursor: wait; }
@@ -652,7 +652,7 @@ onMounted(async () => {
 .m-prod-tip :deep(svg) { color: #ff9f22; flex-shrink: 0; }
 .m-tip-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #FF4F00, #ff6625);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
   border-radius: 100px;

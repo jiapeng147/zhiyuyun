@@ -2023,7 +2023,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   background: rgba(255,255,255,0.6);
 }
 .tabs.products-tabs .tab.active {
-  color: #d8551d;
+  color: #0f766e;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   font-weight: 600;
@@ -2076,7 +2076,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 .products-table :deep(td:nth-child(12)) { text-align: center; }
 
 .products-table :deep(tbody tr) { cursor: pointer; }
-.products-table :deep(tbody tr.row-selected) { background: #eef5ff; box-shadow: inset 3px 0 0 #eb6025; }
+.products-table :deep(tbody tr.row-selected) { background: #eef5ff; box-shadow: inset 3px 0 0 #0f766e; }
 .products-table :deep(tbody tr.row-selected:hover) { background: #e0edff; }
 .products-table :deep(tbody tr:hover td) { background: #f5f9ff; }
 
@@ -2239,8 +2239,8 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 .page-size-select:focus {
   outline: none;
-  border-color: #eb6025;
-  box-shadow: 0 0 0 2px rgba(235, 96, 37, 0.12);
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.12);
 }
 .page-size-unit {
   font-size: 13px;
@@ -2277,13 +2277,13 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 .page-no:hover:not(:disabled) {
   background: #eef2ff;
-  color: #eb6025;
+  color: #0f766e;
   border-color: #f5d5c7;
 }
 .page-no.active {
-  background: #eb6025;
+  background: #0f766e;
   color: #fff;
-  border-color: #eb6025;
+  border-color: #0f766e;
 }
 .page-no:disabled {
   opacity: 0.45;

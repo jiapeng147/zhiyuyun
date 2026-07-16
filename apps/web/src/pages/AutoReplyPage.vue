@@ -1867,7 +1867,7 @@ onMounted(async () => {
 }
 
 .auto-reply-account-badge.is-all {
-  background: linear-gradient(135deg, #ff6d2f 0%, #ff8c5a 60%, #7debd7 100%);
+  background: linear-gradient(135deg, #ff6d2f 0%, #2dd4bf 60%, #7debd7 100%);
   color: #fff;
   box-shadow: 0 8px 18px rgba(217, 63, 0, 0.28);
 }
@@ -2090,7 +2090,7 @@ onMounted(async () => {
   font-size: 12px;
   transition: all .2s;
 }
-.auto-reply-load-more .ghost:hover { border-color: var(--blue, #eb6025); color: var(--blue, #eb6025) }
+.auto-reply-load-more .ghost:hover { border-color: var(--blue, #0f766e); color: var(--blue, #0f766e) }
 
 .auto-reply-product-item {
   display: block;
@@ -2117,7 +2117,7 @@ onMounted(async () => {
 .auto-reply-checkbox.checked {
   position: relative;
   border-color: transparent;
-  background: linear-gradient(135deg, #ff6d2f, #ff8c5a);
+  background: linear-gradient(135deg, #ff6d2f, #2dd4bf);
 }
 
 .auto-reply-checkbox.checked::after {
@@ -2447,7 +2447,7 @@ onMounted(async () => {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #ff6d2f, #ff8c5a);
+  background: linear-gradient(135deg, #ff6d2f, #2dd4bf);
   color: #fff;
   font-size: 12px;
   font-weight: 900;

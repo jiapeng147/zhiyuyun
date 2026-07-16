@@ -423,8 +423,8 @@ onMounted(() => {
 }
 .m-date-tab.active {
   background: white;
-  color: #FF4F00;
-  box-shadow: 0 2px 6px rgba(255, 79, 0, 0.12);
+  color: #0f766e;
+  box-shadow: 0 2px 6px rgba(20, 184, 166, 0.12);
 }
 
 .m-loading {
@@ -444,7 +444,7 @@ onMounted(() => {
   height: 80px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e8f1ff, #ffe1d4);
-  color: #FF4F00;
+  color: #0f766e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -493,7 +493,7 @@ onMounted(() => {
   justify-content: center;
   flex-shrink: 0;
 }
-.m-stat-blue { background: linear-gradient(135deg, #e8f1ff, #ffe1d4); color: #FF4F00; }
+.m-stat-blue { background: linear-gradient(135deg, #e8f1ff, #ffe1d4); color: #0f766e; }
 .m-stat-green { background: linear-gradient(135deg, #e2f8ee, #cdf2df); color: #16bf78; }
 .m-stat-orange { background: linear-gradient(135deg, #fff4e0, #ffe7c2); color: #ff9f22; }
 .m-stat-red { background: linear-gradient(135deg, #ffe8e8, #ffd1d1); color: #ef4444; }
@@ -644,11 +644,11 @@ onMounted(() => {
 .m-chart-bar {
   width: 70%;
   max-width: 28px;
-  background: linear-gradient(180deg, #ff9a6f 0%, #ff6c2d 60%, #FF4F00 100%);
+  background: linear-gradient(180deg, #ff9a6f 0%, #ff6c2d 60%, #0f766e 100%);
   border-radius: 6px 6px 0 0;
   transition: height 0.4s ease;
   min-height: 4px;
-  box-shadow: 0 2px 6px rgba(255, 79, 0, 0.18);
+  box-shadow: 0 2px 6px rgba(20, 184, 166, 0.18);
 }
 .m-chart-date {
   margin-top: 6px;
@@ -691,7 +691,7 @@ onMounted(() => {
   justify-content: center;
   flex-shrink: 0;
 }
-.m-quick-blue { background: linear-gradient(135deg, #e8f1ff, #ffded0); color: #FF4F00; }
+.m-quick-blue { background: linear-gradient(135deg, #e8f1ff, #ffded0); color: #0f766e; }
 .m-quick-green { background: linear-gradient(135deg, #e2f8ee, #cdf2df); color: #16bf78; }
 .m-quick-purple { background: linear-gradient(135deg, #f0ebff, #e2d8ff); color: #f68a5c; }
 .m-quick-orange { background: linear-gradient(135deg, #fff4e0, #ffe7c2); color: #ff9f22; }
@@ -740,12 +740,12 @@ onMounted(() => {
   padding: 0 16px;
   border: none;
   border-radius: 16px;
-  background: linear-gradient(135deg, #FF4F00, #ff6625);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
 }
 .m-pc-notice-btn:active {
   transform: scale(0.96);

@@ -781,7 +781,7 @@ onBeforeUnmount(() => {
 }
 
 .aics-input:focus {
-  border-color: #eb6025;
+  border-color: #0f766e;
 }
 
 .aics-textarea {
@@ -864,9 +864,9 @@ onBeforeUnmount(() => {
 }
 
 .aics-save-btn {
-  background: linear-gradient(135deg, #eb6025, #f6733b);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
-  box-shadow: 0 8px 20px rgba(235, 96, 37, .22);
+  box-shadow: 0 8px 20px rgba(20, 184, 166, .22);
 }
 
 .aics-save-btn:hover:not(:disabled) {
@@ -883,8 +883,8 @@ onBeforeUnmount(() => {
 
 .aics-test-btn {
   background: #fff;
-  color: #eb6025;
-  border: 1px solid #fed2bf;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
 }
 
 .aics-test-btn:hover:not(:disabled),
@@ -917,7 +917,7 @@ onBeforeUnmount(() => {
 
 .aics-bubble.me {
   align-self: flex-end;
-  background: linear-gradient(135deg, #eb6025, #f6733b);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
   border-radius: 14px 14px 4px 14px;
 }
@@ -991,9 +991,9 @@ onBeforeUnmount(() => {
 .aics-upload-btn {
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid #fed2bf;
+  border: 1px solid #99f6e4;
   background: #fff;
-  color: #eb6025;
+  color: #0f766e;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -1070,8 +1070,8 @@ onBeforeUnmount(() => {
 }
 
 .aics-restore-btn:hover {
-  color: #eb6025;
-  border-color: #fed2bf;
+  color: #0f766e;
+  border-color: #99f6e4;
 }
 
 .aics-error-box,
@@ -1113,7 +1113,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   border: 1px solid #f6e3db;
   background: #fff;
-  color: #eb6025;
+  color: #0f766e;
   font-size: 12px;
   cursor: pointer;
 }

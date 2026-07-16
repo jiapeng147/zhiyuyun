@@ -53,7 +53,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'profile')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#ffded0);color:#FF4F00">
+          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#ffded0);color:#0f766e">
             <MIcon name="user" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -197,19 +197,19 @@ onMounted(() => {
   align-items: flex-start;
   gap: 14px;
   margin-bottom: 16px;
-  border: 1px solid rgba(255, 79, 0, 0.08);
+  border: 1px solid rgba(20, 184, 166, 0.08);
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
 }
 .m-pro-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FF4F00, #ff763b);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(255,79,0,0.3);
+  box-shadow: 0 8px 20px rgba(20, 184, 166,0.3);
   flex-shrink: 0;
 }
 .m-pro-info { flex: 1; min-width: 0; }
@@ -315,7 +315,7 @@ onMounted(() => {
 .m-section-action {
   background: none;
   border: none;
-  color: #FF4F00;
+  color: #0f766e;
   font-size: 12px;
   display: inline-flex;
   align-items: center;
@@ -327,7 +327,7 @@ onMounted(() => {
   border-radius: 100px;
   flex-shrink: 0;
 }
-.m-section-action:active { background: rgba(255,79,0,0.08); }
+.m-section-action:active { background: rgba(20, 184, 166,0.08); }
 
 /* 菜单 */
 .m-menu-list { display: flex; flex-direction: column; gap: 4px; }
@@ -406,7 +406,7 @@ onMounted(() => {
 .m-btn:active { transform: scale(0.98); }
 .m-btn-outline {
   background: white;
-  color: #FF4F00;
+  color: #0f766e;
   border: 1.5px solid #ffe1d4;
 }
 .m-btn-danger {

@@ -1,20 +1,29 @@
 <template>
-  <div class="topbar">
-    <button v-if="false" class="top-icon" type="button" aria-label="搜索">
+  <div class="topbar zy-topbar">
+    <button class="zy-global-search" type="button" @click="go('data')">
       <Icon name="search" />
+      <span>搜索账号、商品、订单、消息</span>
+      <kbd>⌘K</kbd>
     </button>
 
-    <button class="top-icon bell" type="button" aria-label="通知中心" @click="toggleNoticePanel">
+    <div class="zy-topbar-spacer"></div>
+
+    <span class="zy-connection-pill" :class="sseStatus">
+      <i aria-hidden="true"></i>
+      {{ sseLabel }}
+    </span>
+
+    <button class="top-icon bell zy-icon-button" type="button" aria-label="通知中心" @click="toggleNoticePanel">
       <span v-if="unreadCount > 0">{{ unreadCount }}</span>
       <Icon name="bell" />
     </button>
 
-    <button class="top-icon" type="button" aria-label="关于我们" title="关于我们" @click="openHelp">
+    <button class="top-icon zy-icon-button" type="button" aria-label="关于我们" title="关于我们" @click="go('settings-about')">
       <Icon name="help" />
     </button>
 
     <button
-      class="top-icon"
+      class="top-icon zy-icon-button"
       type="button"
       :aria-label="isFullscreen ? '退出全屏' : '进入全屏'"
       @click="toggleFullscreen"
@@ -22,24 +31,30 @@
       <Icon name="fullscreen" />
     </button>
 
-    <div ref="userWrapEl" class="top-user-wrap">
-      <button class="top-user" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
-        <div class="avatar small avatar-img"></div>
-        <span>{{ displayName }}</span>
-        <em>{{ sseLabel }}</em>
+    <div ref="userWrapEl" class="top-user-wrap zy-user-menu-wrap">
+      <button class="top-user zy-top-user" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
+        <span class="avatar small avatar-img">{{ initials }}</span>
+        <span class="zy-top-user-copy">
+          <strong>{{ displayName }}</strong>
+          <em>{{ roleLabel }}</em>
+        </span>
         <b aria-hidden="true">⌄</b>
       </button>
 
-      <div v-if="menuOpen" class="top-user-menu">
+      <div v-if="menuOpen" class="top-user-menu zy-popover-menu">
         <button type="button" @click="onProfile">个人中心</button>
+        <button type="button" @click="go('settings-system')">系统设置</button>
         <button type="button" class="danger" @click="onLogout">退出登录</button>
       </div>
     </div>
 
-    <div v-if="showNoticePanel" class="notice-panel" role="dialog" aria-label="通知中心">
+    <div v-if="showNoticePanel" class="notice-panel zy-notice-panel" role="dialog" aria-label="通知中心">
       <div class="notice-panel-head">
-        <h3>通知中心</h3>
-        <button class="modal-close" type="button" aria-label="关闭" @click="showNoticePanel = false">
+        <div>
+          <h3>通知中心</h3>
+          <p>实时事件与系统提醒</p>
+        </div>
+        <button class="modal-close zy-icon-button" type="button" aria-label="关闭" @click="showNoticePanel = false">
           <Icon name="close" />
         </button>
       </div>
@@ -47,9 +62,9 @@
       <div class="notice-panel-body">
         <EmptyState
           v-if="recentEvents.length === 0"
-          icon="🔔"
+          icon="∅"
           title="暂无通知"
-          description="系统实时事件会在此显示。"
+          description="系统实时事件会在这里出现。"
         />
         <button v-for="(ev, i) in recentEvents" :key="eventKey(ev, i)" type="button" class="notice-item" @click="onNoticeClick(ev)">
           <b>{{ ev.title || ev.type || '事件' }}</b>
@@ -69,7 +84,7 @@ import EmptyState from './EmptyState.vue'
 const props = defineProps({
   user: { type: Object, default: () => ({}) },
   sseStatus: { type: String, default: 'disconnected' },
-  unreadCount: { type: [String, Number], default: 0 }
+  unreadCount: { type: [String, Number], default: 0 },
 })
 
 const emit = defineEmits(['logout', 'open-profile-center'])
@@ -78,6 +93,7 @@ const menuOpen = ref(false)
 const userWrapEl = ref(null)
 function onProfile() { menuOpen.value = false; emit('open-profile-center') }
 function onLogout() { menuOpen.value = false; emit('logout') }
+function go(page) { location.hash = `#/${page}` }
 function onDocClick(e) {
   if (menuOpen.value && userWrapEl.value && !userWrapEl.value.contains(e.target)) {
     menuOpen.value = false
@@ -85,8 +101,10 @@ function onDocClick(e) {
 }
 
 const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '管理员')
+const roleLabel = computed(() => props.user?.role === 'superadmin' ? '超级管理员' : '运营成员')
+const initials = computed(() => (displayName.value || 'ZY').slice(0, 2).toUpperCase())
 const sseLabel = computed(() => ({
-  connected: '在线',
+  connected: '实时连接',
   connecting: '连接中',
   reconnecting: '重连中',
   disconnected: '离线',
@@ -112,7 +130,7 @@ function onSseEvent(event) {
     title: detail.title || detail.eventType,
     content: detail.content || detail.message,
     time: new Date().toLocaleTimeString(),
-    raw: detail
+    raw: detail,
   })
   if (recentEvents.value.length > 50) recentEvents.value.pop()
 }
@@ -122,16 +140,12 @@ function onNoticeClick(ev) {
     message: 'messages',
     order: 'auto-delivery',
     account: 'accounts',
-    workflow: 'logs'
+    workflow: 'logs',
   }
   const key = Object.keys(routeMap).find(item => (ev.type || '').toLowerCase().includes(item))
   if (!key) return
   location.hash = `#/${routeMap[key]}`
   showNoticePanel.value = false
-}
-
-function openHelp() {
-  location.hash = '#/settings-about'
 }
 
 function toggleFullscreen() {
@@ -158,131 +172,3 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
 })
 </script>
-
-<style scoped>
-.top-user-wrap {
-  position: relative;
-}
-
-.top-user-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  min-width: 150px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  background: #fff;
-  border: 1px solid #E8E8E8;
-  border-radius: 12px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-  padding: 6px;
-  z-index: 50;
-}
-
-.top-user-menu button {
-  white-space: nowrap;
-  border: 0;
-  background: transparent;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: left;
-  color: #111;
-  font-weight: 600;
-}
-
-.top-user-menu button.danger {
-  color: #ef4444;
-  font-weight: 800;
-}
-
-.top-user-menu button:hover {
-  background: #F5F5F5;
-}
-
-.top-user-menu button.danger:hover {
-  background: #fff5f5;
-}
-
-.notice-panel {
-  position: absolute;
-  right: 0;
-  top: 46px;
-  width: 360px;
-  max-height: 480px;
-  background: #fff;
-  border: 1px solid var(--line, #E5E5E5);
-  border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(92, 49, 30, 0.14);
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.notice-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid #F0F0F0;
-}
-
-.notice-panel-head h3 {
-  margin: 0;
-  font-size: 16px;
-}
-
-.notice-panel-body {
-  overflow: auto;
-  padding: 8px;
-}
-
-.notice-item {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.notice-item:hover {
-  background: #f3f8ff;
-}
-
-.notice-item b {
-  display: block;
-  font-size: 14px;
-  color: #16213e;
-}
-
-.notice-item span {
-  display: block;
-  color: #667085;
-  font-size: 13px;
-  margin-top: 3px;
-}
-
-.notice-item small {
-  color: #98a2b3;
-  font-size: 11px;
-}
-
-.modal-close {
-  border: 0;
-  background: transparent;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-</style>

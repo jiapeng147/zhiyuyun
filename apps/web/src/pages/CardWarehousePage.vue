@@ -957,7 +957,7 @@ onBeforeUnmount(() => {
   background: #FFFFFF;
   padding: 24px 16px;
   text-align: center;
-  color: #FF4F00;
+  color: #0f766e;
   font-weight: 600;
   cursor: pointer;
   transition: all .15s;
@@ -966,7 +966,7 @@ onBeforeUnmount(() => {
   font: inherit;
 }
 .file-drop-zone:hover {
-  border-color: #FF4F00;
+  border-color: #0f766e;
   background: #F5F5F5;
 }
 .file-drop-zone .file-name {
@@ -1082,8 +1082,8 @@ onBeforeUnmount(() => {
   transition: all .15s;
 }
 .page-no:hover:not(:disabled) {
-  border-color: #FF4F00;
-  color: #FF4F00;
+  border-color: #0f766e;
+  color: #0f766e;
 }
 .page-no:disabled {
   opacity: 0.4;

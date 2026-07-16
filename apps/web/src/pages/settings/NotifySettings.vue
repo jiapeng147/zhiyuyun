@@ -2215,7 +2215,7 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff6d2f, #ff8c5a);
+  background: linear-gradient(135deg, #ff6d2f, #2dd4bf);
 }
 
 .notify-hero-copy h1 {
@@ -3093,7 +3093,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #ff6d2f, #ff8c5a);
+  background: linear-gradient(135deg, #ff6d2f, #2dd4bf);
   color: #fff;
   font-size: 13px;
   font-weight: 800;

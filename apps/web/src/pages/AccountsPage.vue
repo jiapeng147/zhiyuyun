@@ -2384,7 +2384,7 @@ onBeforeUnmount(() => {
 }
 
 .quick-actions button:hover {
-  border-color: #ffd0bc;
+  border-color: #99f6e4;
   color: #ff7033;
 }
 
@@ -2498,7 +2498,7 @@ onBeforeUnmount(() => {
 /* Table row selection highlight */
 .base-table tbody tr.row-selected {
   background: #e6f4ff;
-  box-shadow: inset 3px 0 0 #ff5c16;
+  box-shadow: inset 3px 0 0 #0f766e;
 }
 .base-table tbody tr.row-selected:hover {
   background: #ffe2d6;

@@ -393,7 +393,7 @@ onBeforeUnmount(() => {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #FF4F00;
+  color: #0f766e;
   white-space: nowrap;
 }
 .var-desc-text {
@@ -428,8 +428,8 @@ onBeforeUnmount(() => {
   outline: none;
 }
 .form-row textarea:focus {
-  border-color: #FF4F00;
-  box-shadow: 0 0 0 3px rgba(255,79,0,.1);
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166,.1);
 }
 .form-actions {
   margin-top: 20px;
