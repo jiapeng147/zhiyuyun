@@ -15,6 +15,28 @@
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
+    <n-card v-if="editing" ref="editorCardRef" class="source-v4-card source-v4-editor" :bordered="false">
+      <template #header>{{ editing.id ? '编辑货源' : '新增货源' }}</template>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>标题</label>
+          <input v-model="form.title" class="input" maxlength="200" placeholder="给用户和 AI 模型看的标题" />
+        </div>
+        <div class="form-row">
+          <label>正文</label>
+          <textarea v-model="form.content" rows="6" placeholder="实际发货文本内容"></textarea>
+        </div>
+        <div class="form-row">
+          <label>备注</label>
+          <textarea v-model="form.remark" rows="3" maxlength="500" placeholder="可选备注"></textarea>
+        </div>
+      </div>
+      <div class="toolbar" style="justify-content:flex-start">
+        <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="saveSource">{{ mutationBusy === 'save' ? '保存中…' : '保存' }}</AppButton>
+        <AppButton :disabled="mutationBusy === 'save'" @click="cancelEdit">取消</AppButton>
+      </div>
+    </n-card>
+
     <section class="source-v4-stats">
       <n-card v-for="item in sourceStatCards" :key="item.key" class="source-v4-stat" :class="item.tone" :bordered="false">
         <span class="source-v4-stat-icon">{{ item.symbol }}</span>
@@ -33,7 +55,9 @@
 
       <EmptyState v-if="sourcesLoading && sourcesAvailable !== true" icon="⏳" title="货源库加载中" description="正在读取货源与使用情况。" />
       <EmptyState v-else-if="sourcesAvailable === false" icon="⚠️" title="货源库暂不可用" description="当前无法确认货源记录；新增、编辑、删除和商品绑定均已禁用。">
-        <AppButton :disabled="sourcesLoading" @click="loadSources">重试</AppButton>
+        <template #actions>
+          <AppButton :disabled="sourcesLoading" @click="loadSources">重试</AppButton>
+        </template>
       </EmptyState>
       <template v-else-if="sourcesAvailable === true">
       <BaseTable :columns="columns" :rows="rows" @row-click="selectSource">
@@ -59,34 +83,14 @@
       </template>
     </n-card>
 
-    <n-card v-if="editing" class="source-v4-card" :bordered="false">
-      <template #header>{{ editing.id ? '编辑货源' : '新增货源' }}</template>
-      <div class="form-grid">
-        <div class="form-row">
-          <label>标题</label>
-          <input v-model="form.title" class="input" maxlength="200" placeholder="给用户和 AI 模型看的标题" />
-        </div>
-        <div class="form-row">
-          <label>正文</label>
-          <textarea v-model="form.content" rows="6" placeholder="实际发货文本内容"></textarea>
-        </div>
-        <div class="form-row">
-          <label>备注</label>
-          <textarea v-model="form.remark" rows="3" maxlength="500" placeholder="可选备注"></textarea>
-        </div>
-      </div>
-      <div class="toolbar" style="justify-content:flex-start">
-        <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="saveSource">{{ mutationBusy === 'save' ? '保存中…' : '保存' }}</AppButton>
-        <AppButton :disabled="mutationBusy === 'save'" @click="cancelEdit">取消</AppButton>
-      </div>
-    </n-card>
-
-    <template v-if="selected">
+    <div v-if="selected" ref="detailCardRef" class="source-v4-detail-stack">
       <n-card class="source-v4-card" :bordered="false">
         <template #header>货源详情</template>
         <EmptyState v-if="detailLoading" icon="⏳" title="货源详情加载中" description="正在读取绑定商品，期间不会开放配置操作。" />
         <EmptyState v-else-if="detailAvailable === false" icon="⚠️" title="货源详情暂不可用" description="当前无法确认绑定关系；为避免把旧商品配置到新货源，所有写操作已禁用。">
-          <AppButton :disabled="detailLoading" @click="loadSelectedGoods(selected.id, selected)">重试</AppButton>
+          <template #actions>
+            <AppButton :disabled="detailLoading" @click="loadSelectedGoods(selected.id, selected)">重试</AppButton>
+          </template>
         </EmptyState>
         <template v-else-if="detailAvailable === true">
         <div class="source-summary">
@@ -199,7 +203,9 @@
           title="AI 推荐暂不可用"
           description="未能确认推荐结果，不会使用上一次结果执行批量配置。"
         >
-          <AppButton :disabled="analysisLoading" @click="analyzeSource(selected)">重试</AppButton>
+          <template #actions>
+            <AppButton :disabled="analysisLoading" @click="analyzeSource(selected)">重试</AppButton>
+          </template>
         </EmptyState>
         <BaseTable
           v-else
@@ -254,12 +260,12 @@
           @page-change="goCandidateGoodsPage"
         />
       </n-card>
-    </template>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { NCard, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import AppButton from '../components/AppButton.vue'
@@ -310,6 +316,8 @@ const candidateAppliedKeyword = ref('')
 const goodsView = ref('all')
 const recommendationsAvailable = ref(null)
 const aiStatus = ref({ configured: false, message: '' })
+const editorCardRef = ref(null)
+const detailCardRef = ref(null)
 const SOURCE_LIBRARY_FOCUS_GOODS_KEY = 'xya:source-library-focus-goods-id'
 const SOURCE_LIBRARY_FOCUS_TIMING_KEY = 'xya:source-library-focus-timing'
 const focusedGoodsId = ref('')
@@ -458,6 +466,29 @@ function aiStatusMessage(defaultMessage = '未配置通用模型，请先前往�
   return aiStatus.value?.message || defaultMessage
 }
 
+function scrollToPanel(targetRef) {
+  nextTick(() => {
+    const el = targetRef.value?.$el || targetRef.value
+    if (el?.scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  })
+}
+
+function canUseSourceActions(actionLabel = '操作') {
+  if (mutationBusy.value) {
+    error.value = `当前正在处理上一项任务，请稍后再${actionLabel}。`
+    return false
+  }
+  if (sourcesAvailable.value === true) return true
+  if (sourcesLoading.value) {
+    error.value = '货源库还在加载，请稍后再操作。'
+    return false
+  }
+  error.value = '货源库未加载成功，请先点击“刷新货源”或“重试”。'
+  return false
+}
+
 function consumeFocusedContext() {
   focusedGoodsId.value = sessionStorage.getItem(SOURCE_LIBRARY_FOCUS_GOODS_KEY) || ''
   const timing = sessionStorage.getItem(SOURCE_LIBRARY_FOCUS_TIMING_KEY) || ''
@@ -556,19 +587,25 @@ function goSourcePage(page) {
 }
 
 function openCreate() {
-  if (sourcesAvailable.value !== true || mutationBusy.value) return
+  if (!canUseSourceActions('新增')) return
+  success.value = ''
+  error.value = ''
   editing.value = {}
   Object.assign(form, { title: '', content: '', remark: '' })
+  scrollToPanel(editorCardRef)
 }
 
 function editSource(row) {
-  if (sourcesAvailable.value !== true || mutationBusy.value) return
+  if (!canUseSourceActions('编辑')) return
+  success.value = ''
+  error.value = ''
   editing.value = row
   Object.assign(form, {
     title: row.title || '',
     content: row.content || '',
     remark: row.remark || ''
   })
+  scrollToPanel(editorCardRef)
 }
 
 function cancelEdit() {
@@ -605,7 +642,7 @@ function clearSelected() {
 }
 
 async function saveSource() {
-  if (sourcesAvailable.value !== true || mutationBusy.value) return
+  if (!canUseSourceActions('保存')) return
   error.value = ''
   success.value = ''
   mutationBusy.value = 'save'
@@ -631,7 +668,7 @@ async function saveSource() {
 }
 
 async function removeSource(row) {
-  if (sourcesAvailable.value !== true || mutationBusy.value) return
+  if (!canUseSourceActions('删除')) return
   mutationBusy.value = 'delete-confirm'
   try {
     if (!await confirmAction({
@@ -750,7 +787,8 @@ async function selectSource(row) {
   configuredAppliedKeyword.value = ''
   goodsKeyword.value = ''
   candidateAppliedKeyword.value = ''
-  await loadSelectedGoods(row.id, row, { resetPaging: true })
+  const loaded = await loadSelectedGoods(row.id, row, { resetPaging: true })
+  if (loaded) scrollToPanel(detailCardRef)
 }
 
 function recommendationParams() {
@@ -846,6 +884,7 @@ async function analyzeSource(row) {
     const switchingSource = String(selected.value?.id) !== String(sourceId)
     const loaded = await loadSelectedGoods(sourceId, row, { resetPaging: switchingSource })
     if (!loaded) return false
+    scrollToPanel(detailCardRef)
     recommendedGoodsPage.current = 1
     return await requestRecommendation(sourceId, { replaceSelection: true })
   } catch (e) {
@@ -1077,6 +1116,17 @@ onBeforeUnmount(() => {
 
 .source-v4-card :deep(.n-card-header) {
   padding: 16px 16px 0;
+}
+
+.source-v4-editor,
+.source-v4-detail-stack {
+  scroll-margin-top: 96px;
+}
+
+.source-v4-detail-stack {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
 }
 
 .content-preview {

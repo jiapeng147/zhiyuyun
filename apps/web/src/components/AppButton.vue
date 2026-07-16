@@ -8,6 +8,7 @@
     :loading="loading"
     :secondary="isSecondary"
     :tertiary="type === 'ghost'"
+    @click="emit('click', $event)"
   >
     <template v-if="loading && loadingText">{{ loadingText }}</template>
     <slot v-else />
@@ -25,6 +26,7 @@ const props = defineProps({
   loading: Boolean,
   loadingText: { type: String, default: '处理中...' },
 })
+const emit = defineEmits(['click'])
 
 const naiveType = computed(() => {
   if (props.type === 'primary') return 'primary'
