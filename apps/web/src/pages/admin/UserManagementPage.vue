@@ -1,7 +1,5 @@
 <template>
   <div class="user-mgmt-page">
-    <PageHeader title="用户管理" desc="管理注册用户、套餐与自助注册开关（仅超级管理员）" />
-
     <div v-if="notice" :class="['global-notice', noticeType]" role="status">{{ notice }}</div>
 
     <!-- 注册开关 -->
@@ -108,7 +106,6 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import PageHeader from '../../components/PageHeader.vue'
 import CardPanel from '../../components/CardPanel.vue'
 import ToggleSwitch from '../../components/ToggleSwitch.vue'
 import { friendlyError } from '../../utils/friendlyError.js'
