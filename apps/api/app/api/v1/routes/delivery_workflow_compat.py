@@ -1266,7 +1266,7 @@ def _enabled_timing_configs(config: dict[str, Any]) -> list[dict[str, Any]]:
 @router.get("/cards/alerts", response_model=ResultObject)
 async def get_card_alerts(
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     rows = (
         await db.execute(
@@ -1304,7 +1304,7 @@ async def get_card_alerts(
 @router.post("/cards/import/validate", response_model=ResultObject)
 async def validate_card_import(
     body: dict[str, Any] = Body(default_factory=dict),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     items = body.get("items")
     if isinstance(items, list):
@@ -1321,7 +1321,7 @@ async def get_cards(
     current: int = Query(default=1),
     size: int = Query(default=20),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
@@ -1387,7 +1387,7 @@ async def get_cards(
 async def create_card_group(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     group_name = str(body.get("groupName") or "").strip()
     if not group_name:
@@ -1426,7 +1426,7 @@ async def update_card_group(
     group_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     group_name = str(body.get("groupName") or "").strip()
     if not group_name:
@@ -1471,7 +1471,7 @@ async def update_card_group(
 async def delete_card_group(
     group_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     await db.execute(
         text(
@@ -1501,7 +1501,7 @@ async def delete_card_group(
 async def get_card_group_detail(
     group_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     row = await _fetch_card_group_row(db, group_id)
     if not row:
@@ -1516,7 +1516,7 @@ async def get_card_items(
     current: int = Query(default=1),
     size: int = Query(default=50),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
@@ -1563,7 +1563,7 @@ async def create_card_item(
     group_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     content = str(body.get("content") or "").strip()
     card_key = str(body.get("cardContent") or "").strip()
@@ -1602,7 +1602,7 @@ async def batch_create_card_items(
     group_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     items = body.get("items")
     if not isinstance(items, list) or not items:
@@ -1686,7 +1686,7 @@ async def delete_card_item(
     group_id: int,
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     await db.execute(
         text(
@@ -1709,7 +1709,7 @@ async def reset_card_item(
     group_id: int,
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     await db.execute(
         text(
@@ -1738,7 +1738,7 @@ async def lock_card_item(
     group_id: int,
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     await db.execute(
         text(
@@ -1763,7 +1763,7 @@ async def invalid_card_item(
     group_id: int,
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     await db.execute(
         text(
@@ -1787,7 +1787,7 @@ async def invalid_card_item(
 async def get_card_stock_stats(
     group_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     row = (
         await db.execute(
@@ -1827,7 +1827,7 @@ async def get_card_usage_records(
     current: int = Query(default=1),
     size: int = Query(default=20),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
@@ -1869,7 +1869,7 @@ async def get_card_usage_records(
 async def export_card_items(
     group_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     rows = (
         await db.execute(
@@ -1896,7 +1896,7 @@ async def export_card_items(
 @router.get("/auto-delivery/stats", response_model=ResultObject)
 async def get_delivery_stats(
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     start_time, end_time = _current_date_range()
     today_success = (
@@ -2008,7 +2008,7 @@ async def get_delivery_stats(
 async def get_goods_delivery_config(
     goods_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     missing_result = await _require_goods(db, [goods_id])
     if missing_result:
@@ -2020,7 +2020,7 @@ async def get_goods_delivery_config(
 async def query_goods_delivery_configs(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """Return configurations in one bounded query for large management pages."""
     raw_goods_ids = body.get("goodsIds")
@@ -2067,7 +2067,7 @@ async def save_goods_delivery_config(
     goods_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     missing_result = await _require_goods(db, [goods_id])
     if missing_result:
@@ -2132,7 +2132,7 @@ async def toggle_goods_delivery_config(
     timing: str,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     missing_result = await _require_goods(db, [goods_id])
     if missing_result:
@@ -2152,7 +2152,7 @@ async def toggle_goods_delivery_config(
 async def batch_set_delivery_rules(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         goods_ids = _normalize_goods_ids(body.get("goodsIds"))
@@ -2199,7 +2199,7 @@ async def batch_set_delivery_rules(
 async def batch_delete_delivery_rules(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         goods_ids = _normalize_goods_ids(body.get("goodsIds"))
@@ -2218,7 +2218,7 @@ async def batch_delete_delivery_rules(
 async def apply_delivery_rules_to_all(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """将指定商品的发货配置应用到所有在售商品。"""
     source_goods_id = body.get("goodsId") or body.get("sourceGoodsId")
@@ -2268,7 +2268,7 @@ async def apply_delivery_rules_to_all(
 @router.get("/auto-delivery/statement", response_model=ResultObject)
 async def get_delivery_statement(
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     row = (
         await db.execute(
@@ -2298,7 +2298,7 @@ async def get_delivery_statement(
 async def save_delivery_statement(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     enabled = 1 if _truthy(body.get("enabled")) else 0
     content = str(body.get("content") or STATEMENT_DEFAULT_CONTENT)
@@ -2353,7 +2353,7 @@ async def save_delivery_statement(
 async def toggle_delivery_statement(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     enabled = 1 if _truthy(body.get("enabled")) else 0
     existing = (
@@ -2398,7 +2398,7 @@ async def toggle_delivery_statement(
 @router.post("/auto-delivery/statement/preview", response_model=ResultObject)
 async def preview_delivery_statement(
     body: dict[str, Any] = Body(default_factory=dict),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     preview = str(body.get("content") or STATEMENT_DEFAULT_CONTENT)
     preview = preview.replace("{订单编号}", "【订单编号】")
@@ -2414,7 +2414,7 @@ async def get_delivery_sources(
     current: int = Query(default=1, ge=1, le=1_000_000),
     size: int = Query(default=20, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
@@ -2461,7 +2461,7 @@ async def get_delivery_sources(
 async def get_delivery_source_detail(
     source_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     row = (
         await db.execute(
@@ -2488,7 +2488,7 @@ async def get_delivery_source_detail(
 async def create_delivery_source(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         title, content, remark = _delivery_source_fields(body)
@@ -2516,7 +2516,7 @@ async def update_delivery_source(
     source_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         title, content, remark = _delivery_source_fields(body)
@@ -2557,7 +2557,7 @@ async def update_delivery_source(
 async def delete_delivery_source(
     source_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     existing = await _load_delivery_source_row(db, source_id, for_update=True)
     if not existing:
@@ -2626,7 +2626,7 @@ async def get_delivery_source_goods(
         max_length=200,
     ),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     source_row = await _load_delivery_source_row(db, source_id)
     if not source_row:
@@ -2681,7 +2681,7 @@ async def recommend_delivery_source_goods(
         le=SOURCE_RECOMMEND_CANDIDATE_MAX,
     ),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     source_row = await _load_delivery_source_row(db, source_id)
     if not source_row:
@@ -2839,7 +2839,7 @@ async def apply_delivery_source_to_goods(
     source_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         goods_ids = _normalize_goods_ids(body.get("goodsIds"))
@@ -2884,7 +2884,7 @@ async def remove_delivery_source_from_goods(
     source_id: int,
     goods_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """解除单个商品与货源的绑定。
 
@@ -2926,7 +2926,7 @@ async def remove_delivery_source_from_goods(
 
 @router.get("/auto-delivery/templates/variables", response_model=ResultObject)
 async def get_delivery_template_variables(
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
 
@@ -2937,7 +2937,7 @@ async def get_delivery_templates(
     size: int = Query(default=20),
     name: str = Query(default=""),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     del current, size, name, db
     return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
@@ -2947,7 +2947,7 @@ async def get_delivery_templates(
 async def create_delivery_template(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     del body, db
     return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
@@ -2958,7 +2958,7 @@ async def update_delivery_template(
     template_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     del template_id, body, db
     return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
@@ -2968,7 +2968,7 @@ async def update_delivery_template(
 async def delete_delivery_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     del template_id, db
     return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
@@ -2978,7 +2978,7 @@ async def delete_delivery_template(
 async def copy_delivery_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     del template_id, db
     return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
@@ -2996,7 +2996,7 @@ async def get_delivery_records(
     current: int = Query(default=1),
     size: int = Query(default=20),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
@@ -3089,7 +3089,7 @@ async def get_delivery_records(
 async def get_delivery_record_detail(
     record_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     row = (
         await db.execute(
@@ -3146,7 +3146,7 @@ async def get_delivery_record_detail(
 async def retry_delivery_record(
     record_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     exists = (
         await db.execute(
@@ -3179,7 +3179,7 @@ async def schedule_redelivery(
     record_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     del record_id, body, db
     raise HTTPException(
@@ -3192,7 +3192,7 @@ async def schedule_redelivery(
 async def trigger_delivery(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     order_id = body.get("orderId")
     if order_id in (None, ""):
@@ -3240,7 +3240,7 @@ async def trigger_delivery(
 @router.post("/auto-delivery/scan", response_model=ResultObject)
 async def scan_pending_orders(
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     configs = await _load_all_goods_configs(db)
     if not configs:
@@ -3353,7 +3353,7 @@ async def list_delivery_rules(
     current: int = Query(default=1, ge=1),
     size: int = Query(default=10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """查询发货规则列表。
 
@@ -3429,7 +3429,7 @@ async def list_delivery_rules(
 @delivery_rules_router.get("/auto-delivery/global-config", response_model=ResultObject)
 async def get_delivery_global_config(
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """读取全店默认发货配置。
 
@@ -3459,7 +3459,7 @@ async def get_delivery_global_config(
 async def save_delivery_global_config(
     body: dict = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """保存全店默认发货配置（upsert）。
 

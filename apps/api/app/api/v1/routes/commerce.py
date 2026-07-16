@@ -506,7 +506,7 @@ async def list_goods(
     current: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     account_filter = account_id if account_id is not None else xianyu_account_id
     valid_account_ids = owned_account_id_subquery(current_user)
@@ -562,7 +562,7 @@ async def goods_stats(
     account_id: Optional[int] = Query(None, alias="accountId"),
     xianyu_account_id: Optional[int] = Query(None, alias="xianyuAccountId"),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     account_filter = account_id if account_id is not None else xianyu_account_id
     # 仅统计有效账号（deleted=0）的商品，已退出账号的旧商品不在前台展示
@@ -613,7 +613,7 @@ async def goods_stats(
 async def create_goods(
     body: dict[str, Any] = Body(...),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     goods = XianyuGoods(
         account_id=body.get("accountId") or body.get("xianyuAccountId"),
@@ -646,7 +646,7 @@ async def create_goods(
 async def goods_detail(
     goods_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
@@ -672,7 +672,7 @@ async def update_goods(
     goods_id: int,
     body: dict[str, Any] = Body(...),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
@@ -738,7 +738,7 @@ async def update_goods(
 
 
 @router.delete("/goods/{goods_id}", response_model=ResultObject)
-async def delete_goods(goods_id: int, db: AsyncSession = Depends(get_db), _: dict = Depends(get_current_user)):
+async def delete_goods(goods_id: int, db: AsyncSession = Depends(get_db), current_user: dict = Depends(get_current_user)):
     return await delete_goods_local(goods_id, db, _)
 
 
@@ -746,7 +746,7 @@ async def delete_goods(goods_id: int, db: AsyncSession = Depends(get_db), _: dic
 async def delete_goods_local(
     goods_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
@@ -764,7 +764,7 @@ async def delete_goods_local(
 async def delete_goods_remote(
     goods_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """远程删除商品：标记为已从闲鱼删除（status=3），本地记录保留。"""
     result = await db.execute(
@@ -788,7 +788,7 @@ async def list_orders(
     size: int = Query(20, ge=1, le=200),
     sync: bool = Query(False),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     # sync=true 时先从闲鱼拉取最新订单入库，再返回本地查询结果
     if sync and account_id is not None:
@@ -868,7 +868,7 @@ async def list_orders(
 async def order_detail(
     order_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(XianyuTradeOrder).where(XianyuTradeOrder.id == order_id, XianyuTradeOrder.deleted == 0)
@@ -912,7 +912,7 @@ async def update_order(
     order_id: int,
     body: dict[str, Any] = Body(...),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(XianyuTradeOrder).where(XianyuTradeOrder.id == order_id, XianyuTradeOrder.deleted == 0)
@@ -934,7 +934,7 @@ async def manual_delivery(
     order_id: int,
     body: ManualDeliveryReqDTO,
     coordinator: ManualDeliveryCoordinator = Depends(get_manual_delivery_coordinator),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     command = ManualDeliveryCommand(
         delivery_mode=body.delivery_mode,
@@ -982,7 +982,7 @@ async def manual_delivery(
 async def sync_order(
     order_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(XianyuTradeOrder).where(XianyuTradeOrder.id == order_id, XianyuTradeOrder.deleted == 0)
@@ -1007,7 +1007,7 @@ async def sync_order(
 async def sync_orders(
     body: dict[str, Any] = Body(...),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     account_id = body.get("accountId")
     if account_id is None:
@@ -1042,7 +1042,7 @@ async def list_goods_sync_tasks(
     current: int = Query(1, ge=1),
     size: int = Query(5, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     query = select(XianyuGoodsSyncTask).where(XianyuGoodsSyncTask.deleted == 0)
     if account_id is not None:

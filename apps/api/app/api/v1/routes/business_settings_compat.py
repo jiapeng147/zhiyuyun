@@ -117,7 +117,7 @@ async def _decode_text_upload(file_name: str, content: bytes) -> str:
 
 @router.get("/business-settings/ai-customer-service/defaults", response_model=ResultObject)
 async def get_ai_customer_service_defaults(
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     return ResultObject.success(build_default_business_setting(AI_CS_SETTING_KEY))
 
@@ -126,7 +126,7 @@ async def get_ai_customer_service_defaults(
 async def test_ai_customer_service(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     config = await load_business_setting(db, AI_CS_SETTING_KEY)
     system_prompt = str(config.get("systemPrompt") or "").strip()[:6_000]
@@ -169,16 +169,27 @@ async def test_ai_customer_service(
             "usage": result.get("usage") or {},
         })
 
-    raise HTTPException(
-        status_code=503,
-        detail="AI 模型未返回有效回复，请检查模型服务状态后重试",
-    )
+    # Surface stable diagnostics so the operator can tell apart
+    # "endpoint missing (wrong baseUrl)" vs "auth failed" vs "no body".
+    http_status = result.get("httpStatus") if isinstance(result, dict) else None
+    error_text = (result or {}).get("error") or ""
+    if http_status == 404:
+        hint = "AI 模型未返回有效回复：服务端返回 404。请检查「接口地址」是否以 /v1 结尾，例如 https://api.openai.com/v1"
+    elif http_status in {401, 403}:
+        hint = f"AI 模型未返回有效回复：鉴权失败 (HTTP {http_status})。请检查 API Key 是否与所选供应商匹配"
+    elif http_status is not None and (http_status < 200 or http_status >= 300):
+        hint = f"AI 模型未返回有效回复：服务端返回 HTTP {http_status}。{error_text}"
+    elif error_text:
+        hint = f"AI 模型未返回有效回复：{error_text}。请检查 baseUrl / 模型名 / 网络后重试"
+    else:
+        hint = "AI 模型未返回有效回复，请检查模型服务状态后重试"
+    raise HTTPException(status_code=503, detail=hint)
 
 
 @router.post("/business-settings/ai-customer-service/upload-knowledge", response_model=ResultObject)
 async def upload_ai_customer_service_knowledge(
     file: UploadFile = File(...),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     file_name = file.filename or ""
     if not file_name.strip():
@@ -219,7 +230,7 @@ async def upload_ai_customer_service_knowledge(
 async def get_business_settings(
     category: str,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     if category not in ALLOWED_BUSINESS_SETTING_CATEGORIES:
         return ResultObject.failed(f"不支持的配置分类: {category}", code=400)
@@ -231,7 +242,7 @@ async def save_business_settings(
     category: str,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     if category not in ALLOWED_BUSINESS_SETTING_CATEGORIES:
         return ResultObject.failed(f"不支持的配置分类: {category}", code=400)
@@ -247,7 +258,7 @@ async def list_quick_reply_templates(
     account_id: Optional[int] = Query(None, alias="accountId"),
     size: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     query = select(QuickReplyTemplate).where(QuickReplyTemplate.deleted == 0, QuickReplyTemplate.account_id.in_(owned_account_id_subquery(current_user)))
     if account_id is None:
@@ -270,7 +281,7 @@ async def list_quick_reply_templates(
 async def save_quick_reply_template(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     title = str(body.get("title") or "").strip()
     content = str(body.get("content") or "").strip()
@@ -317,7 +328,7 @@ async def save_quick_reply_template(
 async def delete_quick_reply_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(QuickReplyTemplate).where(
@@ -339,7 +350,7 @@ async def list_auto_reply_rules(
     current: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     query = select(AutoReplyRule).where(AutoReplyRule.deleted == 0, AutoReplyRule.account_id.in_(owned_account_id_subquery(current_user)))
     if account_id is not None:
@@ -364,7 +375,7 @@ async def list_auto_reply_rules(
 async def create_auto_reply_rule(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     rule = AutoReplyRule(
         account_id=body.get("accountId") or body.get("xianyuAccountId"),
@@ -388,7 +399,7 @@ async def update_auto_reply_rule(
     rule_id: int,
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0)
@@ -423,7 +434,7 @@ async def update_auto_reply_rule(
 async def delete_auto_reply_rule(
     rule_id: int,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
         select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0)
@@ -440,7 +451,7 @@ async def delete_auto_reply_rule(
 async def preview_auto_reply_rule(
     body: dict[str, Any] = Body(default_factory=dict),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     account_id = body.get("accountId") or body.get("xianyuAccountId")
     message = str(body.get("message") or "").strip()
@@ -481,7 +492,7 @@ async def preview_auto_reply_rule(
 async def get_auto_reply_logs(
     current: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=500),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     return ResultObject.success({
         "records": [],
@@ -495,7 +506,7 @@ async def get_auto_reply_logs(
 async def get_auto_reply_stats(
     days: int = Query(7, ge=1, le=365),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     total = (
         await db.execute(
