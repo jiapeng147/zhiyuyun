@@ -1215,3 +1215,89 @@ class AppPlan(Base):
     description = Column(String(500), nullable=True)
     created_time = Column(DateTime, default=func.now())
     updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AppSubscription(Base):
+    """用户当前/历史订阅周期。"""
+
+    __tablename__ = "app_subscription"
+    __table_args__ = (
+        Index("idx_app_subscription_user_status", "user_id", "status"),
+        Index("idx_app_subscription_period_end", "current_period_end"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    plan_code = Column(String(50), nullable=False)
+    status = Column(String(32), nullable=False, default="active")
+    current_period_start = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    source_order_id = Column(BigInteger, nullable=True)
+    cancel_at_period_end = Column(SmallInteger, nullable=False, default=0)
+    created_time = Column(DateTime, default=func.now())
+    updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AppBillingOrder(Base):
+    """会员套餐支付/续费/升级订单。"""
+
+    __tablename__ = "app_billing_order"
+    __table_args__ = (
+        UniqueConstraint("order_no", name="uk_app_billing_order_no"),
+        Index("idx_app_billing_order_user_status", "user_id", "status"),
+        Index("idx_app_billing_order_created", "created_time"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    order_no = Column(String(64), nullable=False)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    plan_code = Column(String(50), nullable=False)
+    order_type = Column(String(32), nullable=False, default="subscription")
+    amount_cents = Column(Integer, nullable=False, default=0)
+    duration_days = Column(Integer, nullable=False, default=30)
+    status = Column(String(32), nullable=False, default="pending")
+    payment_provider = Column(String(64), nullable=True)
+    payment_method = Column(String(64), nullable=True)
+    paid_time = Column(DateTime, nullable=True)
+    closed_time = Column(DateTime, nullable=True)
+    expire_time = Column(DateTime, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    created_time = Column(DateTime, default=func.now())
+    updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AppUsageDaily(Base):
+    """用户级每日用量汇总。"""
+
+    __tablename__ = "app_usage_daily"
+    __table_args__ = (
+        UniqueConstraint("user_id", "usage_date", "metric", name="uk_app_usage_daily_metric"),
+        Index("idx_app_usage_daily_date_metric", "usage_date", "metric"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    usage_date = Column(Date, nullable=False)
+    metric = Column(String(64), nullable=False)
+    used_count = Column(Integer, nullable=False, default=0)
+    limit_count = Column(Integer, nullable=False, default=0)
+    created_time = Column(DateTime, default=func.now())
+    updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AppQuotaEvent(Base):
+    """配额消耗/拦截事件流水，便于商业后台审计。"""
+
+    __tablename__ = "app_quota_event"
+    __table_args__ = (
+        Index("idx_app_quota_event_user_metric", "user_id", "metric", "created_time"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    metric = Column(String(64), nullable=False)
+    delta = Column(Integer, nullable=False, default=0)
+    source_type = Column(String(64), nullable=True)
+    source_id = Column(String(128), nullable=True)
+    reason = Column(String(255), nullable=True)
+    created_time = Column(DateTime, default=func.now())

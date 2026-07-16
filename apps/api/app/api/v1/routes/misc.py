@@ -48,6 +48,7 @@ from ....services.xianyu_goods_sync import (
     _get_token_from_cookie as _xianyu_token_from_cookie,
 )
 from ....services.auto_category import upload_image_to_xianyu as _upload_image_to_xianyu
+from ....services.billing import BillingLimitError, ensure_account_quota_available
 from ....services.sensitive_config import (
     AMAP_API_KEY_PURPOSE,
     decrypt_runtime_secret,
@@ -585,10 +586,26 @@ async def _save_scan_login_result(session_id: str, db: AsyncSession) -> dict:
 
         if existing_account:
             account = existing_account
+            if (
+                existing_account.owner_user_id is not None
+                and user_id is not None
+                and int(existing_account.owner_user_id) != int(user_id)
+            ):
+                return {"_error": "ACCOUNT_EXISTS", "message": "该闲鱼账号已被其他用户绑定"}
             if existing_account.deleted == 1:
+                try:
+                    await ensure_account_quota_available(
+                        db,
+                        {"user_id": int(user_id or 0), "role": "user"},
+                        restoring_existing=True,
+                    )
+                except BillingLimitError as exc:
+                    return {"_error": "ACCOUNT_QUOTA_EXHAUSTED", "message": str(exc)}
                 # 恢复软删除的账号
                 existing_account.deleted = 0
                 existing_account.status = 1
+                if user_id is not None:
+                    existing_account.owner_user_id = int(user_id)
                 logger.info(
                     "QR account persistence accountId=%d state=restored",
                     account.id,
@@ -599,7 +616,15 @@ async def _save_scan_login_result(session_id: str, db: AsyncSession) -> dict:
                     account.id,
                 )
         else:
+            try:
+                await ensure_account_quota_available(
+                    db,
+                    {"user_id": int(user_id or 0), "role": "user"},
+                )
+            except BillingLimitError as exc:
+                return {"_error": "ACCOUNT_QUOTA_EXHAUSTED", "message": str(exc)}
             account = XianyuAccount(
+                owner_user_id=int(user_id) if user_id is not None else None,
                 platform="xianyu",
                 external_uid=unb,
                 status=1,

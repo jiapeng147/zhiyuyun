@@ -16,6 +16,7 @@ from .routes import (
     auth,
     auto_category,
     auto_reply_scope,
+    billing,
     business_settings_compat,
     captcha,
     client_errors,
@@ -54,6 +55,7 @@ include_router_excluding(
 )
 api_router.include_router(auth.router)
 api_router.include_router(admin_commerce.router)
+api_router.include_router(billing.router)
 api_router.include_router(client_errors.router)
 api_router.include_router(profile.router)
 

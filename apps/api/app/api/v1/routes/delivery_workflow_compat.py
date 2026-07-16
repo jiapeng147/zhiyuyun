@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import current_uid
 from ....services.ai_provider import generate_text
 from ..deps import get_current_user
 
@@ -528,6 +529,9 @@ def _parse_ai_match_payload(raw_content: str) -> dict[str, Any]:
 async def _ai_match_source_goods(
     source_row: dict[str, Any],
     candidates: list[dict[str, Any]],
+    *,
+    db: AsyncSession | None = None,
+    owner_user_id: int | None = None,
 ) -> dict[str, Any]:
     if not candidates:
         return {"configured": True, "ok": True, "matchedIds": set(), "reasons": {}}
@@ -553,6 +557,8 @@ async def _ai_match_source_goods(
             'Return format: {"matches":[{"id":123,"reason":"short reason"}]}'
         ),
         temperature=0.1,
+        db=db,
+        owner_user_id=owner_user_id,
     )
     if not ai_result.get("configured"):
         return {
@@ -2771,6 +2777,8 @@ async def recommend_delivery_source_goods(
     ai_match = await _ai_match_source_goods(
         source_payload,
         ranked_candidates[:SOURCE_RECOMMEND_MODEL_CANDIDATE_MAX],
+        db=db,
+        owner_user_id=current_uid(current_user),
     )
     if not ai_match.get("configured"):
         return ResultObject.success(

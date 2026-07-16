@@ -59,6 +59,7 @@ from ....services.ad_payment_order_attempt import (
     SqlAdPaymentOrderAttemptStore,
     payment_order_terminal_state,
 )
+from ....services.billing import BillingLimitError, ensure_account_quota_available
 from ....services.feishu_bot import send_text_message_result
 from ....services.notify_dispatcher import (
     _render_template,
@@ -2554,6 +2555,10 @@ async def compat_xianyu_accounts_create(
     )
     if existing.scalar_one_or_none():
         return ResultObject.failed("账号已存在")
+    try:
+        await ensure_account_quota_available(db, current_user)
+    except BillingLimitError as exc:
+        return ResultObject.failed(str(exc), code=403)
 
     account = XianyuAccount(
         owner_user_id=current_uid(current_user),

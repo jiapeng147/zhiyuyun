@@ -891,6 +891,8 @@ async def rag_chat(
                 system_prompt=system_prompt,
                 user_prompt=user_message,
                 temperature=0.3,
+                db=db,
+                owner_user_id=current_uid(current_user),
             )
         except Exception as e:
             return ResultObject.internal_error()

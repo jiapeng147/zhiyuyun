@@ -333,6 +333,8 @@ async def generate_text(
     user_prompt: str,
     temperature: float = 0.7,
     messages: list[Dict[str, Any]] | None = None,
+    db: Any | None = None,
+    owner_user_id: int | None = None,
 ) -> Dict[str, Any]:
     request_id = str(uuid.uuid4())
     cfg = await _resolve_ai_config()
@@ -355,6 +357,39 @@ async def generate_text(
     if not result["configured"]:
         result.update({"ok": False, "error": AI_NOT_CONFIGURED_ERROR})
         return result
+
+    billing_user_id = int(owner_user_id or 0)
+    if db is not None and billing_user_id:
+        try:
+            from app.services.billing import (
+                METRIC_AI_CALLS,
+                load_user,
+                record_usage_delta,
+                resolve_entitlement,
+                usage_count_today,
+            )
+
+            billing_user = await load_user(db, billing_user_id)
+            entitlement = await resolve_entitlement(db, billing_user)
+            used_today = await usage_count_today(db, billing_user_id, METRIC_AI_CALLS)
+            if used_today >= int(entitlement.ai_daily_quota or 0):
+                result.update({
+                    "ok": False,
+                    "errorCode": "AI_QUOTA_EXHAUSTED",
+                    "error": (
+                        f"当前套餐每日 AI 调用额度为 {entitlement.ai_daily_quota} 次，"
+                        f"今日已使用 {used_today} 次，请升级套餐或明日再试。"
+                    ),
+                    "quota": {
+                        "used": used_today,
+                        "limit": int(entitlement.ai_daily_quota or 0),
+                    },
+                })
+                return result
+        except Exception as exc:
+            logger.warning("AI billing quota check failed: kind=%s", exc.__class__.__name__)
+            result.update({"ok": False, "error": "AI 用量校验暂不可用，请稍后重试"})
+            return result
 
     if messages is None:
         messages = [
@@ -440,6 +475,26 @@ async def generate_text(
                     or ""
                 ).strip()
         result.update({"ok": bool(content), "content": content, "usage": data.get("usage") or {}})
+        if content and db is not None and billing_user_id:
+            try:
+                await record_usage_delta(
+                    db,
+                    user_id=billing_user_id,
+                    metric=METRIC_AI_CALLS,
+                    delta=1,
+                    limit_count=int(entitlement.ai_daily_quota or 0),
+                    source_type="ai",
+                    source_id=scene,
+                    reason="AI 模型调用成功",
+                )
+                await db.commit()
+            except Exception as exc:
+                try:
+                    await db.rollback()
+                except Exception:
+                    pass
+                logger.warning("AI billing usage write failed: kind=%s", exc.__class__.__name__)
+                result.update({"ok": False, "error": "AI 用量记录失败，本次结果未放行"})
         return result
     except UnsafeRemoteURLError as exc:
         logger.warning("AI Provider endpoint rejected or unavailable: kind=%s", exc.__class__.__name__)

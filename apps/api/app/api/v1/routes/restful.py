@@ -18,6 +18,7 @@ from ....core.unavailable_features import (
     feature_unavailable,
 )
 from ....models.entities import XianyuAccount, XianyuAccountAuth, XianyuGoods, XianyuTradeOrder, XianyuMessage, Notification
+from ....services.billing import BillingLimitError, ensure_account_quota_available
 from ..deps import get_current_user
 from .account import account_to_dto
 
@@ -720,6 +721,7 @@ async def restful_create_account(
         nickname = body.get("nickname", "")
         remark = body.get("account_note") or body.get("remark", "")
         external_uid = body.get("unb") or body.get("external_uid", "")
+        await ensure_account_quota_available(db, current_user)
         account = XianyuAccount(
             owner_user_id=current_uid(current_user),
             external_uid=external_uid,
@@ -732,6 +734,8 @@ async def restful_create_account(
         await db.commit()
         await db.refresh(account)
         return ResultObject.success(account_to_profile_dto(account))
+    except BillingLimitError as e:
+        return ResultObject.failed(str(e), code=403)
     except Exception as e:
         logger.error("create account error", exc_info=True)
         return ResultObject.internal_error()

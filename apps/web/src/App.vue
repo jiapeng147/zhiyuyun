@@ -248,6 +248,7 @@ const pageMap = {
   logs: asyncPage(() => import('./pages/LogsPage.vue')),
   feedback: asyncPage(() => import('./pages/FeedbackPage.vue')),
   'ad-application': asyncPage(() => import('./pages/AdApplicationPage.vue')),
+  billing: asyncPage(() => import('./pages/BillingPage.vue')),
   'settings-notify': asyncPage(() => import('./pages/settings/NotifySettings.vue')),
   profile: asyncPage(() => import('./pages/ProfileCenterPage.vue')),
   'admin-users': asyncPage(() => import('./pages/admin/UserManagementPage.vue'))

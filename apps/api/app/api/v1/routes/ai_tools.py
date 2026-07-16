@@ -3,9 +3,12 @@ import re
 from typing import Any
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.camel import CamelModel
+from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import current_uid
 from ....services.ai_provider import (
     AI_NOT_CONFIGURED_ERROR,
     _resolve_ai_config,
@@ -121,6 +124,7 @@ async def get_ai_tools_status(current_user: dict = Depends(get_current_user)):
 @router.post("/rewrite-goods")
 async def rewrite_goods(
     req: RewriteGoodsReqDTO,
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     title = str(req.title or "").strip()
@@ -146,6 +150,8 @@ async def rewrite_goods(
         ),
         user_prompt=f"商品标题：{title}\n原始描述：{description or '无'}",
         temperature=0.4,
+        db=db,
+        owner_user_id=current_uid(current_user),
     )
     if ai_result.get("ok") and ai_result.get("content"):
         return ResultObject.success({

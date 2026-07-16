@@ -14,6 +14,7 @@ from ....models.entities import (
     XianyuAccountAuth,
     XianyuAccountRuntime,
 )
+from ....services.billing import BillingLimitError, ensure_account_quota_available
 from ....schemas.account import (
     AccountReqDTO, ManualAddAccountReqDTO, UpdateAccountReqDTO,
     DeleteAccountReqDTO, GetAccountDetailReqDTO, RefreshAccountProfileReqDTO,
@@ -106,6 +107,7 @@ async def add_account(
         )
         if existing.scalar_one_or_none():
             return ResultObject.failed("账号已存在")
+        await ensure_account_quota_available(db, current_user)
 
         account = XianyuAccount(
             owner_user_id=current_uid(current_user),
@@ -138,6 +140,8 @@ async def add_account(
             account_id=account.id,
             message="添加成功"
         ))
+    except BillingLimitError as e:
+        return ResultObject.failed(str(e), code=403)
     except Exception as e:
         logger.error("添加账号失败", exc_info=True)
         return ResultObject.internal_error()
@@ -163,6 +167,7 @@ async def manual_add_account(
         )
         if existing.scalar_one_or_none():
             return ResultObject.failed("账号已存在")
+        await ensure_account_quota_available(db, current_user)
 
         account = XianyuAccount(
             owner_user_id=current_uid(current_user),
@@ -195,6 +200,8 @@ async def manual_add_account(
             account_id=account.id,
             message="添加成功"
         ))
+    except BillingLimitError as e:
+        return ResultObject.failed(str(e), code=403)
     except Exception as e:
         logger.error("手动添加账号失败", exc_info=True)
         return ResultObject.internal_error()

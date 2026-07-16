@@ -14,7 +14,20 @@ from ....core.config import settings
 from ....core.database import get_db
 from ....core.response import ResultObject
 from ....models.entities import (
-    AdminUser, AppPlan, XianyuAccount, XianyuGoods, XianyuTradeOrder, XianyuSysSetting,
+    AdminUser,
+    AppBillingOrder,
+    AppPlan,
+    AppSubscription,
+    XianyuAccount,
+    XianyuGoods,
+    XianyuTradeOrder,
+    XianyuSysSetting,
+)
+from ....services.billing import (
+    BillingError,
+    activate_order,
+    billing_state_for_user,
+    create_billing_order,
 )
 from ....services.email_service import (
     load_email_smtp_config,
@@ -137,6 +150,16 @@ class ResetPasswordReqDTO(CamelModel):
     new_password: str
 
 
+class AdminActivateSubscriptionReqDTO(CamelModel):
+    plan_code: str
+    duration_days: int = 30
+    note: Optional[str] = None
+
+
+class AdminMarkBillingOrderPaidReqDTO(CamelModel):
+    note: Optional[str] = None
+
+
 def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
     return PlanRespDTO(
         id=int(p.id), code=p.code, name=p.name,
@@ -145,6 +168,41 @@ def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
         status=int(p.status or 0), description=p.description or "",
         created_time=_dt(p.created_time), updated_time=_dt(p.updated_time),
     )
+
+
+def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None) -> dict:
+    return {
+        "id": int(order.id),
+        "orderNo": order.order_no,
+        "userId": int(order.user_id),
+        "username": user.username if user else "",
+        "planCode": order.plan_code,
+        "orderType": order.order_type,
+        "amountCents": int(order.amount_cents or 0),
+        "durationDays": int(order.duration_days or 0),
+        "status": order.status,
+        "paymentProvider": order.payment_provider or "",
+        "paymentMethod": order.payment_method or "",
+        "paidTime": _dt(order.paid_time),
+        "closedTime": _dt(order.closed_time),
+        "expireTime": _dt(order.expire_time),
+        "createdTime": _dt(order.created_time),
+    }
+
+
+def _subscription_payload(sub: AppSubscription, user: AdminUser | None = None) -> dict:
+    return {
+        "id": int(sub.id),
+        "userId": int(sub.user_id),
+        "username": user.username if user else "",
+        "planCode": sub.plan_code,
+        "status": sub.status,
+        "currentPeriodStart": _dt(sub.current_period_start),
+        "currentPeriodEnd": _dt(sub.current_period_end),
+        "sourceOrderId": int(sub.source_order_id or 0),
+        "cancelAtPeriodEnd": bool(sub.cancel_at_period_end),
+        "createdTime": _dt(sub.created_time),
+    }
 
 
 @router.get("/users", response_model=ResultObject[list[UserRespDTO]])
@@ -419,3 +477,109 @@ async def reset_password(
     user.password_hash = hash_password(new_pw)
     await db.commit()
     return ResultObject.success(f"已重置 {user.username} 的密码")
+
+
+# ============================================================
+# 商业计费：订阅 / 订单 / 手动开通
+# ============================================================
+
+@router.get("/subscriptions", response_model=ResultObject[list[dict]])
+async def list_subscriptions(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    rows = (
+        await db.execute(
+            select(AppSubscription, AdminUser)
+            .outerjoin(AdminUser, AdminUser.id == AppSubscription.user_id)
+            .order_by(AppSubscription.id.desc())
+        )
+    ).all()
+    return ResultObject.success([_subscription_payload(sub, user) for sub, user in rows])
+
+
+@router.get("/billing-orders", response_model=ResultObject[list[dict]])
+async def list_billing_orders(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    rows = (
+        await db.execute(
+            select(AppBillingOrder, AdminUser)
+            .outerjoin(AdminUser, AdminUser.id == AppBillingOrder.user_id)
+            .order_by(AppBillingOrder.id.desc())
+        )
+    ).all()
+    return ResultObject.success([_billing_order_payload(order, user) for order, user in rows])
+
+
+@router.get("/users/{uid}/billing", response_model=ResultObject[dict])
+async def get_user_billing(
+    uid: int,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await billing_state_for_user(db, uid))
+
+
+@router.post("/users/{uid}/subscription", response_model=ResultObject[dict])
+async def activate_user_subscription(
+    uid: int,
+    req: AdminActivateSubscriptionReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_superadmin),
+):
+    try:
+        order = await create_billing_order(
+            db,
+            user_id=uid,
+            plan_code=req.plan_code,
+            duration_days=req.duration_days,
+            order_type="manual",
+            payment_method="admin_grant",
+        )
+        order.metadata_json = {
+            **(order.metadata_json or {}),
+            "adminNote": req.note or "",
+        }
+        await activate_order(db, order, operator=str(current_user.get("username") or "admin"))
+        await db.commit()
+        await db.refresh(order)
+        user = (await db.execute(select(AdminUser).where(AdminUser.id == uid))).scalar_one_or_none()
+        return ResultObject.success(_billing_order_payload(order, user), message="套餐已开通")
+    except BillingError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/billing-orders/{order_id}/mark-paid", response_model=ResultObject[dict])
+async def mark_billing_order_paid(
+    order_id: int,
+    req: AdminMarkBillingOrderPaidReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_superadmin),
+):
+    order = (
+        await db.execute(select(AppBillingOrder).where(AppBillingOrder.id == order_id))
+    ).scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    if order.status == "paid":
+        user = (
+            await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
+        ).scalar_one_or_none()
+        return ResultObject.success(_billing_order_payload(order, user), message="订单已是已支付状态")
+    if order.status not in {"pending", "closed"}:
+        raise HTTPException(status_code=400, detail="当前订单状态不能确认支付")
+    order.metadata_json = {
+        **(order.metadata_json or {}),
+        "adminPaidNote": req.note or "",
+    }
+    try:
+        await activate_order(db, order, operator=str(current_user.get("username") or "admin"))
+        await db.commit()
+        await db.refresh(order)
+        user = (
+            await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
+        ).scalar_one_or_none()
+        return ResultObject.success(_billing_order_payload(order, user), message="订单已确认支付并激活套餐")
+    except BillingError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

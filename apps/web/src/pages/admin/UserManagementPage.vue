@@ -99,6 +99,81 @@
       </div>
     </n-card>
 
+    <!-- 订阅与账单 -->
+    <n-card class="dashboard-section user-v4-card" :bordered="false">
+      <template #header>订阅与账单</template>
+      <template #header-extra><span class="user-v4-desc">查看用户订阅和待确认订单，支持人工确认生效。</span></template>
+      <div class="billing-admin-grid">
+        <section class="billing-admin-panel">
+          <div class="panel-title">
+            <strong>订阅记录</strong>
+            <span class="muted">{{ subscriptions.length }} 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table billing-admin-table">
+              <thead>
+                <tr>
+                  <th>用户</th><th>套餐</th><th>状态</th><th>开始</th><th>结束</th><th>来源订单</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="subscriptions.length === 0">
+                  <td colspan="6" class="empty-cell">暂无订阅</td>
+                </tr>
+                <tr v-for="s in subscriptions" :key="s.id">
+                  <td>{{ s.username || `#${s.userId}` }}</td>
+                  <td><code>{{ s.planCode }}</code></td>
+                  <td><span :class="['status-pill', s.status]">{{ subscriptionStatus(s.status) }}</span></td>
+                  <td class="dim">{{ fmt(s.currentPeriodStart) }}</td>
+                  <td class="dim">{{ s.currentPeriodEnd ? fmt(s.currentPeriodEnd) : '长期' }}</td>
+                  <td>{{ s.sourceOrderId || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="billing-admin-panel">
+          <div class="panel-title">
+            <strong>订单记录</strong>
+            <span class="muted">{{ billingOrders.length }} 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table billing-admin-table">
+              <thead>
+                <tr>
+                  <th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="billingOrders.length === 0">
+                  <td colspan="6" class="empty-cell">暂无订单</td>
+                </tr>
+                <tr v-for="o in billingOrders" :key="o.id">
+                  <td><code>{{ o.orderNo }}</code></td>
+                  <td>{{ o.username || `#${o.userId}` }}</td>
+                  <td>{{ o.planCode }}</td>
+                  <td>¥{{ (o.amountCents / 100).toFixed(2) }}</td>
+                  <td><span :class="['status-pill', o.status]">{{ orderStatus(o.status) }}</span></td>
+                  <td class="actions">
+                    <button
+                      v-if="o.status === 'pending'"
+                      class="btn small primary"
+                      type="button"
+                      :disabled="billingBusy"
+                      @click="markOrderPaid(o)"
+                    >
+                      确认生效
+                    </button>
+                    <span v-else class="dim">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </n-card>
+
     <!-- 手动建用户 -->
     <n-card class="dashboard-section user-v4-card" :bordered="false">
       <template #header>手动建用户</template>
@@ -238,6 +313,15 @@
                 >
                   重置密码
                 </button>
+                <button
+                  v-if="u.role !== 'superadmin'"
+                  class="btn small primary"
+                  type="button"
+                  :disabled="rowBusy === u.id || billingBusy"
+                  @click="openSubscription(u)"
+                >
+                  开通套餐
+                </button>
               </td>
             </tr>
           </tbody>
@@ -331,6 +415,7 @@ import { friendlyError } from '../../utils/friendlyError.js'
 import {
   listUsers, updateUser, createUser, resetPassword,
   getOverview, adminListPlans, adminCreatePlan, adminUpdatePlan, adminDeletePlan,
+  adminListSubscriptions, adminListBillingOrders, adminActivateSubscription, adminMarkBillingOrderPaid,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
 } from '../../api/admin.js'
 
@@ -342,9 +427,12 @@ const regBusy = ref(false)
 const emailBusy = ref(false)
 const createBusy = ref(false)
 const planBusy = ref(false)
+const billingBusy = ref(false)
 const rowBusy = ref(0)
 const emailConfigured = ref(false)
 const email = reactive({ smtpHost: '', smtpPort: 465, smtpUser: '', smtpPass: '', fromName: '' })
+const subscriptions = ref([])
+const billingOrders = ref([])
 
 const createForm = reactive({ username: '', email: '', password: '', planCode: 'free', isSuper: false })
 
@@ -362,11 +450,14 @@ function fmt(v) { if (!v) return '—'; return String(v).replace('T', ' ').slice
 
 async function loadAll() {
   try {
-    const [uRes, pRes, rRes, eRes, oRes] = await Promise.all([
+    const [uRes, pRes, rRes, eRes, oRes, sRes, boRes] = await Promise.all([
       listUsers(), adminListPlans(), getRegistration(), getEmailConfig(), getOverview(),
+      adminListSubscriptions(), adminListBillingOrders(),
     ])
     users.value = uRes.data || []
     plans.value = pRes.data || []
+    subscriptions.value = sRes.data || []
+    billingOrders.value = boRes.data || []
     regEnabled.value = !!(rRes.data && rRes.data.enabled)
     overview.value = oRes.data || null
     const cfg = eRes.data || {}
@@ -462,6 +553,51 @@ async function onDeletePlan(p) {
   catch (e) { flash(friendlyError(e, '删除失败'), 'error') } finally { planBusy.value = false }
 }
 
+function orderStatus(status) {
+  return ({ pending: '待确认', paid: '已生效', closed: '已关闭', refunded: '已退款' })[status] || status || '未知'
+}
+
+function subscriptionStatus(status) {
+  return ({ active: '生效中', replaced: '已替换', canceled: '已取消', expired: '已过期' })[status] || status || '未知'
+}
+
+async function markOrderPaid(order) {
+  if (!order || billingBusy.value) return
+  if (!window.confirm(`确认订单 ${order.orderNo} 已支付并立即开通套餐？`)) return
+  billingBusy.value = true
+  try {
+    await adminMarkBillingOrderPaid(order.id, { note: 'manual-confirm' })
+    flash(`订单 ${order.orderNo} 已确认生效`)
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '确认订单失败'), 'error')
+  } finally {
+    billingBusy.value = false
+  }
+}
+
+async function openSubscription(user) {
+  if (!user || billingBusy.value) return
+  const defaultPlan = user.planCode || plans.value[0]?.code || 'free'
+  const planCode = window.prompt(`请输入要开通的套餐代码：${plans.value.map(p => p.code).join(' / ')}`, defaultPlan)
+  if (!planCode) return
+  const daysRaw = window.prompt('请输入开通天数，免费套餐可填 30', '30')
+  if (!daysRaw) return
+  const durationDays = Math.max(1, Number(daysRaw) || 30)
+  billingBusy.value = true
+  rowBusy.value = user.id
+  try {
+    await adminActivateSubscription(user.id, { planCode: planCode.trim(), durationDays, note: 'manual-open' })
+    flash(`已为 ${user.username} 开通 ${planCode.trim()}`)
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '开通套餐失败'), 'error')
+  } finally {
+    billingBusy.value = false
+    rowBusy.value = 0
+  }
+}
+
 onMounted(loadAll)
 </script>
 
@@ -535,6 +671,19 @@ onMounted(loadAll)
 .plan-list li:last-child { border-bottom: 0; }
 .plan-list .plan-code { font-family: ui-monospace, monospace; color: var(--text, #111); }
 .plan-list .plan-count { color: #0f766e; font-weight: 600; }
+
+/* 订阅与账单 */
+.billing-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.billing-admin-panel { min-width: 0; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; }
+.panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.panel-title strong { color: #111827; font-size: 14px; }
+.billing-admin-table { min-width: 640px; }
+.status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; background: #eef2f7; color: #334155; font-size: 12px; }
+.status-pill.active,
+.status-pill.paid { background: #dcfce7; color: #15803d; }
+.status-pill.pending { background: #fef3c7; color: #92400e; }
+.status-pill.replaced,
+.status-pill.closed { background: #f1f5f9; color: #64748b; }
 
 /* 套餐管理 */
 .plan-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -610,6 +759,10 @@ onMounted(loadAll)
 
   .ov-card.plan-dist {
     grid-column: auto;
+  }
+
+  .billing-admin-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

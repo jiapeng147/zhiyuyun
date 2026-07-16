@@ -43,6 +43,7 @@ export const navGroups = [
   {
     title: '系统',
     items: [
+      { key: 'billing', label: '套餐账单', icon: 'record' },
       { key: 'logs', label: '操作日志', icon: 'log' },
       { key: 'feedback', label: '反馈建议', icon: 'reply' },
       { key: 'ad-application', label: '广告申请', icon: 'opportunity' },
@@ -84,6 +85,7 @@ export const pageTitles = {
   logs: ['操作日志', '查看系统操作与关键行为记录'],
   feedback: ['反馈建议', '提交产品建议、Bug 反馈与功能诉求'],
   'ad-application': ['广告申请', '查看真实商业套餐；未配置时提交与支付保持禁用'],
+  billing: ['套餐账单', '查看当前套餐、配额用量与订阅订单'],
   'settings-ai-cs': ['系统设置 / AI 客服配置', '管理 AI 客服的人设、知识库、聊天规则与测试回复'],
   'settings-system': ['系统设置 / 系统配置', '查看开源版系统总览与各模块配置状态'],
   'settings-amap': ['系统设置 / 高德地图', '单独维护高德地图 API Key 与地址搜索能力'],

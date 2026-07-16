@@ -7,7 +7,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
-from ....core.tenancy import owned_account_id_subquery
+from ....core.tenancy import current_uid, owned_account_id_subquery
 from ....core.response import ResultObject
 from ....models.entities import AutoReplyRule, QuickReplyTemplate
 from ....services.ai_provider import _resolve_ai_config, generate_text, is_ai_configured
@@ -152,6 +152,8 @@ async def test_ai_customer_service(
             system_prompt=system_prompt,
             user_prompt=user_message,
             temperature=0.6,
+            db=db,
+            owner_user_id=current_uid(current_user),
         )
     except Exception as exc:  # noqa: BLE001
         # Provider errors can contain URLs, request bodies, or credentials.
