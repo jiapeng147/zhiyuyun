@@ -1,6 +1,6 @@
 <template>
   <div class="about-page">
-    <CardPanel class="about-shell">
+    <n-card class="about-shell" :bordered="false">
       <div class="about-content">
         <section class="hero-card">
           <div class="hero-visual">
@@ -60,7 +60,13 @@
         </div>
 
         <div class="main-grid">
-          <CardPanel title="更新日志" desc="版本迭代与功能演进记录">
+          <n-card class="about-panel" :bordered="false">
+            <template #header>
+              <div class="about-panel-head">
+                <h3>更新日志</h3>
+                <p>版本迭代与功能演进记录</p>
+              </div>
+            </template>
             <div class="changelog">
               <div v-for="(log, idx) in logs" :key="log.v" :class="['log-item', log.tone]">
                 <div class="log-rail">
@@ -85,9 +91,15 @@
                 </div>
               </div>
             </div>
-          </CardPanel>
+          </n-card>
 
-          <CardPanel v-if="sponsorCard" title="赞助支持" desc="支持项目持续维护与迭代" style="margin-top: 16px">
+          <n-card v-if="sponsorCard" class="about-panel" :bordered="false" style="margin-top: 16px">
+            <template #header>
+              <div class="about-panel-head">
+                <h3>赞助支持</h3>
+                <p>支持项目持续维护与迭代</p>
+              </div>
+            </template>
             <div class="sponsor-block">
               <p class="sponsor-headline">{{ sponsorHeadline }}</p>
               <div
@@ -99,10 +111,16 @@
                 <span v-else class="sponsor-banner-text">{{ sponsorCard.placeholderText || '待后台配置赞助二维码' }}</span>
               </div>
             </div>
-          </CardPanel>
+          </n-card>
 
           <div class="side-stack">
-            <CardPanel title="服务支持" desc="可用入口与响应能力以当前部署方实际配置为准">
+            <n-card class="about-panel" :bordered="false">
+              <template #header>
+                <div class="about-panel-head">
+                  <h3>服务支持</h3>
+                  <p>可用入口与响应能力以当前部署方实际配置为准</p>
+                </div>
+              </template>
               <div class="support-grid">
                 <button v-for="support in supports" :key="support.label" class="support-card" type="button" @click="onSupport(support)">
                   <span class="support-icon" :class="support.tone">
@@ -114,9 +132,15 @@
                   </div>
                 </button>
               </div>
-            </CardPanel>
+            </n-card>
 
-            <CardPanel title="交流群与支持" desc="扫码进入交流群、查看联系方式或支持项目持续更新" style="margin-top: 16px">
+            <n-card class="about-panel" :bordered="false" style="margin-top: 16px">
+              <template #header>
+                <div class="about-panel-head">
+                  <h3>交流群与支持</h3>
+                  <p>扫码进入交流群、查看联系方式或支持项目持续更新</p>
+                </div>
+              </template>
               <div class="community-grid">
                 <button
                   v-for="card in communityCards"
@@ -147,9 +171,15 @@
                   </div>
                 </button>
               </div>
-            </CardPanel>
+            </n-card>
 
-            <CardPanel title="相关链接" desc="协议、隐私与系统工具" style="margin-top: 16px">
+            <n-card class="about-panel" :bordered="false" style="margin-top: 16px">
+              <template #header>
+                <div class="about-panel-head">
+                  <h3>相关链接</h3>
+                  <p>协议、隐私与系统工具</p>
+                </div>
+              </template>
               <div class="link-list">
                 <button v-for="link in links" :key="link.label" class="link-row" type="button" @click="link.action">
                   <span class="link-label">
@@ -159,19 +189,19 @@
                   <span class="link-action">{{ link.actionText }} <span class="link-arrow">›</span></span>
                 </button>
               </div>
-            </CardPanel>
+            </n-card>
           </div>
         </div>
       </div>
-    </CardPanel>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { NCard } from 'naive-ui'
 import { openExternalUrl } from '../../utils/externalUrl.js'
 import { showLegalNotice } from '../../utils/legalNotice.js'
-import CardPanel from '../../components/CardPanel.vue'
 import Badge from '../../components/Badge.vue'
 import Icon from '../../components/Icon.vue'
 import { getAboutContent } from '../../api/system.js'
@@ -399,28 +429,55 @@ function exportDiagnostics() {
 .about-shell {
   padding: 0;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(20, 184, 166, 0.08), transparent 36%),
-    radial-gradient(circle at 100% 0%, rgba(246, 138, 92, 0.08), transparent 34%),
-    rgba(255, 255, 255, 0.98);
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
 }
+.about-shell :deep(.n-card__content) { padding: 0; }
 .about-content { padding: 18px; }
+.about-panel {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+.about-panel :deep(.n-card-header) {
+  padding: 18px 20px 0;
+}
+.about-panel :deep(.n-card__content) {
+  padding: 14px 20px 20px;
+}
+.about-panel-head {
+  display: grid;
+  gap: 5px;
+}
+.about-panel-head h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 800;
+}
+.about-panel-head p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 400;
+}
 .hero-card {
   position: relative;
   overflow: hidden;
-  border-radius: 22px;
+  border-radius: 6px;
   min-height: 164px;
   padding: 24px 28px 22px;
-  background: linear-gradient(90deg, rgba(241, 246, 255, 0.98), rgba(246, 239, 255, 0.88));
-  border: 1px solid rgba(248, 228, 220, 0.95);
-  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
+  background: #f8fafc;
+  border: 1px solid #dfe6f2;
+  box-shadow: none;
 }
 .hero-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 45%);
-  pointer-events: none;
+  content: none;
 }
 .hero-visual {
   position: absolute;
@@ -476,10 +533,10 @@ function exportDiagnostics() {
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  border-radius: 18px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(231, 237, 247, 0.95);
-  box-shadow: 0 10px 26px rgba(94, 50, 31, 0.06);
+  border: 1px solid #dfe6f2;
+  box-shadow: none;
 }
 .metric-icon {
   width: 40px;
@@ -539,16 +596,16 @@ function exportDiagnostics() {
   gap: 12px;
   padding: 14px;
   border: 1px solid rgba(231, 237, 247, 0.95);
-  border-radius: 16px;
+  border-radius: 6px;
   background: #fff;
   cursor: pointer;
   text-align: left;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .support-card:hover {
-  transform: translateY(-2px);
+  transform: none;
   border-color: #99f6e4;
-  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.1);
+  box-shadow: none;
 }
 .support-icon {
   width: 38px;
@@ -577,9 +634,9 @@ function exportDiagnostics() {
   flex-direction: column;
   gap: 14px;
   padding: 18px;
-  border-radius: 18px;
+  border-radius: 6px;
   border: 1px solid #e3ebf6;
-  background: linear-gradient(180deg, #ffffff, #f9fbff);
+  background: #fff;
   text-align: left;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -589,8 +646,8 @@ function exportDiagnostics() {
   align-items: center;
 }
 .community-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(158, 73, 36, 0.1);
+  transform: none;
+  box-shadow: none;
 }
 .community-card.blue:hover { border-color: #ffd2bf; }
 .community-card.orange:hover { border-color: #ffd9ac; }
@@ -744,10 +801,10 @@ function exportDiagnostics() {
   width: 100%;
   max-width: 420px;
   aspect-ratio: 2 / 1;
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
   border: 1px solid #ffe5c2;
-  background: linear-gradient(180deg, #ffffff, #fff8ef);
+  background: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -755,8 +812,8 @@ function exportDiagnostics() {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .sponsor-banner:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(204, 118, 0, 0.14);
+  transform: none;
+  box-shadow: none;
   border-color: #ffd9ac;
 }
 .sponsor-banner img {

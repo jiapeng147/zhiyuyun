@@ -5,7 +5,9 @@
     </div>
     <div class="po-grid">
       <div class="po-main">
-        <CardPanel title="自动上下架策略" desc="能力状态与上线前置条件">
+        <n-card class="po-card" :bordered="false">
+          <template #header>自动上下架策略</template>
+          <template #header-extra><span class="po-card-desc">能力状态与上线前置条件</span></template>
           <div class="po-form">
             <div class="po-row po-row-toggle">
               <div>
@@ -17,7 +19,7 @@
               </button>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
 
         <div class="po-actions">
           <button type="button" class="po-save-btn" disabled title="当前没有可生效的商品运营自动化配置">暂无可保存配置</button>
@@ -28,11 +30,20 @@
 </template>
 
 <script setup>
-import CardPanel from '../../components/CardPanel.vue'
+import { NCard } from 'naive-ui'
 </script>
 
 <style scoped>
 .po-page { padding: 4px; }
+.po-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.po-card :deep(.n-card__content) { padding: 16px; }
+.po-card :deep(.n-card-header) { padding: 16px 16px 0; }
+.po-card-desc { color: #64748b; font-size: 12px; }
 .po-loading { padding: 40px; text-align: center; color: #6b7a90; }
 .po-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 
@@ -46,10 +57,10 @@ import CardPanel from '../../components/CardPanel.vue'
 
 .po-actions { display: flex; gap: 12px; margin-top: 16px; }
 .po-save-btn {
-  padding: 10px 20px; border-radius: 12px; border: 0; cursor: pointer;
+  padding: 10px 20px; border-radius: 6px; border: 0; cursor: pointer;
   font-size: 13px; font-weight: 700;
-  background: linear-gradient(135deg, #0f766e, #14b8a6); color: #fff;
-  box-shadow: 0 8px 20px rgba(20, 184, 166,.22);
+  background: #2563eb; color: #fff;
+  box-shadow: none;
 }
 .po-save-btn:hover:not(:disabled) { transform: translateY(-1px); }
 .po-save-btn:disabled { opacity: .6; cursor: not-allowed; }

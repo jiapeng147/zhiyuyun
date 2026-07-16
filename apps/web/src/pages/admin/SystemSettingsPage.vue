@@ -19,39 +19,28 @@
       </div>
     </section>
 
-    <div class="grid stat-grid" style="grid-template-columns: repeat(4, 1fr)">
-      <StatCard
-        title="通用模型"
-        :value="configAvailable ? summary.generalModel : '状态未知'"
-        :change="summary.generalModelHint"
-        icon="message"
-        color="green"
-      />
-      <StatCard
-        title="向量模型"
-        :value="configAvailable ? summary.embeddingModel : '状态未知'"
-        :change="summary.embeddingModelHint"
-        icon="document"
-        color="blue"
-      />
-      <StatCard
-        title="高德地图"
-        :value="runtimeStatusAvailable ? (runtimeStatus.amapConfigured ? '已配置' : '待配置') : '状态未知'"
-        :change="configAvailable ? (config.amapApiKeyConfigured ? 'Key 已填写' : '未填写 Key') : '配置暂不可用'"
-        icon="shield"
-        :color="runtimeStatusAvailable && runtimeStatus.amapConfigured ? 'green' : 'orange'"
-      />
-      <StatCard
-        title="Redis 状态"
-        :value="summary.redisStatus"
-        :change="summary.redisMode"
-        icon="shield"
-        :color="runtimeStatusAvailable && runtimeStatus.redisConnected ? 'green' : 'orange'"
-      />
+    <div class="grid stat-grid system-v7-stats">
+      <n-card
+        v-for="item in systemStatCards"
+        :key="item.key"
+        class="system-v7-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="system-v7-stat-label">{{ item.title }}</span>
+        <strong>{{ item.value }}</strong>
+        <span class="system-v7-stat-desc">{{ item.change }}</span>
+      </n-card>
     </div>
 
     <div class="page-grid">
-      <CardPanel title="站点基础配置" desc="站点名称、ICP 备案、Logo 与爬虫服务地址，会用于前端展示与后端服务调用。">
+      <n-card class="system-v7-card" :bordered="false">
+        <template #header>
+          <div class="system-card-head">
+            <h3>站点基础配置</h3>
+            <p>站点名称、ICP 备案、Logo 与爬虫服务地址，会用于前端展示与后端服务调用。</p>
+          </div>
+        </template>
         <div class="field-grid two">
           <label class="field">
             <span>站点名称（siteName）</span>
@@ -79,12 +68,15 @@
             />
           </label>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel
-        title="商业版桥接状态"
-        desc="开源版通过商业版后端拉取轮播图、文字广告与广告套餐，并提交广告投放申请。桥接令牌、URL 等敏感信息仅在服务端配置，浏览器不可见。"
-      >
+      <n-card class="system-v7-card" :bordered="false">
+        <template #header>
+          <div class="system-card-head">
+            <h3>商业版桥接状态</h3>
+            <p>开源版通过商业版后端拉取轮播图、文字广告与广告套餐，并提交广告投放申请。桥接令牌、URL 等敏感信息仅在服务端配置，浏览器不可见。</p>
+          </div>
+        </template>
         <div v-if="!runtimeStatusAvailable" class="bridge-notice">
           运行状态暂不可用，无法确认商业版桥接状态。点击上方「重新加载」可重试。
         </div>
@@ -193,9 +185,15 @@
             全部能力已就绪，开源版可正常展示商业版广告并接受用户投放申请。
           </p>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="配置说明" desc="常见配置项的取值规则与注意事项。">
+      <n-card class="system-v7-card" :bordered="false">
+        <template #header>
+          <div class="system-card-head">
+            <h3>配置说明</h3>
+            <p>常见配置项的取值规则与注意事项。</p>
+          </div>
+        </template>
         <ul class="hint-list">
           <li><strong>站点名称</strong>：显示在浏览器标题栏和登录页，建议保持简短（建议 ≤ 16 个字符）。</li>
           <li><strong>ICP 备案号</strong>：中国大陆服务器必须填写，否则前端底部不显示备案信息。海外服务器可留空。</li>
@@ -205,25 +203,30 @@
           <li><strong>通用模型 / 向量模型</strong>：分别到"模型配置"和"向量模型"页签配置。</li>
           <li><strong>RAG 知识库</strong>：到"RAG 知识库"页签管理文档与检索测试。</li>
         </ul>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="知识库列表" desc="系统总览页保留一个轻量概览，便于确认 RAG 知识库模块是否已经接入。">
+      <n-card class="system-v7-card" :bordered="false">
+        <template #header>
+          <div class="system-card-head">
+            <h3>知识库列表</h3>
+            <p>系统总览页保留一个轻量概览，便于确认 RAG 知识库模块是否已经接入。</p>
+          </div>
+        </template>
         <div class="knowledge-summary">
           <strong>{{ knowledgeBaseSummary.available ? knowledgeBaseSummary.total : '—' }}</strong>
           <span>当前知识库数量</span>
           <p v-if="!knowledgeBaseSummary.available" class="global-notice error">知识库概览暂不可用，当前无法确认数量。</p>
           <p>如需查看文档、切片与检索测试，请前往左侧“RAG 知识库”页签继续操作。</p>
         </div>
-      </CardPanel>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive } from 'vue'
-import StatCard from '../../components/StatCard.vue'
+import { NCard } from 'naive-ui'
 import AppButton from '../../components/AppButton.vue'
-import CardPanel from '../../components/CardPanel.vue'
 import { listKnowledgeBases } from '../../api/rag.js'
 import {
   cloneOpenSourceConfig,
@@ -271,6 +274,37 @@ const summary = computed(() => {
       : '运行探测暂不可用'
   }
 })
+
+const systemStatCards = computed(() => [
+  {
+    key: 'general',
+    title: '通用模型',
+    value: configAvailable.value ? summary.value.generalModel : '状态未知',
+    change: summary.value.generalModelHint,
+    tone: runtimeStatusAvailable.value && runtimeStatus.generalModelConfigured ? 'is-ok' : 'is-warn'
+  },
+  {
+    key: 'embedding',
+    title: '向量模型',
+    value: configAvailable.value ? summary.value.embeddingModel : '状态未知',
+    change: summary.value.embeddingModelHint,
+    tone: runtimeStatusAvailable.value && runtimeStatus.embeddingModelConfigured ? 'is-ok' : 'is-info'
+  },
+  {
+    key: 'amap',
+    title: '高德地图',
+    value: runtimeStatusAvailable.value ? (runtimeStatus.amapConfigured ? '已配置' : '待配置') : '状态未知',
+    change: configAvailable.value ? (config.amapApiKeyConfigured ? 'Key 已填写' : '未填写 Key') : '配置暂不可用',
+    tone: runtimeStatusAvailable.value && runtimeStatus.amapConfigured ? 'is-ok' : 'is-warn'
+  },
+  {
+    key: 'redis',
+    title: 'Redis 状态',
+    value: summary.value.redisStatus,
+    change: summary.value.redisMode,
+    tone: runtimeStatusAvailable.value && runtimeStatus.redisConnected ? 'is-ok' : 'is-warn'
+  }
+])
 
 const allBridgeCapabilitiesEnabled = computed(() => {
   if (!runtimeStatusAvailable.value) return false
@@ -343,12 +377,10 @@ function onHeaderAction(event) {
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   padding: 22px;
-  border-radius: 24px;
-  border: 1px solid rgba(231, 237, 247, 0.95);
-  background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92));
-  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
+  border-radius: 6px;
+  border: 1px solid #dfe6f2;
+  background: #fff;
+  box-shadow: none;
 }
 
 .page-pill {
@@ -356,9 +388,9 @@ function onHeaderAction(event) {
   align-items: center;
   min-height: 26px;
   padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border-radius: 4px;
+  background: #eef4ff;
+  color: #2563eb;
   font-size: 11px;
   font-weight: 800;
 }
@@ -386,6 +418,84 @@ function onHeaderAction(event) {
 .stat-grid {
   display: grid;
   gap: 12px;
+}
+
+.system-v7-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.system-v7-stat,
+.system-v7-card {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.system-v7-stat :deep(.n-card__content) {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.system-v7-stat-label {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.system-v7-stat strong {
+  color: #101828;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.system-v7-stat-desc {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.system-v7-stat.is-ok {
+  border-top: 3px solid #16a34a;
+}
+
+.system-v7-stat.is-info {
+  border-top: 3px solid #2563eb;
+}
+
+.system-v7-stat.is-warn {
+  border-top: 3px solid #f59e0b;
+}
+
+.system-v7-card :deep(.n-card-header) {
+  padding: 18px 20px 0;
+}
+
+.system-v7-card :deep(.n-card__content) {
+  padding: 14px 20px 20px;
+}
+
+.system-card-head {
+  display: grid;
+  gap: 5px;
+}
+
+.system-card-head h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+.system-card-head p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .page-grid {
@@ -440,9 +550,9 @@ function onHeaderAction(event) {
 
 .knowledge-summary {
   padding: 18px;
-  border-radius: 18px;
-  border: 1px dashed #f1ddd4;
-  background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
+  border-radius: 6px;
+  border: 1px dashed #cfd8e8;
+  background: #f8fafc;
 }
 
 .knowledge-summary strong {
@@ -468,9 +578,9 @@ function onHeaderAction(event) {
 
 .bridge-notice {
   padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px dashed #f1ddd4;
-  background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
+  border-radius: 6px;
+  border: 1px dashed #cfd8e8;
+  background: #f8fafc;
   color: #6e7e98;
   font-size: 13px;
   line-height: 1.7;
@@ -481,9 +591,9 @@ function onHeaderAction(event) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 18px;
   padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px dashed #f1ddd4;
-  background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
+  border-radius: 6px;
+  border: 1px dashed #cfd8e8;
+  background: #f8fafc;
 }
 
 .bridge-row {
@@ -523,7 +633,7 @@ function onHeaderAction(event) {
 .bridge-capabilities {
   margin-top: 14px;
   padding: 14px 16px;
-  border-radius: 14px;
+  border-radius: 6px;
   border: 1px solid #e3eaf5;
   background: #fff;
 }

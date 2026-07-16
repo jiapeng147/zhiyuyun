@@ -25,7 +25,9 @@
     </section>
 
     <div class="page-grid">
-      <CardPanel title="向量模型（Embedding）" desc="RAG 知识库建索引、召回相似内容与检索增强回答，都会优先使用这里的嵌入模型配置。">
+      <n-card class="settings-v7-card" :bordered="false">
+        <template #header>向量模型（Embedding）</template>
+        <template #header-extra><span class="settings-v7-desc">RAG 知识库建索引、召回相似内容与检索增强回答，都会优先使用这里的嵌入模型配置。</span></template>
         <div class="config-overview">
           <article class="overview-card">
             <span>用途边界</span>
@@ -84,9 +86,11 @@
             />
           </AdminConfigField>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="使用说明" desc="先理解向量模型的职责边界，再去调整供应商和模型选型，会少走很多弯路。">
+      <n-card class="settings-v7-card" :bordered="false">
+        <template #header>使用说明</template>
+        <template #header-extra><span class="settings-v7-desc">先理解向量模型的职责边界，再去调整供应商和模型选型，会少走很多弯路。</span></template>
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">R</div>
@@ -118,16 +122,16 @@
           <li>Base URL 通常以 <code>/v1</code> 结尾，必须使用公网 HTTPS；当前默认安全策略不允许直接连接本机或内网模型服务。</li>
           <li>API Key 不会完整回显；需要更换时直接覆盖，切换接口主机时也必须重新输入并保存。</li>
         </ul>
-      </CardPanel>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { NCard } from 'naive-ui'
 import AdminConfigField from '../../components/AdminConfigField.vue'
 import AppButton from '../../components/AppButton.vue'
-import CardPanel from '../../components/CardPanel.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
   cloneOpenSourceConfig,
@@ -537,5 +541,43 @@ function onHeaderAction(event) {
     font-size: 11px;
     word-break: break-all;
   }
+}
+
+.page-hero,
+.settings-v7-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.page-hero {
+  background: #fff;
+}
+
+.page-pill {
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.page-hero-copy h1 {
+  color: #111827;
+  letter-spacing: 0;
+}
+
+.settings-v7-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.settings-v7-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.settings-v7-desc {
+  max-width: 380px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
 }
 </style>

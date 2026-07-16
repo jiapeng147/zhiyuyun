@@ -25,7 +25,9 @@
     </section>
 
     <div class="page-grid">
-      <CardPanel title="通用模型" desc="所有通用 AI 调用都会优先读取这里的配置。建议按照“供应商 → 模型名 → 地址 → Key”的顺序填写。">
+      <n-card class="settings-v7-card" :bordered="false">
+        <template #header>通用模型</template>
+        <template #header-extra><span class="settings-v7-desc">所有通用 AI 调用都会优先读取这里的配置。建议按照“供应商 → 模型名 → 地址 → Key”的顺序填写。</span></template>
         <div class="config-overview">
           <article class="overview-card">
             <span>适用场景</span>
@@ -154,9 +156,11 @@
             />
           </AdminConfigField>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="配置建议" desc="下面这些说明可以帮助你更快判断“应该填什么”，也能减少联调时的来回试错。">
+      <n-card class="settings-v7-card" :bordered="false">
+        <template #header>配置建议</template>
+        <template #header-extra><span class="settings-v7-desc">下面这些说明可以帮助你更快判断“应该填什么”，也能减少联调时的来回试错。</span></template>
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">A</div>
@@ -187,16 +191,16 @@
           <li>如使用代理网关，请直接在“模型名称”中填写网关要求的模型字段，避免同一配置出现两个名称。</li>
           <li>建议为生产环境单独准备一套 API Key，避免与个人测试或其他项目混用，降低排查成本。</li>
         </ul>
-      </CardPanel>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { NCard } from 'naive-ui'
 import AdminConfigField from '../../components/AdminConfigField.vue'
 import AppButton from '../../components/AppButton.vue'
-import CardPanel from '../../components/CardPanel.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
   cloneOpenSourceConfig,
@@ -699,5 +703,43 @@ function onHeaderAction(event) {
     font-size: 13px;
     line-height: 1.7;
   }
+}
+
+.page-hero,
+.settings-v7-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.page-hero {
+  background: #fff;
+}
+
+.page-pill {
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.page-hero-copy h1 {
+  color: #111827;
+  letter-spacing: 0;
+}
+
+.settings-v7-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.settings-v7-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.settings-v7-desc {
+  max-width: 380px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
 }
 </style>

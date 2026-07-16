@@ -25,7 +25,9 @@
     </section>
 
     <div class="page-grid">
-      <CardPanel title="高德地图 API Key" desc="把 Key 填在这里，保存后前台发布商品与工作流地址搜索会立即使用最新配置。">
+      <n-card class="settings-v7-card" :bordered="false">
+        <template #header>高德地图 API Key</template>
+        <template #header-extra><span class="settings-v7-desc">把 Key 填在这里，保存后前台发布商品与工作流地址搜索会立即使用最新配置。</span></template>
         <div class="config-overview">
           <article class="overview-card">
             <span>推荐顺序</span>
@@ -69,9 +71,11 @@
             <span>/api/amap/inputtips</span>
           </div>
         </div>
-      </CardPanel>
+      </n-card>
 
-      <CardPanel title="使用说明" desc="如果你是第一次配置地图服务，先看下面的 3 条速览，再按步骤完成申请与自检。">
+      <n-card class="settings-v7-card" :bordered="false">
+        <template #header>使用说明</template>
+        <template #header-extra><span class="settings-v7-desc">如果你是第一次配置地图服务，先看下面的 3 条速览，再按步骤完成申请与自检。</span></template>
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">1</div>
@@ -104,16 +108,16 @@
           <li><strong>调试方法</strong>：保存后点击“重新加载”，确认“地图状态”变为“已配置”。若发布商品页仍无法搜索地址，可检查 <code>/api/amap/inputtips</code> 的响应与报错。</li>
           <li><strong>接入位置</strong>：发布商品页的地址搜索会读取这里的配置；当前版本没有“常用地址历史”功能。</li>
         </ol>
-      </CardPanel>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { NCard } from 'naive-ui'
 import AdminConfigField from '../../components/AdminConfigField.vue'
 import AppButton from '../../components/AppButton.vue'
-import CardPanel from '../../components/CardPanel.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
   cloneOpenSourceConfig,
@@ -570,5 +574,43 @@ function onHeaderAction(event) {
     font-size: 11px;
     word-break: break-all;
   }
+}
+
+.page-hero,
+.settings-v7-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.page-hero {
+  background: #fff;
+}
+
+.page-pill {
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.page-hero-copy h1 {
+  color: #111827;
+  letter-spacing: 0;
+}
+
+.settings-v7-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.settings-v7-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.settings-v7-desc {
+  max-width: 380px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
 }
 </style>

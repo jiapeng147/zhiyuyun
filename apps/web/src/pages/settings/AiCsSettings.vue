@@ -11,7 +11,9 @@
     </div>
     <div v-else class="aics-grid">
       <div class="aics-main">
-        <CardPanel title="AI 客服工作模式" desc="主开关开启且选择自动或混合模式后，系统才会按下方运行策略处理买家消息">
+        <n-card class="aics-v7-card" :bordered="false">
+          <template #header>AI 客服工作模式</template>
+          <template #header-extra><span class="aics-v7-desc">主开关开启且选择自动或混合模式后，系统才会按下方运行策略处理买家消息</span></template>
           <div class="aics-form">
             <div class="aics-row aics-row-toggle">
               <div>
@@ -93,9 +95,11 @@
               <p class="aics-hint">窗口结束后，新的买家消息才重新具备自动回复资格。</p>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="客服角色与人设" desc="AI 客服的身份设定、欢迎语与知识库" style="margin-top:16px">
+        <n-card class="aics-v7-card" :bordered="false">
+          <template #header>客服角色与人设</template>
+          <template #header-extra><span class="aics-v7-desc">AI 客服的身份设定、欢迎语与知识库</span></template>
           <div class="aics-form">
             <div class="aics-row">
               <label>客服人设</label>
@@ -195,9 +199,11 @@
               <button type="button" class="aics-upload-btn" @click="addChatRule">新增聊天规则</button>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="安全与会话策略" desc="命中明确配置的关键词时停止 AI 回复，把会话留给人工处理" style="margin-top:16px">
+        <n-card class="aics-v7-card" :bordered="false">
+          <template #header>安全与会话策略</template>
+          <template #header-extra><span class="aics-v7-desc">命中明确配置的关键词时停止 AI 回复，把会话留给人工处理</span></template>
           <div class="aics-form">
             <div class="aics-row aics-row-toggle">
               <div>
@@ -233,7 +239,7 @@
               <p class="aics-hint">每个账号按策略时区的自然日独立计数。生成失败或平台明确未接收会释放名额；已发送和发送结果未知会保守计入，达到上限后不调用模型也不发送。</p>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
 
         <div class="aics-actions">
           <button type="button" class="aics-save-btn" :disabled="saving" @click="save">{{ saving ? '保存中...' : '保存配置' }}</button>
@@ -242,7 +248,8 @@
       </div>
 
       <aside class="aics-side">
-        <CardPanel title="模型测试预览">
+        <n-card class="aics-v7-card" :bordered="false">
+          <template #header>模型测试预览</template>
           <div class="aics-preview">
             <div class="aics-bubble them">这个价格还能再优惠吗？</div>
             <div v-if="testReply" class="aics-bubble me">{{ testReply }}</div>
@@ -265,9 +272,10 @@
             <p class="aics-warn">AI 模型未配置，请先到「系统设置 / 模型配置」填写 baseUrl、apiKey 与模型名称。</p>
             <button type="button" class="aics-retry-btn" @click="goToModelConfig">前往模型配置</button>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="AI 客服状态" style="margin-top:16px">
+        <n-card class="aics-v7-card" :bordered="false">
+          <template #header>AI 客服状态</template>
           <div class="aics-status-list">
             <div class="aics-status-row">
               <span>当前状态</span>
@@ -294,7 +302,7 @@
               <b>{{ form.chatRules.length }} 条</b>
             </div>
           </div>
-        </CardPanel>
+        </n-card>
       </aside>
     </div>
   </div>
@@ -302,7 +310,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../../components/CardPanel.vue'
+import { NCard } from 'naive-ui'
 import {
   getAiCsDefaults,
   getBusinessSettings,
@@ -723,6 +731,29 @@ onBeforeUnmount(() => {
 .aics-side {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.aics-v7-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.aics-v7-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.aics-v7-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.aics-v7-desc {
+  max-width: 320px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .aics-form {
@@ -772,7 +803,7 @@ onBeforeUnmount(() => {
   height: 40px;
   padding: 0 12px;
   border: 1px solid #f6e3db;
-  border-radius: 12px;
+  border-radius: 6px;
   background: #fff;
   font-size: 13px;
   color: #172b4d;
@@ -855,7 +886,7 @@ onBeforeUnmount(() => {
 .aics-save-btn,
 .aics-test-btn {
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: 6px;
   border: 0;
   cursor: pointer;
   font-size: 13px;
@@ -864,9 +895,9 @@ onBeforeUnmount(() => {
 }
 
 .aics-save-btn {
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  background: #2563eb;
   color: #fff;
-  box-shadow: 0 8px 20px rgba(20, 184, 166, .22);
+  box-shadow: none;
 }
 
 .aics-save-btn:hover:not(:disabled) {
@@ -883,8 +914,8 @@ onBeforeUnmount(() => {
 
 .aics-test-btn {
   background: #fff;
-  color: #0f766e;
-  border: 1px solid #99f6e4;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 
 .aics-test-btn:hover:not(:disabled),
@@ -903,7 +934,7 @@ onBeforeUnmount(() => {
 .aics-bubble {
   max-width: 90%;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 6px;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -912,14 +943,14 @@ onBeforeUnmount(() => {
   align-self: flex-start;
   background: #F7F7F8;
   color: #5f3f31;
-  border-radius: 14px 14px 14px 4px;
+  border-radius: 6px;
 }
 
 .aics-bubble.me {
   align-self: flex-end;
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  background: #2563eb;
   color: #fff;
-  border-radius: 14px 14px 4px 14px;
+  border-radius: 6px;
 }
 
 .aics-test-form {

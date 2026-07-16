@@ -512,8 +512,7 @@ textarea {
   flex-wrap: wrap !important;
 }
 
-/* Naive primitives and legacy controls */
-.card-panel,
+/* Naive primitives and active controls */
 .naive-admin-card,
 .table-wrap,
 .xy-modal,
@@ -536,7 +535,6 @@ textarea {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.card-panel:hover,
 .naive-admin-card:hover {
   border-color: var(--line-strong) !important;
 }
@@ -557,7 +555,6 @@ textarea {
 }
 
 .panel-head h3,
-.card-panel h3,
 .modal-head h3,
 .drawer-header h3,
 .section-title {
@@ -567,17 +564,12 @@ textarea {
 }
 
 .panel-head p,
-.card-panel p,
 .subtle,
 .muted,
 .modal-subtitle,
 .drawer-subtitle,
 .section-desc {
   color: var(--muted) !important;
-}
-
-.card-panel-body {
-  min-width: 0 !important;
 }
 
 .toolbar,
@@ -860,7 +852,6 @@ table tbody tr:last-child td {
   margin: 0 0 16px !important;
 }
 
-.stat-card,
 .metric-card,
 .overview-card,
 .status-card,
@@ -879,7 +870,6 @@ table tbody tr:last-child td {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.stat-card:hover,
 .metric-card:hover,
 .overview-card:hover,
 .summary-item:hover,
@@ -1167,10 +1157,6 @@ table tbody tr:last-child td {
   font-size: 13px !important;
   font-weight: 400 !important;
   line-height: 1.6 !important;
-}
-
-.dashboard-page .dashboard-section .card-panel-body {
-  padding-top: 18px !important;
 }
 
 /* Dashboard navigation cards need a stricter layout than generic quick cards. */

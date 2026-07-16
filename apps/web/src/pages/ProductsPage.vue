@@ -291,12 +291,12 @@
         <div class="preview-card" style="height:210px;padding:0;overflow:hidden;border-radius:12px"><img v-if="selected.coverPic" :src="selected.coverPic" style="width:100%;height:100%;object-fit:cover" alt=""><div v-else class="product-thumb" style="width:100%;height:100%;border-radius:0;background:linear-gradient(135deg,#f5f7fb,#dfe9f8)"></div></div>
         <h3 class="drawer-title">{{ selected.name }}</h3>
         <p class="drawer-price"><b style="color:#ef4444;font-size:22px">{{ selected.price }}</b> <Badge :type="selected.statusType">{{ selected.status }}</Badge></p>
-        <CardPanel title="商品数据" class="drawer-card">
+        <n-card title="商品数据" class="drawer-card products-drawer-card" :bordered="false">
           <div class="option-line"><span>商品ID</span><b class="drawer-value">{{ selected.xyGoodId }}</b></div>
           <div class="option-line"><span>库存</span><b>{{ selected.stock }}</b></div>
           <div class="option-line"><span>曝光/浏览/想要</span><b>{{ selected.exposureCount }} / {{ selected.viewCount }} / {{ selected.wantCount }}</b></div>
           <div class="option-line"><span>更新时间</span><b>{{ selected.time }}</b></div>
-        </CardPanel>
+        </n-card>
         <div class="grid drawer-metrics">
           <div class="metric-tile"><span>自动发货</span><b :class="{'text-green':selected.deliveryOn,'text-gray':!selected.deliveryOn}">{{ selected.deliveryOn ? '已开启' : '已关闭' }}</b></div>
           <div class="metric-tile"><span>自动回复</span><b :class="{'text-green':selected.replyOn,'text-gray':!selected.replyOn}">{{ selected.replyOn ? '已开启' : '已关闭' }}</b></div>
@@ -401,7 +401,7 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
-import CardPanel from '../components/CardPanel.vue';import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import ToggleSwitch from '../components/ToggleSwitch.vue';import AppButton from '../components/AppButton.vue';import EmptyState from '../components/EmptyState.vue'
+import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import ToggleSwitch from '../components/ToggleSwitch.vue';import AppButton from '../components/AppButton.vue';import EmptyState from '../components/EmptyState.vue'
 import { confirmAction } from '../utils/confirmAction.js'
 import { globalConfirm } from '../composables/confirmState.js'
 import { getAccounts } from '../api/accounts.js'
@@ -2527,6 +2527,21 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 .drawer-card {
   margin-bottom: 12px;
+}
+.products-drawer-card {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+.products-drawer-card :deep(.n-card-header) {
+  padding: 12px 14px 0;
+  color: #101828;
+  font-size: 14px;
+  font-weight: 800;
+}
+.products-drawer-card :deep(.n-card__content) {
+  padding: 10px 14px 14px;
 }
 .drawer-metrics {
   grid-template-columns: repeat(3, 1fr);

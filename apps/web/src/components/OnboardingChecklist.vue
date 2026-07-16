@@ -1,5 +1,8 @@
 <template>
-  <CardPanel title="新手三步完成首次成功" class="onboarding-card">
+  <n-card class="onboarding-card" :bordered="false">
+    <template #header>
+      <div class="onboarding-card-title">新手三步完成首次成功</div>
+    </template>
     <div class="onboarding-head">
       <div>
         <b>{{ completedCount }}/{{ steps.length }} 已完成</b>
@@ -24,12 +27,12 @@
       <button type="button" class="link" @click="markDone('seen-guide')">我已阅读指南</button>
       <button type="button" class="link" @click="resetProgress">重置进度</button>
     </div>
-  </CardPanel>
+  </n-card>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import CardPanel from './CardPanel.vue'
+import { NCard } from 'naive-ui'
 
 const emit = defineEmits(['navigate'])
 const STORAGE_KEY = 'xya:onboarding:done'
@@ -52,5 +55,5 @@ function resetProgress() { done.value = []; persist() }
 </script>
 
 <style scoped>
-.onboarding-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px}.onboarding-head b{font-size:18px;color:#16213e}.onboarding-head p{margin:6px 0 0;color:#667085;line-height:1.7}.onboarding-progress{--progress:0%;width:72px;height:72px;border-radius:50%;background:conic-gradient(#0f766e var(--progress),#edf2fb 0);display:flex;align-items:center;justify-content:center;flex:0 0 auto}.onboarding-progress span{width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0f766e}.onboarding-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.onboarding-step{display:flex;align-items:flex-start;gap:12px;text-align:left;border:1px solid #E8E8E8;background:#fff;border-radius:16px;padding:14px;cursor:pointer;transition:.16s}.onboarding-step:hover{border-color:#ffd2bf;box-shadow:0 12px 30px rgba(20, 184, 166,.08);transform:translateY(-1px)}.onboarding-step.done{background:#f4fff8;border-color:#abefc6}.step-check{width:28px;height:28px;border-radius:10px;background:#edf4ff;color:#0f766e;display:flex;align-items:center;justify-content:center;font-weight:900;flex:0 0 auto}.done .step-check{background:#dcfae6;color:#067647}.onboarding-step span:nth-child(2){flex:1}.onboarding-step b{display:block;color:#16213e}.onboarding-step em{display:block;margin-top:5px;color:#667085;font-style:normal;line-height:1.5}.onboarding-step strong{color:#0f766e;white-space:nowrap;font-size:13px}.onboarding-actions{display:flex;justify-content:flex-end;gap:14px;margin-top:12px}@media(max-width:1100px){.onboarding-steps{grid-template-columns:minmax(0, 1fr)}.onboarding-steps > *{min-width:0}}
+.onboarding-card{border:1px solid #dfe6f2;border-radius:6px;background:#fff;box-shadow:none}.onboarding-card :deep(.n-card-header){padding:18px 20px 0}.onboarding-card :deep(.n-card__content){padding:14px 20px 20px}.onboarding-card-title{color:#101828;font-size:16px;font-weight:800;line-height:1.3}.onboarding-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px}.onboarding-head b{font-size:18px;color:#16213e}.onboarding-head p{margin:6px 0 0;color:#667085;line-height:1.7}.onboarding-progress{--progress:0%;width:72px;height:72px;border-radius:50%;background:conic-gradient(#2563eb var(--progress),#edf2fb 0);display:flex;align-items:center;justify-content:center;flex:0 0 auto}.onboarding-progress span{width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#2563eb}.onboarding-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.onboarding-step{display:flex;align-items:flex-start;gap:12px;text-align:left;border:1px solid #dfe6f2;background:#fff;border-radius:6px;padding:14px;cursor:pointer;transition:.16s}.onboarding-step:hover{border-color:#b8c4d8;box-shadow:none;transform:none}.onboarding-step.done{background:#f0fdf4;border-color:#abefc6}.step-check{width:28px;height:28px;border-radius:6px;background:#edf4ff;color:#2563eb;display:flex;align-items:center;justify-content:center;font-weight:900;flex:0 0 auto}.done .step-check{background:#dcfae6;color:#067647}.onboarding-step span:nth-child(2){flex:1}.onboarding-step b{display:block;color:#16213e}.onboarding-step em{display:block;margin-top:5px;color:#667085;font-style:normal;line-height:1.5}.onboarding-step strong{color:#2563eb;white-space:nowrap;font-size:13px}.onboarding-actions{display:flex;justify-content:flex-end;gap:14px;margin-top:12px}@media(max-width:1100px){.onboarding-steps{grid-template-columns:minmax(0, 1fr)}.onboarding-steps > *{min-width:0}}
 </style>

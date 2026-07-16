@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile-shell">
+  <div class="mobile-shell mobile-v7-shell">
     <header v-if="!subPage" class="m-topbar">
       <button type="button" class="m-brand" aria-label="返回移动端首页" @click="activeTab = 'home'">
         <div class="m-brand-mark">
@@ -207,7 +207,7 @@ onMounted(() => {
   width: 100%;
   max-width: 100vw;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f5f8ff 0%, #f0f5ff 100%);
+  background: #f6f7f9;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -226,14 +226,14 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(245, 248, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 12px 16px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(231, 237, 247, 0.5);
+  border-bottom: 1px solid #dfe6f2;
 }
 
 .m-topbar-sub {
@@ -251,7 +251,7 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   padding: 6px 8px;
-  border-radius: 100px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 .m-back-btn:active { background: rgba(20, 184, 166,0.08); }
@@ -273,7 +273,7 @@ onMounted(() => {
   color: #6B6B6B;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -306,14 +306,14 @@ onMounted(() => {
   top: 0;
   width: 12px;
   height: 43px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #14b8a6, #0f766e);
+  border-radius: 3px;
+  background: #2563eb;
   transform: rotate(42deg);
-  box-shadow: 0 4px 12px rgba(20, 184, 166,0.25);
+  box-shadow: none;
 }
 .m-brand-mark span + span {
   transform: rotate(-42deg);
-  background: linear-gradient(180deg, #14b8a6, #f44b03);
+  background: #0f172a;
 }
 .m-brand-name {
   font-size: 17px;
@@ -334,9 +334,9 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   background: white;
-  border-radius: 100px;
+  border-radius: 6px;
   padding: 5px 10px 5px 14px;
-  box-shadow: 0 2px 8px rgba(94,50,31,0.06);
+  box-shadow: none;
   border: 1px solid #eef2fa;
   cursor: pointer;
   transition: transform 0.1s;
@@ -356,8 +356,8 @@ onMounted(() => {
 .m-user-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffb94a, #ff7a8a);
+  border-radius: 6px;
+  background: #2563eb;
   color: white;
   display: flex;
   align-items: center;
@@ -390,7 +390,7 @@ onMounted(() => {
   align-items: stretch;
   justify-content: space-around;
   z-index: 100;
-  box-shadow: 0 -4px 20px rgba(94,50,31,0.05);
+  box-shadow: none;
 }
 .m-tab {
   flex: 1;
@@ -411,7 +411,7 @@ onMounted(() => {
 }
 .m-tab :deep(svg) { transition: transform 0.2s; }
 .m-tab.active {
-  color: #0f766e;
+  color: #2563eb;
 }
 .m-tab.active :deep(svg) {
   transform: scale(1.08);
@@ -424,7 +424,125 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 24px;
   height: 3px;
-  background: linear-gradient(90deg, #0f766e, #14b8a6);
+  background: #2563eb;
   border-radius: 0 0 3px 3px;
+}
+
+.mobile-v7-shell :deep(.m-page-header) {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.mobile-v7-shell :deep(.m-page-header h1) {
+  margin-bottom: 3px;
+  color: #101828;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.mobile-v7-shell :deep(.m-page-sub) {
+  color: #667085;
+}
+
+.mobile-v7-shell :deep(.m-summary-card),
+.mobile-v7-shell :deep(.m-auto-item),
+.mobile-v7-shell :deep(.m-menu-item),
+.mobile-v7-shell :deep(.m-pc-notice),
+.mobile-v7-shell :deep(.m-prod-stat-card),
+.mobile-v7-shell :deep(.m-prod-card),
+.mobile-v7-shell :deep(.m-acc-stat-card),
+.mobile-v7-shell :deep(.m-acc-card),
+.mobile-v7-shell :deep(.m-pro-hero),
+.mobile-v7-shell :deep(.m-pro-stats),
+.mobile-v7-shell :deep(.m-section),
+.mobile-v7-shell :deep(.m-msg-list),
+.mobile-v7-shell :deep(.m-prod-tip),
+.mobile-v7-shell :deep(.m-acc-tip),
+.mobile-v7-shell :deep(.m-msg-tip),
+.mobile-v7-shell :deep(.m-data-warning),
+.mobile-v7-shell :deep(.m-state-warning) {
+  border: 1px solid #dfe6f2 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.mobile-v7-shell :deep(.m-summary-icon),
+.mobile-v7-shell :deep(.m-auto-icon),
+.mobile-v7-shell :deep(.m-menu-icon),
+.mobile-v7-shell :deep(.m-pc-notice-icon),
+.mobile-v7-shell :deep(.m-prod-stat-icon),
+.mobile-v7-shell :deep(.m-empty-icon),
+.mobile-v7-shell :deep(.m-acc-stat-icon),
+.mobile-v7-shell :deep(.m-acc-avatar-placeholder),
+.mobile-v7-shell :deep(.m-pro-avatar),
+.mobile-v7-shell :deep(.m-msg-avatar),
+.mobile-v7-shell :deep(.m-bubble-avatar),
+.mobile-v7-shell :deep(.m-bubble-avatar.out-avatar) {
+  border-radius: 6px !important;
+  background: #eef4ff !important;
+  color: #2563eb !important;
+  box-shadow: none !important;
+}
+
+.mobile-v7-shell :deep(.m-prod-search),
+.mobile-v7-shell :deep(.m-prod-refresh),
+.mobile-v7-shell :deep(.m-prod-chip),
+.mobile-v7-shell :deep(.m-chip),
+.mobile-v7-shell :deep(.m-filter-tab),
+.mobile-v7-shell :deep(.m-load-more),
+.mobile-v7-shell :deep(.m-empty-btn),
+.mobile-v7-shell :deep(.m-tip-btn),
+.mobile-v7-shell :deep(.m-big-btn),
+.mobile-v7-shell :deep(.m-btn),
+.mobile-v7-shell :deep(.m-chat-input input),
+.mobile-v7-shell :deep(.m-chat-send) {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+.mobile-v7-shell :deep(.m-prod-chip-active),
+.mobile-v7-shell :deep(.m-chip.active),
+.mobile-v7-shell :deep(.m-empty-btn),
+.mobile-v7-shell :deep(.m-tip-btn),
+.mobile-v7-shell :deep(.m-big-btn),
+.mobile-v7-shell :deep(.m-chat-send),
+.mobile-v7-shell :deep(.m-bubble.out .m-bubble-content) {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+
+.mobile-v7-shell :deep(.m-filter-tab.active) {
+  background: #eef4ff !important;
+  color: #2563eb !important;
+}
+
+.mobile-v7-shell :deep(.m-prod-cover),
+.mobile-v7-shell :deep(.m-prod-cover-placeholder),
+.mobile-v7-shell :deep(.m-acc-avatar),
+.mobile-v7-shell :deep(.m-bubble-content),
+.mobile-v7-shell :deep(.m-bubble-image) {
+  border-radius: 6px !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.mobile-v7-shell :deep(.m-bubble.out .m-bubble-content) {
+  border-bottom-right-radius: 2px !important;
+}
+
+.mobile-v7-shell :deep(.m-bubble.in .m-bubble-content) {
+  border-bottom-left-radius: 2px !important;
+}
+
+.mobile-v7-shell :deep(.m-pro-stats),
+.mobile-v7-shell :deep(.m-acc-metrics),
+.mobile-v7-shell :deep(.m-prod-card-stats) {
+  background: #fff !important;
 }
 </style>

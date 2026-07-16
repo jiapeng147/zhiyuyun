@@ -4,11 +4,18 @@
     <div v-if="kbsWarning" class="global-notice warning" role="status">{{ kbsWarning }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <div class="grid stat-grid" style="grid-template-columns:repeat(4,1fr)">
-      <StatCard title="知识库总数" :value="kbMetric(kbStats.total)" change="全部记录" icon="document" />
-      <StatCard title="启用中" :value="kbMetric(kbStats.active)" change="status=1" icon="shield" color="green" />
-      <StatCard title="文档总数" :value="kbMetric(kbStats.docs)" change="所有知识库汇总" icon="product" color="orange" />
-      <StatCard title="分块总数" :value="kbMetric(kbStats.chunks)" change="所有知识库汇总" icon="message" color="purple" />
+    <div class="grid stat-grid rag-v7-stats">
+      <n-card
+        v-for="item in ragStatCards"
+        :key="item.key"
+        class="rag-v7-stat"
+        :class="item.tone"
+        :bordered="false"
+      >
+        <span class="rag-v7-stat-label">{{ item.title }}</span>
+        <strong>{{ item.value }}</strong>
+        <span class="rag-v7-stat-desc">{{ item.change }}</span>
+      </n-card>
     </div>
 
     <div class="toolbar">
@@ -16,7 +23,13 @@
       <AppButton type="primary" :disabled="kbsAvailable !== true" @click="openCreateKb">+ 新建知识库</AppButton>
     </div>
 
-    <CardPanel title="知识库列表" desc="管理 RAG 知识库与文档索引">
+    <n-card class="rag-v7-card" :bordered="false">
+      <template #header>
+        <div class="rag-card-head">
+          <h3>知识库列表</h3>
+          <p>管理 RAG 知识库与文档索引</p>
+        </div>
+      </template>
       <div v-if="kbsRefreshing" class="refresh-status" role="status" aria-live="polite">
         正在刷新知识库列表，现有数据仍可查看。
       </div>
@@ -42,7 +55,7 @@
           <EmptyState icon="📚" title="暂无知识库" description="点击「新建知识库」开始管理你的文档。" />
         </template>
       </BaseTable>
-    </CardPanel>
+    </n-card>
     <Teleport to="body">
       <div v-if="kbModal.visible" class="modal-mask" @click.self="closeKbModal">
         <section class="xy-modal" style="width:560px">
@@ -196,8 +209,7 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import StatCard from '../../components/StatCard.vue'
-import CardPanel from '../../components/CardPanel.vue'
+import { NCard } from 'naive-ui'
 import BaseTable from '../../components/BaseTable.vue'
 import Badge from '../../components/Badge.vue'
 import AppButton from '../../components/AppButton.vue'
@@ -272,6 +284,12 @@ const kbStats = computed(() => {
   const chunks_total = kbs.value.reduce((s, k) => s + (k.chunkCount || 0), 0)
   return { total, active, docs: docs_total, chunks: chunks_total }
 })
+const ragStatCards = computed(() => [
+  { key: 'total', title: '知识库总数', value: kbMetric(kbStats.value.total), change: '全部记录', tone: 'is-info' },
+  { key: 'active', title: '启用中', value: kbMetric(kbStats.value.active), change: 'status=1', tone: 'is-ok' },
+  { key: 'docs', title: '文档总数', value: kbMetric(kbStats.value.docs), change: '所有知识库汇总', tone: 'is-warn' },
+  { key: 'chunks', title: '分块总数', value: kbMetric(kbStats.value.chunks), change: '所有知识库汇总', tone: 'is-purple' }
+])
 const canMutateDocs = computed(() => (
   kbsAvailable.value === true && docsAvailable.value === true && Boolean(detailKb.value)
 ))
@@ -720,6 +738,63 @@ onBeforeUnmount(() => {
 .warning { background: #fff8e8; color: #8a4b08; border-color: #f7c97a; }
 .refresh-status { margin-bottom: 10px; color: #526079; font-size: 13px; }
 .stat-grid { display: grid; gap: 12px; }
+.rag-v7-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rag-v7-stat,
+.rag-v7-card {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+.rag-v7-stat :deep(.n-card__content) {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+.rag-v7-stat-label {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+}
+.rag-v7-stat strong {
+  color: #101828;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+.rag-v7-stat-desc {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rag-v7-stat.is-info { border-top: 3px solid #2563eb; }
+.rag-v7-stat.is-ok { border-top: 3px solid #16a34a; }
+.rag-v7-stat.is-warn { border-top: 3px solid #f59e0b; }
+.rag-v7-stat.is-purple { border-top: 3px solid #7c3aed; }
+.rag-v7-card :deep(.n-card-header) {
+  padding: 18px 20px 0;
+}
+.rag-v7-card :deep(.n-card__content) {
+  padding: 14px 20px 20px;
+}
+.rag-card-head {
+  display: grid;
+  gap: 5px;
+}
+.rag-card-head h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 800;
+}
+.rag-card-head p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 400;
+}
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; padding: 6px 4px; }
 .form-row { display: flex; flex-direction: column; gap: 6px; }
