@@ -1051,6 +1051,13 @@ const EVENT_GROUPS = [
     icon: 'notifyReport',
     tone: 'green',
     events: ['库存预警', '整点报表', '应用内通知']
+  },
+  {
+    key: 'billing',
+    label: '商业计费',
+    icon: 'notifyReport',
+    tone: 'blue',
+    events: ['账单待支付', '账单支付确认', '账单订单关闭', '套餐到期提醒', '套餐已到期', 'AI 额度预警', '账号配额预警', '套餐权益提醒']
   }
 ]
 

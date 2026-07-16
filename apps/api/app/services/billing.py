@@ -416,7 +416,7 @@ async def usage_count_today(db: AsyncSession, user_id: int, metric: str) -> int:
 
 async def billing_state_for_user(db: AsyncSession, user_id: int) -> dict[str, Any]:
     reconciled = await reconcile_billing_lifecycle(db, user_id=user_id)
-    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"] or reconciled.get("expiringReminders"):
         await db.commit()
     user = await load_user(db, user_id)
     entitlement = await resolve_entitlement(db, user)
@@ -575,6 +575,18 @@ async def audit_quota_rejection(
             reason=reason,
         )
         await db.commit()
+        try:
+            from .billing_notifications import notify_quota_rejection
+
+            await notify_quota_rejection(
+                user_id=user_id,
+                metric=metric,
+                source_type=source_type,
+                source_id=source_id,
+                reason=reason,
+            )
+        except Exception:
+            logger.warning("quota rejection notification failed", exc_info=True)
     except Exception:
         await db.rollback()
         logger.warning("quota rejection audit failed", exc_info=True)
@@ -602,14 +614,18 @@ async def record_usage_delta(
         )
     ).scalar_one_or_none()
     if row:
+        before_used = int(row.used_count or 0)
         row.used_count = int(row.used_count or 0) + int(delta)
         row.limit_count = int(limit_count or row.limit_count or 0)
+        after_used = int(row.used_count or 0)
     else:
+        before_used = 0
+        after_used = max(int(delta), 0)
         db.add(AppUsageDaily(
             user_id=int(user_id),
             usage_date=today,
             metric=metric,
-            used_count=max(int(delta), 0),
+            used_count=after_used,
             limit_count=int(limit_count or 0),
         ))
     db.add(AppQuotaEvent(
@@ -620,6 +636,19 @@ async def record_usage_delta(
         source_id=source_id or None,
         reason=reason or None,
     ))
+    try:
+        from .billing_notifications import maybe_notify_usage_threshold
+
+        await maybe_notify_usage_threshold(
+            db,
+            user_id=int(user_id),
+            metric=metric,
+            before_used=before_used,
+            after_used=after_used,
+            limit_count=int(limit_count or 0),
+        )
+    except Exception:
+        logger.warning("usage threshold notification failed", exc_info=True)
 
 
 async def create_billing_order(
@@ -656,6 +685,13 @@ async def create_billing_order(
     await db.flush()
     if amount == 0:
         await activate_order(db, order, operator="system")
+    else:
+        try:
+            from .billing_notifications import notify_billing_order_pending
+
+            await notify_billing_order_pending(db, order, plan=plan)
+        except Exception:
+            logger.warning("pending billing order notification failed", exc_info=True)
     return order
 
 
@@ -707,6 +743,12 @@ async def activate_order(
         "activatedAt": now.isoformat(),
     }
     await db.flush()
+    try:
+        from .billing_notifications import notify_billing_order_paid
+
+        await notify_billing_order_paid(db, order, subscription, user=user, plan=plan)
+    except Exception:
+        logger.warning("paid billing order notification failed", exc_info=True)
     return subscription
 
 
@@ -729,6 +771,12 @@ async def close_billing_order(
         "closedAt": now.isoformat(),
     }
     await db.flush()
+    try:
+        from .billing_notifications import notify_billing_order_closed
+
+        await notify_billing_order_closed(db, order, reason=reason or "manual")
+    except Exception:
+        logger.warning("closed billing order notification failed", exc_info=True)
     return order
 
 
@@ -736,6 +784,7 @@ async def reconcile_billing_lifecycle(db: AsyncSession, user_id: int | None = No
     now = utcnow()
     closed_orders = 0
     expired_subscriptions = 0
+    expiring_reminders = 0
 
     order_query = select(AppBillingOrder).where(
         AppBillingOrder.status == "pending",
@@ -755,6 +804,12 @@ async def reconcile_billing_lifecycle(db: AsyncSession, user_id: int | None = No
             "closedAt": now.isoformat(),
         }
         closed_orders += 1
+        try:
+            from .billing_notifications import notify_billing_order_closed
+
+            await notify_billing_order_closed(db, order, reason="订单超时未支付")
+        except Exception:
+            logger.warning("expired billing order notification failed", exc_info=True)
 
     sub_query = select(AppSubscription).where(
         AppSubscription.status == "active",
@@ -767,15 +822,47 @@ async def reconcile_billing_lifecycle(db: AsyncSession, user_id: int | None = No
     for sub in subs:
         sub.status = "expired"
         expired_subscriptions += 1
+        try:
+            from .billing_notifications import notify_subscription_expired
 
-    if closed_orders or expired_subscriptions:
+            await notify_subscription_expired(db, sub)
+        except Exception:
+            logger.warning("expired subscription notification failed", exc_info=True)
+
+    remind_query = select(AppSubscription).where(
+        AppSubscription.status == "active",
+        AppSubscription.current_period_end.is_not(None),
+        AppSubscription.current_period_end >= now,
+        AppSubscription.current_period_end <= now + timedelta(days=7),
+    )
+    if user_id:
+        remind_query = remind_query.where(AppSubscription.user_id == int(user_id))
+    remind_subs = (await db.execute(remind_query)).scalars().all()
+    for sub in remind_subs:
+        try:
+            seconds_left = max(0, (sub.current_period_end - now).total_seconds())
+            raw_days = max(1, math.ceil(seconds_left / 86400))
+            days_left = 1 if raw_days <= 1 else (3 if raw_days <= 3 else 7)
+            from .billing_notifications import notify_subscription_expiring
+
+            inserted = await notify_subscription_expiring(db, sub, days_left=days_left)
+            if inserted:
+                expiring_reminders += 1
+        except Exception:
+            logger.warning("expiring subscription notification failed", exc_info=True)
+
+    if closed_orders or expired_subscriptions or expiring_reminders:
         await db.flush()
-    return {"closedOrders": closed_orders, "expiredSubscriptions": expired_subscriptions}
+    return {
+        "closedOrders": closed_orders,
+        "expiredSubscriptions": expired_subscriptions,
+        "expiringReminders": expiring_reminders,
+    }
 
 
 async def billing_overview(db: AsyncSession) -> dict[str, Any]:
     reconciled = await reconcile_billing_lifecycle(db)
-    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"] or reconciled.get("expiringReminders"):
         await db.commit()
     now = utcnow()
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)

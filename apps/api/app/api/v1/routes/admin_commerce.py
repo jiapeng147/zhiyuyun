@@ -764,7 +764,7 @@ async def list_subscriptions(
     db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
 ):
     reconciled = await reconcile_billing_lifecycle(db)
-    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"] or reconciled.get("expiringReminders"):
         await db.commit()
     rows = (
         await db.execute(
@@ -782,7 +782,7 @@ async def list_billing_orders(
     db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
 ):
     reconciled = await reconcile_billing_lifecycle(db)
-    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"] or reconciled.get("expiringReminders"):
         await db.commit()
     statement = (
         select(AppBillingOrder, AdminUser)

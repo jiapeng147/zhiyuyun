@@ -127,7 +127,7 @@ async def list_my_billing_orders(
 ):
     uid = current_uid(current_user)
     reconciled = await reconcile_billing_lifecycle(db, user_id=uid)
-    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"] or reconciled.get("expiringReminders"):
         await db.commit()
     base = select(AppBillingOrder).where(AppBillingOrder.user_id == uid)
     total = len((await db.execute(base)).scalars().all())

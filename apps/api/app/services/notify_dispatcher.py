@@ -443,11 +443,12 @@ async def _insert_in_app_notification(
         await db.execute(
             text(
                 """
-                INSERT INTO notification(user_id, account_id, notice_type, notification_type,
-                    title, content, level, priority, is_read, created_time, updated_time, deleted
+                INSERT INTO notification(
+                    notification_type, title, content, reference_type, reference_id,
+                    priority, is_read, created_time, updated_time, deleted
                 ) VALUES(
-                    NULL, :account_id, :event_type, :event_type,
-                    :title, :content, :level, :priority, 0, NOW(), NOW(), 0
+                    :event_type, :title, :content, :event_type, :account_id,
+                    :priority, 0, NOW(), NOW(), 0
                 )
                 """
             ),
@@ -456,7 +457,6 @@ async def _insert_in_app_notification(
                 "event_type": event_type,
                 "title": (title or "")[:200],
                 "content": content or "",
-                "level": level or "warning",
                 "priority": priority,
             },
         )
