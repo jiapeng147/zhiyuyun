@@ -4,7 +4,7 @@
       <g v-if="hasData" class="grid">
         <line v-for="y in [20,60,100,140,180]" :key="y" x1="20" :y1="y" :x2="width-20" :y2="y" />
       </g>
-      <polyline v-if="hasData" :points="areaPoints" fill="rgba(255,92,22,.10)" stroke="none" />
+      <polyline v-if="hasData" :points="areaPoints" fill="rgba(24, 160, 88,.10)" stroke="none" />
       <polyline v-if="hasData" :points="points" fill="none" stroke="var(--primary)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
       <circle v-for="(p,i) in dotList" :key="i" :cx="p.x" :cy="p.y" r="5" fill="white" stroke="var(--primary)" stroke-width="4" />
       <g v-if="hasData" class="axis"><text v-for="item in labelPoints" :key="item.key" :x="item.x" :y="height-10">{{ item.label }}</text></g>

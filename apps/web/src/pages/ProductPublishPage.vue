@@ -1401,7 +1401,7 @@ onMounted(load)
 }
 .img-card.add-card:disabled { cursor: wait; opacity: .72; }
 .img-card.add-card:focus-visible,
-.img-remove:focus-visible { outline: 3px solid rgba(255,92,22,.35); outline-offset: 2px; }
+.img-remove:focus-visible { outline: 3px solid rgba(24, 160, 88,.35); outline-offset: 2px; }
 .img-remove {
   position: absolute;
   top: 4px;

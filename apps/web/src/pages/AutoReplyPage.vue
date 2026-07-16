@@ -1369,7 +1369,7 @@ onMounted(async () => {
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   color: #c6643a;
   font-size: 12px;
   font-weight: 800;
@@ -1426,7 +1426,7 @@ onMounted(async () => {
   border-color: transparent;
   color: #fff;
   background: linear-gradient(135deg, #ff6d2f, #ff7f48);
-  box-shadow: 0 16px 30px rgba(217, 63, 0, 0.24);
+  box-shadow: 0 16px 30px rgba(24, 160, 88, 0.24);
 }
 
 .auto-reply-action-button.full {
@@ -1784,7 +1784,7 @@ onMounted(async () => {
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   color: #cb683d;
   font-size: 12px;
   font-weight: 800;
@@ -1825,9 +1825,9 @@ onMounted(async () => {
 
 .auto-reply-account-item.active,
 .auto-reply-product-item.selected {
-  border-color: rgba(217, 63, 0, 0.28);
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(12, 192, 223, 0.08));
-  box-shadow: 0 14px 26px rgba(217, 63, 0, 0.12);
+  border-color: rgba(24, 160, 88, 0.28);
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(12, 192, 223, 0.08));
+  box-shadow: 0 14px 26px rgba(24, 160, 88, 0.12);
 }
 
 .auto-reply-account-item:disabled,
@@ -1862,14 +1862,14 @@ onMounted(async () => {
   color: #ff6d2f;
   font-size: 13px;
   font-weight: 900;
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.14));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(229, 229, 229, 0.14));
   overflow: hidden;
 }
 
 .auto-reply-account-badge.is-all {
   background: linear-gradient(135deg, #ff6d2f 0%, #2dd4bf 60%, #7debd7 100%);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(217, 63, 0, 0.28);
+  box-shadow: 0 8px 18px rgba(24, 160, 88, 0.28);
 }
 
 .auto-reply-account-icon {
@@ -1881,7 +1881,7 @@ onMounted(async () => {
 }
 
 .auto-reply-account-badge.has-avatar {
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.18), rgba(125, 235, 215, 0.18));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.18), rgba(125, 235, 215, 0.18));
   padding: 0;
 }
 
@@ -2451,7 +2451,7 @@ onMounted(async () => {
   color: #fff;
   font-size: 12px;
   font-weight: 900;
-  box-shadow: 0 10px 18px rgba(217, 63, 0, 0.2);
+  box-shadow: 0 10px 18px rgba(24, 160, 88, 0.2);
 }
 
 .auto-reply-logic-step strong {
@@ -2499,7 +2499,7 @@ onMounted(async () => {
   padding: 14px 16px;
   border-radius: 18px;
   border: 1px solid rgba(20, 184, 166, 0.14);
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(217, 63, 0, 0.06));
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(24, 160, 88, 0.06));
   color: #79422a;
 }
 

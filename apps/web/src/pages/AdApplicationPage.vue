@@ -1727,7 +1727,7 @@ onBeforeUnmount(() => {
 .ads-textarea:focus {
   outline: none;
   border-color: #ffa37b;
-  box-shadow: 0 0 0 4px rgba(217, 63, 0, 0.1);
+  box-shadow: 0 0 0 4px rgba(24, 160, 88, 0.1);
 }
 
 .ads-input:disabled,
@@ -1859,7 +1859,7 @@ onBeforeUnmount(() => {
 
 .method-card.active {
   border-color: #ff6d2f;
-  box-shadow: 0 14px 26px rgba(217, 63, 0, 0.12);
+  box-shadow: 0 14px 26px rgba(24, 160, 88, 0.12);
   transform: translateY(-1px);
 }
 

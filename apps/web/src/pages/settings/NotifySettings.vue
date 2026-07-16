@@ -2161,7 +2161,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border: 1px solid rgba(246, 226, 218, 0.96);
   background:
-    radial-gradient(circle at 0% 0%, rgba(217, 63, 0, 0.15), transparent 30%),
+    radial-gradient(circle at 0% 0%, rgba(24, 160, 88, 0.15), transparent 30%),
     radial-gradient(circle at 100% 0%, rgba(23, 184, 150, 0.12), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(242, 247, 255, 0.95));
   box-shadow: 0 24px 60px rgba(177, 76, 32, 0.12);
@@ -2203,7 +2203,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   color: #c66136;
   font-size: 13px;
   font-weight: 800;
@@ -2376,7 +2376,7 @@ onBeforeUnmount(() => {
 }
 
 .notify-summary-icon.blue,
-.notify-channel-icon.blue { background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.16)); color: #d06436; }
+.notify-channel-icon.blue { background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(229, 229, 229, 0.16)); color: #d06436; }
 .notify-summary-icon.green,
 .notify-channel-icon.green { background: linear-gradient(135deg, rgba(22, 191, 120, 0.14), rgba(91, 220, 160, 0.16)); color: #16a46b; }
 .notify-summary-icon.cyan,
@@ -2466,7 +2466,7 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   color: #cb683d;
   font-size: 12px;
   font-weight: 700;
@@ -2501,9 +2501,9 @@ onBeforeUnmount(() => {
 }
 
 .notify-channel-item.active {
-  border-color: rgba(217, 63, 0, 0.3);
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(23, 184, 150, 0.08));
-  box-shadow: inset 0 0 0 1px rgba(217, 63, 0, 0.06);
+  border-color: rgba(24, 160, 88, 0.3);
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(23, 184, 150, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(24, 160, 88, 0.06);
 }
 
 .notify-channel-icon {
@@ -2561,7 +2561,7 @@ onBeforeUnmount(() => {
   height: 48px;
   border-radius: 18px;
   border: 1px dashed #edcdbf;
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.05), rgba(229, 229, 229, 0.03));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.05), rgba(229, 229, 229, 0.03));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2580,7 +2580,7 @@ onBeforeUnmount(() => {
   padding: 18px;
   border-radius: 22px;
   color: #fff;
-  background: linear-gradient(135deg, rgba(116, 51, 23, 0.98), rgba(255, 108, 45, 0.92));
+  background: linear-gradient(135deg, rgba(116, 51, 23, 0.98), rgba(24, 160, 88, 0.92));
   box-shadow: 0 18px 32px rgba(177, 76, 32, 0.18);
 }
 
@@ -2620,12 +2620,12 @@ onBeforeUnmount(() => {
   padding: 14px 16px;
   border-radius: 20px;
   border: 1px solid rgba(20, 184, 109, 0.18);
-  background: linear-gradient(135deg, rgba(20, 184, 109, 0.08), rgba(217, 63, 0, 0.05));
+  background: linear-gradient(135deg, rgba(20, 184, 109, 0.08), rgba(24, 160, 88, 0.05));
 }
 
 .notify-status-strip.disconnected {
   border-color: rgba(255, 180, 73, 0.24);
-  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(217, 63, 0, 0.05));
+  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(24, 160, 88, 0.05));
 }
 
 .notify-strip-main {
@@ -2644,7 +2644,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   color: #169d73;
-  background: linear-gradient(135deg, rgba(20, 184, 109, 0.16), rgba(217, 63, 0, 0.12));
+  background: linear-gradient(135deg, rgba(20, 184, 109, 0.16), rgba(24, 160, 88, 0.12));
 }
 
 .notify-status-strip.disconnected .notify-strip-icon {
@@ -2719,8 +2719,8 @@ onBeforeUnmount(() => {
   height: 34px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid rgba(217, 63, 0, 0.12);
-  background: rgba(217, 63, 0, 0.06);
+  border: 1px solid rgba(24, 160, 88, 0.12);
+  background: rgba(24, 160, 88, 0.06);
   color: #c65e31;
   display: inline-flex;
   align-items: center;
@@ -2819,7 +2819,7 @@ onBeforeUnmount(() => {
   height: 32px;
   border: 0;
   border-radius: 12px;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2862,7 +2862,7 @@ onBeforeUnmount(() => {
 .notify-segment button.active {
   color: #fff;
   background: linear-gradient(135deg, #ff6d2f, #ff824c);
-  box-shadow: 0 12px 24px rgba(217, 63, 0, 0.2);
+  box-shadow: 0 12px 24px rgba(24, 160, 88, 0.2);
 }
 
 .notify-chip-group {
@@ -2885,8 +2885,8 @@ onBeforeUnmount(() => {
 
 .notify-chip-group button.active {
   color: #ff6d2f;
-  border-color: rgba(217, 63, 0, 0.26);
-  background: rgba(217, 63, 0, 0.08);
+  border-color: rgba(24, 160, 88, 0.26);
+  background: rgba(24, 160, 88, 0.08);
 }
 
 .notify-config-actions {
@@ -2906,7 +2906,7 @@ onBeforeUnmount(() => {
   padding: 18px;
   border-radius: 24px;
   border: 1px solid rgba(244, 223, 214, 0.96);
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.08), rgba(255, 255, 255, 0.98));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.08), rgba(255, 255, 255, 0.98));
 }
 
 .notify-tutorial-hero.cyan {
@@ -2939,7 +2939,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.18));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(229, 229, 229, 0.18));
   color: #ff6d2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
@@ -3026,7 +3026,7 @@ onBeforeUnmount(() => {
 }
 
 .notify-tutorial-block-highlight {
-  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(217, 63, 0, 0.04), rgba(255, 255, 255, 0.98));
+  background: linear-gradient(135deg, rgba(255, 180, 73, 0.12), rgba(24, 160, 88, 0.04), rgba(255, 255, 255, 0.98));
 }
 
 .notify-tutorial-block-head {
@@ -3044,7 +3044,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.16));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(229, 229, 229, 0.16));
   color: #ff6d2f;
 }
 
@@ -3097,7 +3097,7 @@ onBeforeUnmount(() => {
   color: #fff;
   font-size: 13px;
   font-weight: 800;
-  box-shadow: 0 12px 20px rgba(217, 63, 0, 0.2);
+  box-shadow: 0 12px 20px rgba(24, 160, 88, 0.2);
 }
 
 .notify-step-copy {
@@ -3182,7 +3182,7 @@ onBeforeUnmount(() => {
   margin-top: 2px;
   border-radius: 50%;
   flex: none;
-  background: linear-gradient(135deg, rgba(20, 184, 109, 0.18), rgba(217, 63, 0, 0.12));
+  background: linear-gradient(135deg, rgba(20, 184, 109, 0.18), rgba(24, 160, 88, 0.12));
   position: relative;
 }
 
@@ -3257,7 +3257,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(217, 63, 0, 0.12), rgba(229, 229, 229, 0.16));
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.12), rgba(229, 229, 229, 0.16));
   color: #ff6d2f;
 }
 
@@ -3347,7 +3347,7 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.notify-log-icon.blue { background: rgba(217, 63, 0, 0.1); color: #ff6d2f; }
+.notify-log-icon.blue { background: rgba(24, 160, 88, 0.1); color: #ff6d2f; }
 .notify-log-icon.green { background: rgba(20, 184, 109, 0.1); color: #16a34a; }
 .notify-log-icon.orange { background: rgba(255, 180, 73, 0.16); color: #ea8a00; }
 
@@ -3410,7 +3410,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   color: #cb683d;
   font-size: 12px;
   font-weight: 700;
@@ -3475,7 +3475,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(217, 63, 0, 0.08);
+  background: rgba(24, 160, 88, 0.08);
   color: #ff6d2f;
 }
 

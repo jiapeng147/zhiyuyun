@@ -1,64 +1,76 @@
 <template>
-  <aside class="sidebar zy-shell-sidebar" :class="{ open }">
+  <aside class="sidebar naive-admin-sider" :class="{ open, collapsed }">
     <button class="sidebar-close" type="button" aria-label="关闭菜单" @click="$emit('close')">
-      <Icon name="close" />
+      <n-icon><CloseOutline /></n-icon>
     </button>
 
-    <button type="button" class="zy-brand-card" aria-label="返回首页" @click="$emit('navigate', 'dashboard')">
-      <span class="zy-brand-orb" aria-hidden="true">ZY</span>
-      <span class="zy-brand-text">
+    <button class="naive-admin-logo" type="button" @click="$emit('navigate', 'dashboard')">
+      <span class="naive-admin-logo-mark">ZY</span>
+      <span v-if="!collapsed" class="naive-admin-logo-text">
         <strong>智鱼云</strong>
-        <small>Ops Console</small>
+        <small>Naive Admin</small>
       </span>
     </button>
 
-    <div class="zy-command-card" role="search" @click="$emit('navigate', 'data')">
-      <Icon name="search" />
-      <span>搜索功能 / 数据 / 订单</span>
-      <kbd>⌘K</kbd>
-    </div>
+    <n-scrollbar class="naive-admin-menu-scroll">
+      <n-menu
+        :value="activeMenuKey"
+        :options="menuOptions"
+        :collapsed="collapsed"
+        :collapsed-width="64"
+        :collapsed-icon-size="18"
+        :indent="16"
+        :root-indent="14"
+        accordion
+        inverted
+        @update:value="onMenuSelect"
+      />
+    </n-scrollbar>
 
-    <nav class="nav-scroll zy-nav-scroll" aria-label="主导航">
-      <section v-for="group in groups" :key="group.title" class="nav-group zy-nav-group">
-        <div class="nav-title zy-nav-title">{{ group.title }}</div>
-        <button
-          v-for="item in group.items"
-          :key="item.key"
-          :class="['nav-item zy-nav-item', { active: isActive(item.key), child: item.child }]"
-          type="button"
-          @click="$emit('navigate', item.key)"
-        >
-          <span class="nav-icon"><Icon :name="item.icon" /></span>
-          <span class="zy-nav-label">{{ item.label }}</span>
-          <span v-if="item.badge" class="nav-badge">{{ item.badge }}</span>
-        </button>
-      </section>
-    </nav>
-
-    <div class="zy-sidebar-footer">
-      <button type="button" class="side-user zy-user-card" aria-label="打开个人中心" @click="$emit('navigate','profile')">
-        <span class="avatar avatar-img zy-avatar">{{ initials }}</span>
-        <span class="side-user-main">
+    <div class="naive-admin-sider-bottom">
+      <button class="naive-admin-profile" type="button" @click="$emit('navigate', 'profile')">
+        <n-avatar round size="small">{{ initials }}</n-avatar>
+        <span v-if="!collapsed">
           <strong>{{ displayName }}</strong>
-          <span>{{ roleLabel }}</span>
+          <small>{{ roleLabel }}</small>
         </span>
-        <span class="online-dot" aria-hidden="true"></span>
       </button>
-      <button class="sidebar-logout zy-logout" type="button" @click="$emit('logout')">
-        退出
+      <button v-if="!collapsed" class="sidebar-logout naive-admin-logout" type="button" @click="$emit('logout')">
+        退出登录
       </button>
-      <div class="version zy-version">v{{ APP_VERSION }} · {{ copyrightYear }}</div>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, h, ref } from 'vue'
+import { NAvatar, NIcon, NMenu, NScrollbar } from 'naive-ui'
 import { navGroups } from '../data/nav.js'
-import Icon from './Icon.vue'
-import { APP_VERSION, getCopyrightYear } from '../utils/appMeta.js'
+import {
+  AppsOutline,
+  BarChartOutline,
+  CartOutline,
+  CloseOutline,
+  ChatbubblesOutline,
+  ClipboardOutline,
+  CubeOutline,
+  FileTrayFullOutline,
+  LayersOutline,
+  LinkOutline,
+  ListOutline,
+  MailOutline,
+  MegaphoneOutline,
+  PeopleOutline,
+  PersonCircleOutline,
+  PricetagsOutline,
+  SettingsOutline,
+  ShieldCheckmarkOutline,
+  SyncOutline,
+  TimeOutline,
+  TrainOutline,
+} from '@vicons/ionicons5'
 
-defineEmits(['navigate', 'close', 'logout'])
+const emit = defineEmits(['navigate', 'close', 'logout'])
 
 const props = defineProps({
   active: { type: String, required: true },
@@ -66,7 +78,42 @@ const props = defineProps({
   open: { type: Boolean, default: false },
 })
 
-const groups = computed(() => {
+const collapsed = ref(false)
+
+const iconMap = {
+  dashboard: AppsOutline,
+  data: BarChartOutline,
+  account: PersonCircleOutline,
+  users: PeopleOutline,
+  link: LinkOutline,
+  product: CubeOutline,
+  publish: PricetagsOutline,
+  record: ClipboardOutline,
+  chat: ChatbubblesOutline,
+  message: ChatbubblesOutline,
+  truck: TrainOutline,
+  board: LayersOutline,
+  key: FileTrayFullOutline,
+  clock: TimeOutline,
+  reply: MailOutline,
+  log: ListOutline,
+  bell: MegaphoneOutline,
+  settings: SettingsOutline,
+  opportunity: ShieldCheckmarkOutline,
+  task: SyncOutline,
+  default: CartOutline,
+}
+
+const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '管理员')
+const roleLabel = computed(() => props.user?.role === 'superadmin' ? '超级管理员' : '运营成员')
+const initials = computed(() => (displayName.value || 'ZY').slice(0, 2).toUpperCase())
+
+const activeMenuKey = computed(() => {
+  if (props.active.startsWith('settings-') && props.active !== 'settings-notify') return 'settings-system'
+  return props.active
+})
+
+const visibleGroups = computed(() => {
   const isSuper = props.user?.role === 'superadmin'
   return navGroups
     .filter((g) => !g.superadmin || isSuper)
@@ -74,13 +121,23 @@ const groups = computed(() => {
     .filter((g) => g.items.length > 0)
 })
 
-const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '管理员')
-const roleLabel = computed(() => props.user?.role === 'superadmin' ? '超级管理员' : '运营成员')
-const initials = computed(() => (displayName.value || 'ZY').slice(0, 2).toUpperCase())
-const copyrightYear = getCopyrightYear()
+const menuOptions = computed(() => visibleGroups.value.map((group) => ({
+  type: 'group',
+  label: group.title,
+  key: `group:${group.title}`,
+  children: group.items.map((item) => ({
+    label: item.label,
+    key: item.key,
+    icon: renderMenuIcon(item.icon),
+  })),
+})))
 
-function isActive(key) {
-  if (props.active.startsWith('settings-') && props.active !== 'settings-notify' && key === 'settings-system') return true
-  return props.active === key
+function renderMenuIcon(name) {
+  const Comp = iconMap[name] || iconMap.default
+  return () => h(NIcon, null, { default: () => h(Comp) })
+}
+
+function onMenuSelect(key) {
+  if (key) emit('navigate', key)
 }
 </script>

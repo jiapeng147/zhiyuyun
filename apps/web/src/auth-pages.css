@@ -239,7 +239,7 @@
   height: 42px;
   border-radius: 14px;
   color: #14b8a6;
-  background: linear-gradient(180deg, rgba(217, 63, 0, .14), rgba(217, 63, 0, .04));
+  background: linear-gradient(180deg, rgba(24, 160, 88, .14), rgba(24, 160, 88, .04));
 }
 
 .auth-feature-icon .ui-icon {
@@ -501,7 +501,7 @@
 
 .auth-field:focus-within {
   border-color: #0f766e;
-  box-shadow: 0 0 0 4px rgba(255, 92, 22, .11);
+  box-shadow: 0 0 0 4px rgba(24, 160, 88, .11);
 }
 
 .auth-field-control {
@@ -654,7 +654,7 @@
   min-width: 108px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(255, 92, 22, .08);
+  background: rgba(24, 160, 88, .08);
 }
 
 .auth-link-strong {

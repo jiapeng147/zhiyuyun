@@ -237,7 +237,7 @@ function trapFocus(event) {
 
 .global-confirm-input:focus {
   border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(244, 79, 8, .1);
+  box-shadow: 0 0 0 3px rgba(24, 160, 88, .1);
 }
 
 .global-confirm-input::placeholder {

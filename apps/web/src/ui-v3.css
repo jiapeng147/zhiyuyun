@@ -231,7 +231,7 @@ body {
 }
 
 .ui-icon svg,
-.ui-icon :deep(svg) {
+.ui-icon svg {
   width: 100% !important;
   height: 100% !important;
 }
@@ -999,12 +999,6 @@ table tr:hover td {
 /* Scoped orange remnants and old gradients */
 [style*="#0f766e"],
 [style*="#0f766e"],
-[style*="255,79,0"],
-[style*="255, 79, 0"] {
-  color: #0f766e !important;
-  border-color: #0f766e !important;
-}
-
 [class*="orange"],
 [class*="Orange"] {
   --primary: #0f766e !important;
