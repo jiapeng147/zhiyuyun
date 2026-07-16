@@ -1,5 +1,5 @@
 <template>
-  <div class="ad-application-page">
+  <div class="ad-application-page ads-v8-shell">
     <div
       v-if="commercialState.available === false"
       class="global-notice warn commercial-unavailable"
@@ -2198,6 +2198,73 @@ onBeforeUnmount(() => {
 
 .ads-steps li + li {
   margin-top: 8px;
+}
+
+.ads-v8-shell .ads-hero,
+.ads-v8-shell .ads-section,
+.ads-v8-shell .plan-card,
+.ads-v8-shell .upload-card,
+.ads-v8-shell .method-card,
+.ads-v8-shell .payment-attempt-safety,
+.ads-v8-shell .payment-safety-notice,
+.ads-v8-shell .payment-qr-wrap,
+.ads-v8-shell .payment-qr-fallback,
+.ads-v8-shell .application-card,
+.ads-v8-shell .commercial-unavailable {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.ads-v8-shell .ads-v4-card :deep(.n-card__content),
+.ads-v8-shell .ads-v4-card :deep(.n-card-header) {
+  border-radius: 6px;
+}
+
+.ads-v8-shell .ads-hero h2,
+.ads-v8-shell .ads-v4-card :deep(.n-card-header__main),
+.ads-v8-shell .plan-head h3,
+.ads-v8-shell .payment-top strong,
+.ads-v8-shell .application-head strong {
+  color: #101828;
+  letter-spacing: 0;
+}
+
+.ads-v8-shell .ads-hero-badge,
+.ads-v8-shell .ads-hero-points span,
+.ads-v8-shell .plan-tag,
+.ads-v8-shell .payment-status,
+.ads-v8-shell .application-status,
+.ads-v8-shell .application-meta span,
+.ads-v8-shell .ads-btn,
+.ads-v8-shell .ads-input,
+.ads-v8-shell .ads-textarea,
+.ads-v8-shell .payment-poll-error,
+.ads-v8-shell .application-thumb {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.ads-v8-shell .plan-card:hover,
+.ads-v8-shell .plan-card.active,
+.ads-v8-shell .method-card.active {
+  transform: none;
+  border-color: #bfdbfe;
+  background: #eef4ff;
+  box-shadow: none;
+}
+
+.ads-v8-shell .ads-btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.ads-v8-shell .ads-btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
 }
 
 @media (max-width: 1200px) {

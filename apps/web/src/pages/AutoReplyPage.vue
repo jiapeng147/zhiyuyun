@@ -1,5 +1,5 @@
 <template>
-  <div class="auto-reply-shell">
+  <div class="auto-reply-shell auto-reply-v8-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
     <div v-if="availabilityNotice" class="global-notice warn auto-reply-availability-notice" role="status">
@@ -3024,5 +3024,84 @@ button:disabled {
   .auto-reply-load-more {
     padding: 6px 12px 12px;
   }
+}
+
+.auto-reply-v8-shell .auto-reply-hero,
+.auto-reply-v8-shell .auto-reply-panel,
+.auto-reply-v8-shell .auto-reply-account-item,
+.auto-reply-v8-shell .auto-reply-product-item,
+.auto-reply-v8-shell .auto-reply-status-strip,
+.auto-reply-v8-shell .auto-reply-strategy-top,
+.auto-reply-v8-shell .auto-reply-toggle-box,
+.auto-reply-v8-shell .auto-reply-metric-card,
+.auto-reply-v8-shell .auto-reply-summary-block,
+.auto-reply-v8-shell .auto-reply-logic-step,
+.auto-reply-v8-shell .auto-reply-impact-row,
+.auto-reply-v8-shell .auto-reply-impact-note,
+.auto-reply-v8-shell .auto-reply-selection-bar,
+.auto-reply-v8-shell .auto-reply-unavailable {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.auto-reply-v8-shell .auto-reply-hero :deep(.n-card__content) {
+  border-radius: 6px;
+  background: #fff;
+}
+
+.auto-reply-v8-shell .auto-reply-hero-main,
+.auto-reply-v8-shell .auto-reply-hero-side,
+.auto-reply-v8-shell .auto-reply-side-note,
+.auto-reply-v8-shell .auto-reply-side-item {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.auto-reply-v8-shell .auto-reply-hero-pill,
+.auto-reply-v8-shell .auto-reply-tiny-chip,
+.auto-reply-v8-shell .auto-reply-side-pill,
+.auto-reply-v8-shell .auto-reply-status-chip,
+.auto-reply-v8-shell .auto-reply-status-pill,
+.auto-reply-v8-shell .auto-reply-filter-chip,
+.auto-reply-v8-shell .auto-reply-meta-badge,
+.auto-reply-v8-shell .auto-reply-insight-chip,
+.auto-reply-v8-shell .auto-reply-metric-card b {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.auto-reply-v8-shell .auto-reply-panel-head {
+  border-bottom: 1px solid #dfe6f2;
+}
+
+.auto-reply-v8-shell .auto-reply-action-button,
+.auto-reply-v8-shell .ghost,
+.auto-reply-v8-shell .fill,
+.auto-reply-v8-shell .auto-reply-search,
+.auto-reply-v8-shell .auto-reply-switch .auto-reply-slider,
+.auto-reply-v8-shell .auto-reply-checkbox {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.auto-reply-v8-shell .auto-reply-action-button.primary,
+.auto-reply-v8-shell .fill,
+.auto-reply-v8-shell .auto-reply-filter-chip.active,
+.auto-reply-v8-shell .auto-reply-account-item.active,
+.auto-reply-v8-shell .auto-reply-product-item.selected {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.auto-reply-v8-shell .auto-reply-hero-copy h1,
+.auto-reply-v8-shell .auto-reply-hero-main h2,
+.auto-reply-v8-shell .auto-reply-panel-head h3 {
+  color: #101828;
+  letter-spacing: 0;
 }
 </style>

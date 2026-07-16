@@ -9,7 +9,7 @@
 
     <div class="profile-shell">
       <aside class="profile-side">
-        <div class="card-panel profile-side-card">
+        <div class="profile-v8-card profile-side-card">
           <div class="profile-side-head">
             <h2>个人中心</h2>
           </div>
@@ -58,7 +58,7 @@
           <template #actions><button type="button" class="app-btn" :disabled="overviewLoading" @click="loadOverview">重新加载</button></template>
         </EmptyState>
         <div v-else-if="activeTab === 'overview'" class="profile-main-section profile-overview">
-          <section class="card-panel welcome-hero">
+          <section class="profile-v8-card welcome-hero">
             <div class="welcome-content">
               <div class="welcome-avatar">
                 <svg viewBox="0 0 64 64" width="64" height="64">
@@ -100,20 +100,20 @@
           </section>
 
           <div class="profile-stats">
-            <article v-for="item in statCards" :key="item.label" class="stat-card">
-              <div class="stat-card-main">
-                <div :class="['stat-icon', item.toneClass]">
-                  <img class="stat-icon-img" :src="item.iconSrc" alt="" />
+            <article v-for="item in statCards" :key="item.label" class="profile-v8-stat">
+              <div class="profile-v8-stat-main">
+                <div :class="['profile-v8-stat-icon', item.toneClass]">
+                  <img class="profile-v8-stat-icon-img" :src="item.iconSrc" alt="" />
                 </div>
-                <div class="stat-info">
+                <div class="profile-v8-stat-info">
                   <span>{{ item.label }}</span>
                   <strong>{{ item.value }}</strong>
                 </div>
               </div>
 
-              <div class="stat-card-foot">
+              <div class="profile-v8-stat-foot">
                 <em>{{ item.desc }}</em>
-                <svg :class="['stat-wave', item.toneClass]" viewBox="0 0 96 18" preserveAspectRatio="none" aria-hidden="true">
+                <svg :class="['profile-v8-stat-wave', item.toneClass]" viewBox="0 0 96 18" preserveAspectRatio="none" aria-hidden="true">
                   <path d="M2 11c7 0 7-8 14-8s7 8 14 8 7-8 14-8 7 8 14 8 7-8 14-8 7 8 14 8" />
                 </svg>
               </div>
@@ -121,7 +121,7 @@
           </div>
 
           <div class="two-col-grid">
-            <section class="card-panel member-panel">
+            <section class="profile-v8-card member-panel">
               <div class="panel-head">
                 <div class="panel-title">
                   <span class="panel-head-mark gold" aria-hidden="true">
@@ -165,7 +165,7 @@
           </div>
 
           <div class="overview-bottom-grid">
-            <section class="card-panel account-panel">
+            <section class="profile-v8-card account-panel">
               <div class="panel-head">
                 <div class="panel-title">
                   <span class="panel-head-mark blue" aria-hidden="true">
@@ -188,7 +188,7 @@
           </div>
         </div>
 
-        <div v-else-if="activeTab === 'security'" class="card-panel security-panel content-panel">
+        <div v-else-if="activeTab === 'security'" class="profile-v8-card security-panel content-panel">
           <div class="panel-head">
             <div>
               <h3>账号安全</h3>
@@ -300,7 +300,7 @@
           </div>
         </div>
 
-        <div v-else-if="activeTab === 'password'" class="card-panel form-panel content-panel">
+        <div v-else-if="activeTab === 'password'" class="profile-v8-card form-panel content-panel">
           <div class="panel-head">
             <div>
               <h3>修改密码</h3>
@@ -778,7 +778,7 @@ onBeforeUnmount(() => {
   gap: 14px;
 }
 
-.stat-card {
+.profile-v8-stat {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -793,19 +793,19 @@ onBeforeUnmount(() => {
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.stat-card:hover {
+.profile-v8-stat:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(94, 50, 31, 0.04), 0 16px 32px rgba(94, 50, 31, 0.08);
   border-color: rgba(20, 184, 166, 0.16);
 }
 
-.stat-card-main {
+.profile-v8-stat-main {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.stat-card .stat-icon {
+.profile-v8-stat .profile-v8-stat-icon {
   width: 48px;
   height: 48px;
   border-radius: 16px;
@@ -817,42 +817,42 @@ onBeforeUnmount(() => {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-.stat-icon-img {
+.profile-v8-stat-icon-img {
   width: 28px;
   height: 28px;
   object-fit: contain;
   filter: drop-shadow(0 8px 16px rgba(94, 50, 31, 0.12));
 }
 
-.stat-card .stat-icon.green {
+.profile-v8-stat .profile-v8-stat-icon.green {
   background: linear-gradient(145deg, #e8fbef 0%, #c9f2d8 100%);
   color: #16a34a;
 }
 
-.stat-card .stat-icon.orange {
+.profile-v8-stat .profile-v8-stat-icon.orange {
   background: linear-gradient(145deg, #fff6e8 0%, #ffe0ae 100%);
   color: #f59e0b;
 }
 
-.stat-card .stat-icon.purple {
+.profile-v8-stat .profile-v8-stat-icon.purple {
   background: linear-gradient(145deg, #f3ecff 0%, #ffe1d4 100%);
   color: #f68a5c;
 }
 
-.stat-info {
+.profile-v8-stat-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.stat-info span {
+.profile-v8-stat-info span {
   font-size: 13px;
   font-weight: 700;
   color: #6B6B6B;
 }
 
-.stat-info strong {
+.profile-v8-stat-info strong {
   font-size: 28px;
   line-height: 1;
   font-weight: 900;
@@ -860,7 +860,7 @@ onBeforeUnmount(() => {
   font-family: 'SF Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
 }
 
-.stat-card-foot {
+.profile-v8-stat-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -868,34 +868,34 @@ onBeforeUnmount(() => {
   margin-top: 14px;
 }
 
-.stat-card-foot em {
+.profile-v8-stat-foot em {
   font-style: normal;
   font-size: 11px;
   color: #6B6B6B;
 }
 
-.stat-wave {
+.profile-v8-stat-wave {
   width: 84px;
   height: 18px;
   flex: 0 0 auto;
 }
 
-.stat-wave path {
+.profile-v8-stat-wave path {
   fill: none;
   stroke: #ff8c5b;
   stroke-width: 3;
   stroke-linecap: round;
 }
 
-.stat-wave.green path {
+.profile-v8-stat-wave.green path {
   stroke: #22c55e;
 }
 
-.stat-wave.orange path {
+.profile-v8-stat-wave.orange path {
   stroke: #fb923c;
 }
 
-.stat-wave.purple path {
+.profile-v8-stat-wave.purple path {
   stroke: #f68a5c;
 }
 
@@ -2510,11 +2510,11 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .stat-info strong {
+  .profile-v8-stat-info strong {
     font-size: 22px;
   }
 
-  .stat-card {
+  .profile-v8-stat {
     padding: 12px;
     min-height: 0;
   }
@@ -2691,7 +2691,7 @@ onBeforeUnmount(() => {
 .account-panel,
 .quick-panel,
 .content-panel,
-.stat-card,
+.profile-v8-stat,
 .security-card,
 .security-tips,
 .security-level-card {
@@ -2785,25 +2785,25 @@ onBeforeUnmount(() => {
   background: #eff6ff;
 }
 
-.stat-card {
+.profile-v8-stat {
   min-height: 108px;
   padding: 16px;
 }
 
-.stat-card:hover {
+.profile-v8-stat:hover {
   transform: none;
   border-color: #dbe3ee;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
-.stat-card .stat-icon {
+.profile-v8-stat .profile-v8-stat-icon {
   width: 40px;
   height: 40px;
   border-radius: 6px;
   box-shadow: none;
 }
 
-.stat-info strong {
+.profile-v8-stat-info strong {
   color: #111827;
   font-size: 24px;
   letter-spacing: 0;

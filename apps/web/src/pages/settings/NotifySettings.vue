@@ -1,5 +1,5 @@
 <template>
-  <div class="notify-settings-shell">
+  <div class="notify-settings-shell notify-v8-shell">
     <div v-if="loading" class="global-notice" role="status" aria-live="polite">正在加载通知配置与投递记录...</div>
     <div v-if="error" class="global-notice error" role="alert">{{ error }}</div>
     <div v-if="success" class="global-notice success" role="status">{{ success }}</div>
@@ -3562,6 +3562,95 @@ onBeforeUnmount(() => {
   .notify-rule-row {
     grid-template-columns: minmax(0, 1fr) 64px 64px;
   }
+}
+
+.notify-v8-shell .notify-hero,
+.notify-v8-shell .notify-health-card,
+.notify-v8-shell .notify-summary-card,
+.notify-v8-shell .notify-panel,
+.notify-v8-shell .notify-preview-card,
+.notify-v8-shell .notify-status-strip,
+.notify-v8-shell .notify-config-section,
+.notify-v8-shell .notify-tutorial-hero,
+.notify-v8-shell .notify-tutorial-block,
+.notify-v8-shell .notify-rule-group,
+.notify-v8-shell .notify-phone-screen,
+.notify-v8-shell .notification-test-attempt {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.notify-v8-shell .notify-hero {
+  padding: 20px;
+  align-items: stretch;
+}
+
+.notify-v8-shell .notify-hero-pill,
+.notify-v8-shell .notify-tiny-chip,
+.notify-v8-shell .notify-inline-chip,
+.notify-v8-shell .notify-preview-tag,
+.notify-v8-shell .notify-channel-state,
+.notify-v8-shell .notify-toast,
+.notify-v8-shell .notify-step-index,
+.notify-v8-shell .notify-check-dot {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.notify-v8-shell .notify-summary-icon,
+.notify-v8-shell .notify-health-icon,
+.notify-v8-shell .notify-channel-icon,
+.notify-v8-shell .notify-strip-icon,
+.notify-v8-shell .notify-tutorial-icon,
+.notify-v8-shell .notify-tutorial-head-icon,
+.notify-v8-shell .notify-group-icon,
+.notify-v8-shell .notify-log-icon,
+.notify-v8-shell .notify-toast-icon {
+  border-radius: 6px;
+  background: #eef4ff;
+  color: #2563eb;
+  box-shadow: none;
+}
+
+.notify-v8-shell .notify-panel-head {
+  border-bottom: 1px solid #dfe6f2;
+}
+
+.notify-v8-shell .notify-channel-item,
+.notify-v8-shell .notify-add-channel,
+.notify-v8-shell .notify-rule-row,
+.notify-v8-shell .notify-log-row,
+.notify-v8-shell .notify-tutorial-step,
+.notify-v8-shell .notify-tutorial-field,
+.notify-v8-shell .notify-form-grid input,
+.notify-v8-shell .notify-form-grid select,
+.notify-v8-shell .notify-field textarea,
+.notify-v8-shell .notify-input-wrap,
+.notify-v8-shell .notify-segment,
+.notify-v8-shell .notify-chip-group button,
+.notify-v8-shell .notify-link-button,
+.notify-v8-shell .notification-resolution-button {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.notify-v8-shell .notify-channel-item.active,
+.notify-v8-shell .notify-segment button.active,
+.notify-v8-shell .notify-chip-group button.active,
+.notify-v8-shell .notify-rule-actions button:hover,
+.notify-v8-shell .notify-link-button:hover:not(:disabled) {
+  background: #eef4ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+.notify-v8-shell .notify-hero-copy h1,
+.notify-v8-shell .notify-panel-head h3,
+.notify-v8-shell .notify-preview-head strong {
+  color: #101828;
+  letter-spacing: 0;
 }
 
 @media (max-width: 900px) {

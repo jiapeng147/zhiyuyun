@@ -449,9 +449,11 @@ onMounted(() => {
 }
 
 .mobile-v7-shell :deep(.m-summary-card),
+.mobile-v7-shell :deep(.m-hero),
 .mobile-v7-shell :deep(.m-auto-item),
 .mobile-v7-shell :deep(.m-menu-item),
 .mobile-v7-shell :deep(.m-pc-notice),
+.mobile-v7-shell :deep(.m-stat-card),
 .mobile-v7-shell :deep(.m-prod-stat-card),
 .mobile-v7-shell :deep(.m-prod-card),
 .mobile-v7-shell :deep(.m-acc-stat-card),
@@ -463,6 +465,9 @@ onMounted(() => {
 .mobile-v7-shell :deep(.m-prod-tip),
 .mobile-v7-shell :deep(.m-acc-tip),
 .mobile-v7-shell :deep(.m-msg-tip),
+.mobile-v7-shell :deep(.m-overview-card),
+.mobile-v7-shell :deep(.m-starter-item),
+.mobile-v7-shell :deep(.m-quick-card),
 .mobile-v7-shell :deep(.m-data-warning),
 .mobile-v7-shell :deep(.m-state-warning) {
   border: 1px solid #dfe6f2 !important;
@@ -472,6 +477,7 @@ onMounted(() => {
 }
 
 .mobile-v7-shell :deep(.m-summary-icon),
+.mobile-v7-shell :deep(.m-stat-icon),
 .mobile-v7-shell :deep(.m-auto-icon),
 .mobile-v7-shell :deep(.m-menu-icon),
 .mobile-v7-shell :deep(.m-pc-notice-icon),
@@ -494,6 +500,7 @@ onMounted(() => {
 .mobile-v7-shell :deep(.m-prod-chip),
 .mobile-v7-shell :deep(.m-chip),
 .mobile-v7-shell :deep(.m-filter-tab),
+.mobile-v7-shell :deep(.m-date-tab),
 .mobile-v7-shell :deep(.m-load-more),
 .mobile-v7-shell :deep(.m-empty-btn),
 .mobile-v7-shell :deep(.m-tip-btn),

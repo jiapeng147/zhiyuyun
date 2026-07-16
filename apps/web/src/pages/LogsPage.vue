@@ -517,9 +517,5 @@ onBeforeUnmount(() => {
   .three-col > * {
     min-width: 0;
   }
-  .stat-card,
-  .card-panel {
-    min-width: 0;
-  }
 }
 </style>

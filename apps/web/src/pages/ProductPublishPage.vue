@@ -1,5 +1,5 @@
 <template>
-  <div class="publish-v4">
+  <div class="publish-v4 publish-v8-shell">
     <n-card class="publish-v4-hero" :bordered="false">
       <div>
         <n-tag size="small" type="success" :bordered="false">Publish Console</n-tag>
@@ -1821,6 +1821,59 @@ onMounted(load)
 .candidate-btn small {
   font-weight: 400;
   opacity: 0.8;
+}
+
+.publish-v8-shell .publish-v4-hero,
+.publish-v8-shell .publish-v4-card,
+.publish-v8-shell .publish-v4-side :deep(.n-card),
+.publish-v8-shell .category-search-results,
+.publish-v8-shell .cascader-levels,
+.publish-v8-shell .auto-category-hint,
+.publish-v8-shell .auto-category-candidates,
+.publish-v8-shell .poi-dropdown,
+.publish-v8-shell .poi-badge,
+.publish-v8-shell .img-card,
+.publish-v8-shell .shipping-item {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.publish-v8-shell .publish-v4-hero :deep(.n-card__content),
+.publish-v8-shell .publish-v4-card :deep(.n-card__content),
+.publish-v8-shell .publish-v4-card :deep(.n-card-header) {
+  border-radius: 6px;
+}
+
+.publish-v8-shell .publish-v4-hero h2,
+.publish-v8-shell .publish-v4-card :deep(.n-card-header__main) {
+  color: #101828;
+  letter-spacing: 0;
+}
+
+.publish-v8-shell .publish-v4-steps span,
+.publish-v8-shell .chip,
+.publish-v8-shell .recent-categories button,
+.publish-v8-shell .category-actions button,
+.publish-v8-shell .category-link,
+.publish-v8-shell .candidate-btn,
+.publish-v8-shell .category-search,
+.publish-v8-shell .category-clear,
+.publish-v8-shell .category-ai-btn,
+.publish-v8-shell .location-input,
+.publish-v8-shell .auto-category-msg,
+.publish-v8-shell .poi-item,
+.publish-v8-shell .img-remove {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.publish-v8-shell .cascader-item.active,
+.publish-v8-shell .candidate-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
 }
 
 /* === 移动端适配 (max-width: 900px) === */

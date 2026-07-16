@@ -663,7 +663,6 @@ onBeforeUnmount(() => {
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
   }
-  .card-panel,
   .stat-grid > *,
   .stat-row > *,
   .form-grid > *,

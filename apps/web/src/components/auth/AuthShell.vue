@@ -1,5 +1,5 @@
 <template>
-  <div :class="['auth-shell-v3', `auth-shell-${pageKey}`]">
+  <div :class="['auth-shell-v3', 'auth-v8-shell', `auth-shell-${pageKey}`]">
     <header class="auth-v3-topbar">
       <button type="button" class="auth-v3-brand" @click="emit('navigate', 'data')">
         <span>ZY</span>
@@ -99,3 +99,70 @@ function openDoc(title) {
   openLegalDoc(title, props.legalDescription)
 }
 </script>
+
+<style scoped>
+.auth-v8-shell {
+  min-height: 100vh;
+  background: #f6f7f9;
+  color: #101828;
+}
+
+.auth-v8-shell .auth-v3-topbar,
+.auth-v8-shell .auth-v3-panel,
+.auth-v8-shell .auth-v3-console,
+.auth-v8-shell .auth-v3-metric,
+.auth-v8-shell .auth-v3-feature-row > div {
+  border: 1px solid #dfe6f2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.auth-v8-shell .auth-v3-brand span,
+.auth-v8-shell .auth-v3-brand-dot {
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: none;
+}
+
+.auth-v8-shell .auth-v3-ghost,
+.auth-v8-shell .auth-v3-console-head,
+.auth-v8-shell .auth-v3-console-grid,
+.auth-v8-shell .auth-v3-timeline span {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.auth-v8-shell .auth-v3-showcase h1,
+.auth-v8-shell .auth-v3-panel-head h2,
+.auth-v8-shell .auth-v3-brand strong {
+  color: #101828;
+  letter-spacing: 0;
+}
+
+.auth-v8-shell .auth-v3-showcase h1 span,
+.auth-v8-shell .auth-v3-eyebrow,
+.auth-v8-shell .auth-v3-metric em {
+  color: #2563eb;
+}
+
+.auth-v8-shell .auth-v3-console {
+  background: #0f172a;
+  color: #fff;
+}
+
+.auth-v8-shell :deep(input),
+.auth-v8-shell :deep(button),
+.auth-v8-shell :deep(.app-btn) {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.auth-v8-shell :deep(.app-btn.primary),
+.auth-v8-shell :deep(button[type='submit']) {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+</style>
