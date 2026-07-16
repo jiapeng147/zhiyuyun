@@ -1,104 +1,154 @@
 <template>
-  <div>
-    <div v-if="error" class="global-notice error" role="alert">{{ error }}</div>
-    <div v-if="warning" class="global-notice warning" role="status">{{ warning }}</div>
-    <div v-if="success" class="global-notice success" role="status">{{ success }}</div>
+  <div class="orders-page-v4">
+    <main class="orders-v4-main">
+      <div class="orders-v4-notices">
+        <div v-if="error" class="global-notice error" role="alert">{{ error }}</div>
+        <div v-if="warning" class="global-notice warning" role="status">{{ warning }}</div>
+        <div v-if="success" class="global-notice success" role="status">{{ success }}</div>
+      </div>
 
-    <CardPanel title="订单筛选">
-      <div class="toolbar wrap">
-        <select v-model="query.accountId" class="input select" :disabled="accountsAvailable === false" @change="search">
-          <option value="">全部账号</option>
-          <option v-for="account in accounts" :key="account.id" :value="String(account.id)">
-            {{ accountName(account) }}
-          </option>
-        </select>
-        <select v-model="query.status" class="input select" @change="search">
-          <option value="">全部状态</option>
-          <option value="0">待付款</option>
-          <option value="1">已付款</option>
-          <option value="2">待发货</option>
-          <option value="3">已发货</option>
-          <option value="4">已完成</option>
-          <option value="5">已关闭</option>
-        </select>
-        <input v-model="query.keyword" class="input grow" placeholder="搜索订单号 / 买家 / 商品" @keyup.enter="search" />
-        <AppButton type="primary" :loading="ordersLoading" @click="search">查询</AppButton>
-        <AppButton @click="resetFilters">重置</AppButton>
-        <AppButton :loading="syncingList" :disabled="!query.accountId" @click="syncAccountOrders">
-          {{ syncingList ? '同步中...' : '同步当前账号真实订单' }}
-        </AppButton>
-      </div>
-      <div class="sync-tip">
-        选择账号后，列表查询会优先同步该账号的闲鱼真实订单，再展示当前筛选结果。
-      </div>
-    </CardPanel>
+      <n-card class="orders-v4-hero" :bordered="false">
+        <div class="orders-v4-hero-copy">
+          <n-tag size="small" type="success" :bordered="false">Order Fulfillment</n-tag>
+          <h2>订单履约台</h2>
+          <p>集中同步闲鱼真实订单，跟进买家、商品、付款状态与手动发货进度。</p>
+        </div>
+        <n-space class="orders-v4-hero-actions" :size="8" align="center" wrap>
+          <n-button type="primary" size="small" :loading="ordersLoading" @click="loadOrders">刷新订单</n-button>
+          <n-button
+            size="small"
+            :loading="syncingList"
+            :disabled="!query.accountId"
+            @click="syncAccountOrders"
+          >
+            {{ syncingList ? '同步中...' : '同步当前账号' }}
+          </n-button>
+        </n-space>
+      </n-card>
 
-    <CardPanel title="订单列表" style="margin-top: 16px">
-      <div v-if="ordersRefreshing" class="refresh-status" role="status" aria-live="polite">
-        正在刷新订单列表，现有数据仍可查看。
-      </div>
-      <EmptyState v-if="ordersLoading && ordersAvailable !== true" icon="⏳" title="订单加载中" description="正在读取后端订单记录。" />
-      <EmptyState v-else-if="ordersAvailable === false" icon="⚠️" title="订单列表暂不可用" description="当前无法确认是否存在订单，不会把查询失败显示为空列表。">
-        <template #actions><AppButton @click="loadOrders">重新加载</AppButton></template>
-      </EmptyState>
-      <BaseTable v-else :columns="columns" :rows="rows" @row-click="selectOrder">
-        <template #orderNo="{ row }">
-          <div>
-            <div class="strong">{{ row.externalOrderId || '-' }}</div>
-            <div class="subtle">{{ row.createTimeText }}</div>
+      <section class="orders-v4-stats">
+        <n-card
+          v-for="item in orderStatCards"
+          :key="item.key"
+          class="orders-v4-stat"
+          :class="item.tone"
+          :bordered="false"
+        >
+          <span class="orders-v4-stat-icon">{{ item.symbol }}</span>
+          <n-statistic :label="item.title" :value="item.value" />
+          <small>{{ item.change }}</small>
+        </n-card>
+      </section>
+
+      <n-card class="orders-v4-filter-card" :bordered="false">
+        <div class="orders-v4-filter-grid">
+          <div class="orders-v4-filter-left">
+            <n-select
+              v-model:value="query.accountId"
+              class="orders-v4-account-select"
+              :disabled="accountsAvailable === false"
+              :options="accountFilterOptions"
+              @update:value="search"
+            />
+            <n-select
+              v-model:value="query.status"
+              class="orders-v4-status-select"
+              :options="orderStatusOptions"
+              @update:value="search"
+            />
           </div>
-        </template>
-        <template #buyer="{ row }">
-          <div>
-            <div class="strong">{{ row.buyerName || '-' }}</div>
-            <div class="subtle">{{ row.buyerId || '-' }}</div>
+          <div class="orders-v4-search">
+            <n-input
+              v-model:value="query.keyword"
+              clearable
+              placeholder="搜索订单号 / 买家 / 商品"
+              @keyup.enter="search"
+            />
+            <n-space :size="8" align="center" wrap>
+              <n-button type="primary" :loading="ordersLoading" @click="search">查询</n-button>
+              <n-button :disabled="ordersLoading" @click="resetFilters">重置</n-button>
+            </n-space>
           </div>
+        </div>
+        <div class="sync-tip">
+          选择账号后，列表查询会优先同步该账号的闲鱼真实订单，再展示当前筛选结果。
+        </div>
+      </n-card>
+
+      <n-card class="orders-v4-table-card" :bordered="false">
+        <template #header>订单列表</template>
+        <template #header-extra>
+          <n-space :size="8" align="center">
+            <n-tag size="small" :bordered="false">{{ selectedAccountName }}</n-tag>
+            <n-tag size="small" type="info" :bordered="false">第 {{ query.current }} 页</n-tag>
+          </n-space>
         </template>
-        <template #items="{ row }">
-          <div class="goods-cell">
-            <div v-for="(item, idx) in rowItemSlice(row)" :key="idx" class="goods-item">
-              <img
-                v-if="item.goodsImage && !failedImageUrls.has(item.goodsImage)"
-                :src="item.goodsImage"
-                class="goods-thumb"
-                alt=""
-                referrerpolicy="no-referrer"
-                @error="onGoodsImageError($event, item)"
-              />
-              <div class="goods-info">
-                <div class="goods-title">{{ item.goodsTitle || '-' }}<span v-if="item.externalGoodsId" class="goods-id-inline">（{{ item.externalGoodsId }}）</span></div>
-              </div>
+        <div v-if="ordersRefreshing" class="refresh-status" role="status" aria-live="polite">
+          正在刷新订单列表，现有数据仍可查看。
+        </div>
+        <EmptyState v-if="ordersLoading && ordersAvailable !== true" icon="⏳" title="订单加载中" description="正在读取后端订单记录。" />
+        <EmptyState v-else-if="ordersAvailable === false" icon="⚠️" title="订单列表暂不可用" description="当前无法确认是否存在订单，不会把查询失败显示为空列表。">
+          <template #actions><AppButton @click="loadOrders">重新加载</AppButton></template>
+        </EmptyState>
+        <BaseTable v-else :columns="columns" :rows="rows" @row-click="selectOrder">
+          <template #orderNo="{ row }">
+            <div>
+              <div class="strong">{{ row.externalOrderId || '-' }}</div>
+              <div class="subtle">{{ row.createTimeText }}</div>
             </div>
-            <div v-if="!rowItemSlice(row).length" class="subtle">{{ row.itemSummary }}</div>
-          </div>
-        </template>
-        <template #quantity="{ row }">
-          <div>
-            <div class="strong">{{ row.quantityTotalText }}</div>
-            <div class="subtle">{{ row.deliveryProgressText }}</div>
-          </div>
-        </template>
-        <template #orderStatus="{ row }">
-          <Badge :type="row.orderStatusBadge">{{ row.orderStatusText }}</Badge>
-        </template>
-        <template #delivery="{ row }">
-          <div>
-            <Badge :type="row.deliveryBadge">{{ row.deliveryStatusText }}</Badge>
-            <div class="subtle" style="margin-top: 4px">{{ row.platformSyncTimeText }}</div>
-          </div>
-        </template>
-        <template #op="{ row }">
-          <div class="inline-actions">
-            <button class="link" @click.stop="selectOrder(row)">查看详情</button>
-            <button class="link" @click.stop="openManualDelivery(row)">手动发货</button>
-            <button class="link" @click.stop="syncCurrentOrder(row)">
-              {{ syncingOrderId === row.id ? '同步中...' : '同步' }}
-            </button>
-          </div>
-        </template>
-      </BaseTable>
-      <Pagination v-if="ordersAvailable === true" :total="total" :current="query.current" :page-size="query.size" @page-change="goPage" />
-    </CardPanel>
+          </template>
+          <template #buyer="{ row }">
+            <div>
+              <div class="strong">{{ row.buyerName || '-' }}</div>
+              <div class="subtle">{{ row.buyerId || '-' }}</div>
+            </div>
+          </template>
+          <template #items="{ row }">
+            <div class="goods-cell">
+              <div v-for="(item, idx) in rowItemSlice(row)" :key="idx" class="goods-item">
+                <img
+                  v-if="item.goodsImage && !failedImageUrls.has(item.goodsImage)"
+                  :src="item.goodsImage"
+                  class="goods-thumb"
+                  alt=""
+                  referrerpolicy="no-referrer"
+                  @error="onGoodsImageError($event, item)"
+                />
+                <div class="goods-info">
+                  <div class="goods-title">{{ item.goodsTitle || '-' }}<span v-if="item.externalGoodsId" class="goods-id-inline">（{{ item.externalGoodsId }}）</span></div>
+                </div>
+              </div>
+              <div v-if="!rowItemSlice(row).length" class="subtle">{{ row.itemSummary }}</div>
+            </div>
+          </template>
+          <template #quantity="{ row }">
+            <div>
+              <div class="strong">{{ row.quantityTotalText }}</div>
+              <div class="subtle">{{ row.deliveryProgressText }}</div>
+            </div>
+          </template>
+          <template #orderStatus="{ row }">
+            <Badge :type="row.orderStatusBadge">{{ row.orderStatusText }}</Badge>
+          </template>
+          <template #delivery="{ row }">
+            <div>
+              <Badge :type="row.deliveryBadge">{{ row.deliveryStatusText }}</Badge>
+              <div class="subtle" style="margin-top: 4px">{{ row.platformSyncTimeText }}</div>
+            </div>
+          </template>
+          <template #op="{ row }">
+            <div class="inline-actions">
+              <button class="link" @click.stop="selectOrder(row)">查看详情</button>
+              <button class="link" @click.stop="openManualDelivery(row)">手动发货</button>
+              <button class="link" @click.stop="syncCurrentOrder(row)">
+                {{ syncingOrderId === row.id ? '同步中...' : '同步' }}
+              </button>
+            </div>
+          </template>
+        </BaseTable>
+        <Pagination v-if="ordersAvailable === true" :total="total" :current="query.current" :page-size="query.size" @page-change="goPage" />
+      </n-card>
+    </main>
 
     <!-- 订单详情弹窗 -->
     <Teleport to="body">
@@ -217,7 +267,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -289,6 +339,60 @@ const columns = [
 const rows = computed(() => orders.value.map(buildOrderRowViewModel))
 const ordersRefreshing = computed(() => ordersLoading.value && ordersAvailable.value === true)
 const detailView = computed(() => (selected.value ? buildOrderDetailViewModel(selected.value) : null))
+const accountFilterOptions = computed(() => [
+  { label: '全部账号', value: '' },
+  ...accounts.value.map(account => ({ label: accountName(account), value: String(account.id) }))
+])
+const orderStatusOptions = [
+  { label: '全部状态', value: '' },
+  { label: '待付款', value: '0' },
+  { label: '已付款', value: '1' },
+  { label: '待发货', value: '2' },
+  { label: '已发货', value: '3' },
+  { label: '已完成', value: '4' },
+  { label: '已关闭', value: '5' }
+]
+const selectedAccountName = computed(() => (query.accountId ? accountLabel(query.accountId) : '全部账号'))
+const pendingDeliveryCount = computed(() => rows.value.filter(row => Number(row.orderStatus) === 2).length)
+const activeDeliveryCount = computed(() => rows.value.filter(row => {
+  const status = String(row.deliveryStatus || '').toLowerCase()
+  return ['pending', 'running', 'in_progress', 'partial', 'message_sent', 'unknown'].includes(status)
+}).length)
+const completedOrderCount = computed(() => rows.value.filter(row => Number(row.orderStatus) === 4 || String(row.deliveryStatus || '').toLowerCase() === 'success').length)
+const orderStatCards = computed(() => [
+  {
+    key: 'total',
+    title: '订单总量',
+    value: total.value,
+    change: `${selectedAccountName.value} · 后端分页总数`,
+    symbol: '总',
+    tone: 'tone-blue'
+  },
+  {
+    key: 'page',
+    title: '当前页',
+    value: rows.value.length,
+    change: `每页 ${query.size} 条 · 第 ${query.current} 页`,
+    symbol: '页',
+    tone: 'tone-green'
+  },
+  {
+    key: 'pending',
+    title: '待发货',
+    value: pendingDeliveryCount.value,
+    change: '当前页付款后待履约订单',
+    symbol: '发',
+    tone: 'tone-orange'
+  },
+  {
+    key: 'delivery',
+    title: '履约中',
+    value: activeDeliveryCount.value,
+    change: `已完成 ${completedOrderCount.value} 单`,
+    symbol: '履',
+    tone: 'tone-cyan'
+  }
+])
 const manualBusy = computed(() => manualConfirming.value || manualSubmitting.value)
 const manualFieldsLocked = computed(() => manualOutcome.value !== null)
 const manualSubmitDisabled = computed(() => manualBusy.value
@@ -605,6 +709,170 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.orders-page-v4 {
+  width: 100%;
+  min-width: 0;
+}
+
+.orders-v4-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.orders-v4-notices {
+  display: grid;
+  gap: 8px;
+}
+
+.orders-v4-hero,
+.orders-v4-filter-card,
+.orders-v4-table-card,
+.orders-v4-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.orders-v4-hero :deep(.n-card__content) {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.orders-v4-hero-copy {
+  min-width: 0;
+}
+
+.orders-v4-hero-copy h2 {
+  margin: 12px 0 6px;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.orders-v4-hero-copy p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.orders-v4-hero-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.orders-v4-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.orders-v4-stat :deep(.n-card__content) {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.orders-v4-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.orders-v4-stat.tone-blue .orders-v4-stat-icon {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.orders-v4-stat.tone-green .orders-v4-stat-icon {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.orders-v4-stat.tone-orange .orders-v4-stat-icon {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.orders-v4-stat.tone-cyan .orders-v4-stat-icon {
+  background: #ecfeff;
+  color: #0891b2;
+}
+
+.orders-v4-stat :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.orders-v4-stat :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.orders-v4-stat small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.orders-v4-filter-card :deep(.n-card__content),
+.orders-v4-table-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.orders-v4-table-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+}
+
+.orders-v4-filter-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.orders-v4-filter-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.orders-v4-account-select {
+  width: 180px;
+}
+
+.orders-v4-status-select {
+  width: 140px;
+}
+
+.orders-v4-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 360px;
+  min-width: 280px;
+}
+
+.orders-v4-table-card {
+  overflow: hidden;
+}
+
 /* 订单详情弹窗 */
 .order-modal-mask {
   position: fixed;
@@ -912,8 +1180,59 @@ onBeforeUnmount(() => {
   border-color: #f7c97a;
 }
 
+@media (max-width: 1280px) {
+  .orders-v4-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
+  .orders-v4-main {
+    gap: 12px;
+  }
+
+  .orders-v4-hero :deep(.n-card__content) {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .orders-v4-hero-copy h2 {
+    font-size: 20px;
+  }
+
+  .orders-v4-hero-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .orders-v4-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .orders-v4-filter-card :deep(.n-card__content),
+  .orders-v4-table-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
+  .orders-v4-table-card :deep(.n-card-header) {
+    padding: 12px 12px 0;
+    align-items: flex-start;
+  }
+
+  .orders-v4-filter-grid,
+  .orders-v4-filter-left,
+  .orders-v4-search {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .orders-v4-account-select,
+  .orders-v4-status-select {
+    width: 100%;
+  }
+
   /* 订单详情弹窗：全宽底部弹出 */
   .order-modal-mask {
     align-items: flex-end;
