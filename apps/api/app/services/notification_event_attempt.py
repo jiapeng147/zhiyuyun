@@ -13,7 +13,9 @@ import logging
 import re
 import uuid
 from dataclasses import dataclass, replace
+from datetime import timezone
 from typing import Awaitable, Callable
+
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -22,6 +24,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.entities import NotificationEventAttempt, NotificationEventTargetMutex
 
 logger = logging.getLogger(__name__)
+
+
+def _utcnow() -> dt.datetime:
+    """Timezone-aware UTC clock used as the default for the store.
+
+    ``datetime.utcnow()`` is deprecated in Python 3.12 and removed in 3.13;
+    keep the helper here so every caller can rely on a stable naive-vs-aware
+    contract.
+    """
+    return dt.datetime.now(timezone.utc)
 
 _EVENT_TYPE_PATTERN = re.compile(r"^[a-z0-9_.:-]{1,64}$")
 _DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
@@ -141,7 +153,7 @@ class SqlNotificationEventAttemptStore:
         retry_backoff_seconds: int = 60,
     ) -> None:
         self._session_factory = session_factory
-        self._now = now or dt.datetime.utcnow
+        self._now = now or _utcnow
         self.lease_seconds = max(5, min(int(lease_seconds), 300))
         self.retry_backoff_seconds = max(
             5, min(int(retry_backoff_seconds), 60 * 60)

@@ -214,6 +214,16 @@ async def update_admin_password(
     return None
 
 
+async def _registration_is_open(db: AsyncSession) -> bool:
+    """注册开关: DB 设置 registration_enabled 优先, 回退 env 默认。"""
+    raw = (await load_setting_value(db, "registration_enabled", "")).strip()
+    if raw in ("1", "true", "True"):
+        return True
+    if raw in ("0", "false", "False"):
+        return False
+    return bool(settings.registration_enabled)
+
+
 async def enforce_login_rate_limit(request: Request) -> None:
     retry_after = await login_retry_after(request)
     if retry_after:
@@ -444,7 +454,7 @@ async def list_plans(db: AsyncSession = Depends(get_db)):
 async def register_send_code(
     req: RegisterSendCodeReqDTO, request: Request, db: AsyncSession = Depends(get_db)
 ):
-    if not settings.registration_enabled:
+    if not await _registration_is_open(db):
         raise HTTPException(status_code=403, detail="注册暂未开放")
     email = (req.email or "").strip().lower()
     if not email or "@" not in email:
@@ -465,7 +475,7 @@ async def register_send_code(
 async def register(
     req: RegisterReqDTO, request: Request, db: AsyncSession = Depends(get_db)
 ):
-    if not settings.registration_enabled:
+    if not await _registration_is_open(db):
         raise HTTPException(status_code=403, detail="注册暂未开放")
     email = (req.email or "").strip().lower()
     username = (req.username or "").strip()

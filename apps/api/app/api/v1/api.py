@@ -10,6 +10,7 @@ from ...core.route_registry import assert_unique_routes, include_router_excludin
 
 from .routes import (
     account,
+    admin_commerce,
     admin_data_compat,
     ai_tools,
     auth,
@@ -52,6 +53,7 @@ include_router_excluding(
     },
 )
 api_router.include_router(auth.router)
+api_router.include_router(admin_commerce.router)
 api_router.include_router(client_errors.router)
 api_router.include_router(profile.router)
 
