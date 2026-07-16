@@ -160,6 +160,10 @@
           <strong>{{ billingOverview.pendingOrderCount || 0 }}</strong>
         </div>
         <div>
+          <span>累计退款</span>
+          <strong>{{ money(billingOverview.refundedAmountCents) }}</strong>
+        </div>
+        <div>
           <span>生效订阅</span>
           <strong>{{ billingOverview.activeSubscriptionCount || 0 }}</strong>
         </div>
@@ -273,7 +277,16 @@
                     >
                       关闭
                     </button>
-                    <span v-else class="dim">—</span>
+                    <button
+                      v-if="o.status === 'paid'"
+                      class="btn small danger"
+                      type="button"
+                      :disabled="billingBusy"
+                      @click="refundOrder(o)"
+                    >
+                      退款
+                    </button>
+                    <span v-if="o.status !== 'pending' && o.status !== 'paid'" class="dim">—</span>
                   </td>
                 </tr>
               </tbody>
@@ -868,6 +881,7 @@ import {
   adminListUsageDaily, adminListQuotaEvents, adminGetUserProfile,
   adminListBillingCoupons, adminCreateBillingCoupon, adminUpdateBillingCoupon, adminDeleteBillingCoupon,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
+  adminRefundBillingOrder,
 } from '../../api/admin.js'
 
 const users = ref([])
@@ -1289,6 +1303,30 @@ async function closeAdminOrder(order) {
   }
 }
 
+async function refundOrder(order) {
+  if (!order || billingBusy.value) return
+  const amountYuan = (Number(order.amountCents || 0) / 100).toFixed(2)
+  const reason = window.prompt(`请输入订单 ${order.orderNo} 的退款原因`, order.refundReason || 'admin_refund')
+  if (reason === null) return
+  const amountRaw = window.prompt('请输入退款金额（元）', amountYuan)
+  if (amountRaw === null) return
+  const refundAmountCents = Math.max(0, Math.round(Number(amountRaw || 0) * 100))
+  if (!window.confirm(`确认退款 ${money(refundAmountCents)}？该订单关联的套餐权益会被撤销或回退。`)) return
+  billingBusy.value = true
+  try {
+    await adminRefundBillingOrder(order.id, {
+      reason: reason || 'admin_refund',
+      refundAmountCents,
+    })
+    flash(`订单 ${order.orderNo} 已退款`)
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '退款失败'), 'error')
+  } finally {
+    billingBusy.value = false
+  }
+}
+
 async function saveBillingSettings() {
   if (billingBusy.value) return
   billingBusy.value = true
@@ -1409,7 +1447,7 @@ onMounted(loadAll)
 .plan-list .plan-count { color: #0f766e; font-weight: 600; }
 
 /* 订阅与账单 */
-.billing-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.billing-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .billing-stats div { padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f8fafc; }
 .billing-stats span { display: block; color: #64748b; font-size: 12px; margin-bottom: 6px; }
 .billing-stats strong { display: block; color: #111827; font-size: 22px; line-height: 1.2; }

@@ -33,6 +33,7 @@ export const adminGetUserProfile = (id) => request.get(`/admin/users/${id}/profi
 export const adminActivateSubscription = (id, data) => request.post(`/admin/users/${id}/subscription`, data)
 export const adminMarkBillingOrderPaid = (id, data = {}) => request.post(`/admin/billing-orders/${id}/mark-paid`, data)
 export const adminCloseBillingOrder = (id, data = {}) => request.post(`/admin/billing-orders/${id}/close`, data)
+export const adminRefundBillingOrder = (id, data = {}) => request.post(`/admin/billing-orders/${id}/refund`, data)
 
 // === 注册开关 + SMTP ===
 export const getRegistration = () => request.get('/admin/registration')

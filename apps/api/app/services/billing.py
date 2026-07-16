@@ -985,6 +985,125 @@ async def close_billing_order(
     return order
 
 
+async def _apply_plan_to_user(db: AsyncSession, user: AdminUser, plan_code: str, expire_time: datetime | None) -> None:
+    plan = (
+        await db.execute(select(AppPlan).where(AppPlan.code == (plan_code or "free")))
+    ).scalar_one_or_none()
+    if plan:
+        user.plan_code = plan.code
+        user.max_accounts = int(plan.max_accounts or 0)
+        user.ai_daily_quota = int(plan.ai_daily_quota or 0)
+    else:
+        user.plan_code = plan_code or "free"
+        user.max_accounts = 1
+        user.ai_daily_quota = 100
+    user.plan_expire_time = expire_time
+
+
+async def _restore_previous_subscription(
+    db: AsyncSession,
+    *,
+    user: AdminUser,
+    exclude_subscription_id: int,
+) -> AppSubscription | None:
+    now = utcnow()
+    candidates = (
+        await db.execute(
+            select(AppSubscription)
+            .where(
+                AppSubscription.user_id == int(user.id),
+                AppSubscription.id != int(exclude_subscription_id),
+                AppSubscription.status == "replaced",
+            )
+            .order_by(AppSubscription.id.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+    for sub in candidates:
+        if sub.current_period_end and sub.current_period_end <= now:
+            continue
+        if sub.source_order_id:
+            source = (
+                await db.execute(
+                    select(AppBillingOrder).where(AppBillingOrder.id == int(sub.source_order_id))
+                )
+            ).scalar_one_or_none()
+            if source and source.status in {"refunded", "closed"}:
+                continue
+        sub.status = "active"
+        await _apply_plan_to_user(db, user, sub.plan_code, sub.current_period_end)
+        return sub
+    await _apply_plan_to_user(db, user, "free", None)
+    return None
+
+
+async def refund_billing_order(
+    db: AsyncSession,
+    order: AppBillingOrder,
+    *,
+    operator: str,
+    reason: str = "",
+    refund_amount_cents: int | None = None,
+) -> AppBillingOrder:
+    if order.status != "paid":
+        raise BillingError("只有已生效订单可以退款", code="order_not_paid")
+    now = utcnow()
+    amount = int(order.amount_cents or 0)
+    refund_amount = _clean_int(refund_amount_cents if refund_amount_cents is not None else amount, amount, 0, amount)
+    user = await load_user(db, int(order.user_id))
+    source_sub = (
+        await db.execute(
+            select(AppSubscription)
+            .where(AppSubscription.source_order_id == int(order.id))
+            .order_by(AppSubscription.id.desc())
+        )
+    ).scalars().first()
+
+    order.status = "refunded"
+    order.closed_time = order.closed_time or now
+    order.metadata_json = {
+        **(order.metadata_json or {}),
+        "refundedBy": operator,
+        "refundReason": reason or "admin_refund",
+        "refundAmountCents": refund_amount,
+        "refundedAt": now.isoformat(),
+    }
+
+    if source_sub and source_sub.status == "active":
+        source_sub.status = "canceled"
+        source_sub.cancel_at_period_end = 0
+        source_sub.current_period_end = now
+        other_active = (
+            await db.execute(
+                select(AppSubscription)
+                .where(
+                    AppSubscription.user_id == int(user.id),
+                    AppSubscription.id != int(source_sub.id),
+                    AppSubscription.status == "active",
+                )
+                .order_by(AppSubscription.id.desc())
+            )
+        ).scalars().first()
+        if other_active:
+            await _apply_plan_to_user(db, user, other_active.plan_code, other_active.current_period_end)
+        else:
+            await _restore_previous_subscription(db, user=user, exclude_subscription_id=int(source_sub.id))
+
+    await db.flush()
+    try:
+        from .billing_notifications import notify_billing_order_refunded
+
+        await notify_billing_order_refunded(
+            db,
+            order,
+            refund_amount_cents=refund_amount,
+            reason=reason or "管理员退款",
+        )
+    except Exception:
+        logger.warning("refunded billing order notification failed", exc_info=True)
+    return order
+
+
 async def reconcile_billing_lifecycle(db: AsyncSession, user_id: int | None = None) -> dict[str, int]:
     now = utcnow()
     closed_orders = 0
@@ -1096,6 +1215,18 @@ async def billing_overview(db: AsyncSession) -> dict[str, Any]:
             select(func.count()).select_from(AppBillingOrder).where(AppBillingOrder.status == "pending")
         )
     ).scalar() or 0)
+    refunded_amount = int((
+        await db.execute(
+            select(func.coalesce(func.sum(AppBillingOrder.amount_cents), 0)).where(
+                AppBillingOrder.status == "refunded"
+            )
+        )
+    ).scalar() or 0)
+    refunded_count = int((
+        await db.execute(
+            select(func.count()).select_from(AppBillingOrder).where(AppBillingOrder.status == "refunded")
+        )
+    ).scalar() or 0)
     active_subscriptions = int((
         await db.execute(
             select(func.count()).select_from(AppSubscription).where(AppSubscription.status == "active")
@@ -1109,6 +1240,8 @@ async def billing_overview(db: AsyncSession) -> dict[str, Any]:
         "paidTodayCents": paid_today,
         "pendingAmountCents": pending_amount,
         "pendingOrderCount": pending_count,
+        "refundedAmountCents": refunded_amount,
+        "refundedOrderCount": refunded_count,
         "activeSubscriptionCount": active_subscriptions,
         "orderStatus": [{"status": row[0] or "", "count": int(row[1] or 0)} for row in order_status_rows],
         "generatedAt": now.isoformat(),

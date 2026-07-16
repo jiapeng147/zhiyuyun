@@ -19,6 +19,7 @@ EVENT_BILLING_ORDER_PENDING = "账单待支付"
 EVENT_BILLING_ORDER_PAID = "账单支付确认"
 EVENT_BILLING_ORDER_CLOSED = "账单订单关闭"
 EVENT_BILLING_PAYMENT_PROOF = "付款凭证提交"
+EVENT_BILLING_ORDER_REFUNDED = "账单退款确认"
 EVENT_SUBSCRIPTION_EXPIRING = "套餐到期提醒"
 EVENT_SUBSCRIPTION_EXPIRED = "套餐已到期"
 EVENT_AI_QUOTA_WARNING = "AI 额度预警"
@@ -259,6 +260,36 @@ async def notify_billing_payment_proof_submitted(
         title=title,
         content=content,
         reference_type="billing_payment_proof",
+        reference_id=int(order.id),
+        priority=3,
+        context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
+    )
+
+
+async def notify_billing_order_refunded(
+    db: AsyncSession,
+    order: AppBillingOrder,
+    *,
+    refund_amount_cents: int,
+    reason: str = "",
+) -> None:
+    user = await _load_user(db, int(order.user_id))
+    username = user.username if user else f"#{order.user_id}"
+    title = "账单订单已退款"
+    content = (
+        f"用户：{username}\n"
+        f"订单号：{order.order_no}\n"
+        f"套餐：{order.plan_code}\n"
+        f"退款金额：{_money(refund_amount_cents)}\n"
+        f"原因：{reason or '管理员退款'}\n"
+        "相关套餐权益已按退款规则调整。"
+    )
+    await _notify_once(
+        db,
+        event=EVENT_BILLING_ORDER_REFUNDED,
+        title=title,
+        content=content,
+        reference_type="billing_order_refunded",
         reference_id=int(order.id),
         priority=3,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},

@@ -41,6 +41,7 @@ from ....services.billing import (
     normalize_feature_flags,
     feature_items,
     reconcile_billing_lifecycle,
+    refund_billing_order,
     save_payment_config,
 )
 from ....services.email_service import (
@@ -206,6 +207,11 @@ class AdminCloseBillingOrderReqDTO(CamelModel):
     reason: Optional[str] = "admin_close"
 
 
+class AdminRefundBillingOrderReqDTO(CamelModel):
+    reason: Optional[str] = "admin_refund"
+    refund_amount_cents: Optional[int] = None
+
+
 class BillingPaymentConfigReqDTO(CamelModel):
     enabled: bool = False
     order_expire_minutes: int = 1440
@@ -268,6 +274,7 @@ def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
 def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None) -> dict:
     meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
     proof = meta.get("paymentProof") if isinstance(meta.get("paymentProof"), dict) else None
+    refund_amount = meta.get("refundAmountCents")
     return {
         "id": int(order.id),
         "orderNo": order.order_no,
@@ -279,6 +286,10 @@ def _billing_order_payload(order: AppBillingOrder, user: AdminUser | None = None
         "discountCents": int(meta.get("discountCents") or 0),
         "couponCode": str(meta.get("couponCode") or ""),
         "couponName": str(meta.get("couponName") or ""),
+        "refundAmountCents": int(refund_amount if refund_amount is not None else 0),
+        "refundReason": str(meta.get("refundReason") or ""),
+        "refundedAt": str(meta.get("refundedAt") or ""),
+        "refundedBy": str(meta.get("refundedBy") or ""),
         "amountCents": int(order.amount_cents or 0),
         "durationDays": int(order.duration_days or 0),
         "status": order.status,
@@ -1135,6 +1146,37 @@ async def close_admin_billing_order(
             await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
         ).scalar_one_or_none()
         return ResultObject.success(_billing_order_payload(order, user), message="订单已关闭")
+    except BillingError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/billing-orders/{order_id}/refund", response_model=ResultObject[dict])
+async def refund_admin_billing_order(
+    order_id: int,
+    req: AdminRefundBillingOrderReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_superadmin),
+):
+    order = (
+        await db.execute(select(AppBillingOrder).where(AppBillingOrder.id == order_id))
+    ).scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    try:
+        await refund_billing_order(
+            db,
+            order,
+            operator=str(current_user.get("username") or "admin"),
+            reason=req.reason or "admin_refund",
+            refund_amount_cents=req.refund_amount_cents,
+        )
+        await db.commit()
+        await db.refresh(order)
+        user = (
+            await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
+        ).scalar_one_or_none()
+        return ResultObject.success(_billing_order_payload(order, user), message="订单已退款，套餐权益已调整")
     except BillingError as exc:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc

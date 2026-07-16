@@ -78,6 +78,7 @@ def _parse_paid_at(value: str | None) -> str:
 def _order_payload(order: AppBillingOrder) -> dict:
     meta = order.metadata_json if isinstance(order.metadata_json, dict) else {}
     proof = meta.get("paymentProof") if isinstance(meta.get("paymentProof"), dict) else None
+    refund_amount = meta.get("refundAmountCents")
     return {
         "id": int(order.id),
         "orderNo": order.order_no,
@@ -87,6 +88,9 @@ def _order_payload(order: AppBillingOrder) -> dict:
         "discountCents": int(meta.get("discountCents") or 0),
         "couponCode": str(meta.get("couponCode") or ""),
         "couponName": str(meta.get("couponName") or ""),
+        "refundAmountCents": int(refund_amount if refund_amount is not None else 0),
+        "refundReason": str(meta.get("refundReason") or ""),
+        "refundedAt": str(meta.get("refundedAt") or ""),
         "amountCents": int(order.amount_cents or 0),
         "durationDays": int(order.duration_days or 0),
         "status": order.status,
