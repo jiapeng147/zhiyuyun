@@ -79,6 +79,23 @@ def is_ai_configured(config: Optional[Dict[str, Any]]) -> bool:
         or normalized_key in _PLACEHOLDER_API_KEYS
         or collapsed_key in {item.replace("-", "").replace("_", "") for item in _PLACEHOLDER_API_KEYS}
     )
+    custom_endpoint = str(config.get("endpoint") or "").strip()
+    custom_endpoint_safe = False
+    if custom_endpoint:
+        try:
+            validate_public_https_url_syntax(custom_endpoint)
+            custom_endpoint_safe = True
+        except UnsafeRemoteURLError:
+            custom_endpoint_safe = False
+    if custom_endpoint and custom_endpoint_safe:
+        # Custom endpoint mode: bypass baseUrl path-joining entirely.
+        return bool(
+            enabled
+            and custom_endpoint
+            and api_key
+            and model
+            and not placeholder_key
+        )
     try:
         validate_public_https_url_syntax(base_url)
         endpoint_safe = True
@@ -113,6 +130,7 @@ async def _load_chat_model_config_from_db() -> Optional[Dict[str, Any]]:
             "requestTimeout": int(general_model.get("requestTimeout") or settings.ai_provider_timeout_seconds or 30),
             "polishKeywords": str(general_model.get("polishKeywords") or "").strip(),
             "polishForbiddenKeywords": str(general_model.get("polishForbiddenKeywords") or "").strip(),
+            "endpoint": str(general_model.get("endpoint") or "").strip(),
         }
         merged["enabled"] = is_ai_configured({
             "enabled": True,
@@ -160,6 +178,7 @@ async def _resolve_ai_config() -> Dict[str, Any]:
                 "enabled": True,
                 "source": "settings",
                 "request_timeout": int(db_config.get("requestTimeout") or settings.ai_provider_timeout_seconds or 30),
+                "endpoint": str(db_config.get("endpoint") or "").strip(),
             }
 
     base_url = (settings.ai_provider_base_url or "").strip()
@@ -315,8 +334,12 @@ async def generate_text(
 ) -> Dict[str, Any]:
     request_id = str(uuid.uuid4())
     cfg = await _resolve_ai_config()
+    custom_endpoint = str(cfg.get("endpoint") or "").strip()
+    if custom_endpoint:
+        # Strip a trailing slash so the request URL stays tidy.
+        custom_endpoint = custom_endpoint.rstrip("/")
     base_url = (cfg["base_url"] or "").rstrip("/")
-    if base_url and not base_url.endswith("/v1"):
+    if not custom_endpoint and base_url and not base_url.endswith("/v1"):
         base_url += "/v1"
 
     result: Dict[str, Any] = {
@@ -346,8 +369,9 @@ async def generate_text(
     }
 
     try:
+        target_url = custom_endpoint or f"{base_url}/chat/completions"
         response = await request_public_https(
-            f"{base_url}/chat/completions",
+            target_url,
             method="POST",
             content=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             headers={

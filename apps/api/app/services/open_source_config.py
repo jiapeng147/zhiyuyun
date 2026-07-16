@@ -135,6 +135,7 @@ def default_open_source_config() -> dict[str, Any]:
             "requestTimeout": settings.ai_provider_timeout_seconds,
             "polishKeywords": "",
             "polishForbiddenKeywords": "",
+            "endpoint": "",
         },
         "embeddingModel": {
             "provider": "",
@@ -181,6 +182,7 @@ def normalize_open_source_config(payload: Any) -> dict[str, Any]:
             ),
             "polishKeywords": _as_text(general_payload.get("polishKeywords")),
             "polishForbiddenKeywords": _as_text(general_payload.get("polishForbiddenKeywords")),
+            "endpoint": _as_text(general_payload.get("endpoint")),
         },
         "embeddingModel": {
             "provider": _as_text(embedding_payload.get("provider")),

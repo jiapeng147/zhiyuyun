@@ -81,6 +81,15 @@
           </AdminConfigField>
 
           <AdminConfigField
+            label="自定义 Endpoint"
+            hint="中转站/网关与官方 OpenAI 路径不一致时使用。填写后将绕过默认的 baseUrl + /chat/completions 拼接逻辑，直接 POST 到你填的完整 URL。"
+            meta="可填 https://example.com/v1/chat/completions 或中转站提供的兼容路径。仅支持 HTTPS，且域名必须是公网可解析地址。留空 = 走上方接口地址的标准 OpenAI 拼接。"
+            badge="中转站适配"
+          >
+            <input v-model="form.generalModel.endpoint" class="config-input" :placeholder="config.generalModel.endpoint || '留空走默认；例如 https://ai.jiapeng.vip/openai/v1/chat/completions'" />
+          </AdminConfigField>
+
+          <AdminConfigField
             label="API Key"
             hint="用于实际鉴权。保存后不会回显完整内容，只显示已保存状态。"
             meta="Key 轮换时直接覆盖即可；修改接口主机时也必须重新输入。若报 401/403，请检查 Key 与地址是否匹配。"
@@ -244,6 +253,7 @@ const form = reactive({
     requestTimeout: null,
     polishKeywords: '',
     polishForbiddenKeywords: '',
+    endpoint: '',
   },
 })
 
@@ -274,6 +284,7 @@ function syncForm() {
   form.generalModel.requestTimeout = null
   form.generalModel.polishKeywords = ''
   form.generalModel.polishForbiddenKeywords = ''
+  form.generalModel.endpoint = ''
 }
 
 async function loadPage() {
@@ -311,6 +322,7 @@ async function save() {
       form.generalModel.polishForbiddenKeywords,
       prev.polishForbiddenKeywords
     ),
+    endpoint: pickNext(form.generalModel.endpoint, prev.endpoint),
   }
   const saved = await saveConfig(payload, { successMessage: '通用模型配置已保存' })
   if (!saved) return
