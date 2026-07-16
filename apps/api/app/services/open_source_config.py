@@ -136,6 +136,7 @@ def default_open_source_config() -> dict[str, Any]:
             "polishKeywords": "",
             "polishForbiddenKeywords": "",
             "endpoint": "",
+            "apiMode": "chat_completions",
         },
         "embeddingModel": {
             "provider": "",
@@ -183,6 +184,7 @@ def normalize_open_source_config(payload: Any) -> dict[str, Any]:
             "polishKeywords": _as_text(general_payload.get("polishKeywords")),
             "polishForbiddenKeywords": _as_text(general_payload.get("polishForbiddenKeywords")),
             "endpoint": _as_text(general_payload.get("endpoint")),
+            "apiMode": _as_text(general_payload.get("apiMode")) or "chat_completions",
         },
         "embeddingModel": {
             "provider": _as_text(embedding_payload.get("provider")),

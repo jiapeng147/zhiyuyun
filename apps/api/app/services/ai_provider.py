@@ -131,6 +131,7 @@ async def _load_chat_model_config_from_db() -> Optional[Dict[str, Any]]:
             "polishKeywords": str(general_model.get("polishKeywords") or "").strip(),
             "polishForbiddenKeywords": str(general_model.get("polishForbiddenKeywords") or "").strip(),
             "endpoint": str(general_model.get("endpoint") or "").strip(),
+            "apiMode": str(general_model.get("apiMode") or "chat_completions").strip() or "chat_completions",
         }
         merged["enabled"] = is_ai_configured({
             "enabled": True,
@@ -179,6 +180,7 @@ async def _resolve_ai_config() -> Dict[str, Any]:
                 "source": "settings",
                 "request_timeout": int(db_config.get("requestTimeout") or settings.ai_provider_timeout_seconds or 30),
                 "endpoint": str(db_config.get("endpoint") or "").strip(),
+                "api_mode": str(db_config.get("apiMode") or "chat_completions").strip() or "chat_completions",
             }
 
     base_url = (settings.ai_provider_base_url or "").strip()
@@ -362,14 +364,35 @@ async def generate_text(
     elif system_prompt:
         messages = [{"role": "system", "content": system_prompt}] + list(messages)
 
-    payload = {
-        "model": cfg["model"],
-        "temperature": temperature,
-        "messages": messages,
-    }
+    api_mode = str(cfg.get("api_mode") or "chat_completions").strip() or "chat_completions"
+    if api_mode == "responses":
+        # OpenAI Responses API (/v1/responses): flat "input" string or array.
+        user_text = user_prompt or ""
+        if messages and not user_text:
+            for msg in reversed(messages):
+                if msg.get("role") == "user":
+                    user_text = msg.get("content") or ""
+                    break
+        responses_payload: Dict[str, Any] = {
+            "model": cfg["model"],
+            "input": user_text,
+        }
+        if system_prompt:
+            responses_payload["instructions"] = system_prompt
+        if temperature is not None:
+            responses_payload["temperature"] = temperature
+        payload = responses_payload
+        default_path = "/responses"
+    else:
+        payload = {
+            "model": cfg["model"],
+            "temperature": temperature,
+            "messages": messages,
+        }
+        default_path = "/chat/completions"
 
     try:
-        target_url = custom_endpoint or f"{base_url}/chat/completions"
+        target_url = custom_endpoint or f"{base_url}{default_path}"
         response = await request_public_https(
             target_url,
             method="POST",
@@ -383,20 +406,39 @@ async def generate_text(
             max_response_bytes=1024 * 1024,
         )
         result["httpStatus"] = response.status_code
+        result["apiMode"] = api_mode
         if response.status_code < 200 or response.status_code >= 300:
             result.update({"ok": False, "error": f"AI Provider returned HTTP {response.status_code}"})
             return result
         data = response.json()
         if not isinstance(data, dict):
             raise ValueError("invalid provider response")
-        choices = data.get("choices") or []
         content = ""
-        if isinstance(choices, list) and choices and isinstance(choices[0], dict):
-            content = (
-                (choices[0].get("message") or {}).get("content")
-                or choices[0].get("text")
-                or ""
-            ).strip()
+        if api_mode == "responses":
+            # OpenAI Responses API returns output_text (convenience) or
+            # output[].content[].text (structured).
+            content = str(data.get("output_text") or "").strip()
+            if not content:
+                for item in (data.get("output") or []):
+                    if not isinstance(item, dict):
+                        continue
+                    for part in (item.get("content") or []):
+                        if not isinstance(part, dict):
+                            continue
+                        text = part.get("text") or ""
+                        if text:
+                            content = str(text).strip()
+                            break
+                    if content:
+                        break
+        else:
+            choices = data.get("choices") or []
+            if isinstance(choices, list) and choices and isinstance(choices[0], dict):
+                content = (
+                    (choices[0].get("message") or {}).get("content")
+                    or choices[0].get("text")
+                    or ""
+                ).strip()
         result.update({"ok": bool(content), "content": content, "usage": data.get("usage") or {}})
         return result
     except UnsafeRemoteURLError as exc:

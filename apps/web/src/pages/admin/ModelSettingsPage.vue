@@ -90,6 +90,18 @@
           </AdminConfigField>
 
           <AdminConfigField
+            label="API 模式"
+            hint="切换对话协议。Chat Completions 是大多数 OpenAI 兼容中转的标准接口；Responses 是新版 OpenAI Responses API（中转站明确标注 'Responses 模式' 时选这个）。"
+            meta="选 Responses 后会自动 POST 到 /v1/responses 并按 Responses 协议解析 output_text。"
+            badge="协议"
+          >
+            <select v-model="form.generalModel.apiMode" class="config-input config-select">
+              <option value="chat_completions">Chat Completions（/v1/chat/completions）</option>
+              <option value="responses">Responses（/v1/responses）</option>
+            </select>
+          </AdminConfigField>
+
+          <AdminConfigField
             label="API Key"
             hint="用于实际鉴权。保存后不会回显完整内容，只显示已保存状态。"
             meta="Key 轮换时直接覆盖即可；修改接口主机时也必须重新输入。若报 401/403，请检查 Key 与地址是否匹配。"
@@ -254,6 +266,7 @@ const form = reactive({
     polishKeywords: '',
     polishForbiddenKeywords: '',
     endpoint: '',
+    apiMode: 'chat_completions',
   },
 })
 
@@ -285,6 +298,7 @@ function syncForm() {
   form.generalModel.polishKeywords = ''
   form.generalModel.polishForbiddenKeywords = ''
   form.generalModel.endpoint = ''
+  form.generalModel.apiMode = ''
 }
 
 async function loadPage() {
@@ -323,6 +337,7 @@ async function save() {
       prev.polishForbiddenKeywords
     ),
     endpoint: pickNext(form.generalModel.endpoint, prev.endpoint),
+    apiMode: pickNext(form.generalModel.apiMode, prev.apiMode || 'chat_completions'),
   }
   const saved = await saveConfig(payload, { successMessage: '通用模型配置已保存' })
   if (!saved) return
