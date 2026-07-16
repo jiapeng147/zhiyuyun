@@ -403,6 +403,16 @@ async def generate_text(
         logger.warning("AI Provider endpoint rejected or unavailable: kind=%s", exc.__class__.__name__)
         result.update({"ok": False, "error": "AI Provider endpoint must be a reachable public HTTPS address"})
         return result
+    except json.JSONDecodeError:
+        logger.warning(
+            "AI Provider endpoint returned non-JSON body (likely SPA fallback); httpStatus=%s",
+            result.get("httpStatus"),
+        )
+        result.update({
+            "ok": False,
+            "error": "服务端返回的不是 JSON（可能是网关的 Web 页面）。请确认自定义 Endpoint 是中转站提供的真实 API 完整地址",
+        })
+        return result
     except Exception as exc:  # noqa: BLE001
         logger.warning("AI Provider request failed: kind=%s", exc.__class__.__name__)
         result.update({"ok": False, "error": "AI Provider request failed"})
