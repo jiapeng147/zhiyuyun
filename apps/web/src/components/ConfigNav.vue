@@ -1,8 +1,8 @@
 <template>
-  <aside class="config-nav naive-admin-config-nav">
+  <n-card class="config-nav naive-admin-config-nav settings-config-nav-v4" :bordered="false">
     <div class="config-nav-head">
       <span>系统设置</span>
-      <p>系统配置 / 高德地图 / 模型配置 / RAG 知识库</p>
+      <p>站点、模型、通知与知识库配置</p>
     </div>
 
     <n-menu
@@ -12,18 +12,20 @@
       :indent="12"
       @update:value="key => emit('navigate', key)"
     />
-  </aside>
+  </n-card>
 </template>
 
 <script setup>
 import { computed, h } from 'vue'
-import { NIcon, NMenu } from 'naive-ui'
+import { NCard, NIcon, NMenu } from 'naive-ui'
 import {
   BusinessOutline,
   ChatbubbleEllipsesOutline,
   CodeSlashOutline,
+  CubeOutline,
   DocumentTextOutline,
   HardwareChipOutline,
+  HelpCircleOutline,
   LocationOutline,
   NotificationsOutline,
   SettingsOutline,
@@ -39,6 +41,10 @@ const iconMap = {
   bell: NotificationsOutline,
   message: ChatbubbleEllipsesOutline,
   opportunity: BusinessOutline,
+  product: CubeOutline,
+  help: HelpCircleOutline,
+  map: LocationOutline,
+  ai: HardwareChipOutline,
   key: HardwareChipOutline,
   board: DocumentTextOutline,
   link: LocationOutline,
@@ -54,85 +60,49 @@ const menuOptions = computed(() => tabs.map(tab => ({
 
 <style scoped>
 .config-nav {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.92));
-  border: 1px solid rgba(231, 237, 247, 0.95);
-  border-radius: 22px;
-  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
-  padding: 16px 14px 14px;
-  min-height: calc(100vh - 168px);
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  min-height: calc(100vh - 188px);
   position: sticky;
-  top: 18px;
-  backdrop-filter: blur(10px);
+  top: 112px;
+  overflow: hidden;
+}
+
+.settings-config-nav-v4 {
+  top: 112px !important;
+  min-height: calc(100vh - 188px) !important;
+}
+
+.config-nav :deep(.n-card__content) {
+  padding: 0;
 }
 
 .config-nav-head {
-  padding: 4px 10px 14px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #F0F0F0;
+  padding: 16px;
+  margin: 0;
+  border-bottom: 1px solid #edf0f5;
+  background: #f8fafc;
 }
 
 .config-nav-head span {
   display: block;
   font-size: 15px;
-  font-weight: 800;
-  color: #13213d;
-  letter-spacing: 0.2px;
+  font-weight: 650;
+  color: #111827;
+  letter-spacing: 0;
 }
 
 .config-nav-head p {
   margin: 6px 0 0;
   font-size: 12px;
   line-height: 1.5;
-  color: #8b97aa;
+  color: #64748b;
 }
 
 .config-nav-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.config-link {
-  width: 100%;
-  height: 48px;
-  border: 0;
-  background: transparent;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 14px;
-  color: #5a6880;
-  font-weight: 700;
-  text-align: left;
-  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
-}
-
-.config-link:hover {
-  background: #f3f8ff;
-  color: #0f766e;
-  transform: translateX(1px);
-}
-
-.config-link.active {
-  background: linear-gradient(135deg, #edf4ff, #e7f0ff);
-  color: #0f766e;
-  box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.12), 0 8px 20px rgba(20, 184, 166, 0.08);
-}
-
-.config-link span {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.config-link :deep(.ui-icon),
-.config-link :deep(.ui-icon-img) {
-  width: 18px;
-  height: 18px;
+  padding: 8px;
 }
 
 @media (max-width: 1260px) {
@@ -140,34 +110,26 @@ const menuOptions = computed(() => tabs.map(tab => ({
     min-height: auto;
     position: static;
   }
+
+  .settings-config-nav-v4 {
+    min-height: auto !important;
+    position: static !important;
+  }
 }
 
 @media (max-width: 900px) {
   .config-nav {
-    padding: 10px 12px;
-    border-radius: 16px;
-    overflow: hidden;
+    border-radius: 6px;
   }
   .config-nav-head {
     display: none;
   }
+
   .config-nav-list {
-    display: flex;
-    flex-direction: row;
     overflow-x: auto;
-    gap: 8px;
-    padding-bottom: 2px;
+    padding: 8px;
     min-width: 0;
     -webkit-overflow-scrolling: touch;
-  }
-  .config-link {
-    width: auto;
-    flex-shrink: 0;
-    height: 40px;
-    padding: 0 14px;
-    white-space: nowrap;
-    font-size: 13px;
-    border-radius: 12px;
   }
 }
 </style>
