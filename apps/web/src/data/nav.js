@@ -35,6 +35,13 @@ export const navGroups = [
     ],
   },
   {
+    title: '商业管理',
+    superadmin: true,
+    items: [
+      { key: 'admin-users', label: '用户管理', icon: 'users', superadmin: true },
+    ],
+  },
+  {
     title: '系统',
     items: [
       { key: 'logs', label: '操作日志', icon: 'log' },

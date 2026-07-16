@@ -41,7 +41,13 @@ import Icon from './Icon.vue'
 import { APP_VERSION, getCopyrightYear } from '../utils/appMeta.js'
 defineEmits(['navigate', 'close', 'logout'])
 const props = defineProps({ active: { type: String, required: true }, user: { type: Object, default: () => ({}) }, open: { type: Boolean, default: false } })
-const groups = navGroups
+const groups = computed(() => {
+  const isSuper = props.user?.role === 'superadmin'
+  return navGroups
+    .filter((g) => !g.superadmin || isSuper)
+    .map((g) => ({ ...g, items: g.items.filter((it) => !it.superadmin || isSuper) }))
+    .filter((g) => g.items.length > 0)
+})
 const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '管理员')
 const copyrightYear = getCopyrightYear()
 function isActive(key) {

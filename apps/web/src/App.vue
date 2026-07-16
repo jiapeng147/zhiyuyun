@@ -148,7 +148,8 @@ const pageMap = {
   feedback: asyncPage(() => import('./pages/FeedbackPage.vue')),
   'ad-application': asyncPage(() => import('./pages/AdApplicationPage.vue')),
   'settings-notify': asyncPage(() => import('./pages/settings/NotifySettings.vue')),
-  profile: asyncPage(() => import('./pages/ProfileCenterPage.vue'))
+  profile: asyncPage(() => import('./pages/ProfileCenterPage.vue')),
+  'admin-users': asyncPage(() => import('./pages/admin/UserManagementPage.vue'))
 }
 
 const settingsKeys = [
