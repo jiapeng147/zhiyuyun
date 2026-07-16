@@ -19,6 +19,7 @@ from ....models.entities import (
     AppPlan,
     AppSubscription,
     XianyuAccount,
+    XianyuConversation,
     XianyuGoods,
     XianyuTradeOrder,
     XianyuSysSetting,
@@ -231,6 +232,249 @@ def _subscription_payload(sub: AppSubscription, user: AdminUser | None = None) -
         "sourceOrderId": int(sub.source_order_id or 0),
         "cancelAtPeriodEnd": bool(sub.cancel_at_period_end),
         "createdTime": _dt(sub.created_time),
+    }
+
+
+def _user_payload(user: AdminUser) -> dict:
+    return {
+        "id": int(user.id),
+        "username": user.username,
+        "email": user.email or "",
+        "role": "superadmin" if user.is_super else "user",
+        "planCode": user.plan_code or "free",
+        "planExpireTime": _dt(user.plan_expire_time),
+        "status": int(user.status or 0),
+        "emailVerified": bool(user.email_verified),
+        "maxAccounts": int(user.max_accounts or 0),
+        "aiDailyQuota": int(user.ai_daily_quota or 0),
+        "nickname": user.nickname or "",
+        "phone": user.phone or "",
+        "registerIp": user.register_ip or "",
+        "createdTime": _dt(user.created_time),
+        "updatedTime": _dt(user.updated_time),
+        "lastLoginTime": _dt(user.last_login_time),
+    }
+
+
+async def _scalar_int(db: AsyncSession, statement) -> int:
+    return int((await db.execute(statement)).scalar() or 0)
+
+
+def _account_payload(account: XianyuAccount) -> dict:
+    return {
+        "id": int(account.id),
+        "externalUid": account.external_uid or "",
+        "nickname": account.nickname or account.remark or "",
+        "status": int(account.status or 0),
+        "city": " / ".join([item for item in [account.province, account.city] if item]) or "",
+        "soldCount": int(account.sold_count or 0),
+        "followers": int(account.followers or 0),
+        "createdTime": _dt(account.created_time),
+        "updatedTime": _dt(account.updated_time),
+    }
+
+
+def _trade_order_payload(order: XianyuTradeOrder) -> dict:
+    return {
+        "id": int(order.id),
+        "accountId": int(order.account_id or 0),
+        "externalOrderId": order.external_order_id or "",
+        "orderStatus": int(order.order_status or 0),
+        "totalAmount": order.total_amount or "",
+        "buyerName": order.buyer_name or "",
+        "itemId": order.item_id or "",
+        "createTime": _dt(order.create_time),
+        "createdTime": _dt(order.created_time),
+    }
+
+
+async def _build_user_profile(db: AsyncSession, uid: int) -> dict:
+    user = (await db.execute(select(AdminUser).where(AdminUser.id == uid))).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    account_ids = select(XianyuAccount.id).where(
+        XianyuAccount.owner_user_id == int(uid),
+        XianyuAccount.deleted == 0,
+    )
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    account_total = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuAccount).where(
+            XianyuAccount.owner_user_id == int(uid),
+            XianyuAccount.deleted == 0,
+        ),
+    )
+    account_active = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuAccount).where(
+            XianyuAccount.owner_user_id == int(uid),
+            XianyuAccount.deleted == 0,
+            XianyuAccount.status == 1,
+        ),
+    )
+    goods_total = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuGoods).where(
+            XianyuGoods.account_id.in_(account_ids),
+            XianyuGoods.deleted == 0,
+        ),
+    )
+    goods_on_sale = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuGoods).where(
+            XianyuGoods.account_id.in_(account_ids),
+            XianyuGoods.deleted == 0,
+            XianyuGoods.status == 1,
+        ),
+    )
+    goods_sold = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuGoods).where(
+            XianyuGoods.account_id.in_(account_ids),
+            XianyuGoods.deleted == 0,
+            XianyuGoods.status == 2,
+        ),
+    )
+    order_total = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuTradeOrder).where(
+            XianyuTradeOrder.account_id.in_(account_ids),
+            XianyuTradeOrder.deleted == 0,
+        ),
+    )
+    order_today = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuTradeOrder).where(
+            XianyuTradeOrder.account_id.in_(account_ids),
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.created_time >= today_start,
+        ),
+    )
+    conversation_total = await _scalar_int(
+        db,
+        select(func.count()).select_from(XianyuConversation).where(
+            XianyuConversation.account_id.in_(account_ids),
+        ),
+    )
+    unread_total = await _scalar_int(
+        db,
+        select(func.coalesce(func.sum(XianyuConversation.unread_count), 0)).where(
+            XianyuConversation.account_id.in_(account_ids),
+        ),
+    )
+    paid_amount_cents = await _scalar_int(
+        db,
+        select(func.coalesce(func.sum(AppBillingOrder.amount_cents), 0)).where(
+            AppBillingOrder.user_id == int(uid),
+            AppBillingOrder.status == "paid",
+        ),
+    )
+    pending_order_count = await _scalar_int(
+        db,
+        select(func.count()).select_from(AppBillingOrder).where(
+            AppBillingOrder.user_id == int(uid),
+            AppBillingOrder.status == "pending",
+        ),
+    )
+
+    order_status_rows = (
+        await db.execute(
+            select(XianyuTradeOrder.order_status, func.count())
+            .where(XianyuTradeOrder.account_id.in_(account_ids), XianyuTradeOrder.deleted == 0)
+            .group_by(XianyuTradeOrder.order_status)
+        )
+    ).all()
+    goods_status_rows = (
+        await db.execute(
+            select(XianyuGoods.status, func.count())
+            .where(XianyuGoods.account_id.in_(account_ids), XianyuGoods.deleted == 0)
+            .group_by(XianyuGoods.status)
+        )
+    ).all()
+    account_rows = (
+        await db.execute(
+            select(XianyuAccount)
+            .where(XianyuAccount.owner_user_id == int(uid), XianyuAccount.deleted == 0)
+            .order_by(XianyuAccount.id.desc())
+            .limit(8)
+        )
+    ).scalars().all()
+    trade_order_rows = (
+        await db.execute(
+            select(XianyuTradeOrder)
+            .where(XianyuTradeOrder.account_id.in_(account_ids), XianyuTradeOrder.deleted == 0)
+            .order_by(XianyuTradeOrder.id.desc())
+            .limit(8)
+        )
+    ).scalars().all()
+    subscription_rows = (
+        await db.execute(
+            select(AppSubscription)
+            .where(AppSubscription.user_id == int(uid))
+            .order_by(AppSubscription.id.desc())
+            .limit(8)
+        )
+    ).scalars().all()
+    billing_order_rows = (
+        await db.execute(
+            select(AppBillingOrder)
+            .where(AppBillingOrder.user_id == int(uid))
+            .order_by(AppBillingOrder.id.desc())
+            .limit(8)
+        )
+    ).scalars().all()
+
+    billing_state = await billing_state_for_user(db, uid)
+    usage_page = await list_usage_daily(db, user_id=uid, current=1, size=30)
+    event_page = await list_quota_events(db, user_id=uid, current=1, size=30)
+
+    return {
+        "user": _user_payload(user),
+        "billing": billing_state,
+        "summary": {
+            "accounts": {
+                "total": account_total,
+                "active": account_active,
+                "inactive": max(account_total - account_active, 0),
+                "quota": int(user.max_accounts or 0),
+            },
+            "goods": {
+                "total": goods_total,
+                "onSale": goods_on_sale,
+                "sold": goods_sold,
+                "offSale": max(goods_total - goods_on_sale - goods_sold, 0),
+                "statusDistribution": [
+                    {"status": int(status or 0), "count": int(count or 0)}
+                    for status, count in goods_status_rows
+                ],
+            },
+            "orders": {
+                "total": order_total,
+                "newToday": order_today,
+                "statusDistribution": [
+                    {"status": int(status or 0), "count": int(count or 0)}
+                    for status, count in order_status_rows
+                ],
+            },
+            "messages": {
+                "conversations": conversation_total,
+                "unread": unread_total,
+            },
+            "billing": {
+                "paidAmountCents": paid_amount_cents,
+                "pendingOrderCount": pending_order_count,
+            },
+        },
+        "recentAccounts": [_account_payload(row) for row in account_rows],
+        "recentTradeOrders": [_trade_order_payload(row) for row in trade_order_rows],
+        "subscriptions": [_subscription_payload(row, user) for row in subscription_rows],
+        "billingOrders": [_billing_order_payload(row, user) for row in billing_order_rows],
+        "usageDaily": usage_page,
+        "quotaEvents": event_page,
+        "generatedAt": now.isoformat(),
     }
 
 
@@ -618,6 +862,14 @@ async def get_user_billing(
     db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
 ):
     return ResultObject.success(await billing_state_for_user(db, uid))
+
+
+@router.get("/users/{uid}/profile", response_model=ResultObject[dict])
+async def get_user_profile(
+    uid: int,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await _build_user_profile(db, uid))
 
 
 @router.post("/users/{uid}/subscription", response_model=ResultObject[dict])

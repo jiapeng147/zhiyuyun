@@ -424,6 +424,14 @@
               <td class="dim">{{ fmt(u.lastLoginTime) }}</td>
               <td class="actions">
                 <button
+                  class="btn small"
+                  type="button"
+                  :disabled="profileLoading && profileTarget?.id === u.id"
+                  @click="openUserProfile(u)"
+                >
+                  画像
+                </button>
+                <button
                   v-if="u.role !== 'superadmin'"
                   class="btn small"
                   type="button"
@@ -455,6 +463,185 @@
         </table>
       </div>
     </n-card>
+
+    <!-- 用户商业画像 -->
+    <div v-if="profileTarget" class="modal-mask" @click.self="closeUserProfile">
+      <div class="modal-card profile-card">
+        <div class="modal-head">
+          <div>
+            <h3>{{ profileTarget.username }} 的商业画像</h3>
+            <p class="modal-subtitle">用户权益、经营数据、订阅账单、用量与审计事件。</p>
+          </div>
+          <button class="modal-close" type="button" aria-label="关闭" @click="closeUserProfile">×</button>
+        </div>
+        <div v-if="profileLoading" class="profile-loading">画像加载中…</div>
+        <div v-else-if="profileData" class="profile-body">
+          <section class="profile-identity">
+            <div>
+              <div class="profile-name">{{ profileData.user.username }}</div>
+              <div class="profile-meta">
+                <span>ID {{ profileData.user.id }}</span>
+                <span>{{ profileData.user.email || '未填写邮箱' }}</span>
+                <span>{{ profileData.user.role === 'superadmin' ? '超级管理员' : '普通用户' }}</span>
+              </div>
+            </div>
+            <div class="profile-plan">
+              <span>当前套餐</span>
+              <strong>{{ profileData.billing?.plan?.name || profileData.user.planCode }}</strong>
+              <em>{{ profileData.billing?.plan?.expireTime ? fmt(profileData.billing.plan.expireTime) : '长期有效' }}</em>
+            </div>
+          </section>
+
+          <section class="profile-kpis">
+            <div class="profile-kpi">
+              <span>闲鱼账号</span>
+              <strong>{{ profileData.summary.accounts.total }}</strong>
+              <em>{{ profileData.summary.accounts.active }} 正常 / {{ displayLimit(profileData.summary.accounts.quota) }} 配额</em>
+            </div>
+            <div class="profile-kpi">
+              <span>商品</span>
+              <strong>{{ profileData.summary.goods.total }}</strong>
+              <em>{{ profileData.summary.goods.onSale }} 在售 / {{ profileData.summary.goods.sold }} 已售</em>
+            </div>
+            <div class="profile-kpi">
+              <span>业务订单</span>
+              <strong>{{ profileData.summary.orders.total }}</strong>
+              <em>{{ profileData.summary.orders.newToday }} 今日新增</em>
+            </div>
+            <div class="profile-kpi">
+              <span>会话</span>
+              <strong>{{ profileData.summary.messages.conversations }}</strong>
+              <em>{{ profileData.summary.messages.unread }} 未读</em>
+            </div>
+            <div class="profile-kpi">
+              <span>确认收入</span>
+              <strong>{{ money(profileData.summary.billing.paidAmountCents) }}</strong>
+              <em>{{ profileData.summary.billing.pendingOrderCount }} 待确认订单</em>
+            </div>
+          </section>
+
+          <section class="profile-quota">
+            <div class="quota-line">
+              <span>账号配额</span>
+              <strong>{{ profileUsage.accounts.used }} / {{ displayLimit(profileUsage.accounts.limit) }}</strong>
+            </div>
+            <div class="profile-bar"><i :style="{ width: quotaPercent(profileUsage.accounts.used, profileUsage.accounts.limit) + '%' }"></i></div>
+            <div class="quota-line">
+              <span>AI 今日额度</span>
+              <strong>{{ profileUsage.aiCallsToday.used }} / {{ displayLimit(profileUsage.aiCallsToday.limit) }}</strong>
+            </div>
+            <div class="profile-bar ai"><i :style="{ width: quotaPercent(profileUsage.aiCallsToday.used, profileUsage.aiCallsToday.limit) + '%' }"></i></div>
+            <div class="profile-features">
+              <span
+                v-for="feature in profileData.billing?.plan?.featureItems || []"
+                :key="feature.key"
+                :class="{ off: !feature.enabled }"
+              >
+                {{ feature.label }}
+              </span>
+            </div>
+          </section>
+
+          <section class="profile-grid">
+            <div class="profile-panel">
+              <div class="panel-title"><strong>最近账号</strong><span class="muted">{{ profileData.recentAccounts.length }} 条</span></div>
+              <table class="table profile-table">
+                <thead><tr><th>账号</th><th>状态</th><th>粉丝</th><th>创建</th></tr></thead>
+                <tbody>
+                  <tr v-if="profileData.recentAccounts.length === 0"><td colspan="4" class="empty-cell">暂无账号</td></tr>
+                  <tr v-for="row in profileData.recentAccounts" :key="row.id">
+                    <td>{{ row.nickname || row.externalUid || `#${row.id}` }}</td>
+                    <td>{{ row.status === 1 ? '正常' : '停用' }}</td>
+                    <td>{{ row.followers }}</td>
+                    <td class="dim">{{ fmt(row.createdTime) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="profile-panel">
+              <div class="panel-title"><strong>订阅历史</strong><span class="muted">{{ profileData.subscriptions.length }} 条</span></div>
+              <table class="table profile-table">
+                <thead><tr><th>套餐</th><th>状态</th><th>开始</th><th>结束</th></tr></thead>
+                <tbody>
+                  <tr v-if="profileData.subscriptions.length === 0"><td colspan="4" class="empty-cell">暂无订阅</td></tr>
+                  <tr v-for="row in profileData.subscriptions" :key="row.id">
+                    <td><code>{{ row.planCode }}</code></td>
+                    <td>{{ subscriptionStatus(row.status) }}</td>
+                    <td class="dim">{{ fmt(row.currentPeriodStart) }}</td>
+                    <td class="dim">{{ row.currentPeriodEnd ? fmt(row.currentPeriodEnd) : '长期' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="profile-panel">
+              <div class="panel-title"><strong>账单订单</strong><span class="muted">{{ profileData.billingOrders.length }} 条</span></div>
+              <table class="table profile-table">
+                <thead><tr><th>订单号</th><th>套餐</th><th>金额</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr v-if="profileData.billingOrders.length === 0"><td colspan="4" class="empty-cell">暂无账单订单</td></tr>
+                  <tr v-for="row in profileData.billingOrders" :key="row.id">
+                    <td><code>{{ row.orderNo }}</code></td>
+                    <td>{{ row.planCode }}</td>
+                    <td>{{ money(row.amountCents) }}</td>
+                    <td>{{ orderStatus(row.status) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="profile-panel">
+              <div class="panel-title"><strong>业务订单</strong><span class="muted">{{ profileData.recentTradeOrders.length }} 条</span></div>
+              <table class="table profile-table">
+                <thead><tr><th>订单</th><th>买家</th><th>金额</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr v-if="profileData.recentTradeOrders.length === 0"><td colspan="4" class="empty-cell">暂无业务订单</td></tr>
+                  <tr v-for="row in profileData.recentTradeOrders" :key="row.id">
+                    <td>{{ row.externalOrderId || `#${row.id}` }}</td>
+                    <td>{{ row.buyerName || '—' }}</td>
+                    <td>{{ row.totalAmount || '—' }}</td>
+                    <td>{{ tradeOrderStatus(row.orderStatus) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="profile-panel">
+              <div class="panel-title"><strong>用量趋势</strong><span class="muted">{{ profileData.usageDaily.records.length }} 条</span></div>
+              <table class="table profile-table">
+                <thead><tr><th>日期</th><th>指标</th><th>已用</th><th>上限</th></tr></thead>
+                <tbody>
+                  <tr v-if="profileData.usageDaily.records.length === 0"><td colspan="4" class="empty-cell">暂无用量</td></tr>
+                  <tr v-for="row in profileData.usageDaily.records" :key="row.id">
+                    <td>{{ row.usageDate || '—' }}</td>
+                    <td>{{ row.metricLabel || row.metric }}</td>
+                    <td>{{ row.usedCount }}</td>
+                    <td>{{ displayLimit(row.limitCount) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="profile-panel">
+              <div class="panel-title"><strong>配额事件</strong><span class="muted">{{ profileData.quotaEvents.records.length }} 条</span></div>
+              <table class="table profile-table">
+                <thead><tr><th>指标</th><th>变化</th><th>来源</th><th>时间</th></tr></thead>
+                <tbody>
+                  <tr v-if="profileData.quotaEvents.records.length === 0"><td colspan="4" class="empty-cell">暂无事件</td></tr>
+                  <tr v-for="row in profileData.quotaEvents.records" :key="row.id" :title="row.reason || ''">
+                    <td>{{ row.metricLabel || row.metric }}</td>
+                    <td><span :class="['event-delta', Number(row.delta || 0) > 0 ? 'plus' : 'zero']">{{ eventDelta(row.delta) }}</span></td>
+                    <td>{{ sourceText(row.sourceType) }}</td>
+                    <td class="dim">{{ fmt(row.createdTime) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
 
     <!-- 重置密码模态 -->
     <div v-if="resetTarget" class="modal-mask" @click.self="resetTarget = null">
@@ -542,7 +729,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { NCard, NSpace, NTag } from 'naive-ui'
 import ToggleSwitch from '../../components/ToggleSwitch.vue'
 import { friendlyError } from '../../utils/friendlyError.js'
@@ -551,7 +738,7 @@ import {
   getOverview, adminListPlans, adminCreatePlan, adminUpdatePlan, adminDeletePlan,
   adminListSubscriptions, adminListBillingOrders, adminActivateSubscription, adminMarkBillingOrderPaid,
   adminCloseBillingOrder, adminGetBillingOverview, adminGetBillingSettings, adminSetBillingSettings,
-  adminListUsageDaily, adminListQuotaEvents,
+  adminListUsageDaily, adminListQuotaEvents, adminGetUserProfile,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
 } from '../../api/admin.js'
 
@@ -588,6 +775,9 @@ const createForm = reactive({ username: '', email: '', password: '', planCode: '
 const resetTarget = ref(null)
 const resetPwd = ref('')
 const resetBusy = ref(false)
+const profileTarget = ref(null)
+const profileData = ref(null)
+const profileLoading = ref(false)
 
 const editingPlan = ref(null)
 
@@ -607,6 +797,11 @@ const featureCatalog = [
   { key: 'item_polish', label: '商品擦亮' },
   { key: 'notifications', label: '通知设置' },
 ]
+const emptyProfileUsage = { used: 0, limit: 0, remaining: 0 }
+const profileUsage = computed(() => ({
+  accounts: profileData.value?.billing?.usage?.accounts || emptyProfileUsage,
+  aiCallsToday: profileData.value?.billing?.usage?.aiCallsToday || emptyProfileUsage,
+}))
 
 function flash(msg, type = 'success') { notice.value = msg; noticeType.value = type; setTimeout(() => { if (notice.value === msg) notice.value = '' }, 4000) }
 function fmt(v) { if (!v) return '—'; return String(v).replace('T', ' ').slice(0, 16) }
@@ -626,6 +821,14 @@ function sourceText(sourceType) {
     feature_block: '权益拦截',
   }
   return map[sourceType] || sourceType || '系统'
+}
+function quotaPercent(used, limit) {
+  const max = Number(limit || 0)
+  if (max <= 0 || max >= 999999) return max >= 999999 ? 8 : 100
+  return Math.max(4, Math.min(100, Math.round((Number(used || 0) / max) * 100)))
+}
+function tradeOrderStatus(status) {
+  return ({ 0: '待付款', 1: '已付款', 2: '待发货', 3: '已发货', 4: '已完成', 5: '已关闭' })[Number(status || 0)] || '未知'
 }
 function defaultFeatures(source = {}) {
   return Object.fromEntries(featureCatalog.map(item => [item.key, source[item.key] !== false]))
@@ -723,6 +926,28 @@ async function onResetPwd() {
     flash(`已重置 ${resetTarget.value.username} 的密码`)
     resetTarget.value = null; resetPwd.value = ''
   } catch (e) { flash(friendlyError(e, '重置失败'), 'error') } finally { resetBusy.value = false }
+}
+
+async function openUserProfile(user) {
+  if (!user) return
+  profileTarget.value = user
+  profileData.value = null
+  profileLoading.value = true
+  try {
+    const res = await adminGetUserProfile(user.id)
+    profileData.value = res.data || null
+  } catch (e) {
+    flash(friendlyError(e, '用户画像加载失败'), 'error')
+    profileTarget.value = null
+  } finally {
+    profileLoading.value = false
+  }
+}
+
+function closeUserProfile() {
+  profileTarget.value = null
+  profileData.value = null
+  profileLoading.value = false
 }
 
 // === 套餐编辑 ===
@@ -978,10 +1203,43 @@ onMounted(loadAll)
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal-card { background: #fff; border-radius: 6px; padding: 20px; width: min(520px, 92vw); box-shadow: 0 16px 48px rgba(0,0,0,.18); }
 .modal-card.small { width: min(420px, 92vw); }
+.modal-card.profile-card { width: min(1180px, 94vw); max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .modal-head h3 { margin: 0; font-size: 16px; }
+.modal-subtitle { margin: 5px 0 0; color: #64748b; font-size: 12px; line-height: 1.5; }
 .modal-close { background: transparent; border: 0; font-size: 22px; line-height: 1; color: var(--muted, #6b6b6b); cursor: pointer; padding: 4px 8px; }
 .modal-body { display: flex; flex-direction: column; gap: 12px; }
+
+.profile-loading { padding: 44px 0; color: #64748b; text-align: center; }
+.profile-body { min-height: 0; overflow-y: auto; padding-right: 4px; display: grid; gap: 14px; }
+.profile-identity { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 14px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f8fafc; }
+.profile-name { color: #111827; font-size: 22px; font-weight: 750; line-height: 1.25; }
+.profile-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; color: #64748b; font-size: 12px; }
+.profile-meta span { padding: 2px 7px; border-radius: 999px; background: #fff; border: 1px solid #e5e7eb; }
+.profile-plan { min-width: 180px; text-align: right; display: grid; gap: 3px; }
+.profile-plan span { color: #64748b; font-size: 12px; }
+.profile-plan strong { color: #111827; font-size: 18px; }
+.profile-plan em { color: #64748b; font-size: 12px; font-style: normal; }
+.profile-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.profile-kpi { min-width: 0; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; }
+.profile-kpi span { display: block; color: #64748b; font-size: 12px; margin-bottom: 6px; }
+.profile-kpi strong { display: block; color: #111827; font-size: 24px; line-height: 1.15; }
+.profile-kpi em { display: block; margin-top: 6px; color: #64748b; font-size: 12px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-quota { padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; display: grid; gap: 8px; }
+.quota-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #64748b; font-size: 13px; }
+.quota-line strong { color: #111827; }
+.profile-bar { height: 7px; overflow: hidden; border-radius: 999px; background: #eef2f7; }
+.profile-bar i { display: block; height: 100%; border-radius: inherit; background: #0f766e; }
+.profile-bar.ai i { background: #2563eb; }
+.profile-features { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.profile-features span { padding: 2px 7px; border-radius: 999px; background: #eefbf6; color: #0f766e; font-size: 12px; }
+.profile-features span.off { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.profile-panel { min-width: 0; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; }
+.profile-table { min-width: 520px; width: 100%; border-collapse: collapse; font-size: 12px; }
+.profile-table th, .profile-table td { padding: 9px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.profile-table th { color: #64748b; font-weight: 650; }
+.profile-table code { padding: 1px 5px; border-radius: 4px; background: #eef2f7; color: #334155; }
 
 /* role / status */
 .plan-select { padding: 5px 8px; min-width: 96px; }
@@ -1018,6 +1276,19 @@ onMounted(loadAll)
   }
 
   .billing-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-identity {
+    flex-direction: column;
+  }
+
+  .profile-plan {
+    text-align: left;
+  }
+
+  .profile-kpis,
+  .profile-grid {
     grid-template-columns: 1fr;
   }
 

@@ -25,6 +25,7 @@ export const adminListQuotaEvents = (params = {}) => request.get('/admin/quota-e
 export const adminGetBillingSettings = () => request.get('/admin/billing-settings')
 export const adminSetBillingSettings = (data) => request.put('/admin/billing-settings', data)
 export const adminGetUserBilling = (id) => request.get(`/admin/users/${id}/billing`)
+export const adminGetUserProfile = (id) => request.get(`/admin/users/${id}/profile`)
 export const adminActivateSubscription = (id, data) => request.post(`/admin/users/${id}/subscription`, data)
 export const adminMarkBillingOrderPaid = (id, data = {}) => request.post(`/admin/billing-orders/${id}/mark-paid`, data)
 export const adminCloseBillingOrder = (id, data = {}) => request.post(`/admin/billing-orders/${id}/close`, data)
