@@ -1,7 +1,40 @@
 <template>
-  <div class="dashboard-page">
-    <div class="dashboard-grid">
-      <div class="dashboard-main">
+  <div class="dashboard-page dashboard-admin">
+    <div v-if="error" class="dashboard-alert error">
+      <span>{{ error }}</span>
+      <n-button size="small" tertiary :loading="reloading" @click="reloadData">
+        {{ reloading ? '重试中' : '重试' }}
+      </n-button>
+    </div>
+
+    <section class="dashboard-hero-grid">
+      <n-card class="dashboard-welcome-card" :bordered="false">
+        <div class="welcome-main">
+          <n-tag size="small" type="success" :bordered="false">运营工作台</n-tag>
+          <h2>今日运营概览</h2>
+          <p>{{ guideLeadText }}</p>
+          <n-space :size="8" class="welcome-actions">
+            <n-button type="primary" size="small" @click="emit('navigate', 'accounts')">账号接入</n-button>
+            <n-button size="small" @click="emit('navigate', 'products')">商品管理</n-button>
+            <n-button size="small" @click="emit('navigate', 'data')">数据面板</n-button>
+            <n-button size="small" tertiary :loading="reloading" @click="reloadData">刷新</n-button>
+          </n-space>
+        </div>
+        <div class="welcome-side">
+          <div class="health-card">
+            <strong :class="statusSummaryClass">{{ statusSummaryText }}</strong>
+            <span>最后刷新 {{ lastLoaded }}</span>
+          </div>
+          <div class="health-mini-grid">
+            <div v-for="item in healthSummary" :key="item.key" class="health-mini">
+              <b>{{ item.value }}</b>
+              <span>{{ item.label }}</span>
+            </div>
+          </div>
+        </div>
+      </n-card>
+
+      <n-card class="dashboard-banner-card" :bordered="false">
         <section v-if="totalSlides > 0" class="hero-card">
           <div class="hero-viewport">
             <div class="hero-track" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
@@ -23,15 +56,11 @@
             </div>
           </div>
 
-          <button class="hero-arrow hero-arrow-left" type="button" :disabled="totalSlides <= 1" @click="prevSlide">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+          <button class="hero-arrow hero-arrow-left" type="button" :disabled="totalSlides <= 1" aria-label="上一张" @click="prevSlide">
+            ‹
           </button>
-          <button class="hero-arrow hero-arrow-right" type="button" :disabled="totalSlides <= 1" @click="nextSlide">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+          <button class="hero-arrow hero-arrow-right" type="button" :disabled="totalSlides <= 1" aria-label="下一张" @click="nextSlide">
+            ›
           </button>
 
           <div class="hero-dots">
@@ -39,75 +68,164 @@
               v-for="(_, index) in totalSlides"
               :key="`dot-${index}`"
               type="button"
+              :aria-label="`切换到第 ${index + 1} 张`"
               :class="['hero-dot', { active: currentSlide === index }]"
               @click="goToSlide(index)"
             ></button>
           </div>
         </section>
-
-        <div v-if="error" class="global-notice error">
-          <span>{{ error }}</span>
-          <button class="retry-btn" type="button" :disabled="reloading" @click="reloadData">{{ reloading ? '重试中...' : '重试' }}</button>
+        <div v-else class="banner-empty">
+          <strong>暂无运营横幅</strong>
+          <span>已保留广告服务状态，不展示占位图片。</span>
         </div>
+      </n-card>
+    </section>
 
-        <CardPanel title="快速开始" desc="把最常用的入口放在这里，方便第一次进入系统时快速上手" class="dashboard-section">
-          <div class="quick-start-grid">
-            <button v-for="item in quickStarts" :key="item.t" type="button" class="quick-card" @click="goFeature(item)">
-              <div :class="['circle-ico', item.c]"><Icon :name="item.i" /></div>
-              <div class="quick-text">
-                <strong>{{ item.t }}</strong>
-                <span>{{ item.d }}</span>
+    <section class="metric-grid">
+      <n-card
+        v-for="item in overviewMetrics"
+        :key="item.key"
+        class="metric-card"
+        :class="`tone-${item.tone}`"
+        :bordered="false"
+      >
+        <div class="metric-card-head">
+          <span class="metric-icon"><Icon :name="item.icon" /></span>
+          <n-tag size="small" :type="item.tagType" :bordered="false">{{ item.state }}</n-tag>
+        </div>
+        <n-statistic :label="item.label" :value="item.value">
+          <template #suffix>{{ item.suffix }}</template>
+        </n-statistic>
+        <p>{{ item.helper }}</p>
+      </n-card>
+    </section>
+
+    <section class="dashboard-content-grid">
+      <main class="dashboard-main">
+        <n-card title="业务进度" class="dashboard-card" :bordered="false">
+          <div class="progress-grid">
+            <button
+              v-for="item in workProgress"
+              :key="item.key"
+              type="button"
+              class="progress-item"
+              @click="goFeature(item)"
+            >
+              <div class="progress-item-head">
+                <span class="progress-icon"><Icon :name="item.icon" /></span>
+                <div>
+                  <strong>{{ item.label }}</strong>
+                  <span>{{ item.detail }}</span>
+                </div>
               </div>
-              <span class="card-arrow">›</span>
+              <n-progress
+                type="line"
+                :percentage="item.percent"
+                :height="6"
+                :show-indicator="false"
+                :color="item.color"
+                rail-color="#edf2f7"
+              />
             </button>
           </div>
-        </CardPanel>
+        </n-card>
 
-        <CardPanel title="功能特性" desc="常用业务能力模块一览，延续设计稿中的两行卡片结构" class="dashboard-section">
+        <n-card title="常用入口" class="dashboard-card" :bordered="false">
+          <div class="shortcut-grid">
+            <button
+              v-for="item in primaryShortcuts"
+              :key="item.t"
+              type="button"
+              class="shortcut-card"
+              @click="goFeature(item)"
+            >
+              <span :class="['shortcut-icon', item.c]"><Icon :name="item.i" /></span>
+              <strong>{{ item.t }}</strong>
+              <span>{{ item.d }}</span>
+            </button>
+          </div>
+        </n-card>
+
+        <n-card title="实时事件" class="dashboard-card" :bordered="false">
+          <n-data-table
+            v-if="realtimeRows.length"
+            size="small"
+            :columns="realtimeColumns"
+            :data="realtimeRows"
+            :bordered="false"
+            :single-line="false"
+            :pagination="false"
+          />
+          <n-empty v-else size="small" description="暂无实时事件" />
+        </n-card>
+
+        <n-card title="功能矩阵" class="dashboard-card" :bordered="false">
           <div class="feature-grid">
             <button v-for="item in features" :key="item.t" type="button" class="feature-card" @click="goFeature(item)">
-              <div :class="['circle-ico', item.c]"><Icon :name="item.i" /></div>
-              <div class="feature-text">
+              <span :class="['feature-icon', item.c]"><Icon :name="item.i" /></span>
+              <span class="feature-text">
                 <strong>{{ item.t }}</strong>
-                <span>{{ item.d }}</span>
-                <em>{{ `点击进入 ${item.targetLabel}` }}</em>
-              </div>
-              <span class="card-arrow">›</span>
+                <small>{{ item.d }}</small>
+              </span>
+              <em>{{ item.targetLabel }}</em>
             </button>
           </div>
-        </CardPanel>
-
-        <CardPanel title="最近实时事件" class="dashboard-section">
-          <div v-if="realtimeEvents.length === 0" class="events-empty">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#dbc2b7" stroke-width="1.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              <path d="m9 12 2 2 4-4" />
-            </svg>
-            <p>暂无实时事件，等待后端推送</p>
-          </div>
-          <div v-else class="events-box">
-            <div v-for="(event, index) in realtimeEvents" :key="event.id || `rt-${index}`" class="event-row">
-              <strong>{{ event.type || '实时事件' }}</strong>
-              <span>{{ event.text }}</span>
-              <em>{{ event.time || '--:--:--' }}</em>
-            </div>
-          </div>
-        </CardPanel>
-      </div>
+        </n-card>
+      </main>
 
       <aside class="dashboard-side">
-        <CardPanel class="side-panel ad-side-panel">
-          <template #title>广告合作</template>
-          <template #action>
-            <button
-              class="side-link"
-              type="button"
+        <n-card title="待办建议" class="dashboard-card side-panel" :bordered="false">
+          <div class="todo-list">
+            <button v-for="item in guides" :key="item.title" type="button" class="todo-item" @click="goFeature(item)">
+              <span :class="['todo-state', item.state]">{{ item.stateText }}</span>
+              <strong>{{ item.title }}</strong>
+              <small>{{ item.desc }}</small>
+            </button>
+          </div>
+        </n-card>
+
+        <n-card title="系统状态" class="dashboard-card side-panel" :bordered="false">
+          <div class="status-list">
+            <div v-for="item in systemStatus" :key="item.id || item.label" class="status-row" :title="item.message || ''">
+              <span><i :class="['status-dot', { offline: item.ok === false, unknown: item.ok == null }]"></i>{{ item.label }}</span>
+              <strong :class="item.ok === true ? 'status-ok' : (item.ok === false ? 'status-bad' : 'status-unknown')">
+                {{ item.ok === true ? '正常' : (item.ok === false ? '异常' : '未知') }}
+              </strong>
+            </div>
+          </div>
+        </n-card>
+
+        <n-card title="最近通知" class="dashboard-card side-panel" :bordered="false">
+          <template #header-extra>
+            <n-button text size="small" @click="emit('navigate', 'messages')">查看全部</n-button>
+          </template>
+          <div v-if="notificationsAvailable === false" class="side-empty" role="status">
+            <strong>通知服务暂不可用</strong>
+            <span>当前无法确认最近通知。</span>
+          </div>
+          <n-data-table
+            v-else-if="notificationRows.length"
+            size="small"
+            :columns="notificationColumns"
+            :data="notificationRows"
+            :bordered="false"
+            :single-line="false"
+            :pagination="false"
+          />
+          <n-empty v-else size="small" description="暂无通知" />
+        </n-card>
+
+        <n-card title="广告合作" class="dashboard-card side-panel ad-side-panel" :bordered="false">
+          <template #header-extra>
+            <n-button
+              text
+              size="small"
               :disabled="adsAvailable !== true"
               :title="adsAvailable === false ? adsUnavailableMessage : ''"
               @click="emit('navigate', 'ad-application')"
             >
-              申请投放 ›
-            </button>
+              申请投放
+            </n-button>
           </template>
           <div v-if="adsAvailable === false" class="side-empty" role="status">
             <strong>广告商业服务不可用</strong>
@@ -116,10 +234,6 @@
           <div v-else-if="adsAvailable === null" class="side-empty" role="status">
             <strong>正在确认广告服务</strong>
             <span>确认真实商业服务可用前，不展示广告或投放入口。</span>
-          </div>
-          <div v-else class="ad-side-copy">
-            <strong>广告内容由商业服务实时提供</strong>
-            <span>套餐、价格、审核、排期与展示状态均以商业服务返回的数据为准。</span>
           </div>
           <div v-if="activeTextAds.length" class="ad-text-list">
             <button
@@ -140,102 +254,15 @@
             <strong>暂无可展示广告</strong>
             <span>商业服务当前没有返回可展示的文字广告。</span>
           </div>
-        </CardPanel>
-
-        <CardPanel class="side-panel">
-          <template #title>使用指南</template>
-          <template #action>
-            <button class="side-link" type="button" @click="emit('navigate', 'settings-about')">查看全部 ›</button>
-          </template>
-          <div class="guide-section">
-            <h4>新手入门指南</h4>
-            <p>{{ guideLeadText }}</p>
-            <ol class="guide-list">
-              <li v-for="item in guides" :key="item.title">
-                <div class="guide-step-head">
-                  <strong>{{ item.title }}</strong>
-                  <em :class="['guide-step-status', item.state]">{{ item.stateText }}</em>
-                </div>
-                <span>{{ item.desc }}</span>
-              </li>
-            </ol>
-            <button class="guide-doc-link" type="button" @click="openGuideDocument">前往阅读文档</button>
-            <div class="guide-collapse-list">
-              <div v-for="item in guideCollapsibles" :key="item.label" class="guide-collapse-block">
-                <button
-                  type="button"
-                  class="guide-collapse-item"
-                  @click="toggleCollapse(item.label)"
-                >
-                  <span>{{ item.label }}</span>
-                  <svg :class="['collapse-chevron', { open: isGuideOpen(item.label) }]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-                <div v-if="isGuideOpen(item.label)" class="guide-collapse-panel">
-                  <p>{{ item.summary }}</p>
-                  <ul class="guide-collapse-points">
-                    <li v-for="point in item.points" :key="point">{{ point }}</li>
-                  </ul>
-                  <button v-if="item.actionText" class="guide-inline-link" type="button" @click="goFeature(item)">
-                    {{ item.actionText }} ›
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardPanel>
-
-        <CardPanel class="side-panel">
-          <template #title>最近通知</template>
-          <template #action>
-            <button class="side-link" type="button" @click="emit('navigate', 'messages')">查看全部 ›</button>
-          </template>
-          <div v-if="notificationsAvailable === false" class="side-empty" role="status">
-            <strong>通知服务暂不可用</strong>
-            <span>当前无法确认是否存在最近通知，请稍后重试。</span>
-          </div>
-          <div v-else-if="notifications.length === 0" class="side-empty">
-            <strong>暂无通知</strong>
-            <span>系统消息与业务提醒会展示在这里</span>
-          </div>
-          <div v-else class="side-list">
-            <article v-for="(item, index) in notifications" :key="item.id || `notice-${index}`" class="notice-item">
-              <div class="notice-head">
-                <strong>{{ item.title }}</strong>
-                <span>{{ item.time || '' }}</span>
-              </div>
-              <div class="notice-meta">
-                <i :class="['notice-tag', `notice-tag-${item.typeClass}`]">{{ item.typeLabel }}</i>
-                <b :class="['notice-state', { unread: item.isUnread }]">{{ item.isUnread ? '未读' : '已读' }}</b>
-              </div>
-              <p>{{ item.text }}</p>
-            </article>
-          </div>
-        </CardPanel>
-
-        <CardPanel title="系统状态" class="side-panel">
-          <div class="status-list">
-            <div v-for="item in systemStatus" :key="item.id || item.label" class="status-row" :title="item.message || ''">
-              <span><i :class="['status-dot', { offline: item.ok === false, unknown: item.ok == null }]"></i>{{ item.label }}</span>
-              <strong :class="item.ok === true ? 'status-ok' : (item.ok === false ? 'status-bad' : 'status-unknown')">
-                {{ item.ok === true ? '正常' : (item.ok === false ? '异常' : '状态未知') }}
-              </strong>
-            </div>
-            <div class="status-footer">
-              <strong :class="statusSummaryClass">{{ statusSummaryText }}</strong>
-              <span>{{ lastLoaded }}</span>
-            </div>
-          </div>
-        </CardPanel>
+        </n-card>
       </aside>
-    </div>
-</div>
+    </section>
+  </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import CardPanel from '../components/CardPanel.vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { NButton, NCard, NDataTable, NEmpty, NProgress, NSpace, NStatistic, NTag } from 'naive-ui'
 import Icon from '../components/Icon.vue'
 import { getCarouselList } from '../api/carousel'
 import { getTextAds } from '../api/ads.js'
@@ -270,7 +297,6 @@ const textAds = ref([])
 const adsAvailable = ref(null)
 const adsUnavailableMessage = ref('当前不展示占位广告，配置并接通真实商业桥后才能申请投放。')
 const lastLoaded = ref('-')
-const collapsed = reactive({})
 let autoTimer = null
 const defaultOverview = {
   accountCount: 0,
@@ -337,6 +363,145 @@ const activeTextAds = computed(() => {
     .sort((a, b) => (a?.sortOrder ?? 0) - (b?.sortOrder ?? 0))
     .slice(0, 10)
 })
+
+function toCount(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : 0
+}
+
+const overviewMetrics = computed(() => {
+  const {
+    accountCount,
+    goodsCount,
+    todayOrderCount,
+    messageCount
+  } = overview.value
+  const availableState = overviewAvailable.value ? '已同步' : '待确认'
+  return [
+    {
+      key: 'accounts',
+      label: '店铺账号',
+      value: toCount(accountCount),
+      suffix: '个',
+      icon: 'users',
+      tone: 'blue',
+      tagType: accountCount > 0 ? 'success' : 'warning',
+      state: accountCount > 0 ? availableState : '待接入',
+      helper: accountCount > 0 ? '账号授权与连接状态可继续巡检' : '先完成账号接入'
+    },
+    {
+      key: 'goods',
+      label: '商品数量',
+      value: toCount(goodsCount),
+      suffix: '件',
+      icon: 'product',
+      tone: 'green',
+      tagType: goodsCount > 0 ? 'success' : 'warning',
+      state: goodsCount > 0 ? availableState : '待同步',
+      helper: goodsCount > 0 ? '商品数据已进入运营视图' : '同步或发布商品后展示'
+    },
+    {
+      key: 'orders',
+      label: '今日订单',
+      value: toCount(todayOrderCount),
+      suffix: '笔',
+      icon: 'record',
+      tone: 'orange',
+      tagType: todayOrderCount > 0 ? 'success' : 'default',
+      state: overviewAvailable.value ? '今日' : '待确认',
+      helper: todayOrderCount > 0 ? '关注履约与发货进度' : '今日暂未产生订单'
+    },
+    {
+      key: 'messages',
+      label: '消息会话',
+      value: toCount(messageCount),
+      suffix: '条',
+      icon: 'message',
+      tone: 'purple',
+      tagType: messageCount > 0 ? 'info' : 'default',
+      state: overviewAvailable.value ? '累计' : '待确认',
+      helper: messageCount > 0 ? '可进入在线消息继续处理' : '暂无可展示会话'
+    }
+  ]
+})
+
+const healthSummary = computed(() => [
+  { key: 'ok', label: '正常服务', value: systemStatus.value.filter(item => item.ok === true).length },
+  { key: 'bad', label: '异常服务', value: abnormalStatusCount.value },
+  { key: 'unknown', label: '待确认', value: unknownStatusCount.value },
+  { key: 'notice', label: '通知', value: notifications.value.length }
+])
+
+const workProgress = computed(() => {
+  const { accountCount, goodsCount, todayOrderCount, messageCount, pendingCount } = overview.value
+  const hasOverview = overviewAvailable.value
+  return [
+    {
+      key: 'account',
+      label: '账号接入',
+      detail: accountCount > 0 ? `${accountCount} 个账号已接入` : '等待账号授权',
+      percent: hasOverview ? (accountCount > 0 ? 100 : 12) : 0,
+      color: '#2080f0',
+      icon: 'users',
+      to: 'accounts'
+    },
+    {
+      key: 'goods',
+      label: '商品运营',
+      detail: goodsCount > 0 ? `${goodsCount} 件商品可管理` : '等待商品同步',
+      percent: hasOverview ? (goodsCount > 0 ? 100 : (accountCount > 0 ? 42 : 8)) : 0,
+      color: '#18a058',
+      icon: 'product',
+      to: 'products'
+    },
+    {
+      key: 'orders',
+      label: '订单履约',
+      detail: pendingCount > 0 ? `${pendingCount} 个待处理任务` : `${todayOrderCount} 笔今日订单`,
+      percent: hasOverview ? (pendingCount > 0 ? 68 : (todayOrderCount > 0 ? 88 : 35)) : 0,
+      color: pendingCount > 0 ? '#f0a020' : '#18a058',
+      icon: 'record',
+      to: pendingCount > 0 ? 'orders' : 'auto-delivery'
+    },
+    {
+      key: 'message',
+      label: '消息处理',
+      detail: messageCount > 0 ? `${messageCount} 条会话记录` : '等待实时消息',
+      percent: hasOverview ? (messageCount > 0 ? 78 : 22) : 0,
+      color: '#7c3aed',
+      icon: 'chat',
+      to: 'messages'
+    }
+  ]
+})
+
+const realtimeRows = computed(() => realtimeEvents.value.map((item, index) => ({
+  key: item.id || `rt-${index}`,
+  type: item.type || '实时事件',
+  text: item.text || '-',
+  time: item.time || '--:--:--'
+})))
+
+const notificationRows = computed(() => notifications.value.map((item, index) => ({
+  key: item.id || `notice-${index}`,
+  title: item.title || item.typeLabel || '通知',
+  type: item.typeLabel,
+  status: item.isUnread ? '未读' : '已读',
+  time: item.time || '',
+  text: item.text || '-'
+})))
+
+const realtimeColumns = [
+  { title: '类型', key: 'type', width: 98, ellipsis: { tooltip: true } },
+  { title: '内容', key: 'text', ellipsis: { tooltip: true } },
+  { title: '时间', key: 'time', width: 96 }
+]
+
+const notificationColumns = [
+  { title: '标题', key: 'title', ellipsis: { tooltip: true } },
+  { title: '状态', key: 'status', width: 62 },
+  { title: '时间', key: 'time', width: 82 }
+]
 
 const abnormalStatusCount = computed(() => systemStatus.value.filter(item => item.ok === false).length)
 const unknownStatusCount = computed(() => systemStatus.value.filter(item => item.ok == null).length)
@@ -411,85 +576,6 @@ const guides = computed(() => {
     }
   ]
 })
-const guideCollapsibles = computed(() => {
-  if (!overviewAvailable.value) {
-    return [
-      {
-        label: '功能使用教程',
-        summary: '导航概览暂不可用，仍可进入各模块查看其独立状态。',
-        points: [
-          '先检查账号管理中的授权与连接状态。',
-          '再进入商品、订单和自动化页面查看各自的可用性提示。',
-          '不要把当前概览中的未知状态当作零数据。'
-        ],
-        actionText: '检查账号状态',
-        to: 'accounts'
-      },
-      {
-        label: '状态恢复建议',
-        summary: '概览恢复前，避免根据未加载的数据作运营判断。',
-        points: [
-          '使用页面顶部“重试”重新加载导航数据。',
-          '查看右侧系统状态，区分异常、正常与未探测依赖。',
-          '若持续失败，请检查 API 与数据库运行状态。'
-        ],
-        actionText: '查看系统设置',
-        to: 'settings-about'
-      }
-    ]
-  }
-  const { accountCount, goodsCount, todayOrderCount, pendingCount } = overview.value
-  return [
-    {
-      label: '功能使用教程',
-      summary: '建议按“账号接入 → 商品管理 → 自动化配置”的顺序完成配置，上手速度会更快。',
-      points: [
-        accountCount > 0
-          ? `账号中心当前已接入 ${accountCount} 个账号，可继续检查在线状态与授权有效期。`
-          : '先进入“账号管理”添加店铺账号，完成授权后再继续后续业务操作。',
-        goodsCount > 0
-          ? `商品中心当前已有 ${goodsCount} 个商品，可继续编辑详情、上下架与同步信息。`
-          : '进入“商品管理”发布或同步商品，准备后续订单、卡密和自动化流程。',
-        '最后进入“自动化发货”或“定时任务”，为重复业务建立稳定规则。'
-      ],
-      actionText: accountCount > 0 ? '继续管理账号' : '立即添加账号',
-      to: 'accounts'
-    },
-    {
-      label: '最佳实践案例',
-      summary: '推荐把导航面板作为每天登录后的第一站，先处理提醒，再进入具体模块。',
-      points: [
-        pendingCount > 0
-          ? `当前有 ${pendingCount} 个待处理任务，建议优先进入订单或自动发货模块。`
-          : '先查看最近实时事件和最近通知，确认系统是否有新订单、消息或异常提醒。',
-        todayOrderCount > 0
-          ? `今日已产生 ${todayOrderCount} 笔订单，建议同步跟进履约状态与发货进度。`
-          : '若今日订单较少，可优先完善商品资料、自动回复和定时任务规则。',
-        '完成日常检查后，再到数据面板观察成交、消息和服务表现。'
-      ],
-      actionText: '进入定时任务',
-      to: 'scheduled-tasks'
-    },
-    {
-      label: '常见问题解答',
-      summary: '如果模块没有数据或入口不可用，通常可以先检查以下几个基础项。',
-      points: [
-        accountCount > 0
-          ? '账号已接入但业务数据为空时，先检查店铺授权是否失效或连接是否中断。'
-          : '尚未接入账号时，部分商品、订单与消息模块不会展示实时数据。',
-        notifications.value.length > 0
-          ? '最近通知中已有系统消息，可优先查看提醒内容定位异常来源。'
-          : '如果最近通知为空，说明近期没有新的系统消息或业务提醒。',
-        error.value
-          ? '当前检测到导航数据加载异常，建议稍后刷新页面或检查后端服务状态。'
-          : '已探测服务正常时，可继续检查网络、SSE 连接或各模块筛选条件。'
-      ],
-      actionText: '查看系统设置',
-      to: 'settings-about'
-    }
-  ]
-})
-
 function resolveCarouselImage(imageUrl) {
   const value = String(imageUrl || '').trim()
   if (!value) return ''
@@ -750,20 +836,6 @@ function onSse(event) {
   })
 }
 
-function toggleCollapse(label) {
-  const next = !isGuideOpen(label)
-  guideCollapsibles.value.forEach(item => {
-    collapsed[item.label] = false
-  })
-  collapsed[label] = next
-}
-
-function isGuideOpen(label) {
-  const value = collapsed[label]
-  if (value === undefined) return label === guideCollapsibles.value[0]?.label
-  return value
-}
-
 function formatRealtimeType(type) {
   switch (String(type || '').toLowerCase()) {
     case 'order':
@@ -783,13 +855,9 @@ function formatRealtimeType(type) {
   }
 }
 
-function openGuideDocument() {
-  emit('navigate', 'settings-about')
-}
-
 const quickStarts = [
   { t: '添加账号', d: '添加店铺账号，开始管理您的店铺', i: 'users', c: 'blue-bg', to: 'accounts' },
-  { t: 'WebSocket连接', d: '建立实时连接，接收消息和数据', i: 'data', c: 'purple-bg', to: 'accounts' },
+  { t: 'WebSocket连接', d: '建立实时连接，接收消息和数据', i: 'link', c: 'purple-bg', to: 'connections' },
   { t: '商品管理', d: '发布管理商品，优化商品信息', i: 'product', c: 'green-bg', to: 'products' },
   { t: '自动化发货', d: '设置发货规则并查看实际执行结果', i: 'truck', c: 'orange-bg', to: 'auto-delivery' }
 ]
@@ -797,13 +865,18 @@ const quickStarts = [
 const features = [
   { t: '多账号管理', d: '集中查看账号、授权与连接状态', i: 'users', c: 'purple-bg', to: 'accounts', targetLabel: '管理账号' },
   { t: '商品同步', d: '按需同步商品；发布与改价结果以平台确认为准', i: 'product', c: 'green-bg', to: 'products', targetLabel: '商品管理' },
-  { t: '订单管理', d: '按需同步订单并查看后端实际记录状态', i: 'order', c: 'blue-bg', to: 'orders', targetLabel: '订单管理' },
+  { t: '订单管理', d: '按需同步订单并查看后端实际记录状态', i: 'record', c: 'blue-bg', to: 'orders', targetLabel: '订单管理' },
   { t: '自动发货', d: '按已配置规则处理发货，异常与未知结果需人工复核', i: 'truck', c: 'orange-bg', to: 'auto-delivery', targetLabel: '自动化' },
   { t: '广告合作', d: '查看商业服务返回的真实套餐；未配置时页面会明确禁用提交与支付。', i: 'opportunity', c: 'purple-bg', to: 'ad-application', targetLabel: '广告申请' },
   { t: '系统设置', d: '集中管理通用模型、向量模型、RAG 知识库与高德地图配置。', i: 'settings', c: 'cyan-bg', to: 'settings-system', targetLabel: '系统配置' },
   { t: '卡密仓库', d: '管理卡密资源，安全存储和使用', i: 'key', c: 'orange-bg', to: 'card-warehouse', targetLabel: '卡密仓库' },
   { t: '数据统计', d: '查看订单、发货与自动回复的实际汇总', i: 'data', c: 'blue-bg', to: 'data', targetLabel: '数据面板' }
 ]
+
+const primaryShortcuts = computed(() => {
+  const extra = features.filter(item => ['订单管理', '数据统计', '系统设置', '卡密仓库'].includes(item.t))
+  return [...quickStarts, ...extra]
+})
 
 function goFeature(item) {
   if (item?.to) emit('navigate', item.to)
@@ -1728,6 +1801,751 @@ onBeforeUnmount(() => {
   /* 空状态收敛 */
   .events-empty {
     min-height: 70px;
+  }
+}
+/* Stage 3 dashboard shell */
+.dashboard-admin {
+  max-width: 100%;
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-admin :deep(.n-card) {
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.dashboard-admin :deep(.n-card__content) {
+  min-width: 0;
+}
+
+.dashboard-alert {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid #f3d1d8;
+  border-radius: 6px;
+  background: #fff7f8;
+  color: #d03050;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.dashboard-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, .85fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.dashboard-welcome-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.dashboard-welcome-card :deep(.n-card__content) {
+  min-height: 224px;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.welcome-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.welcome-main h2 {
+  margin: 14px 0 8px;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.welcome-main p {
+  max-width: 760px;
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.welcome-actions {
+  margin-top: 20px;
+}
+
+.welcome-side {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 10px;
+}
+
+.health-card {
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.health-card strong {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.health-card span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.health-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.health-mini {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #fff;
+  text-align: center;
+}
+
+.health-mini b {
+  display: block;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.health-mini span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.dashboard-banner-card {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.dashboard-banner-card :deep(.n-card__content) {
+  height: 100%;
+  padding: 10px;
+}
+
+.dashboard-admin .hero-card {
+  height: 100%;
+  min-height: 224px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.dashboard-admin .hero-viewport {
+  height: 100%;
+  min-height: 224px;
+  aspect-ratio: auto;
+  border-radius: 6px;
+}
+
+.dashboard-admin .hero-track,
+.dashboard-admin .hero-slide,
+.dashboard-admin .hero-banner {
+  height: 100%;
+}
+
+.dashboard-admin .hero-arrow {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .92);
+  color: #111827;
+  font-size: 22px;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .10);
+}
+
+.dashboard-admin .hero-arrow-left {
+  left: 10px;
+}
+
+.dashboard-admin .hero-arrow-right {
+  right: 10px;
+}
+
+.dashboard-admin .hero-dots {
+  bottom: 10px;
+}
+
+.dashboard-admin .hero-dot {
+  width: 7px;
+  height: 7px;
+  background: rgba(255, 255, 255, .62);
+}
+
+.dashboard-admin .hero-dot.active {
+  width: 20px;
+  background: #18a058;
+}
+
+.banner-empty {
+  height: 100%;
+  min-height: 224px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.banner-empty strong {
+  color: #111827;
+  font-size: 15px;
+}
+
+.banner-empty span {
+  font-size: 12px;
+}
+
+.dashboard-admin .metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.metric-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.metric-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-icon :deep(.ui-icon) {
+  width: 20px;
+  height: 20px;
+}
+
+.tone-blue .metric-icon,
+.dashboard-admin .blue-bg {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.tone-green .metric-icon,
+.dashboard-admin .green-bg {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.tone-orange .metric-icon,
+.dashboard-admin .orange-bg {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.tone-purple .metric-icon,
+.dashboard-admin .purple-bg {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.dashboard-admin .cyan-bg {
+  background: #ecfeff;
+  color: #0891b2;
+}
+
+.metric-card :deep(.n-statistic .n-statistic-value) {
+  color: #111827;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.metric-card :deep(.n-statistic .n-statistic-label) {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.metric-card p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.dashboard-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.dashboard-admin .dashboard-main,
+.dashboard-admin .dashboard-side {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-admin .dashboard-side {
+  position: sticky;
+  top: 118px;
+}
+
+.dashboard-card {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.dashboard-card :deep(.n-card-header) {
+  padding: 16px 16px 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.dashboard-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.progress-item {
+  min-width: 0;
+  min-height: 112px;
+  padding: 14px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #fff;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.progress-item:hover,
+.shortcut-card:hover,
+.feature-card:hover,
+.todo-item:hover,
+.ad-text-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(24, 160, 88, .36);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+}
+
+.progress-item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.progress-icon,
+.shortcut-icon,
+.feature-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-icon {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.progress-item strong,
+.shortcut-card strong,
+.feature-card strong,
+.todo-item strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.progress-item span,
+.shortcut-card span,
+.feature-card small,
+.todo-item small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shortcut-card {
+  min-width: 0;
+  min-height: 122px;
+  padding: 14px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #fff;
+  text-align: left;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.shortcut-card > span:last-child {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.dashboard-admin .feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-admin .feature-card {
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.feature-text {
+  min-width: 0;
+}
+
+.feature-text small {
+  display: block;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-admin .feature-card em {
+  color: #18a058;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.dashboard-admin :deep(.n-data-table) {
+  font-size: 12px;
+}
+
+.dashboard-admin :deep(.n-data-table-th) {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 650;
+}
+
+.todo-list {
+  display: grid;
+  gap: 10px;
+}
+
+.todo-item {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #fff;
+  text-align: left;
+  display: grid;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.todo-state {
+  width: fit-content;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.todo-state.done {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.todo-state.progress {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.todo-state.todo,
+.todo-state.suggest {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.todo-state.unknown {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.dashboard-admin .status-list {
+  display: grid;
+}
+
+.dashboard-admin .status-row {
+  min-height: 38px;
+  border-bottom: 1px solid #edf0f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-admin .status-row:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-admin .status-row span {
+  color: #334155;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.dashboard-admin .status-row strong {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.dashboard-admin .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #18a058;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.dashboard-admin .status-dot.offline {
+  background: #d03050;
+}
+
+.dashboard-admin .status-dot.unknown {
+  background: #f0a020;
+}
+
+.dashboard-admin .status-ok,
+.dashboard-admin .status-success {
+  color: #18a058;
+}
+
+.dashboard-admin .status-bad,
+.dashboard-admin .status-error {
+  color: #d03050;
+}
+
+.dashboard-admin .status-unknown {
+  color: #a16207;
+}
+
+.dashboard-admin .side-empty {
+  padding: 10px 0;
+  color: #64748b;
+  font-size: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-admin .side-empty strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.ad-text-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-admin .ad-text-item {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.dashboard-admin .ad-text-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dashboard-admin .ad-text-head strong {
+  min-width: 0;
+  color: #111827;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-admin .ad-text-head i {
+  flex: 0 0 auto;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dashboard-admin .ad-text-item p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1500px) {
+  .dashboard-admin .metric-grid,
+  .shortcut-grid,
+  .progress-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-hero-grid,
+  .dashboard-content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-admin .dashboard-side {
+    position: static;
+  }
+
+  .dashboard-welcome-card :deep(.n-card__content) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-admin {
+    gap: 12px;
+  }
+
+  .dashboard-hero-grid,
+  .dashboard-content-grid {
+    gap: 12px;
+  }
+
+  .dashboard-welcome-card :deep(.n-card__content),
+  .dashboard-card :deep(.n-card__content),
+  .metric-card :deep(.n-card__content) {
+    padding: 14px;
+  }
+
+  .welcome-main h2 {
+    font-size: 20px;
+  }
+
+  .health-mini-grid,
+  .dashboard-admin .metric-grid,
+  .shortcut-grid,
+  .progress-grid,
+  .dashboard-admin .feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-admin .hero-card,
+  .dashboard-admin .hero-viewport,
+  .banner-empty {
+    min-height: 150px;
+  }
+
+  .dashboard-admin .feature-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dashboard-admin .feature-card em {
+    display: none;
   }
 }
 </style>
