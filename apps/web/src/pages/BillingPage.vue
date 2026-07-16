@@ -52,7 +52,15 @@
     <n-card class="billing-card" :bordered="false">
       <template #header>可选套餐</template>
       <template #header-extra>
-        <span class="muted">付费订单创建后需等待管理员确认</span>
+        <label class="duration-picker">
+          <span>周期</span>
+          <select v-model.number="durationDays">
+            <option :value="30">1 个月</option>
+            <option :value="90">3 个月</option>
+            <option :value="180">6 个月</option>
+            <option :value="365">12 个月</option>
+          </select>
+        </label>
       </template>
       <div class="plan-catalog">
         <div v-for="plan in plans" :key="plan.code" class="plan-item">
@@ -80,6 +88,40 @@
       </div>
     </n-card>
 
+    <n-card v-if="paymentConfig.enabled || pendingOrders.length" class="billing-card" :bordered="false">
+      <template #header>支付说明</template>
+      <template #header-extra>
+        <span class="muted">付费订单需管理员确认后生效</span>
+      </template>
+      <div class="payment-layout">
+        <div class="payment-copy">
+          <p>{{ paymentConfig.instructions || '请联系管理员确认付款方式。付款完成后，管理员会在后台确认订单并开通套餐。' }}</p>
+          <div v-if="paymentConfig.contact" class="payment-line">
+            <span>联系方式</span>
+            <strong>{{ paymentConfig.contact }}</strong>
+          </div>
+          <div v-if="paymentConfig.bankAccount" class="payment-line">
+            <span>收款账户</span>
+            <strong>{{ paymentConfig.bankAccount }}</strong>
+          </div>
+          <div class="payment-line">
+            <span>订单有效期</span>
+            <strong>{{ Math.round((paymentConfig.orderExpireMinutes || 1440) / 60) }} 小时</strong>
+          </div>
+        </div>
+        <div class="payment-qr-list">
+          <figure v-if="paymentConfig.alipayQrUrl">
+            <img :src="paymentConfig.alipayQrUrl" alt="支付宝收款码" />
+            <figcaption>支付宝</figcaption>
+          </figure>
+          <figure v-if="paymentConfig.wechatQrUrl">
+            <img :src="paymentConfig.wechatQrUrl" alt="微信收款码" />
+            <figcaption>微信</figcaption>
+          </figure>
+        </div>
+      </div>
+    </n-card>
+
     <n-card class="billing-card" :bordered="false">
       <template #header>订单记录</template>
       <div class="table-wrap">
@@ -91,12 +133,14 @@
               <th>金额</th>
               <th>周期</th>
               <th>状态</th>
+              <th>有效期</th>
               <th>创建时间</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="orders.length === 0">
-              <td colspan="6" class="empty-cell">暂无订单</td>
+              <td colspan="8" class="empty-cell">暂无订单</td>
             </tr>
             <tr v-for="order in orders" :key="order.id">
               <td><code>{{ order.orderNo }}</code></td>
@@ -104,7 +148,20 @@
               <td>{{ money(order.amountCents) }}</td>
               <td>{{ order.durationDays }} 天</td>
               <td><span :class="['status-pill', order.status]">{{ statusText(order.status) }}</span></td>
+              <td>{{ fmt(order.expireTime) }}</td>
               <td>{{ fmt(order.createdTime) }}</td>
+              <td>
+                <button
+                  v-if="order.status === 'pending'"
+                  class="billing-btn small"
+                  type="button"
+                  :disabled="orderBusy"
+                  @click="closeOrder(order)"
+                >
+                  取消
+                </button>
+                <span v-else class="muted">—</span>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -118,17 +175,21 @@ import { computed, onMounted, ref } from 'vue'
 import { NCard } from 'naive-ui'
 import { friendlyError } from '../utils/friendlyError.js'
 import {
+  closeBillingOrder,
   createBillingOrder,
   getBillingPlans,
   getMyBilling,
+  getPaymentConfig,
   listBillingOrders,
 } from '../api/billing.js'
 
 const state = ref(null)
 const plans = ref([])
 const orders = ref([])
+const paymentConfig = ref({})
 const loading = ref(false)
 const orderBusy = ref(false)
+const durationDays = ref(30)
 const notice = ref('')
 const noticeType = ref('success')
 
@@ -138,6 +199,7 @@ const usage = computed(() => ({
   aiCallsToday: state.value?.usage?.aiCallsToday || emptyUsage,
 }))
 const currentPlanCode = computed(() => state.value?.plan?.code || 'free')
+const pendingOrders = computed(() => orders.value.filter(order => order.status === 'pending'))
 
 function flash(message, type = 'success') {
   notice.value = message
@@ -180,14 +242,16 @@ async function loadAll() {
   if (loading.value) return
   loading.value = true
   try {
-    const [billingRes, plansRes, ordersRes] = await Promise.all([
+    const [billingRes, plansRes, ordersRes, paymentRes] = await Promise.all([
       getMyBilling(),
       getBillingPlans(),
       listBillingOrders({ current: 1, size: 50 }),
+      getPaymentConfig(),
     ])
     state.value = billingRes.data || null
     plans.value = plansRes.data || []
     orders.value = ordersRes.data?.records || []
+    paymentConfig.value = paymentRes.data || {}
   } catch (error) {
     flash(friendlyError(error, '套餐账单加载失败'), 'error')
   } finally {
@@ -201,13 +265,29 @@ async function createOrder(plan) {
   try {
     const res = await createBillingOrder({
       planCode: plan.code,
-      durationDays: 30,
+      durationDays: durationDays.value || 30,
       paymentMethod: 'manual',
     })
+    if (res.data?.paymentConfig) paymentConfig.value = res.data.paymentConfig
     flash(res.data?.message || '订单已创建')
     await loadAll()
   } catch (error) {
     flash(friendlyError(error, '创建订单失败'), 'error')
+  } finally {
+    orderBusy.value = false
+  }
+}
+
+async function closeOrder(order) {
+  if (!order || orderBusy.value) return
+  if (!window.confirm(`确认取消订单 ${order.orderNo}？`)) return
+  orderBusy.value = true
+  try {
+    await closeBillingOrder(order.id, { reason: 'user_cancel' })
+    flash('订单已取消')
+    await loadAll()
+  } catch (error) {
+    flash(friendlyError(error, '取消订单失败'), 'error')
   } finally {
     orderBusy.value = false
   }
@@ -274,6 +354,23 @@ onMounted(loadAll)
   color: #64748b;
   font-size: 13px;
   line-height: 1.6;
+}
+
+.duration-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.duration-picker select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
 }
 
 .billing-grid {
@@ -418,6 +515,64 @@ onMounted(loadAll)
   font-size: 12px;
 }
 
+.payment-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+}
+
+.payment-copy {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.payment-line {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.payment-line span {
+  width: 72px;
+  flex: 0 0 auto;
+}
+
+.payment-line strong {
+  min-width: 0;
+  color: #111827;
+  font-weight: 650;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.payment-qr-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.payment-qr-list figure {
+  margin: 0;
+  width: 112px;
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.payment-qr-list img {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+}
+
 .billing-btn {
   height: 32px;
   padding: 0 14px;
@@ -432,6 +587,12 @@ onMounted(loadAll)
   border-color: #2563eb;
   background: #2563eb;
   color: #fff;
+}
+
+.billing-btn.small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 .billing-btn:disabled {
@@ -494,6 +655,14 @@ onMounted(loadAll)
   .billing-hero :deep(.n-card__content) {
     flex-direction: column;
     padding: 14px;
+  }
+
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-qr-list {
+    justify-content: flex-start;
   }
 }
 </style>

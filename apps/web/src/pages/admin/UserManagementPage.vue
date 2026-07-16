@@ -103,6 +103,59 @@
     <n-card class="dashboard-section user-v4-card" :bordered="false">
       <template #header>订阅与账单</template>
       <template #header-extra><span class="user-v4-desc">查看用户订阅和待确认订单，支持人工确认生效。</span></template>
+      <div class="billing-stats">
+        <div>
+          <span>累计确认收入</span>
+          <strong>{{ money(billingOverview.paidAmountCents) }}</strong>
+        </div>
+        <div>
+          <span>今日确认收入</span>
+          <strong>{{ money(billingOverview.paidTodayCents) }}</strong>
+        </div>
+        <div>
+          <span>待确认订单</span>
+          <strong>{{ billingOverview.pendingOrderCount || 0 }}</strong>
+        </div>
+        <div>
+          <span>生效订阅</span>
+          <strong>{{ billingOverview.activeSubscriptionCount || 0 }}</strong>
+        </div>
+      </div>
+
+      <div class="billing-settings">
+        <label class="field check">
+          <input v-model="billingSettings.enabled" type="checkbox" />
+          <span>在客户账单页展示支付说明</span>
+        </label>
+        <label class="field">
+          <span>订单有效期（分钟）</span>
+          <input v-model.number="billingSettings.orderExpireMinutes" class="input" type="number" min="5" />
+        </label>
+        <label class="field wide">
+          <span>支付说明</span>
+          <textarea v-model="billingSettings.instructions" class="input" rows="2" placeholder="付款流程、备注订单号、确认时效等"></textarea>
+        </label>
+        <label class="field">
+          <span>联系方式</span>
+          <input v-model.trim="billingSettings.contact" class="input" placeholder="微信/邮箱/客服账号" />
+        </label>
+        <label class="field">
+          <span>收款账户</span>
+          <input v-model.trim="billingSettings.bankAccount" class="input" placeholder="银行卡/对公账户/收款说明" />
+        </label>
+        <label class="field">
+          <span>支付宝收款码 URL</span>
+          <input v-model.trim="billingSettings.alipayQrUrl" class="input" placeholder="https://..." />
+        </label>
+        <label class="field">
+          <span>微信收款码 URL</span>
+          <input v-model.trim="billingSettings.wechatQrUrl" class="input" placeholder="https://..." />
+        </label>
+        <div class="billing-settings-actions">
+          <button class="btn primary" type="button" :disabled="billingBusy" @click="saveBillingSettings">保存账单设置</button>
+        </div>
+      </div>
+
       <div class="billing-admin-grid">
         <section class="billing-admin-panel">
           <div class="panel-title">
@@ -141,12 +194,12 @@
             <table class="table billing-admin-table">
               <thead>
                 <tr>
-                  <th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>操作</th>
+                  <th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>有效期</th><th>操作</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="billingOrders.length === 0">
-                  <td colspan="6" class="empty-cell">暂无订单</td>
+                  <td colspan="7" class="empty-cell">暂无订单</td>
                 </tr>
                 <tr v-for="o in billingOrders" :key="o.id">
                   <td><code>{{ o.orderNo }}</code></td>
@@ -154,6 +207,7 @@
                   <td>{{ o.planCode }}</td>
                   <td>¥{{ (o.amountCents / 100).toFixed(2) }}</td>
                   <td><span :class="['status-pill', o.status]">{{ orderStatus(o.status) }}</span></td>
+                  <td class="dim">{{ fmt(o.expireTime) }}</td>
                   <td class="actions">
                     <button
                       v-if="o.status === 'pending'"
@@ -163,6 +217,15 @@
                       @click="markOrderPaid(o)"
                     >
                       确认生效
+                    </button>
+                    <button
+                      v-if="o.status === 'pending'"
+                      class="btn small danger"
+                      type="button"
+                      :disabled="billingBusy"
+                      @click="closeAdminOrder(o)"
+                    >
+                      关闭
                     </button>
                     <span v-else class="dim">—</span>
                   </td>
@@ -416,6 +479,7 @@ import {
   listUsers, updateUser, createUser, resetPassword,
   getOverview, adminListPlans, adminCreatePlan, adminUpdatePlan, adminDeletePlan,
   adminListSubscriptions, adminListBillingOrders, adminActivateSubscription, adminMarkBillingOrderPaid,
+  adminCloseBillingOrder, adminGetBillingOverview, adminGetBillingSettings, adminSetBillingSettings,
   getRegistration, setRegistration, getEmailConfig, setEmailConfig,
 } from '../../api/admin.js'
 
@@ -433,6 +497,17 @@ const emailConfigured = ref(false)
 const email = reactive({ smtpHost: '', smtpPort: 465, smtpUser: '', smtpPass: '', fromName: '' })
 const subscriptions = ref([])
 const billingOrders = ref([])
+const billingOverview = ref({})
+const billingSettings = reactive({
+  enabled: false,
+  orderExpireMinutes: 1440,
+  paymentMethods: ['manual_transfer'],
+  instructions: '',
+  contact: '',
+  bankAccount: '',
+  alipayQrUrl: '',
+  wechatQrUrl: '',
+})
 
 const createForm = reactive({ username: '', email: '', password: '', planCode: 'free', isSuper: false })
 
@@ -447,17 +522,29 @@ const noticeType = ref('success')
 
 function flash(msg, type = 'success') { notice.value = msg; noticeType.value = type; setTimeout(() => { if (notice.value === msg) notice.value = '' }, 4000) }
 function fmt(v) { if (!v) return '—'; return String(v).replace('T', ' ').slice(0, 16) }
+function money(cents) { return `¥${(Number(cents || 0) / 100).toFixed(2)}` }
 
 async function loadAll() {
   try {
-    const [uRes, pRes, rRes, eRes, oRes, sRes, boRes] = await Promise.all([
+    const [uRes, pRes, rRes, eRes, oRes, sRes, boRes, billingOvRes, billingSettingsRes] = await Promise.all([
       listUsers(), adminListPlans(), getRegistration(), getEmailConfig(), getOverview(),
-      adminListSubscriptions(), adminListBillingOrders(),
+      adminListSubscriptions(), adminListBillingOrders(), adminGetBillingOverview(), adminGetBillingSettings(),
     ])
     users.value = uRes.data || []
     plans.value = pRes.data || []
     subscriptions.value = sRes.data || []
     billingOrders.value = boRes.data || []
+    billingOverview.value = billingOvRes.data || {}
+    Object.assign(billingSettings, {
+      enabled: !!billingSettingsRes.data?.enabled,
+      orderExpireMinutes: Number(billingSettingsRes.data?.orderExpireMinutes || 1440),
+      paymentMethods: billingSettingsRes.data?.paymentMethods || ['manual_transfer'],
+      instructions: billingSettingsRes.data?.instructions || '',
+      contact: billingSettingsRes.data?.contact || '',
+      bankAccount: billingSettingsRes.data?.bankAccount || '',
+      alipayQrUrl: billingSettingsRes.data?.alipayQrUrl || '',
+      wechatQrUrl: billingSettingsRes.data?.wechatQrUrl || '',
+    })
     regEnabled.value = !!(rRes.data && rRes.data.enabled)
     overview.value = oRes.data || null
     const cfg = eRes.data || {}
@@ -576,6 +663,44 @@ async function markOrderPaid(order) {
   }
 }
 
+async function closeAdminOrder(order) {
+  if (!order || billingBusy.value) return
+  if (!window.confirm(`确认关闭订单 ${order.orderNo}？`)) return
+  billingBusy.value = true
+  try {
+    await adminCloseBillingOrder(order.id, { reason: 'admin_close' })
+    flash(`订单 ${order.orderNo} 已关闭`)
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '关闭订单失败'), 'error')
+  } finally {
+    billingBusy.value = false
+  }
+}
+
+async function saveBillingSettings() {
+  if (billingBusy.value) return
+  billingBusy.value = true
+  try {
+    await adminSetBillingSettings({
+      enabled: billingSettings.enabled,
+      orderExpireMinutes: Number(billingSettings.orderExpireMinutes || 1440),
+      paymentMethods: billingSettings.paymentMethods,
+      instructions: billingSettings.instructions,
+      contact: billingSettings.contact,
+      bankAccount: billingSettings.bankAccount,
+      alipayQrUrl: billingSettings.alipayQrUrl,
+      wechatQrUrl: billingSettings.wechatQrUrl,
+    })
+    flash('账单设置已保存')
+    await loadAll()
+  } catch (e) {
+    flash(friendlyError(e, '保存账单设置失败'), 'error')
+  } finally {
+    billingBusy.value = false
+  }
+}
+
 async function openSubscription(user) {
   if (!user || billingBusy.value) return
   const defaultPlan = user.planCode || plans.value[0]?.code || 'free'
@@ -673,6 +798,13 @@ onMounted(loadAll)
 .plan-list .plan-count { color: #0f766e; font-weight: 600; }
 
 /* 订阅与账单 */
+.billing-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.billing-stats div { padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f8fafc; }
+.billing-stats span { display: block; color: #64748b; font-size: 12px; margin-bottom: 6px; }
+.billing-stats strong { display: block; color: #111827; font-size: 22px; line-height: 1.2; }
+.billing-settings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end; margin-bottom: 14px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; }
+.billing-settings .wide { grid-column: span 2; }
+.billing-settings-actions { display: flex; align-items: flex-end; justify-content: flex-end; }
 .billing-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .billing-admin-panel { min-width: 0; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; }
 .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
@@ -763,6 +895,15 @@ onMounted(loadAll)
 
   .billing-admin-grid {
     grid-template-columns: 1fr;
+  }
+
+  .billing-stats,
+  .billing-settings {
+    grid-template-columns: 1fr;
+  }
+
+  .billing-settings .wide {
+    grid-column: auto;
   }
 }
 </style>

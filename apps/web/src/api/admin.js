@@ -18,10 +18,14 @@ export const adminDeletePlan = (id) => request.delete(`/admin/plans/${id}`)
 
 // === 订阅与账单 ===
 export const adminListSubscriptions = () => request.get('/admin/subscriptions')
-export const adminListBillingOrders = () => request.get('/admin/billing-orders')
+export const adminListBillingOrders = (params = {}) => request.get('/admin/billing-orders', { params })
+export const adminGetBillingOverview = () => request.get('/admin/billing-overview')
+export const adminGetBillingSettings = () => request.get('/admin/billing-settings')
+export const adminSetBillingSettings = (data) => request.put('/admin/billing-settings', data)
 export const adminGetUserBilling = (id) => request.get(`/admin/users/${id}/billing`)
 export const adminActivateSubscription = (id, data) => request.post(`/admin/users/${id}/subscription`, data)
 export const adminMarkBillingOrderPaid = (id, data = {}) => request.post(`/admin/billing-orders/${id}/mark-paid`, data)
+export const adminCloseBillingOrder = (id, data = {}) => request.post(`/admin/billing-orders/${id}/close`, data)
 
 // === 注册开关 + SMTP ===
 export const getRegistration = () => request.get('/admin/registration')

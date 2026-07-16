@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import json
 import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -18,10 +19,23 @@ from ..models.entities import (
     AppSubscription,
     AppUsageDaily,
     XianyuAccount,
+    XianyuSysSetting,
 )
 
 METRIC_ACCOUNTS = "accounts"
 METRIC_AI_CALLS = "ai_calls"
+BILLING_PAYMENT_CONFIG_KEY = "billing_payment_config"
+
+DEFAULT_PAYMENT_CONFIG: dict[str, Any] = {
+    "enabled": False,
+    "orderExpireMinutes": 1440,
+    "paymentMethods": ["manual_transfer"],
+    "instructions": "请联系管理员确认付款方式。付款完成后，管理员会在后台确认订单并开通套餐。",
+    "contact": "",
+    "alipayQrUrl": "",
+    "wechatQrUrl": "",
+    "bankAccount": "",
+}
 
 
 class BillingError(RuntimeError):
@@ -61,6 +75,71 @@ def _dt(value: datetime | None) -> str:
 
 def _order_no() -> str:
     return "B" + utcnow().strftime("%Y%m%d%H%M%S") + uuid.uuid4().hex[:10].upper()
+
+
+def _clean_int(value: Any, default: int = 0, minimum: int | None = None, maximum: int | None = None) -> int:
+    try:
+        result = int(value)
+    except (TypeError, ValueError):
+        result = default
+    if minimum is not None:
+        result = max(result, minimum)
+    if maximum is not None:
+        result = min(result, maximum)
+    return result
+
+
+def normalize_payment_config(raw: dict[str, Any] | None = None) -> dict[str, Any]:
+    data = {**DEFAULT_PAYMENT_CONFIG, **(raw or {})}
+    methods = data.get("paymentMethods", data.get("payment_methods"))
+    if not isinstance(methods, list):
+        methods = DEFAULT_PAYMENT_CONFIG["paymentMethods"]
+    return {
+        "enabled": bool(data.get("enabled")),
+        "orderExpireMinutes": _clean_int(
+            data.get("orderExpireMinutes", data.get("order_expire_minutes")),
+            1440,
+            5,
+            30 * 24 * 60,
+        ),
+        "paymentMethods": [str(item).strip() for item in methods if str(item or "").strip()][:8],
+        "instructions": str(data.get("instructions") or "").strip()[:5000],
+        "contact": str(data.get("contact") or "").strip()[:500],
+        "alipayQrUrl": str(data.get("alipayQrUrl", data.get("alipay_qr_url")) or "").strip()[:1000],
+        "wechatQrUrl": str(data.get("wechatQrUrl", data.get("wechat_qr_url")) or "").strip()[:1000],
+        "bankAccount": str(data.get("bankAccount", data.get("bank_account")) or "").strip()[:1000],
+    }
+
+
+async def load_payment_config(db: AsyncSession) -> dict[str, Any]:
+    row = (
+        await db.execute(
+            select(XianyuSysSetting).where(XianyuSysSetting.setting_key == BILLING_PAYMENT_CONFIG_KEY)
+        )
+    ).scalar_one_or_none()
+    if not row or not row.setting_value:
+        return normalize_payment_config()
+    try:
+        parsed = json.loads(row.setting_value)
+    except (TypeError, json.JSONDecodeError):
+        parsed = {}
+    return normalize_payment_config(parsed if isinstance(parsed, dict) else {})
+
+
+async def save_payment_config(db: AsyncSession, payload: dict[str, Any]) -> dict[str, Any]:
+    config = normalize_payment_config(payload)
+    raw = json.dumps(config, ensure_ascii=False)
+    row = (
+        await db.execute(
+            select(XianyuSysSetting).where(XianyuSysSetting.setting_key == BILLING_PAYMENT_CONFIG_KEY)
+        )
+    ).scalar_one_or_none()
+    if row:
+        row.setting_value = raw
+    else:
+        db.add(XianyuSysSetting(setting_key=BILLING_PAYMENT_CONFIG_KEY, setting_value=raw))
+    await db.commit()
+    return config
 
 
 def _is_expired(user: AdminUser, now: datetime | None = None) -> bool:
@@ -158,6 +237,9 @@ async def usage_count_today(db: AsyncSession, user_id: int, metric: str) -> int:
 
 
 async def billing_state_for_user(db: AsyncSession, user_id: int) -> dict[str, Any]:
+    reconciled = await reconcile_billing_lifecycle(db, user_id=user_id)
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+        await db.commit()
     user = await load_user(db, user_id)
     entitlement = await resolve_entitlement(db, user)
     account_used = await count_user_accounts(db, int(user.id))
@@ -282,13 +364,15 @@ async def create_billing_order(
     duration_days: int = 30,
     order_type: str = "subscription",
     payment_method: str = "manual",
+    expire_minutes: int = 1440,
 ) -> AppBillingOrder:
     plan = await load_plan(db, plan_code)
     if int(plan.status or 0) != 1:
         raise BillingError("套餐已下架，不能购买", code="plan_inactive")
-    days = max(int(duration_days or 30), 1)
+    days = _clean_int(duration_days, 30, 1, 3650)
     month_units = max(1, math.ceil(days / 30))
     amount = int(plan.price_cents or 0) * month_units
+    expires_in = _clean_int(expire_minutes, 1440, 5, 30 * 24 * 60)
     order = AppBillingOrder(
         order_no=_order_no(),
         user_id=int(user_id),
@@ -299,8 +383,8 @@ async def create_billing_order(
         status="pending",
         payment_provider="internal",
         payment_method=payment_method,
-        expire_time=utcnow() + timedelta(minutes=30),
-        metadata_json={"monthUnits": month_units},
+        expire_time=utcnow() + timedelta(minutes=expires_in),
+        metadata_json={"monthUnits": month_units, "expireMinutes": expires_in},
     )
     db.add(order)
     await db.flush()
@@ -318,7 +402,10 @@ async def activate_order(
     plan = await load_plan(db, order.plan_code)
     user = await load_user(db, int(order.user_id))
     now = utcnow()
-    end_time = None if int(plan.price_cents or 0) <= 0 else now + timedelta(days=int(order.duration_days or 30))
+    is_paid_plan = int(plan.price_cents or 0) > 0
+    current_expire = user.plan_expire_time if user.plan_code == plan.code else None
+    period_start = current_expire if is_paid_plan and current_expire and current_expire > now else now
+    end_time = None if not is_paid_plan else period_start + timedelta(days=int(order.duration_days or 30))
 
     active_rows = (
         await db.execute(
@@ -335,7 +422,7 @@ async def activate_order(
         user_id=int(user.id),
         plan_code=plan.code,
         status="active",
-        current_period_start=now,
+        current_period_start=period_start,
         current_period_end=end_time,
         source_order_id=int(order.id),
     )
@@ -355,3 +442,116 @@ async def activate_order(
     }
     await db.flush()
     return subscription
+
+
+async def close_billing_order(
+    db: AsyncSession,
+    order: AppBillingOrder,
+    *,
+    operator: str,
+    reason: str = "",
+) -> AppBillingOrder:
+    if order.status != "pending":
+        raise BillingError("只有待确认订单可以关闭", code="order_not_pending")
+    now = utcnow()
+    order.status = "closed"
+    order.closed_time = now
+    order.metadata_json = {
+        **(order.metadata_json or {}),
+        "closedBy": operator,
+        "closedReason": reason or "manual",
+        "closedAt": now.isoformat(),
+    }
+    await db.flush()
+    return order
+
+
+async def reconcile_billing_lifecycle(db: AsyncSession, user_id: int | None = None) -> dict[str, int]:
+    now = utcnow()
+    closed_orders = 0
+    expired_subscriptions = 0
+
+    order_query = select(AppBillingOrder).where(
+        AppBillingOrder.status == "pending",
+        AppBillingOrder.expire_time.is_not(None),
+        AppBillingOrder.expire_time < now,
+    )
+    if user_id:
+        order_query = order_query.where(AppBillingOrder.user_id == int(user_id))
+    orders = (await db.execute(order_query)).scalars().all()
+    for order in orders:
+        order.status = "closed"
+        order.closed_time = now
+        order.metadata_json = {
+            **(order.metadata_json or {}),
+            "closedBy": "system",
+            "closedReason": "expired",
+            "closedAt": now.isoformat(),
+        }
+        closed_orders += 1
+
+    sub_query = select(AppSubscription).where(
+        AppSubscription.status == "active",
+        AppSubscription.current_period_end.is_not(None),
+        AppSubscription.current_period_end < now,
+    )
+    if user_id:
+        sub_query = sub_query.where(AppSubscription.user_id == int(user_id))
+    subs = (await db.execute(sub_query)).scalars().all()
+    for sub in subs:
+        sub.status = "expired"
+        expired_subscriptions += 1
+
+    if closed_orders or expired_subscriptions:
+        await db.flush()
+    return {"closedOrders": closed_orders, "expiredSubscriptions": expired_subscriptions}
+
+
+async def billing_overview(db: AsyncSession) -> dict[str, Any]:
+    reconciled = await reconcile_billing_lifecycle(db)
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+        await db.commit()
+    now = utcnow()
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    paid_filter = AppBillingOrder.status == "paid"
+    paid_amount = int((
+        await db.execute(select(func.coalesce(func.sum(AppBillingOrder.amount_cents), 0)).where(paid_filter))
+    ).scalar() or 0)
+    paid_today = int((
+        await db.execute(
+            select(func.coalesce(func.sum(AppBillingOrder.amount_cents), 0)).where(
+                paid_filter,
+                AppBillingOrder.paid_time.is_not(None),
+                AppBillingOrder.paid_time >= today,
+            )
+        )
+    ).scalar() or 0)
+    pending_amount = int((
+        await db.execute(
+            select(func.coalesce(func.sum(AppBillingOrder.amount_cents), 0)).where(
+                AppBillingOrder.status == "pending"
+            )
+        )
+    ).scalar() or 0)
+    pending_count = int((
+        await db.execute(
+            select(func.count()).select_from(AppBillingOrder).where(AppBillingOrder.status == "pending")
+        )
+    ).scalar() or 0)
+    active_subscriptions = int((
+        await db.execute(
+            select(func.count()).select_from(AppSubscription).where(AppSubscription.status == "active")
+        )
+    ).scalar() or 0)
+    order_status_rows = (
+        await db.execute(select(AppBillingOrder.status, func.count()).group_by(AppBillingOrder.status))
+    ).all()
+    return {
+        "paidAmountCents": paid_amount,
+        "paidTodayCents": paid_today,
+        "pendingAmountCents": pending_amount,
+        "pendingOrderCount": pending_count,
+        "activeSubscriptionCount": active_subscriptions,
+        "orderStatus": [{"status": row[0] or "", "count": int(row[1] or 0)} for row in order_status_rows],
+        "generatedAt": now.isoformat(),
+    }

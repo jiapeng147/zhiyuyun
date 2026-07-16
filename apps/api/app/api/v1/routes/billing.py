@@ -14,7 +14,10 @@ from ....models.entities import AppBillingOrder, AppPlan
 from ....services.billing import (
     BillingError,
     billing_state_for_user,
+    close_billing_order,
     create_billing_order,
+    load_payment_config,
+    reconcile_billing_lifecycle,
 )
 from ..deps import get_current_user
 
@@ -25,6 +28,10 @@ class CreateBillingOrderReqDTO(CamelModel):
     plan_code: str
     duration_days: int = 30
     payment_method: Optional[str] = "manual"
+
+
+class CloseBillingOrderReqDTO(CamelModel):
+    reason: Optional[str] = "user_cancel"
 
 
 def _dt(value) -> str:
@@ -71,6 +78,11 @@ async def get_my_billing(
     return ResultObject.success(await billing_state_for_user(db, current_uid(current_user)))
 
 
+@router.get("/payment-config", response_model=ResultObject[dict])
+async def get_payment_config(db: AsyncSession = Depends(get_db)):
+    return ResultObject.success(await load_payment_config(db))
+
+
 @router.get("/plans", response_model=ResultObject[list[dict]])
 async def list_billing_plans(db: AsyncSession = Depends(get_db)):
     rows = (
@@ -91,6 +103,9 @@ async def list_my_billing_orders(
     current_user: dict = Depends(get_current_user),
 ):
     uid = current_uid(current_user)
+    reconciled = await reconcile_billing_lifecycle(db, user_id=uid)
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+        await db.commit()
     base = select(AppBillingOrder).where(AppBillingOrder.user_id == uid)
     total = len((await db.execute(base)).scalars().all())
     rows = (
@@ -115,22 +130,54 @@ async def create_my_billing_order(
     current_user: dict = Depends(get_current_user),
 ):
     try:
+        payment_config = await load_payment_config(db)
         order = await create_billing_order(
             db,
             user_id=current_uid(current_user),
             plan_code=req.plan_code,
             duration_days=req.duration_days,
             payment_method=req.payment_method or "manual",
+            expire_minutes=int(payment_config.get("orderExpireMinutes") or 1440),
         )
         await db.commit()
         await db.refresh(order)
         payload = _order_payload(order)
+        if order.status == "pending":
+            payload["paymentConfig"] = payment_config
         payload["message"] = (
             "免费套餐已生效"
             if order.status == "paid" and int(order.amount_cents or 0) == 0
             else "订阅订单已创建，等待支付或管理员确认"
         )
         return ResultObject.success(payload)
+    except BillingError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/orders/{order_id}/close", response_model=ResultObject[dict])
+async def close_my_billing_order(
+    order_id: int,
+    req: CloseBillingOrderReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    uid = current_uid(current_user)
+    order = (
+        await db.execute(
+            select(AppBillingOrder).where(
+                AppBillingOrder.id == order_id,
+                AppBillingOrder.user_id == uid,
+            )
+        )
+    ).scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    try:
+        await close_billing_order(db, order, operator=f"user:{uid}", reason=req.reason or "user_cancel")
+        await db.commit()
+        await db.refresh(order)
+        return ResultObject.success(_order_payload(order), message="订单已关闭")
     except BillingError as exc:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,8 +26,13 @@ from ....models.entities import (
 from ....services.billing import (
     BillingError,
     activate_order,
+    billing_overview,
     billing_state_for_user,
+    close_billing_order,
     create_billing_order,
+    load_payment_config,
+    reconcile_billing_lifecycle,
+    save_payment_config,
 )
 from ....services.email_service import (
     load_email_smtp_config,
@@ -158,6 +163,21 @@ class AdminActivateSubscriptionReqDTO(CamelModel):
 
 class AdminMarkBillingOrderPaidReqDTO(CamelModel):
     note: Optional[str] = None
+
+
+class AdminCloseBillingOrderReqDTO(CamelModel):
+    reason: Optional[str] = "admin_close"
+
+
+class BillingPaymentConfigReqDTO(CamelModel):
+    enabled: bool = False
+    order_expire_minutes: int = 1440
+    payment_methods: Optional[list[str]] = None
+    instructions: Optional[str] = None
+    contact: Optional[str] = None
+    alipay_qr_url: Optional[str] = None
+    wechat_qr_url: Optional[str] = None
+    bank_account: Optional[str] = None
 
 
 def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
@@ -487,6 +507,9 @@ async def reset_password(
 async def list_subscriptions(
     db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
 ):
+    reconciled = await reconcile_billing_lifecycle(db)
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+        await db.commit()
     rows = (
         await db.execute(
             select(AppSubscription, AdminUser)
@@ -499,16 +522,46 @@ async def list_subscriptions(
 
 @router.get("/billing-orders", response_model=ResultObject[list[dict]])
 async def list_billing_orders(
+    status: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
 ):
+    reconciled = await reconcile_billing_lifecycle(db)
+    if reconciled["closedOrders"] or reconciled["expiredSubscriptions"]:
+        await db.commit()
+    statement = (
+        select(AppBillingOrder, AdminUser)
+        .outerjoin(AdminUser, AdminUser.id == AppBillingOrder.user_id)
+    )
+    if status:
+        statement = statement.where(AppBillingOrder.status == status)
     rows = (
         await db.execute(
-            select(AppBillingOrder, AdminUser)
-            .outerjoin(AdminUser, AdminUser.id == AppBillingOrder.user_id)
-            .order_by(AppBillingOrder.id.desc())
+            statement.order_by(AppBillingOrder.id.desc())
         )
     ).all()
     return ResultObject.success([_billing_order_payload(order, user) for order, user in rows])
+
+
+@router.get("/billing-overview", response_model=ResultObject[dict])
+async def get_billing_overview(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await billing_overview(db))
+
+
+@router.get("/billing-settings", response_model=ResultObject[dict])
+async def get_billing_settings(
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await load_payment_config(db))
+
+
+@router.put("/billing-settings", response_model=ResultObject[dict])
+async def set_billing_settings(
+    req: BillingPaymentConfigReqDTO,
+    db: AsyncSession = Depends(get_db), _: dict = Depends(require_superadmin),
+):
+    return ResultObject.success(await save_payment_config(db, req.model_dump()), message="账单设置已保存")
 
 
 @router.get("/users/{uid}/billing", response_model=ResultObject[dict])
@@ -566,7 +619,7 @@ async def mark_billing_order_paid(
             await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
         ).scalar_one_or_none()
         return ResultObject.success(_billing_order_payload(order, user), message="订单已是已支付状态")
-    if order.status not in {"pending", "closed"}:
+    if order.status != "pending":
         raise HTTPException(status_code=400, detail="当前订单状态不能确认支付")
     order.metadata_json = {
         **(order.metadata_json or {}),
@@ -580,6 +633,36 @@ async def mark_billing_order_paid(
             await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
         ).scalar_one_or_none()
         return ResultObject.success(_billing_order_payload(order, user), message="订单已确认支付并激活套餐")
+    except BillingError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/billing-orders/{order_id}/close", response_model=ResultObject[dict])
+async def close_admin_billing_order(
+    order_id: int,
+    req: AdminCloseBillingOrderReqDTO,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_superadmin),
+):
+    order = (
+        await db.execute(select(AppBillingOrder).where(AppBillingOrder.id == order_id))
+    ).scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    try:
+        await close_billing_order(
+            db,
+            order,
+            operator=str(current_user.get("username") or "admin"),
+            reason=req.reason or "admin_close",
+        )
+        await db.commit()
+        await db.refresh(order)
+        user = (
+            await db.execute(select(AdminUser).where(AdminUser.id == order.user_id))
+        ).scalar_one_or_none()
+        return ResultObject.success(_billing_order_payload(order, user), message="订单已关闭")
     except BillingError as exc:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc
