@@ -10,6 +10,7 @@ from ....core.database import get_db
 from ....core.tenancy import current_uid, owned_account_id_subquery
 from ....core.response import ResultObject
 from ....models.entities import AutoReplyRule, QuickReplyTemplate
+from ....services.billing import BillingLimitError, ensure_feature_available
 from ....services.ai_provider import _resolve_ai_config, generate_text, is_ai_configured
 from ....services.business_settings import (
     AI_CS_SETTING_KEY,
@@ -23,6 +24,13 @@ from ..deps import get_current_user
 
 router = APIRouter(tags=["businessSettingsCompat"])
 AI_SETTINGS_HINT = "未配置通用模型，请先前往系统设置中的“模型配置”填写 baseUrl、apiKey 与模型名称。"
+
+
+async def _require_plan_feature(db: AsyncSession, current_user: dict, feature_key: str) -> None:
+    try:
+        await ensure_feature_available(db, current_user, feature_key)
+    except BillingLimitError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
 def _format_datetime(value: Optional[datetime.datetime]) -> Optional[str]:
@@ -128,6 +136,7 @@ async def test_ai_customer_service(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "ai_customer_service")
     config = await load_business_setting(db, AI_CS_SETTING_KEY)
     system_prompt = str(config.get("systemPrompt") or "").strip()[:6_000]
     raw_message = body.get("message")
@@ -191,8 +200,10 @@ async def test_ai_customer_service(
 @router.post("/business-settings/ai-customer-service/upload-knowledge", response_model=ResultObject)
 async def upload_ai_customer_service_knowledge(
     file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "ai_customer_service")
     file_name = file.filename or ""
     if not file_name.strip():
         return ResultObject.failed("文件名不能为空", code=400)
@@ -234,6 +245,8 @@ async def get_business_settings(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if category == AI_CS_SETTING_KEY:
+        await _require_plan_feature(db, current_user, "ai_customer_service")
     if category not in ALLOWED_BUSINESS_SETTING_CATEGORIES:
         return ResultObject.failed(f"不支持的配置分类: {category}", code=400)
     return ResultObject.success(await load_business_setting(db, category))
@@ -285,6 +298,7 @@ async def save_quick_reply_template(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_reply")
     title = str(body.get("title") or "").strip()
     content = str(body.get("content") or "").strip()
     if not title or not content:
@@ -332,6 +346,7 @@ async def delete_quick_reply_template(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_reply")
     result = await db.execute(
         select(QuickReplyTemplate).where(
             QuickReplyTemplate.id == template_id,
@@ -379,6 +394,7 @@ async def create_auto_reply_rule(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_reply")
     rule = AutoReplyRule(
         account_id=body.get("accountId") or body.get("xianyuAccountId"),
         rule_name=str(body.get("ruleName") or body.get("rule_name") or "").strip() or "自动回复规则",
@@ -403,6 +419,7 @@ async def update_auto_reply_rule(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_reply")
     result = await db.execute(
         select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0)
     )
@@ -438,6 +455,7 @@ async def delete_auto_reply_rule(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_reply")
     result = await db.execute(
         select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0)
     )
@@ -455,6 +473,7 @@ async def preview_auto_reply_rule(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_reply")
     account_id = body.get("accountId") or body.get("xianyuAccountId")
     message = str(body.get("message") or "").strip()
     query = select(AutoReplyRule).where(

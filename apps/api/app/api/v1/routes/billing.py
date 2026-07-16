@@ -17,6 +17,7 @@ from ....services.billing import (
     close_billing_order,
     create_billing_order,
     load_payment_config,
+    plan_payload,
     reconcile_billing_lifecycle,
 )
 from ..deps import get_current_user
@@ -36,20 +37,6 @@ class CloseBillingOrderReqDTO(CamelModel):
 
 def _dt(value) -> str:
     return value.isoformat() if value else ""
-
-
-def _plan_payload(plan: AppPlan) -> dict:
-    return {
-        "id": int(plan.id),
-        "code": plan.code,
-        "name": plan.name,
-        "maxAccounts": int(plan.max_accounts or 0),
-        "aiDailyQuota": int(plan.ai_daily_quota or 0),
-        "priceCents": int(plan.price_cents or 0),
-        "sortOrder": int(plan.sort_order or 0),
-        "status": int(plan.status or 0),
-        "description": plan.description or "",
-    }
 
 
 def _order_payload(order: AppBillingOrder) -> dict:
@@ -92,7 +79,7 @@ async def list_billing_plans(db: AsyncSession = Depends(get_db)):
             .order_by(AppPlan.sort_order.asc(), AppPlan.id.asc())
         )
     ).scalars().all()
-    return ResultObject.success([_plan_payload(row) for row in rows])
+    return ResultObject.success([plan_payload(row) for row in rows])
 
 
 @router.get("/orders", response_model=ResultObject[dict])

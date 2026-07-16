@@ -1213,6 +1213,7 @@ class AppPlan(Base):
     sort_order = Column(Integer, nullable=False, default=0)
     status = Column(SmallInteger, nullable=False, default=1, comment="1上架 0下架")
     description = Column(String(500), nullable=True)
+    feature_flags = Column(JSON, nullable=True, comment="套餐功能权益开关(JSON)")
     created_time = Column(DateTime, default=func.now())
     updated_time = Column(DateTime, default=func.now(), onupdate=func.now())
 

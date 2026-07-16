@@ -13,11 +13,19 @@ from ....core.database import get_db
 from ....core.response import ResultObject
 from ....core.tenancy import current_uid
 from ....services.ai_provider import generate_text
+from ....services.billing import BillingLimitError, ensure_feature_available
 from ..deps import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["delivery-workflow-compat"])
 AI_SETTINGS_HINT = "未配置通用模型，当前仅展示规则匹配候选。前往系统设置中的“模型配置”完成配置后，可使用 AI 一键配置商品。"
+
+
+async def _require_plan_feature(db: AsyncSession, current_user: dict, feature_key: str) -> None:
+    try:
+        await ensure_feature_available(db, current_user, feature_key)
+    except BillingLimitError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 # 自动发货规则与全局配置扩展 router（前端 autoDelivery.js 调用）
 # 参考项目 Java 实现：
@@ -2075,6 +2083,7 @@ async def save_goods_delivery_config(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_delivery")
     missing_result = await _require_goods(db, [goods_id])
     if missing_result:
         return missing_result
@@ -2140,6 +2149,7 @@ async def toggle_goods_delivery_config(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_delivery")
     missing_result = await _require_goods(db, [goods_id])
     if missing_result:
         return missing_result
@@ -2496,6 +2506,7 @@ async def create_delivery_source(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "source_library")
     try:
         title, content, remark = _delivery_source_fields(body)
     except ValueError as exc:
@@ -2524,6 +2535,7 @@ async def update_delivery_source(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "source_library")
     try:
         title, content, remark = _delivery_source_fields(body)
     except ValueError as exc:
@@ -2565,6 +2577,7 @@ async def delete_delivery_source(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "source_library")
     existing = await _load_delivery_source_row(db, source_id, for_update=True)
     if not existing:
         await db.rollback()
@@ -2689,6 +2702,7 @@ async def recommend_delivery_source_goods(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "source_library")
     source_row = await _load_delivery_source_row(db, source_id)
     if not source_row:
         return ResultObject.failed("货源不存在", code=404)
@@ -2849,6 +2863,7 @@ async def apply_delivery_source_to_goods(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "source_library")
     try:
         goods_ids = _normalize_goods_ids(body.get("goodsIds"))
     except ValueError as exc:
@@ -3202,6 +3217,7 @@ async def trigger_delivery(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_delivery")
     order_id = body.get("orderId")
     if order_id in (None, ""):
         return ResultObject.validate_failed("orderId 不能为空")
@@ -3250,6 +3266,7 @@ async def scan_pending_orders(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    await _require_plan_feature(db, current_user, "auto_delivery")
     configs = await _load_all_goods_configs(db)
     if not configs:
         return ResultObject.success({"scanned": 0, "created": 0, "message": "暂无已配置的自动发货商品"})

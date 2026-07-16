@@ -26,6 +26,15 @@
           <span>套餐状态</span>
           <strong :class="state?.plan?.expired ? 'danger' : 'ok'">{{ state?.plan?.expired ? '已过期' : '生效中' }}</strong>
         </div>
+        <div class="current-features">
+          <span
+            v-for="feature in currentFeatureItems"
+            :key="feature.key"
+            :class="{ off: !feature.enabled }"
+          >
+            {{ feature.label }}
+          </span>
+        </div>
       </n-card>
 
       <n-card class="billing-card" :bordered="false">
@@ -75,6 +84,15 @@
           <div class="plan-features">
             <span>{{ displayLimit(plan.maxAccounts) }} 个账号</span>
             <span>{{ displayLimit(plan.aiDailyQuota) }} 次 AI/日</span>
+          </div>
+          <div class="plan-feature-grid">
+            <span
+              v-for="feature in plan.featureItems || []"
+              :key="feature.key"
+              :class="{ off: !feature.enabled }"
+            >
+              {{ feature.label }}
+            </span>
           </div>
           <button
             class="billing-btn primary"
@@ -200,6 +218,7 @@ const usage = computed(() => ({
 }))
 const currentPlanCode = computed(() => state.value?.plan?.code || 'free')
 const pendingOrders = computed(() => orders.value.filter(order => order.status === 'pending'))
+const currentFeatureItems = computed(() => state.value?.plan?.featureItems || [])
 
 function flash(message, type = 'success') {
   notice.value = message
@@ -416,6 +435,29 @@ onMounted(loadAll)
 .summary-row strong.ok { color: #15803d; }
 .summary-row strong.danger { color: #b91c1c; }
 
+.current-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.current-features span,
+.plan-feature-grid span {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eefbf6;
+  color: #0f766e;
+  font-size: 12px;
+}
+
+.current-features span.off,
+.plan-feature-grid span.off {
+  background: #f1f5f9;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
 .quota-main {
   display: flex;
   align-items: baseline;
@@ -513,6 +555,12 @@ onMounted(loadAll)
   background: #eefbf6;
   color: #0f766e;
   font-size: 12px;
+}
+
+.plan-feature-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .payment-layout {

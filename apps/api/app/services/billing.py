@@ -26,6 +26,22 @@ METRIC_ACCOUNTS = "accounts"
 METRIC_AI_CALLS = "ai_calls"
 BILLING_PAYMENT_CONFIG_KEY = "billing_payment_config"
 
+FEATURE_CATALOG: tuple[dict[str, str], ...] = (
+    {"key": "accounts", "label": "闲鱼账号"},
+    {"key": "products", "label": "商品管理"},
+    {"key": "messages", "label": "在线消息"},
+    {"key": "ai_customer_service", "label": "AI 客服"},
+    {"key": "auto_reply", "label": "自动回复"},
+    {"key": "auto_delivery", "label": "自动发货"},
+    {"key": "card_warehouse", "label": "卡密仓库"},
+    {"key": "source_library", "label": "货源库"},
+    {"key": "rag", "label": "RAG 知识库"},
+    {"key": "scheduled_tasks", "label": "定时任务"},
+    {"key": "item_polish", "label": "商品擦亮"},
+    {"key": "notifications", "label": "通知设置"},
+)
+DEFAULT_FEATURE_FLAGS: dict[str, bool] = {item["key"]: True for item in FEATURE_CATALOG}
+
 DEFAULT_PAYMENT_CONFIG: dict[str, Any] = {
     "enabled": False,
     "orderExpireMinutes": 1440,
@@ -59,6 +75,7 @@ class BillingEntitlement:
     plan_expire_time: datetime | None
     expired: bool
     source: str
+    features: dict[str, bool]
 
 
 def utcnow() -> datetime:
@@ -75,6 +92,40 @@ def _dt(value: datetime | None) -> str:
 
 def _order_no() -> str:
     return "B" + utcnow().strftime("%Y%m%d%H%M%S") + uuid.uuid4().hex[:10].upper()
+
+
+def normalize_feature_flags(raw: Any = None) -> dict[str, bool]:
+    result = dict(DEFAULT_FEATURE_FLAGS)
+    if isinstance(raw, dict):
+        for key in result:
+            if key in raw:
+                result[key] = bool(raw.get(key))
+    return result
+
+
+def feature_items(flags: dict[str, bool] | None = None) -> list[dict[str, Any]]:
+    normalized = normalize_feature_flags(flags)
+    return [
+        {"key": item["key"], "label": item["label"], "enabled": bool(normalized.get(item["key"], True))}
+        for item in FEATURE_CATALOG
+    ]
+
+
+def plan_payload(plan: AppPlan) -> dict[str, Any]:
+    flags = normalize_feature_flags(plan.feature_flags)
+    return {
+        "id": int(plan.id),
+        "code": plan.code,
+        "name": plan.name,
+        "maxAccounts": int(plan.max_accounts or 0),
+        "aiDailyQuota": int(plan.ai_daily_quota or 0),
+        "priceCents": int(plan.price_cents or 0),
+        "sortOrder": int(plan.sort_order or 0),
+        "status": int(plan.status or 0),
+        "description": plan.description or "",
+        "features": flags,
+        "featureItems": feature_items(flags),
+    }
 
 
 def _clean_int(value: Any, default: int = 0, minimum: int | None = None, maximum: int | None = None) -> int:
@@ -188,16 +239,19 @@ async def resolve_entitlement(db: AsyncSession, user: AdminUser) -> BillingEntit
         plan_name = plan.name
         price_cents = int(plan.price_cents or 0)
         source = "plan"
+        features = normalize_feature_flags(plan.feature_flags)
     else:
         max_accounts = int(user.max_accounts or 0)
         ai_daily_quota = int(user.ai_daily_quota or 0)
         plan_name = desired_code
         price_cents = 0
         source = "user"
+        features = normalize_feature_flags()
 
     if bool(user.is_super):
         max_accounts = max(max_accounts, 999_999)
         ai_daily_quota = max(ai_daily_quota, 999_999)
+        features = normalize_feature_flags()
 
     return BillingEntitlement(
         user_id=int(user.id),
@@ -209,6 +263,7 @@ async def resolve_entitlement(db: AsyncSession, user: AdminUser) -> BillingEntit
         plan_expire_time=user.plan_expire_time,
         expired=expired,
         source=source,
+        features=features,
     )
 
 
@@ -266,6 +321,8 @@ async def billing_state_for_user(db: AsyncSession, user_id: int) -> dict[str, An
             "expireTime": _dt(entitlement.plan_expire_time),
             "expired": entitlement.expired,
             "source": entitlement.source,
+            "features": entitlement.features,
+            "featureItems": feature_items(entitlement.features),
         },
         "subscription": {
             "id": int(subscription.id) if subscription else None,
@@ -288,6 +345,28 @@ async def billing_state_for_user(db: AsyncSession, user_id: int) -> dict[str, An
         },
         "generatedAt": utcnow().isoformat(),
     }
+
+
+async def ensure_feature_available(
+    db: AsyncSession,
+    current_user: dict | None,
+    feature_key: str,
+) -> None:
+    if is_superadmin(current_user):
+        return
+    uid = current_uid(current_user)
+    if not uid:
+        raise BillingLimitError("无法确认当前用户，功能访问已阻止", code="user_unknown")
+    user = await load_user(db, uid)
+    if int(user.status or 0) != 1:
+        raise BillingLimitError("账号已被禁用，不能使用该功能", code="user_disabled")
+    entitlement = await resolve_entitlement(db, user)
+    if entitlement.features.get(feature_key, True) is False:
+        label = next((item["label"] for item in FEATURE_CATALOG if item["key"] == feature_key), feature_key)
+        raise BillingLimitError(
+            f"当前套餐未包含「{label}」功能，请升级套餐或联系管理员开通。",
+            code="feature_not_in_plan",
+        )
 
 
 async def ensure_account_quota_available(

@@ -71,12 +71,12 @@
           <thead>
             <tr>
               <th>代码</th><th>名称</th><th>账号配额</th><th>AI 配额/日</th>
-              <th>月价</th><th>排序</th><th>状态</th><th>操作</th>
+              <th>月价</th><th>权益</th><th>排序</th><th>状态</th><th>操作</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="plans.length === 0">
-              <td colspan="8" class="empty-cell">暂无套餐</td>
+              <td colspan="9" class="empty-cell">暂无套餐</td>
             </tr>
             <tr v-for="p in plans" :key="p.id">
               <td><code>{{ p.code }}</code></td>
@@ -84,6 +84,7 @@
               <td>{{ p.maxAccounts }}</td>
               <td>{{ p.aiDailyQuota }}</td>
               <td>¥{{ (p.priceCents / 100).toFixed(2) }}</td>
+              <td>{{ featureSummary(p.features) }}</td>
               <td>{{ p.sortOrder }}</td>
               <td>
                 <span :class="['status-dot', p.status === 1 ? 'ok' : 'off']"></span>
@@ -458,6 +459,13 @@
             <span>描述</span>
             <textarea v-model="editingPlan.description" class="input" rows="2" placeholder="显示在注册/升级页"></textarea>
           </label>
+          <div class="feature-editor">
+            <span class="feature-editor-title">套餐权益</span>
+            <label v-for="feature in featureCatalog" :key="feature.key" class="feature-check">
+              <input v-model="editingPlan.features[feature.key]" type="checkbox" />
+              <span>{{ feature.label }}</span>
+            </label>
+          </div>
           <div class="form-actions">
             <button class="btn" type="button" @click="editingPlan = null">取消</button>
             <button class="btn primary" type="button" :disabled="planBusy" @click="onSavePlan">
@@ -519,10 +527,31 @@ const editingPlan = ref(null)
 
 const notice = ref('')
 const noticeType = ref('success')
+const featureCatalog = [
+  { key: 'accounts', label: '闲鱼账号' },
+  { key: 'products', label: '商品管理' },
+  { key: 'messages', label: '在线消息' },
+  { key: 'ai_customer_service', label: 'AI 客服' },
+  { key: 'auto_reply', label: '自动回复' },
+  { key: 'auto_delivery', label: '自动发货' },
+  { key: 'card_warehouse', label: '卡密仓库' },
+  { key: 'source_library', label: '货源库' },
+  { key: 'rag', label: 'RAG 知识库' },
+  { key: 'scheduled_tasks', label: '定时任务' },
+  { key: 'item_polish', label: '商品擦亮' },
+  { key: 'notifications', label: '通知设置' },
+]
 
 function flash(msg, type = 'success') { notice.value = msg; noticeType.value = type; setTimeout(() => { if (notice.value === msg) notice.value = '' }, 4000) }
 function fmt(v) { if (!v) return '—'; return String(v).replace('T', ' ').slice(0, 16) }
 function money(cents) { return `¥${(Number(cents || 0) / 100).toFixed(2)}` }
+function defaultFeatures(source = {}) {
+  return Object.fromEntries(featureCatalog.map(item => [item.key, source[item.key] !== false]))
+}
+function featureSummary(features = {}) {
+  const enabled = featureCatalog.filter(item => defaultFeatures(features)[item.key])
+  return `${enabled.length}/${featureCatalog.length}`
+}
 
 async function loadAll() {
   try {
@@ -613,17 +642,17 @@ async function onResetPwd() {
 
 // === 套餐编辑 ===
 function openCreatePlan() {
-  editingPlan.value = { id: 0, code: '', name: '', maxAccounts: 1, aiDailyQuota: 100, priceCents: 0, sortOrder: plans.value.length + 1, statusBool: true, description: '' }
+  editingPlan.value = { id: 0, code: '', name: '', maxAccounts: 1, aiDailyQuota: 100, priceCents: 0, sortOrder: plans.value.length + 1, statusBool: true, description: '', features: defaultFeatures() }
 }
 function openEditPlan(p) {
-  editingPlan.value = { id: p.id, code: p.code, name: p.name, maxAccounts: p.maxAccounts, aiDailyQuota: p.aiDailyQuota, priceCents: p.priceCents, sortOrder: p.sortOrder, statusBool: p.status === 1, description: p.description || '' }
+  editingPlan.value = { id: p.id, code: p.code, name: p.name, maxAccounts: p.maxAccounts, aiDailyQuota: p.aiDailyQuota, priceCents: p.priceCents, sortOrder: p.sortOrder, statusBool: p.status === 1, description: p.description || '', features: defaultFeatures(p.features || {}) }
 }
 async function onSavePlan() {
   if (!editingPlan.value) return; if (planBusy.value) return
   planBusy.value = true
   try {
     const ep = editingPlan.value
-    const payload = { code: ep.code.trim(), name: ep.name.trim(), maxAccounts: ep.maxAccounts, aiDailyQuota: ep.aiDailyQuota, priceCents: ep.priceCents, sortOrder: ep.sortOrder, status: ep.statusBool ? 1 : 0, description: ep.description || null }
+    const payload = { code: ep.code.trim(), name: ep.name.trim(), maxAccounts: ep.maxAccounts, aiDailyQuota: ep.aiDailyQuota, priceCents: ep.priceCents, sortOrder: ep.sortOrder, status: ep.statusBool ? 1 : 0, description: ep.description || null, features: defaultFeatures(ep.features || {}) }
     if (ep.id) {
       await adminUpdatePlan(ep.id, payload); flash(`已更新套餐 ${ep.code}`)
     } else {
@@ -849,6 +878,10 @@ onMounted(loadAll)
 .field.check input { width: 16px; height: 16px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-actions { margin-top: 12px; display: flex; gap: 8px; }
+.feature-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f8fafc; }
+.feature-editor-title { grid-column: 1 / -1; color: #64748b; font-size: 13px; }
+.feature-check { display: inline-flex; align-items: center; gap: 7px; color: #374151; font-size: 13px; }
+.feature-check input { width: 15px; height: 15px; }
 
 /* modal */
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }

@@ -1,7 +1,7 @@
 """超级管理员: 商业版管理端点(用户管理 / 注册开关 / 邮箱SMTP)。"""
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import case, func, select
@@ -31,6 +31,8 @@ from ....services.billing import (
     close_billing_order,
     create_billing_order,
     load_payment_config,
+    normalize_feature_flags,
+    feature_items,
     reconcile_billing_lifecycle,
     save_payment_config,
 )
@@ -127,6 +129,7 @@ class PlanReqDTO(CamelModel):
     sort_order: int = 0
     status: int = 1
     description: Optional[str] = None
+    features: Optional[dict[str, bool]] = None
 
 
 class PlanRespDTO(CamelModel):
@@ -139,6 +142,8 @@ class PlanRespDTO(CamelModel):
     sort_order: int
     status: int
     description: Optional[str] = ""
+    features: dict[str, bool] = {}
+    feature_items: list[dict[str, Any]] = []
     created_time: Optional[str] = ""
     updated_time: Optional[str] = ""
 
@@ -181,11 +186,13 @@ class BillingPaymentConfigReqDTO(CamelModel):
 
 
 def _plan_to_dto(p: AppPlan) -> PlanRespDTO:
+    flags = normalize_feature_flags(p.feature_flags)
     return PlanRespDTO(
         id=int(p.id), code=p.code, name=p.name,
         max_accounts=int(p.max_accounts or 0), ai_daily_quota=int(p.ai_daily_quota or 0),
         price_cents=int(p.price_cents or 0), sort_order=int(p.sort_order or 0),
         status=int(p.status or 0), description=p.description or "",
+        features=flags, feature_items=feature_items(flags),
         created_time=_dt(p.created_time), updated_time=_dt(p.updated_time),
     )
 
@@ -379,6 +386,7 @@ async def create_plan(
         max_accounts=int(req.max_accounts), ai_daily_quota=int(req.ai_daily_quota),
         price_cents=int(req.price_cents), sort_order=int(req.sort_order),
         status=int(req.status), description=req.description,
+        feature_flags=normalize_feature_flags(req.features),
     )
     db.add(plan)
     await db.commit()
@@ -408,6 +416,8 @@ async def update_plan(
     plan.sort_order = int(req.sort_order)
     plan.status = int(req.status)
     plan.description = req.description
+    if req.features is not None:
+        plan.feature_flags = normalize_feature_flags(req.features)
     await db.commit()
     await db.refresh(plan)
     return ResultObject.success(_plan_to_dto(plan))

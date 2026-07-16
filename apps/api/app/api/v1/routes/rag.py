@@ -45,10 +45,23 @@ from ....services.sensitive_config import (
     decrypt_runtime_secret,
     prepare_secret_for_storage,
 )
+from ....services.billing import BillingLimitError, ensure_feature_available
 from ..deps import get_current_user
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/rag", tags=["rag"])
+
+
+async def require_rag_feature(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    try:
+        await ensure_feature_available(db, current_user, "rag")
+    except BillingLimitError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+
+
+router = APIRouter(prefix="/rag", tags=["rag"], dependencies=[Depends(require_rag_feature)])
 
 
 # 复用 rag_service 的切片与向量化能力

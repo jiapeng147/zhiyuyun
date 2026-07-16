@@ -28,6 +28,7 @@ from ....core.security import (
 from sqlalchemy.exc import IntegrityError
 
 from ....models.entities import XianyuOperationLog, XianyuSysSetting, AdminUser, AppPlan
+from ....services.billing import plan_payload
 from ....services.email_service import send_verification_email, verify_code
 from ..deps import get_current_user
 
@@ -427,27 +428,12 @@ class RegisterReqDTO(CamelModel):
     nickname: Optional[str] = ""
 
 
-class PlanRespDTO(CamelModel):
-    code: str
-    name: str
-    max_accounts: int
-    ai_daily_quota: int
-    price_cents: int
-    description: Optional[str] = ""
-
-
-@router.get("/plans", response_model=ResultObject[list[PlanRespDTO]])
+@router.get("/plans", response_model=ResultObject[list[dict]])
 async def list_plans(db: AsyncSession = Depends(get_db)):
     rows = (await db.execute(
         select(AppPlan).where(AppPlan.status == 1).order_by(AppPlan.sort_order)
     )).scalars().all()
-    return ResultObject.success([
-        PlanRespDTO(
-            code=p.code, name=p.name, max_accounts=p.max_accounts,
-            ai_daily_quota=p.ai_daily_quota, price_cents=p.price_cents,
-            description=p.description or "",
-        ) for p in rows
-    ])
+    return ResultObject.success([plan_payload(p) for p in rows])
 
 
 @router.post("/register/send-code", response_model=ResultObject[None])
