@@ -22,16 +22,17 @@
       <Icon name="fullscreen" />
     </button>
 
-    <div class="top-user-wrap">
-      <button class="top-user" type="button" @click="$emit('open-profile-center')">
+    <div ref="userWrapEl" class="top-user-wrap">
+      <button class="top-user" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
         <div class="avatar small avatar-img"></div>
         <span>{{ displayName }}</span>
         <em>{{ sseLabel }}</em>
         <b aria-hidden="true">⌄</b>
       </button>
 
-      <div class="top-user-menu logout-only">
-        <button type="button" @click="$emit('logout')">退出登录</button>
+      <div v-if="menuOpen" class="top-user-menu">
+        <button type="button" @click="onProfile">个人中心</button>
+        <button type="button" class="danger" @click="onLogout">退出登录</button>
       </div>
     </div>
 
@@ -71,7 +72,17 @@ const props = defineProps({
   unreadCount: { type: [String, Number], default: 0 }
 })
 
-defineEmits(['logout', 'open-profile-center'])
+const emit = defineEmits(['logout', 'open-profile-center'])
+
+const menuOpen = ref(false)
+const userWrapEl = ref(null)
+function onProfile() { menuOpen.value = false; emit('open-profile-center') }
+function onLogout() { menuOpen.value = false; emit('logout') }
+function onDocClick(e) {
+  if (menuOpen.value && userWrapEl.value && !userWrapEl.value.contains(e.target)) {
+    menuOpen.value = false
+  }
+}
 
 const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '管理员')
 const sseLabel = computed(() => ({
@@ -138,11 +149,13 @@ function onFullscreenChange() {
 onMounted(() => {
   window.addEventListener('xya-sse-event', onSseEvent)
   document.addEventListener('fullscreenchange', onFullscreenChange)
+  document.addEventListener('click', onDocClick)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('xya-sse-event', onSseEvent)
   document.removeEventListener('fullscreenchange', onFullscreenChange)
+  document.removeEventListener('click', onDocClick)
 })
 </script>
 
@@ -154,38 +167,41 @@ onBeforeUnmount(() => {
 .top-user-menu {
   position: absolute;
   right: 0;
-  top: 46px;
+  top: calc(100% + 6px);
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(92, 49, 30, 0.14);
-  padding: 8px;
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-6px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.top-user-wrap:hover .top-user-menu,
-.top-user-wrap:focus-within .top-user-menu {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 50;
 }
 
 .top-user-menu button {
   white-space: nowrap;
   border: 0;
   background: transparent;
-  padding: 10px 18px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
+  text-align: left;
+  color: #111;
+  font-weight: 600;
+}
+
+.top-user-menu button.danger {
   color: #ef4444;
   font-weight: 800;
 }
 
 .top-user-menu button:hover {
+  background: #F5F5F5;
+}
+
+.top-user-menu button.danger:hover {
   background: #fff5f5;
 }
 
