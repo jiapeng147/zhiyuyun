@@ -627,7 +627,7 @@ class SqlManualDeliveryAttemptStore:
         ).scalar_one_or_none()
         if order is None:
             await self._db.rollback()
-            raise ManualDeliveryError(409, "order_missing_during_delivery", "订单已不存在，无法确认本地发货状态")
+            raise ManualDeliveryError(409, "order_missing_during_delivery", "订单已不存在，无法确认系统发货状态")
         attempt = await self._locked_attempt(lease)
         if attempt.message_confirmed_at is None:
             raise ManualDeliveryError(

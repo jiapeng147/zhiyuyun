@@ -52,7 +52,7 @@ async def get_carousel_list(
         return ResultObject.success(payload)
     except CommercialBridgeCapabilityUnavailable:
         return _carousel_unavailable_response(
-            "广告轮播已关闭：商业桥尚未证明仅已支付广告可进入展示接口",
+            "广告轮播已关闭：商业服务尚未确认仅已支付广告可进入展示接口",
             configured=True,
             reason="commercial_bridge_paid_placement_required",
         )
@@ -80,4 +80,4 @@ async def get_announcement_list(
         return ResultObject.success(local_content.get("announcements", []))
     except RuntimeError:
         logger.error("Local announcement content storage is unavailable")
-        return ResultObject.failed("公告内容服务暂不可用，请联系管理员检查内容存储", code=503)
+        return ResultObject.failed("公告内容服务暂不可用，请联系平台支持检查内容存储", code=503)

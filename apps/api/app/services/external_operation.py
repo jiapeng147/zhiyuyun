@@ -164,8 +164,8 @@ class ExternalOperationCoordinator:
         messages = {
             "pending": "操作待执行",
             "in_progress": "同一操作正在执行，请勿重复提交",
-            "remote_confirmed": "平台已确认，但本地状态尚未完成；重试只会修复本地状态",
-            "confirmed": "平台与本地状态均已确认",
+            "remote_confirmed": "平台已确认，但系统状态尚未完成；重试只会修复系统状态",
+            "confirmed": "平台与系统状态均已确认",
             "failed": lease.error_message or "平台明确拒绝操作，可排除问题后安全重试",
             "unknown": lease.error_message or "平台结果未知，请先同步核对，禁止自动重试",
         }
@@ -337,7 +337,7 @@ class SqlExternalOperationStore:
                 raise ExternalOperationError(
                     409,
                     "target_already_published",
-                    "该本地草稿已经完成发布；系统已阻止使用新意图重复发布",
+                    "该草稿商品已经完成发布；系统已阻止使用新意图重复发布",
                 )
             # A confirmed price change does not permanently lock the product;
             # a later key with a different digest represents a new price.
@@ -470,7 +470,7 @@ class SqlExternalOperationStore:
         attempt.retry_scope = "local_persist"
         attempt.retry_safe = 1
         attempt.last_error_code = "local_persistence_failed"
-        attempt.error_message = "平台已确认，但本地状态保存失败；重试只会修复本地状态"
+        attempt.error_message = "平台已确认，但系统状态保存失败；重试只会修复系统状态"
         self._release(attempt)
         await self.db.commit()
         return self._lease(attempt, "return")

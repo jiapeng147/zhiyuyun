@@ -13,13 +13,12 @@ RouteKey: TypeAlias = tuple[str, str]
 IGNORED_DUPLICATE_METHODS = frozenset({"HEAD", "OPTIONS"})
 RETIRED_API_SURFACE_REASON = "RETIRED_API_SURFACE"
 LEGACY_AUTH_RETIRED_GUIDANCE = (
-    "开源版只保留固定管理员登录，不提供用户注册、账号探测、短信验证码、"
-    "自助找回密码或旧会话接口；请使用 POST /api/auth/login 登录，并由部署管理员"
-    "通过受控配置和密码修改流程维护唯一管理员账号。"
+    "当前版本已下线旧注册、账号探测、短信验证码、自助找回密码或旧会话接口；"
+    "请使用 POST /api/auth/login 登录，并由平台负责人通过受控配置和密码修改流程维护登录账号。"
 )
 INTERNAL_QR_RETIRED_GUIDANCE = (
     "旧 Java 网关内部扫码接口已移除，不再通过内部接口创建会话或返回原始 Cookie；"
-    "管理员客户端请使用 POST /api/qrlogin/generate、POST /api/qrlogin/status/{session_id} "
+    "客户端请使用 POST /api/qrlogin/generate、POST /api/qrlogin/status/{session_id} "
     "和 POST /api/qrlogin/cleanup。扫码凭据始终只在服务端保存。"
 )
 
@@ -180,7 +179,7 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "POST",
         "/api/order/confirmShipment",
-        "仅修改本地订单状态的旧发货接口已移除；请使用 POST /api/orders/{order_id}/manual-delivery，并检查返回的真实发货状态。",
+        "仅修改系统订单状态的旧发货接口已移除；请使用 POST /api/orders/{order_id}/manual-delivery，并检查返回的真实发货状态。",
     ),
     RetiredSurface(
         "POST",
@@ -190,7 +189,7 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "POST",
         "/api/order/batchRefresh",
-        "仅回读本地数据的旧刷新桩已移除；请使用 POST /api/orders/sync 后重新查询订单。",
+        "仅回读系统数据的旧刷新接口已移除；请使用 POST /api/orders/sync 后重新查询订单。",
     ),
     RetiredSurface(
         "POST",
@@ -200,7 +199,7 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "POST",
         "/api/item/delete",
-        "可能跨账号误删的旧本地删除接口已移除；请使用 DELETE /api/goods/{goods_id}/local。",
+        "可能跨账号误删的旧系统删除接口已移除；请使用 DELETE /api/goods/{goods_id}/local。",
     ),
     RetiredSurface(
         "POST",
@@ -245,7 +244,7 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "DELETE",
         "/api/goods/{goods_id}/remote",
-        "仅修改本地状态的伪远程删除接口已移除；请使用 POST /api/item/remoteDelete。",
+        "仅修改系统状态的伪远程删除接口已移除；请使用 POST /api/item/remoteDelete。",
     ),
     RetiredSurface(
         "POST",
@@ -370,7 +369,7 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "POST",
         "/api/websocket/clearCaptchaWait",
-        "验证码等待占位接口已移除：当前版本没有可清理的持久化等待状态。",
+        "验证码等待接口已下线：当前版本没有可清理的持久化等待状态。",
     ),
     RetiredSurface(
         "POST",
@@ -400,12 +399,12 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "POST",
         "/api/account/refreshProfile",
-        "仅回显本地账号资料的旧刷新接口已移除；请使用 POST /api/xianyu/accounts/{account_id}/refresh-profile 执行真实平台刷新。",
+        "仅回显系统账号资料的旧刷新接口已移除；请使用 POST /api/xianyu/accounts/{account_id}/refresh-profile 执行真实平台刷新。",
     ),
     RetiredSurface(
         "POST",
         "/api/operationLog/runtime",
-        "运行时日志摘要占位接口已移除；请使用 GET /api/operation-logs 查询真实审计记录。",
+        "运行时日志摘要接口已移除；请使用 GET /api/operation-logs 查询真实审计记录。",
     ),
     RetiredSurface(
         "POST",
@@ -415,7 +414,7 @@ RETIRED_SURFACES = (
     RetiredSurface(
         "POST",
         "/api/operationLog/runtime/clear",
-        "运行时日志批量删除接口已移除；请使用部署环境的受控日志保留、轮转和归档策略，并保留管理员操作审计记录。",
+        "运行时日志批量删除接口已移除；请使用平台环境的受控日志保留、轮转和归档策略，并保留操作审计记录。",
     ),
     RetiredSurface(
         "POST",

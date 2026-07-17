@@ -2951,7 +2951,7 @@ async def remove_delivery_source_from_goods(
 async def get_delivery_template_variables(
     current_user: dict = Depends(get_current_user),
 ):
-    return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
+    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
 
 
 @router.get("/auto-delivery/templates", response_model=ResultObject)
@@ -2963,7 +2963,7 @@ async def get_delivery_templates(
     current_user: dict = Depends(get_current_user),
 ):
     del current, size, name, db
-    return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
+    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
 
 
 @router.post("/auto-delivery/templates", response_model=ResultObject)
@@ -2973,7 +2973,7 @@ async def create_delivery_template(
     current_user: dict = Depends(get_current_user),
 ):
     del body, db
-    return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
+    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
 
 
 @router.put("/auto-delivery/templates/{template_id}", response_model=ResultObject)
@@ -2984,7 +2984,7 @@ async def update_delivery_template(
     current_user: dict = Depends(get_current_user),
 ):
     del template_id, body, db
-    return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
+    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
 
 
 @router.delete("/auto-delivery/templates/{template_id}", response_model=ResultObject)
@@ -2994,7 +2994,7 @@ async def delete_delivery_template(
     current_user: dict = Depends(get_current_user),
 ):
     del template_id, db
-    return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
+    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
 
 
 @router.post("/auto-delivery/templates/{template_id}/copy", response_model=ResultObject)
@@ -3004,7 +3004,7 @@ async def copy_delivery_template(
     current_user: dict = Depends(get_current_user),
 ):
     del template_id, db
-    return ResultObject.failed("开源版已移除自动发货子类模板管理功能", code=404)
+    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
 
 
 @router.get("/auto-delivery/records", response_model=ResultObject)

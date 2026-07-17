@@ -574,7 +574,7 @@ class XianyuWebSocketClient:
         if not persisted:
             annotated["retrySafe"] = False
             annotated["warning"] = (
-                "消息已确认发送，但本地记录保存失败；请刷新会话核对，勿重复发送"
+                "消息已确认发送，但系统记录保存失败；请刷新会话核对，勿重复发送"
             )
         return annotated
 

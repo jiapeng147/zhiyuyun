@@ -267,7 +267,7 @@ class GoodsOffShelfCoordinator:
                     remote_confirmed=True,
                     local_confirmed=False,
                     error_code="local_finalize_failed",
-                    error_message="平台下架已确认，但本地状态未完成；可安全重试本地收尾",
+                    error_message="平台下架已确认，但系统状态未完成；可安全重试系统收尾",
                 )
         return self._outcome(lease)
 
@@ -299,8 +299,8 @@ class GoodsOffShelfCoordinator:
             "pending": "下架请求已登记，等待执行",
             "in_progress": "该商品正在平台下架，请勿重复操作",
             "remote_confirmed": lease.error_message
-            or "平台下架已确认，但本地状态尚未完成；再次操作只会重试本地收尾",
-            "confirmed": "平台与本地下架状态均已确认",
+            or "平台下架已确认，但系统状态尚未完成；再次操作只会重试系统收尾",
+            "confirmed": "平台与系统下架状态均已确认",
             "failed": lease.error_message or "平台明确未执行下架；排除问题后可手动重试",
             "unknown": lease.error_message
             or "平台下架结果未知，请先在闲鱼 App 核对；系统已禁止自动重试",
@@ -440,7 +440,7 @@ class SqlGoodsOffShelfStore:
                 raise GoodsOffShelfError(
                     409,
                     "goods_already_off_shelf",
-                    "本地商品已是下架状态；旧意图不会再次调用平台，请先同步核对",
+                    "系统商品已是下架状态；旧意图不会再次调用平台，请先同步核对",
                 )
             return await self._claim_existing(existing, repeated=True)
         if latest is not None and self._blocks_new_intent(latest):
@@ -452,7 +452,7 @@ class SqlGoodsOffShelfStore:
             raise GoodsOffShelfError(
                 409,
                 "goods_already_off_shelf",
-                "本地商品已是下架状态；请先同步核对平台，无需重复下架",
+                "系统商品已是下架状态；请先同步核对平台，无需重复下架",
             )
 
         attempt = GoodsOffShelfAttempt(
@@ -594,7 +594,7 @@ class SqlGoodsOffShelfStore:
                 raise GoodsOffShelfError(
                     409,
                     "remote_off_shelf_not_confirmed",
-                    "平台下架尚未确认，本地商品状态不会改变",
+                    "平台下架尚未确认，系统商品状态不会改变",
                 )
             if goods is None:
                 raise GoodsOffShelfPersistenceError("local goods row is unavailable")

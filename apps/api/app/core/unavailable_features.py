@@ -20,7 +20,7 @@ ACCOUNT_STRATEGY_UNAVAILABLE = (
 ACCOUNT_LOGIN_CREDENTIAL_UNAVAILABLE = (
     "当前版本仅支持扫码或 Cookie 授权闲鱼账号，没有账号密码登录或会话续期执行器。"
     "为避免存储无用途的高风险凭据，此接口已停用且不会回显遗留信息；"
-    "请使用扫码登录，并由管理员按生产文档清理历史凭据。"
+    "请使用扫码登录，并由平台负责人按生产文档清理历史凭据。"
 )
 
 FACE_VERIFICATION_UNAVAILABLE = (

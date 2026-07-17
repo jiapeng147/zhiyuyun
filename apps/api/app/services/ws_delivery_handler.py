@@ -556,7 +556,7 @@ async def _notify_realtime_delivery_attention(
 
         message = (
             "实时自动发货需要人工核对。"
-            f"本地尝试编号：{outcome.attempt_id}；"
+            f"尝试编号：{outcome.attempt_id}；"
             f"状态：{outcome.status}；"
             f"错误代码：{_safe_log_code(outcome.error_code or 'review_required')}。"
             "请在闲鱼 App 核对消息与订单状态，未知结果不要重复发送。"

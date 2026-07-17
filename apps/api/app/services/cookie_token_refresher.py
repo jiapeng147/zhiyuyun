@@ -300,7 +300,7 @@ async def _do_cookie_keepalive(state: AccountRefreshState) -> bool:
                 )
                 if not status_persisted:
                     state.last_cookie_keepalive_ok = False
-                    state.last_error = "平台登录已验证，但本地状态保存失败"
+                    state.last_error = "平台登录已验证，但系统状态保存失败"
                     return False
                 await clear_cookie_expired_state(state.account_id)
             except Exception:
@@ -579,7 +579,7 @@ async def check_cookie_login(
                 confirmed=False,
                 authenticated=False,
                 code="LOCAL_STATE_UNAVAILABLE",
-                message="平台登录已验证，但本地状态保存失败；当前仍不可用于自动化，请稍后重试。",
+                message="平台登录已验证，但系统状态保存失败；当前仍不可用于自动化，请稍后重试。",
             )
         return CookieLoginCheck(
             confirmed=True,
@@ -603,7 +603,7 @@ async def check_cookie_login(
                 confirmed=False,
                 authenticated=False,
                 code="LOCAL_STATE_UNAVAILABLE",
-                message="已确认平台要求安全验证，但本地隔离状态保存失败，请停止自动化并联系管理员。",
+                message="已确认平台要求安全验证，但系统隔离状态保存失败，请停止自动化并联系平台支持。",
             )
         return CookieLoginCheck(
             confirmed=True,
@@ -625,7 +625,7 @@ async def check_cookie_login(
                 confirmed=False,
                 authenticated=False,
                 code="LOCAL_STATE_UNAVAILABLE",
-                message="已确认 Cookie 会话过期，但本地隔离状态保存失败，请停止自动化并联系管理员。",
+                message="已确认 Cookie 会话过期，但系统隔离状态保存失败，请停止自动化并联系平台支持。",
             )
         return CookieLoginCheck(
             confirmed=True,

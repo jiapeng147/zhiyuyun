@@ -62,7 +62,7 @@ async def get_profile_overview(
         "userId": current_user.get("user_id", 0),
         "username": current_user.get("username", settings.admin_username),
         "nickname": current_user.get("username", settings.admin_username),
-        "tenantName": "自托管单管理员实例",
+        "tenantName": "智鱼云运营实例",
         "lastLoginTime": last_login_time or None,
         "lastSecurityUpdateTime": last_security_update_time or None,
         "updatedTime": last_security_update_time or last_login_time or None,

@@ -71,8 +71,8 @@ def _error_message(code: str) -> str:
         "message_rejected": "平台明确拒绝消息，本次未送达，可在排查后重试",
         "message_ack_unknown": "发送结果未确认，请先在闲鱼 App 核对；系统不会自动重发",
         "message_result_unknown": "发送边界发生异常，结果未知；系统不会自动重发",
-        "local_message_persist_failed": "平台已确认发送，但本地消息落库失败；后续只补本地状态",
-        "reply_decryption_failed": "平台已确认发送，但本地回复内容无法解密；系统不会重发",
+        "local_message_persist_failed": "平台已确认发送，但系统消息落库失败；后续只补系统状态",
+        "reply_decryption_failed": "平台已确认发送，但系统回复内容无法解密；系统不会重发",
         "manual_mode": "当前为人工模式，尚未向买家发送 AI 回复",
         "outside_work_hours": "当前不在配置时区的工作时段，尚未向买家发送 AI 回复",
         "human_intervention_active": "同一会话处于人工接管暂停窗口，尚未发送 AI 回复",
@@ -706,7 +706,7 @@ class SqlAiAutoReplyAttemptStore:
         if str(attempt.state) != "message_sent":
             raise AiAutoReplyAttemptError(
                 "attempt_state_conflict",
-                "AI 自动回复本地确认状态已变化",
+                "AI 自动回复系统确认状态已变化",
             )
         attempt.state = "confirmed"
         attempt.retry_scope = None

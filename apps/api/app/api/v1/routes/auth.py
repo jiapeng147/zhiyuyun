@@ -154,7 +154,7 @@ async def validate_admin_credentials(db: AsyncSession, username: str, password: 
 
     password_hash = await load_admin_password_hash(db)
     if not password_hash:
-        return "管理员密码未配置，请在 .env 中设置 ADMIN_PASSWORD_HASH"
+        return "登录密码未配置，请在 .env 中设置 ADMIN_PASSWORD_HASH"
     username_matches = hmac.compare_digest(username, settings.admin_username)
     password_matches = await asyncio.to_thread(
         verify_password,
@@ -188,7 +188,7 @@ async def update_admin_password(
 
     stored_hash = await load_admin_password_hash(db)
     if not stored_hash:
-        return "管理员密码尚未配置"
+        return "登录密码尚未配置"
     if not await asyncio.to_thread(verify_password, old_password, stored_hash):
         return "当前密码错误"
     if await asyncio.to_thread(verify_password, new_password, stored_hash):
@@ -255,8 +255,8 @@ async def login(req: LoginReqDTO, request: Request, db: AsyncSession = Depends(g
                 # 种子超管: 历史改密写在 admin_password_hash 设置里, 走 legacy 校验保持兼容
                 error = await validate_admin_credentials(db, user.username, password)
                 if error:
-                    if error.startswith("管理员密码未配置"):
-                        raise HTTPException(status_code=503, detail="认证服务尚未完成管理员密码配置")
+                    if error.startswith("登录密码未配置"):
+                        raise HTTPException(status_code=503, detail="认证服务尚未完成登录密码配置")
                     await record_login_failure(request)
                     raise HTTPException(status_code=401, detail="用户名或密码错误")
             else:
@@ -274,8 +274,8 @@ async def login(req: LoginReqDTO, request: Request, db: AsyncSession = Depends(g
             if login_id == settings.admin_username:
                 error = await validate_admin_credentials(db, login_id, password)
                 if error:
-                    if error.startswith("管理员密码未配置"):
-                        raise HTTPException(status_code=503, detail="认证服务尚未完成管理员密码配置")
+                    if error.startswith("登录密码未配置"):
+                        raise HTTPException(status_code=503, detail="认证服务尚未完成登录密码配置")
                     await record_login_failure(request)
                     raise HTTPException(status_code=401, detail="用户名或密码错误")
                 authed_uid = 0
@@ -384,7 +384,7 @@ async def change_password(
             new_password=req.new_password,
             operator=current_user.get("username", settings.admin_username),
             ip_address=request_client_ip(request),
-            operation_desc="管理员修改登录密码",
+            operation_desc="修改登录密码",
             target_type="auth",
         )
         if error:

@@ -425,7 +425,7 @@ class SqlAdPaymentOrderAttemptStore:
             attempt.retry_safe = 0
             attempt.last_error_code = "remote_result_unknown_after_recovery"
             attempt.error_message = (
-                "上次支付订单请求在确认前中断；仅允许复用原支付意图向幂等商业桥恢复"
+                "上次支付订单请求在确认前中断；仅允许复用原支付意图向商业服务恢复"
             )
         elif state == "failed" and bool(attempt.retry_safe):
             attempt.state = "pending"
@@ -456,7 +456,7 @@ class SqlAdPaymentOrderAttemptStore:
                 attempt.retry_safe = 0
                 attempt.last_error_code = "remote_result_unknown_after_recovery"
                 attempt.error_message = (
-                    "上次支付订单请求在确认前中断；仅原支付意图键可向幂等商业桥恢复"
+                    "上次支付订单请求在确认前中断；仅原支付意图键可向商业服务恢复"
                 )
             else:
                 attempt.state = "failed"
@@ -517,7 +517,7 @@ class SqlAdPaymentOrderAttemptStore:
         attempt.retry_safe = 1 if retry_safe else 0
         attempt.last_error_code = self._safe_code(code)
         attempt.error_message = (
-            "商业桥明确未发出支付订单请求；仅可复用原支付意图重试"
+            "商业服务明确未发出支付订单请求；仅可复用原支付意图重试"
             if retry_safe
             else "支付订单请求失败且无法确认未执行；请先人工核对"
         )
@@ -572,7 +572,7 @@ class SqlAdPaymentOrderAttemptStore:
             raise AdPaymentOrderAttemptError(
                 503,
                 "attempt_persistence_unavailable",
-                "支付订单结果已返回，但本地核对记录不可用",
+                "支付订单结果已返回，但系统核对记录不可用",
             )
         if str(attempt.state) == "confirmed":
             await self.db.commit()
@@ -581,7 +581,7 @@ class SqlAdPaymentOrderAttemptStore:
         attempt.retry_safe = 0
         attempt.remote_order_no = order_no
         attempt.last_error_code = "confirmation_persistence_failed"
-        attempt.error_message = "商业桥已返回订单，但本地确认提交失败；请按订单号核对并复用原意图恢复"
+        attempt.error_message = "商业服务已返回订单，但系统确认提交失败；请按订单号核对并复用原意图恢复"
         self._release(attempt)
         await self.db.commit()
         return self._lease(

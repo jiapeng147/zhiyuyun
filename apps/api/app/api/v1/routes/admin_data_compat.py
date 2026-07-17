@@ -53,7 +53,7 @@ def _as_bool(value: Any) -> bool:
 
 
 def _removed_feature_response(feature_name: str):
-    return ResultObject.failed(f"开源版已移除{feature_name}功能", code=404)
+    return ResultObject.failed(f"当前版本已下线{feature_name}功能", code=404)
 
 
 def _model_row_to_payload(row: dict[str, Any]) -> dict[str, Any]:

@@ -545,7 +545,7 @@ class SqlNotificationTestAttemptStore:
             raise NotificationTestAttemptError(
                 503,
                 "notification_test_attempt_missing",
-                "通知发送结果已返回，但本地安全状态不可用",
+                "通知发送结果已返回，但系统安全状态不可用",
             )
         if str(attempt.state or "") != "confirmed":
             attempt.state = "unknown"

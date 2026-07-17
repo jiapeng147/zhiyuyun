@@ -489,7 +489,7 @@ async def force_refresh_account(
 async def start_refresh_scheduler(current_user: dict = Depends(get_current_user)):
     """启动刷新调度器（超级管理员操作）"""
     if not is_superadmin(current_user):
-        raise HTTPException(status_code=403, detail="需要超级管理员权限")
+        raise HTTPException(status_code=403, detail="需要平台负责人权限")
     try:
         from app.services.cookie_token_refresher import start_dispatcher
         await start_dispatcher()
@@ -503,7 +503,7 @@ async def start_refresh_scheduler(current_user: dict = Depends(get_current_user)
 async def stop_refresh_scheduler(current_user: dict = Depends(get_current_user)):
     """停止刷新调度器（超级管理员操作）"""
     if not is_superadmin(current_user):
-        raise HTTPException(status_code=403, detail="需要超级管理员权限")
+        raise HTTPException(status_code=403, detail="需要平台负责人权限")
     try:
         from app.services.cookie_token_refresher import stop_dispatcher
         await stop_dispatcher()

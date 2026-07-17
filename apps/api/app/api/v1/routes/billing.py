@@ -236,7 +236,7 @@ async def create_my_billing_order(
         payload["message"] = (
             "免费套餐已生效"
             if order.status == "paid" and int(order.amount_cents or 0) == 0
-            else "订阅订单已创建，等待支付或管理员确认"
+            else "订阅订单已创建，等待支付或平台确认"
         )
         return ResultObject.success(payload)
     except BillingError as exc:
@@ -291,7 +291,7 @@ async def submit_payment_proof(
         logger.warning("payment proof notification failed", exc_info=True)
     await db.commit()
     await db.refresh(order)
-    return ResultObject.success(_order_payload(order), message="付款凭证已提交，等待管理员核对")
+    return ResultObject.success(_order_payload(order), message="付款凭证已提交，等待平台核对")
 
 
 @router.post("/orders/{order_id}/close", response_model=ResultObject[dict])

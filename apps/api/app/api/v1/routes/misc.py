@@ -520,7 +520,7 @@ def _validate_safe_https_image_url(image_url: str) -> str:
 
 def _read_uploaded_image_bytes(image_url: str) -> bytes:
     if not image_url.startswith("/uploads/"):
-        raise ValueError("仅支持发送本地上传目录中的图片")
+        raise ValueError("仅支持发送系统上传目录中的图片")
     safe_path = os.path.normpath(image_url.lstrip("/"))
     local_path = os.path.join(_IMAGE_UPLOAD_BASE_DIR, os.path.basename(safe_path))
     if not os.path.exists(local_path):
@@ -528,11 +528,11 @@ def _read_uploaded_image_bytes(image_url: str) -> bytes:
             os.path.join(os.path.dirname(_IMAGE_UPLOAD_BASE_DIR), safe_path)
         )
     if not os.path.exists(local_path) or not os.path.isfile(local_path):
-        raise ValueError("未找到本地上传图片，请重新上传后再发送")
+        raise ValueError("未找到已上传图片，请重新上传后再发送")
     with open(local_path, "rb") as file_obj:
         data = file_obj.read()
     if not data:
-        raise ValueError("本地上传图片内容为空，请重新上传后再发送")
+        raise ValueError("上传图片内容为空，请重新上传后再发送")
     return data
 
 
@@ -1833,8 +1833,8 @@ async def operation_log_runtime_clear(
     raise HTTPException(
         status_code=410,
         detail=(
-            "运行时日志批量删除接口已移除；请使用部署环境的受控日志保留、"
-            "轮转和归档策略，并保留管理员操作审计记录。"
+            "运行时日志批量删除接口已移除；请使用平台环境的受控日志保留、"
+            "轮转和归档策略，并保留操作审计记录。"
         ),
     )
 

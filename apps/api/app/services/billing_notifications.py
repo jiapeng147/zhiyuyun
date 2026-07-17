@@ -161,7 +161,7 @@ async def notify_billing_order_pending(
         f"套餐：{plan.name if plan else order.plan_code}\n"
         f"金额：{_money(order.amount_cents)}\n"
         f"有效期至：{_dt(order.expire_time)}\n"
-        "请按账单页支付说明完成付款，管理员确认后套餐生效。"
+        "请按账单页支付说明完成付款，平台确认后套餐生效。"
     )
     await _notify_once(
         db,
@@ -281,7 +281,7 @@ async def notify_billing_order_refunded(
         f"订单号：{order.order_no}\n"
         f"套餐：{order.plan_code}\n"
         f"退款金额：{_money(refund_amount_cents)}\n"
-        f"原因：{reason or '管理员退款'}\n"
+        f"原因：{reason or '平台退款'}\n"
         "相关套餐权益已按退款规则调整。"
     )
     await _notify_once(
@@ -309,7 +309,7 @@ async def notify_subscription_expiring(
         f"用户：{username}\n"
         f"套餐：{sub.plan_code}\n"
         f"到期时间：{_dt(sub.current_period_end)}\n"
-        "请及时续费或联系管理员开通新周期，避免到期后权益降级。"
+        "请及时续费或联系平台开通新周期，避免到期后权益降级。"
     )
     return await _notify_once(
         db,

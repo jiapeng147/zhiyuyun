@@ -267,10 +267,10 @@ async def _load_goods_remote_delete_meta(
     messages = {
         "pending": "删除请求已登记，等待执行",
         "in_progress": "平台删除正在执行，请勿重复操作",
-        "remote_confirmed": "平台删除已确认，本地软删除尚未完成",
+        "remote_confirmed": "平台删除已确认，系统记录删除尚未完成",
         "failed": "平台明确拒绝删除，排除问题后可手动重试",
         "unknown": "平台删除结果未知，请先在闲鱼 App 核对，禁止自动重试",
-        "confirmed": "平台删除与本地软删除均已完成",
+        "confirmed": "平台删除与系统记录删除均已完成",
     }
     for attempt in attempts:
         state = str(attempt.state or "pending")
@@ -319,8 +319,8 @@ async def _load_goods_off_shelf_meta(
     messages = {
         "pending": "下架请求已登记，等待执行",
         "in_progress": "平台下架正在执行，请勿重复操作",
-        "remote_confirmed": "平台下架已确认，本地状态尚未完成",
-        "confirmed": "平台与本地下架状态均已确认",
+        "remote_confirmed": "平台下架已确认，系统状态尚未完成",
+        "confirmed": "平台与系统下架状态均已确认",
         "failed": "平台明确未执行下架",
         "unknown": "平台下架结果未知，请先在闲鱼 App 核对，禁止自动重试",
     }
@@ -1031,7 +1031,7 @@ async def sync_orders(
         "accountId": account_id,
         "count": count,
         "syncResult": sync_result,
-        "message": f"账号 {account_id} 的订单同步完成，共 {sync_result.get('total', 0)} 条，本地累计 {count} 条",
+        "message": f"账号 {account_id} 的订单同步完成，共 {sync_result.get('total', 0)} 条，系统累计 {count} 条",
     })
 
 

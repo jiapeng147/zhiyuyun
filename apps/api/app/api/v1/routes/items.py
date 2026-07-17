@@ -576,9 +576,9 @@ async def publish_item(
             try:
                 target_local_id = int(req.get("localGoodsId"))
             except (TypeError, ValueError):
-                raise ExternalOperationError(422, "invalid_local_goods_id", "本地商品标识无效")
+                raise ExternalOperationError(422, "invalid_local_goods_id", "商品记录标识无效")
             if target_local_id <= 0:
-                raise ExternalOperationError(422, "invalid_local_goods_id", "本地商品标识无效")
+                raise ExternalOperationError(422, "invalid_local_goods_id", "商品记录标识无效")
             target_goods = (
                 await db.execute(
                     select(XianyuGoods).where(
@@ -588,9 +588,9 @@ async def publish_item(
                 )
             ).scalar_one_or_none()
             if target_goods is None:
-                raise ExternalOperationError(404, "local_goods_not_found", "待发布的本地商品不存在")
+                raise ExternalOperationError(404, "local_goods_not_found", "待发布的草稿商品不存在")
             if target_goods.account_id is not None and int(target_goods.account_id) != int(account_id):
-                raise ExternalOperationError(409, "local_goods_account_conflict", "本地商品与发布账号不匹配")
+                raise ExternalOperationError(409, "local_goods_account_conflict", "商品记录与发布账号不匹配")
 
         digest = _operation_digest({
             "accountId": account_id,
@@ -655,7 +655,7 @@ async def publish_item(
             )
         )
         logger.info("商品发布操作结束: accountId=%d state=%s", account_id, outcome.status)
-        return _operation_response(outcome, success_message="发布成功并已保存到本地商品库")
+        return _operation_response(outcome, success_message="发布成功并已保存到系统商品库")
 
     except ExternalOperationError as e:
         return JSONResponse(
@@ -1034,7 +1034,7 @@ async def update_item_price(
             )
         )
         logger.info("商品改价操作结束: accountId=%d state=%s", account_id, outcome.status)
-        return _operation_response(outcome, success_message="商品价格已在平台和本地确认")
+        return _operation_response(outcome, success_message="商品价格已在平台和系统记录中确认")
 
     except ExternalOperationError as e:
         return JSONResponse(

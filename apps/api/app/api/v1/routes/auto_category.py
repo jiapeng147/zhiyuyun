@@ -49,7 +49,7 @@ async def _resolve_image_data(url: str) -> bytes:
         data, _ = await asyncio.to_thread(load_safe_local_image, local_path)
         return data
     if value.startswith("/"):
-        raise UnsafePathError("本地图片必须位于 /uploads 目录")
+        raise UnsafePathError("图片必须位于系统上传目录")
     return await download_public_image(value)
 
 

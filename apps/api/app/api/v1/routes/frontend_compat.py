@@ -791,7 +791,7 @@ def _local_feedback_owner(current_user: dict[str, Any] | None) -> str:
     if not owner:
         raise HTTPException(
             status_code=403,
-            detail="无法确认本地反馈所有者，已拒绝访问。",
+            detail="无法确认反馈所有者，已拒绝访问。",
         )
     return owner
 
@@ -1346,7 +1346,7 @@ async def get_text_ads(
         return ResultObject.success(payload)
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "广告展示已关闭：商业桥尚未证明仅已支付广告可进入展示接口",
+            "广告展示已关闭：商业服务尚未确认仅已支付广告可进入展示接口",
             configured=True,
             reason="commercial_bridge_paid_placement_required",
         )
@@ -1427,7 +1427,7 @@ async def create_ad_application(
         require_paid_ad_creation_capabilities()
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "广告申请与支付已关闭：商业桥尚未同时证明申请和支付订单幂等能力",
+            "广告申请与支付已关闭：商业服务尚未同时确认申请和支付订单幂等能力",
             configured=True,
             reason="commercial_bridge_paid_ad_capabilities_required",
         )
@@ -1440,7 +1440,7 @@ async def create_ad_application(
         return ResultObject.success(data)
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "广告申请与支付已关闭：商业桥能力在提交前变为不可用",
+            "广告申请与支付已关闭：商业服务能力在提交前变为不可用",
             configured=True,
             reason="commercial_bridge_paid_ad_capabilities_required",
         )
@@ -1465,7 +1465,7 @@ async def get_ad_payment_methods(
         require_commercial_mutation_capability()
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "广告申请已关闭：商业桥尚未证明支持广告申请幂等键",
+            "广告申请已关闭：商业服务尚未确认支持广告申请幂等键",
             configured=True,
             reason="commercial_bridge_mutation_idempotency_required",
         )
@@ -1476,7 +1476,7 @@ async def get_ad_payment_methods(
         return ResultObject.success(data)
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "真实支付已关闭：商业桥尚未证明支持支付订单幂等键",
+            "真实支付已关闭：商业服务尚未确认支持支付订单幂等键",
             configured=True,
             reason="commercial_bridge_payment_idempotency_required",
         )
@@ -1575,7 +1575,7 @@ async def create_ad_payment_order(
         )
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "广告支付已关闭：商业桥尚未同时证明申请和支付订单幂等能力",
+            "广告支付已关闭：商业服务尚未同时确认申请和支付订单幂等能力",
             configured=True,
             reason="commercial_bridge_paid_ad_capabilities_required",
         )
@@ -1618,7 +1618,7 @@ async def get_ad_payment_order(
                     "Failed to persist verified payment terminal state",
                 )
                 return _commercial_unavailable_response(
-                    "已核对到支付订单终态，但本地安全状态同步失败；请勿新建支付意图并重试查询",
+                    "已核对到支付订单终态，但系统安全状态同步失败；请勿新建支付意图并重试查询",
                     status_code=502,
                     configured=True,
                     reason="payment_terminal_state_sync_failed",
@@ -1679,7 +1679,7 @@ async def close_ad_payment_order(
             )
             result = ResultObject(
                 code=502,
-                msg="商业服务已返回关闭结果，但本地安全状态同步失败；请勿新建支付意图并改用查询核对",
+                msg="商业服务已返回关闭结果，但系统安全状态同步失败；请勿新建支付意图并改用查询核对",
                 data={
                     "status": "unknown",
                     "operation": "close",
@@ -1696,7 +1696,7 @@ async def close_ad_payment_order(
         return ResultObject.success(data)
     except CommercialBridgeCapabilityUnavailable:
         return _commercial_unavailable_response(
-            "关闭支付订单已禁用：商业桥尚未证明支持稳定关闭幂等键；请仅查询核对订单状态",
+            "关闭支付订单已禁用：商业服务尚未确认支持稳定关闭幂等键；请仅查询核对订单状态",
             configured=True,
             reason="commercial_bridge_payment_idempotency_required",
         )
@@ -1856,7 +1856,7 @@ async def create_feedback(
                 return ResultObject.success(_feedback_view(existing), "已返回原反馈提交结果")
             if len(store["records"]) >= MAX_LOCAL_FEEDBACK_RECORDS:
                 return ResultObject.failed(
-                    "本地反馈记录已达容量上限，请由部署管理员归档后再提交",
+                    "反馈记录已达容量上限，请由平台负责人归档后再提交",
                     code=507,
                 )
             now = _dt_text(_now())
@@ -1886,10 +1886,10 @@ async def create_feedback(
         await db.commit()
         return ResultObject.success(_feedback_view(record))
     except SensitiveStoreBusyError:
-        return ResultObject.failed("本地反馈正在被其他请求更新，请稍后重试", code=409)
+        return ResultObject.failed("反馈记录正在被其他请求更新，请稍后重试", code=409)
     except SensitiveStoreCapacityError:
         return ResultObject.failed(
-            "本地加密反馈存储已达安全容量上限，请由部署管理员归档后再提交",
+            "加密反馈存储已达安全容量上限，请由平台负责人归档后再提交",
             code=507,
         )
 
@@ -1952,7 +1952,7 @@ async def append_feedback_reply(
                 return ResultObject.success(_feedback_view(record), "已返回原补充结果")
             if len(record.get("replies") or []) >= MAX_LOCAL_FEEDBACK_REPLIES:
                 return ResultObject.failed(
-                    "本地反馈补充记录已达容量上限，请由部署管理员归档后再继续",
+                    "反馈补充记录已达容量上限，请由平台负责人归档后再继续",
                     code=507,
                 )
 
@@ -1980,10 +1980,10 @@ async def append_feedback_reply(
         await db.commit()
         return ResultObject.success(_feedback_view(record))
     except SensitiveStoreBusyError:
-        return ResultObject.failed("本地反馈正在被其他请求更新，请稍后重试", code=409)
+        return ResultObject.failed("反馈记录正在被其他请求更新，请稍后重试", code=409)
     except SensitiveStoreCapacityError:
         return ResultObject.failed(
-            "本地加密反馈存储已达安全容量上限，请由部署管理员归档后再继续",
+            "加密反馈存储已达安全容量上限，请由平台负责人归档后再继续",
             code=507,
         )
 

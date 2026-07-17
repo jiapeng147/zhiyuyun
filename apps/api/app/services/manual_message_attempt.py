@@ -156,7 +156,7 @@ class ManualMessageOutcome:
             "message_ack_unknown": "平台确认超时，发送结果未知；请先在闲鱼 App 核对，系统已禁止直接重试",
             "message_result_unknown": "发送边界发生异常，结果未知；请先在闲鱼 App 核对，系统已禁止直接重试",
             "message_result_unknown_after_recovery": "上次发送在确认前中断，结果未知；请先在闲鱼 App 核对，系统不会重发",
-            "local_message_persist_failed": "平台已确认接收，但本地记录失败；请先核对会话，系统已禁止重发",
+            "local_message_persist_failed": "平台已确认接收，但系统记录失败；请先核对会话，系统已禁止重发",
         }
         return {
             "attemptId": self.attempt_id,

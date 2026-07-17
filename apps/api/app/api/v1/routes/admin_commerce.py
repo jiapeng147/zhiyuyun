@@ -59,7 +59,7 @@ REGISTRATION_SETTING_KEY = "registration_enabled"
 
 async def require_superadmin(current_user: dict = Depends(get_current_user)) -> dict:
     if (current_user or {}).get("role") != "superadmin":
-        raise HTTPException(status_code=403, detail="需要超级管理员权限")
+        raise HTTPException(status_code=403, detail="需要平台负责人权限")
     return current_user
 
 
@@ -585,7 +585,7 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
     if user.is_super and req.status is not None and int(req.status) == 0:
-        raise HTTPException(status_code=400, detail="不能禁用超级管理员")
+        raise HTTPException(status_code=400, detail="不能禁用平台负责人")
     if req.status is not None:
         user.status = int(req.status)
     if req.plan_code:

@@ -102,7 +102,7 @@ class Settings(BaseSettings):
     commercial_backend_access_token: str = Field(default="", exclude=True, repr=False)
     commercial_backend_access_token_file: str = Field(default="", exclude=True, repr=False)
     commercial_backend_site_code: str = "open-source"
-    commercial_backend_site_name: str = "开源版"
+    commercial_backend_site_name: str = "智鱼云"
     commercial_backend_timeout_seconds: int = 15
     # Enable only after ad-application and feedback mutation endpoints have
     # been verified to honor the same Idempotency-Key in the header and body.

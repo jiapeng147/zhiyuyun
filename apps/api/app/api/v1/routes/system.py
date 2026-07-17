@@ -274,7 +274,7 @@ async def get_system_info():
         "framework": "FastAPI",
         "database": "MySQL",
         "port": settings.server_port,
-        "mode": "open-source-single-admin",
+        "mode": "zhiyuyun-platform",
     })
 
 
@@ -319,7 +319,7 @@ async def update_open_source_config(
         db.add(XianyuOperationLog(
             operator=current_user.get("username", settings.admin_username),
             operation_type="update_open_source_config",
-            operation_desc="更新开源版系统配置",
+            operation_desc="更新系统配置",
             target_type="system",
             target_id="open_source_config",
             ip_address=get_client_ip(request) if request else "127.0.0.1",
@@ -430,7 +430,7 @@ async def change_password(
         new_password=req.new_password,
         operator=current_user.get("username", settings.admin_username),
         ip_address=request_client_ip(request),
-        operation_desc="管理员修改登录密码",
+        operation_desc="修改登录密码",
         target_type="auth",
     )
     if error:

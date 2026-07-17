@@ -111,7 +111,7 @@ async def confirm_shipment(
         order.order_status = 3
         order.ship_time = datetime.datetime.now()
         await db.commit()
-        return ResultObject.success("确认发货成功（仅更新本地状态）")
+        return ResultObject.success("确认发货成功（已更新系统状态）")
     except Exception as e:
         logger.error("确认发货失败", exc_info=True)
         return ResultObject.internal_error()

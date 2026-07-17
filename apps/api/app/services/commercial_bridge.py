@@ -84,7 +84,7 @@ def _sanitize_about_content(value: dict[str, Any]) -> dict[str, Any]:
                 support.get("actionValue")
             ):
                 support["actionType"] = "toast"
-                support["actionValue"] = "部署方尚未配置真实联系方式。"
+                support["actionValue"] = "平台运营方尚未配置真实联系方式。"
 
     legal_docs = sanitized.get("legalDocs")
     if isinstance(legal_docs, dict):
@@ -127,7 +127,7 @@ def get_commercial_bridge_config() -> dict[str, Any]:
         ),
         "accessToken": _as_text(settings.commercial_backend_access_token),
         "siteCode": _as_text(settings.commercial_backend_site_code) or "open-source",
-        "siteName": _as_text(settings.commercial_backend_site_name) or "开源版",
+        "siteName": _as_text(settings.commercial_backend_site_name) or "智鱼云",
         "timeoutSeconds": max(int(settings.commercial_backend_timeout_seconds or 15), 3),
         "mutationIdempotencyEnabled": bool(
             settings.commercial_backend_mutation_idempotency_enabled
@@ -153,10 +153,10 @@ def require_ad_payment_order_capability() -> dict[str, Any]:
 
     config = get_commercial_bridge_config()
     if not commercial_bridge_is_configured(config):
-        raise CommercialBridgeNotConfigured("未配置商业版桥接地址或访问令牌")
+        raise CommercialBridgeNotConfigured("未配置商业服务地址或访问令牌")
     if not config["paymentIdempotencyEnabled"]:
         raise CommercialBridgeCapabilityUnavailable(
-            "商业桥尚未确认支持支付订单幂等键"
+            "商业服务尚未确认支持支付订单幂等键"
         )
     return config
 
@@ -166,10 +166,10 @@ def require_commercial_mutation_capability() -> dict[str, Any]:
 
     config = get_commercial_bridge_config()
     if not commercial_bridge_is_configured(config):
-        raise CommercialBridgeNotConfigured("未配置商业版桥接地址或访问令牌")
+        raise CommercialBridgeNotConfigured("未配置商业服务地址或访问令牌")
     if not config["mutationIdempotencyEnabled"]:
         raise CommercialBridgeCapabilityUnavailable(
-            "商业桥尚未确认支持广告申请写入幂等键"
+            "商业服务尚未确认支持广告申请写入幂等键"
         )
     return config
 
@@ -179,10 +179,10 @@ def require_paid_ad_placement_capability() -> dict[str, Any]:
 
     config = get_commercial_bridge_config()
     if not commercial_bridge_is_configured(config):
-        raise CommercialBridgeNotConfigured("未配置商业版桥接地址或访问令牌")
+        raise CommercialBridgeNotConfigured("未配置商业服务地址或访问令牌")
     if not config["paidAdPlacementEnforced"]:
         raise CommercialBridgeCapabilityUnavailable(
-            "商业桥尚未证明仅已支付广告可激活并进入展示接口"
+            "商业服务尚未确认仅已支付广告可激活并进入展示接口"
         )
     return config
 
@@ -203,7 +203,7 @@ def require_paid_ad_creation_capabilities() -> dict[str, Any]:
     config = require_commercial_mutation_capability()
     if not config["paymentIdempotencyEnabled"]:
         raise CommercialBridgeCapabilityUnavailable(
-            "商业桥尚未确认支持广告支付订单幂等键"
+            "商业服务尚未确认支持广告支付订单幂等键"
         )
     return config
 
@@ -420,11 +420,11 @@ async def get_commercial_bridge_runtime() -> dict[str, Any]:
     if not configured:
         if health_ok:
             runtime["commercialBridgeMessage"] = (
-                f"{health_message}，但尚未配置桥接 token 或桥接接口，当前使用本地兜底"
+                f"{health_message}，但尚未配置服务 token 或服务接口，当前使用服务降级模式"
             )
         else:
             runtime["commercialBridgeMessage"] = (
-                f"{health_message or '未配置商业版桥接，且健康检查不可用'}，当前使用本地兜底"
+                f"{health_message or '未配置商业服务，且健康检查不可用'}，当前使用服务降级模式"
             )
         return runtime
 
@@ -744,30 +744,30 @@ def default_about_content() -> dict[str, Any]:
     return copy.deepcopy(
         {
             "heroTitle": "智鱼云",
-            "heroBadgeText": "付费广告商业桥",
-            "heroDescription": "开源单管理员版本提供本地核心能力；只有付费广告申请、支付与展示会连接商业版后端。",
-            "serviceStatusText": "本地核心能力；付费广告桥按需配置",
+            "heroBadgeText": "商业服务",
+            "heroDescription": "平台提供账号运营、系统配置与广告合作能力；广告申请、支付与展示以已接通的商业服务为准。",
+            "serviceStatusText": "平台核心能力；广告服务按需配置",
             "logs": [
                 {
-                    "v": "开源版",
+                    "v": "商业运营版",
                     "t": "",
                     "tone": "major",
-                    "d": "当前版本已完成固定账号密码登录、系统配置整合与付费广告商业桥边界；未配置的广告能力会明确显示为不可用。",
+                    "d": "当前版本已完成账号密码登录、系统配置整合与广告服务边界；未配置的广告能力会明确显示为不可用。",
                     "sections": [
                         {
                             "t": "登录与账号",
-                            "d": "保留固定管理员账号密码登录模式，扫码登录仅用于闲鱼店铺授权，避免误连到外部旧环境。",
+                            "d": "保留账号密码登录模式，扫码登录仅用于闲鱼店铺授权，避免误连到外部旧环境。",
                         },
                         {
                             "t": "系统配置",
                             "d": "通用模型、向量模型、RAG 知识库与高德地图配置已统一收敛到系统配置页。",
                         },
                         {
-                            "t": "广告商业桥",
-                            "d": "开源版只通过服务端桥接接口处理付费广告申请、支付与展示，不暴露商业版数据库，也不让前端持有 bridge token。",
+                            "t": "广告服务",
+                            "d": "系统只通过服务端接口处理付费广告申请、支付与展示，不暴露服务密钥，也不让前端持有访问 token。",
                         },
                     ],
-                    "tags": ["固定账号登录", "系统配置整合", "付费广告桥", "广告合作"],
+                    "tags": ["账号密码登录", "系统配置整合", "广告服务", "广告合作"],
                 }
             ],
             "supports": [
@@ -775,7 +775,7 @@ def default_about_content() -> dict[str, Any]:
                     "label": "反馈建议",
                     "icon": "aboutSupportFeedback",
                     "tone": "violet",
-                    "desc": "提交使用问题、需求建议和联调备注，形成开源版闭环反馈。",
+                    "desc": "提交使用问题、需求建议和联调备注，形成平台闭环反馈。",
                     "actionType": "route",
                     "actionValue": "feedback",
                     "actionMessage": "正在前往反馈建议...",
@@ -784,7 +784,7 @@ def default_about_content() -> dict[str, Any]:
                     "label": "广告合作",
                     "icon": "aboutSupportWeb",
                     "tone": "blue",
-                    "desc": "仅在真实付费广告桥接通后查看套餐、提交申请并支付；未配置时入口会明确禁用操作。",
+                    "desc": "仅在真实广告服务接通后查看套餐、提交申请并支付；未配置时入口会明确禁用操作。",
                     "actionType": "route",
                     "actionValue": "ad-application",
                     "actionMessage": "正在前往广告合作...",
@@ -802,22 +802,22 @@ def default_about_content() -> dict[str, Any]:
                     "label": "商务联系",
                     "icon": "aboutSupportChat",
                     "tone": "orange",
-                    "desc": "当前默认部署未配置商务联系人，请由部署方补充真实入口。",
+                    "desc": "当前平台未配置商务联系人，请由平台运营方补充真实入口。",
                     "actionType": "toast",
-                    "actionValue": "部署方尚未配置商务联系方式。",
+                    "actionValue": "平台运营方尚未配置商务联系方式。",
                 },
             ],
             "communityCards": [
                 {
                     "label": "交流群",
                     "title": "微信群二维码",
-                    "desc": "用于当前部署自行维护的版本通知、使用答疑、投放交流与功能建议收集。",
+                    "desc": "用于平台自行维护的版本通知、使用答疑、投放交流与功能建议收集。",
                     "placeholderText": "GROUP",
                     "hint": "配置后可扫码",
                     "tone": "blue",
                     "actionType": "toast",
                     "actionText": "配置后可扫码",
-                    "actionValue": "当前部署尚未配置交流二维码，请联系部署管理员。",
+                    "actionValue": "当前平台尚未配置交流二维码，请联系平台负责人。",
                 },
                 {
                     "label": "联系方式",
@@ -828,7 +828,7 @@ def default_about_content() -> dict[str, Any]:
                     "tone": "green",
                     "actionType": "toast",
                     "actionText": "不可用",
-                    "actionValue": "部署方尚未配置商务联系方式。",
+                    "actionValue": "平台运营方尚未配置商务联系方式。",
                 },
             ],
             "links": [
@@ -851,7 +851,7 @@ def default_about_content() -> dict[str, Any]:
                     "icon": "refresh",
                     "actionText": "查看",
                     "actionType": "toast",
-                    "actionValue": "当前版本已包含固定账号登录、系统配置整合与付费广告商业桥。",
+                    "actionValue": "当前版本已包含账号登录、系统配置整合与广告服务。",
                 },
                 {
                     "label": "导出诊断日志",
@@ -870,5 +870,3 @@ def default_about_content() -> dict[str, Any]:
             },
         }
     )
-
-

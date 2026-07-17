@@ -59,7 +59,7 @@ def validate_password_strength(password: str, username: str = "") -> str | None:
         return "新密码过于常见，请更换更难猜测的密码"
     user = (username or "").strip().casefold()
     if len(user) >= 3 and user in normalized:
-        return "新密码不能包含管理员用户名"
+        return "新密码不能包含当前账号用户名"
     return None
 
 

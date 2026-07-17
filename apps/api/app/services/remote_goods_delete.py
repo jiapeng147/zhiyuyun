@@ -289,7 +289,7 @@ class RemoteGoodsDeleteCoordinator:
                     remote_confirmed=True,
                     local_deleted=False,
                     error_code="local_finalize_failed",
-                    error_message="平台删除已确认，但本地软删除未完成；可安全重试本地收尾",
+                    error_message="平台删除已确认，但系统记录删除未完成；可安全重试系统收尾",
                 )
 
         return self._outcome(lease)
@@ -324,8 +324,8 @@ class RemoteGoodsDeleteCoordinator:
             "pending": "删除请求已登记，等待执行",
             "in_progress": "该商品的远程删除正在执行，请勿重复操作",
             "remote_confirmed": lease.error_message
-            or "平台删除已确认，但本地软删除尚未完成；再次操作只会重试本地收尾",
-            "confirmed": "平台删除与本地软删除均已确认完成",
+            or "平台删除已确认，但系统记录删除尚未完成；再次操作只会重试系统收尾",
+            "confirmed": "平台删除与系统记录删除均已确认完成",
             "failed": lease.error_message or "平台明确拒绝删除；排除问题后可手动重试",
             "unknown": lease.error_message
             or "平台删除结果未知，请先在闲鱼 App 核对；系统已禁止自动重试",
@@ -399,7 +399,7 @@ class SqlRemoteGoodsDeleteStore:
             raise RemoteDeleteError(
                 403,
                 "remote_delete_disabled",
-                "远程删除功能未明确启用；请由管理员确认风险后将 goods_delete_enabled 设置为 true",
+                "远程删除功能未明确启用；请由平台负责人确认风险后将 goods_delete_enabled 设置为 true",
             )
 
     async def acquire(
@@ -472,7 +472,7 @@ class SqlRemoteGoodsDeleteStore:
             raise RemoteDeleteError(
                 409,
                 "goods_already_locally_deleted",
-                "商品已被本地标记删除；请同步商品并核对平台状态，系统不会重复远程删除",
+                "商品已被系统标记删除；请同步商品并核对平台状态，系统不会重复远程删除",
             )
 
         attempt = RemoteGoodsDeleteAttempt(
@@ -599,7 +599,7 @@ class SqlRemoteGoodsDeleteStore:
                 raise RemoteDeleteError(
                     409,
                     "remote_delete_not_confirmed",
-                    "平台删除尚未确认，本地商品不会被删除",
+                    "平台删除尚未确认，系统商品不会被删除",
                 )
             if goods is None:
                 raise RemoteDeletePersistenceError("local goods row is unavailable")

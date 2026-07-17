@@ -363,7 +363,7 @@ async def general_exception_handler(request: Request, exc: Exception):
         request.method,
         request.url.path,
     )
-    result = ResultObject.failed("服务器内部错误，请联系管理员并提供请求编号").model_dump(by_alias=True)
+    result = ResultObject.failed("服务器内部错误，请联系平台支持并提供请求编号").model_dump(by_alias=True)
     result["requestId"] = request_id
     return JSONResponse(
         status_code=500,

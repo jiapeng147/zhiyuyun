@@ -53,7 +53,7 @@ DEFAULT_PAYMENT_CONFIG: dict[str, Any] = {
     "enabled": False,
     "orderExpireMinutes": 1440,
     "paymentMethods": ["manual_transfer"],
-    "instructions": "请联系管理员确认付款方式。付款完成后，管理员会在后台确认订单并开通套餐。",
+    "instructions": "请联系平台确认付款方式。付款完成后，平台会确认订单并开通套餐。",
     "contact": "",
     "alipayQrUrl": "",
     "wechatQrUrl": "",
@@ -521,7 +521,7 @@ async def ensure_feature_available(
     entitlement = await resolve_entitlement(db, user)
     if entitlement.features.get(feature_key, True) is False:
         label = next((item["label"] for item in FEATURE_CATALOG if item["key"] == feature_key), feature_key)
-        message = f"当前套餐未包含「{label}」功能，请升级套餐或联系管理员开通。"
+        message = f"当前套餐未包含「{label}」功能，请升级套餐或联系平台开通。"
         await audit_quota_rejection(
             db,
             user_id=uid,
@@ -1097,7 +1097,7 @@ async def refund_billing_order(
             db,
             order,
             refund_amount_cents=refund_amount,
-            reason=reason or "管理员退款",
+            reason=reason or "平台退款",
         )
     except Exception:
         logger.warning("refunded billing order notification failed", exc_info=True)
