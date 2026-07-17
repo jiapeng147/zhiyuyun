@@ -76,7 +76,7 @@
             </button>
             <button type="button" class="json-copy" :disabled="copiedJson === 'request'" @click="copyJson(detail.requestParams, 'request')">{{ copiedJson === 'request' ? '已复制' : '复制' }}</button>
           </div>
-          <pre v-show="expandedJson.request" class="mock-json">{{ formatJson(detail.requestParams) }}</pre>
+          <pre v-show="expandedJson.request" class="trace-json">{{ formatJson(detail.requestParams) }}</pre>
         </div>
         <div v-if="detail.responseResult" class="json-section">
           <div class="json-section-head">
@@ -86,7 +86,7 @@
             </button>
             <button type="button" class="json-copy" :disabled="copiedJson === 'response'" @click="copyJson(detail.responseResult, 'response')">{{ copiedJson === 'response' ? '已复制' : '复制' }}</button>
           </div>
-          <pre v-show="expandedJson.response" class="mock-json">{{ formatJson(detail.responseResult) }}</pre>
+          <pre v-show="expandedJson.response" class="trace-json">{{ formatJson(detail.responseResult) }}</pre>
         </div>
       </template>
       <EmptyState v-else icon="📋" title="选择记录查看详情" description="点击左侧列表中的「查看」按钮，这里会展示记录详情。" />
@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
     font-size: 11px;
   }
   /* JSON 展示区块横向滚动，避免溢出 */
-  .mock-json {
+  .trace-json {
     display: block;
     overflow-x: auto;
     white-space: pre;

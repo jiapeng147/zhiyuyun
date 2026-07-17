@@ -406,7 +406,7 @@ const accountInfoItems = computed(() => [
   { label: '账户 ID', value: overview.userId ?? '-' },
   { label: '平台实例', value: overview.tenantName || '-' },
   { label: '账号状态', value: formatUserStatus(overview.status) },
-  { label: '套餐版本', value: planName.value || '-' },
+  { label: '当前套餐', value: planName.value || '-' },
   { label: '最近登录', value: displayDate(overview.lastLoginTime) },
   { label: '安全更新', value: displayDate(overview.lastSecurityUpdateTime) }
 ])

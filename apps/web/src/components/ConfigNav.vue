@@ -1,5 +1,5 @@
 <template>
-  <n-card class="config-nav naive-admin-config-nav settings-config-nav-v4" :bordered="false">
+  <n-card class="config-nav zy-shell-config-nav settings-config-nav-v4" :bordered="false">
     <div class="config-nav-head">
       <span>系统设置</span>
       <p>站点、模型、通知与知识库配置</p>

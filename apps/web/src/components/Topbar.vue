@@ -1,7 +1,7 @@
 <template>
-  <div class="topbar naive-admin-header">
+  <div class="topbar zy-shell-header">
     <n-input
-      class="naive-admin-search"
+      class="zy-shell-search"
       placeholder="搜索账号、商品、订单、消息"
       readonly
       @click="go('data')"
@@ -14,11 +14,11 @@
       </template>
     </n-input>
 
-    <div class="naive-admin-header-spacer"></div>
+    <div class="zy-shell-header-spacer"></div>
 
     <n-tag round :type="sseType" size="small">
       <template #icon>
-        <span class="naive-admin-status-dot" :class="sseStatus"></span>
+        <span class="zy-shell-status-dot" :class="sseStatus"></span>
       </template>
       {{ sseLabel }}
     </n-tag>
@@ -38,7 +38,7 @@
     </n-button>
 
     <n-dropdown trigger="click" :options="userOptions" @select="handleUserSelect">
-      <button class="naive-admin-user">
+      <button class="zy-shell-user">
         <n-avatar round size="small">{{ initials }}</n-avatar>
         <span>
           <strong>{{ displayName }}</strong>
@@ -60,7 +60,7 @@
           <n-list-item v-for="(ev, i) in recentEvents" :key="eventKey(ev, i)" @click="onNoticeClick(ev)">
             <n-thing :title="ev.title || ev.type || '事件'" :description="ev.content || ev.message || ''">
               <template #header-extra>
-                <span class="naive-admin-notice-time">{{ ev.time || '' }}</span>
+                <span class="zy-shell-notice-time">{{ ev.time || '' }}</span>
               </template>
             </n-thing>
           </n-list-item>

@@ -1,6 +1,6 @@
 <template>
   <n-button
-    class="app-btn naive-admin-button"
+    class="app-btn zy-shell-button"
     :class="[type || 'default']"
     :type="naiveType"
     :attr-type="nativeType || 'button'"

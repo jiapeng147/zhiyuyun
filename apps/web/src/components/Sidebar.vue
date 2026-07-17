@@ -1,20 +1,20 @@
 <template>
-  <aside class="sidebar naive-admin-sider" :class="{ open, collapsed }">
+  <aside class="sidebar zy-shell-sider" :class="{ open, collapsed }">
     <button class="sidebar-close" type="button" aria-label="关闭菜单" @click="$emit('close')">
       <n-icon><CloseOutline /></n-icon>
     </button>
 
-    <button class="naive-admin-logo" type="button" @click="$emit('navigate', 'data')">
-      <span class="naive-admin-logo-mark">ZY</span>
-      <span v-if="!collapsed" class="naive-admin-logo-text">
+    <button class="zy-shell-logo" type="button" @click="$emit('navigate', 'data')">
+      <span class="zy-shell-logo-mark">ZY</span>
+      <span v-if="!collapsed" class="zy-shell-logo-text">
         <strong>智鱼云</strong>
         <small>运营工作台</small>
       </span>
     </button>
 
-    <n-scrollbar class="naive-admin-menu-scroll">
+    <n-scrollbar class="zy-shell-menu-scroll">
       <n-menu
-        class="naive-admin-menu"
+        class="zy-shell-menu"
         :value="activeMenuKey"
         :options="menuOptions"
         :collapsed="collapsed"
@@ -28,15 +28,15 @@
       />
     </n-scrollbar>
 
-    <div class="naive-admin-sider-bottom">
-      <button class="naive-admin-profile" type="button" @click="$emit('navigate', 'profile')">
+    <div class="zy-shell-sider-bottom">
+      <button class="zy-shell-profile" type="button" @click="$emit('navigate', 'profile')">
         <n-avatar round size="small">{{ initials }}</n-avatar>
         <span v-if="!collapsed">
           <strong>{{ displayName }}</strong>
           <small>{{ roleLabel }}</small>
         </span>
       </button>
-      <button v-if="!collapsed" class="sidebar-logout naive-admin-logout" type="button" @click="$emit('logout')">
+      <button v-if="!collapsed" class="sidebar-logout zy-shell-logout" type="button" @click="$emit('logout')">
         退出登录
       </button>
     </div>

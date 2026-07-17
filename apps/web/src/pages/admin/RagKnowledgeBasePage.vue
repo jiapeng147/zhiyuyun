@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-rag">
+  <div class="ops-rag">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="kbsWarning" class="global-notice warning" role="status">{{ kbsWarning }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
@@ -734,7 +734,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.admin-rag { display: flex; flex-direction: column; gap: 16px; }
+.ops-rag { display: flex; flex-direction: column; gap: 16px; }
 .warning { background: #fff8e8; color: #8a4b08; border-color: #f7c97a; }
 .refresh-status { margin-bottom: 10px; color: #526079; font-size: 13px; }
 .stat-grid { display: grid; gap: 12px; }
@@ -820,7 +820,7 @@ onBeforeUnmount(() => {
 
 /* ===== 移动端响应式（max-width: 900px）===== */
 @media (max-width: 900px) {
-  .admin-rag { gap: 12px; }
+  .ops-rag { gap: 12px; }
 
   .stat-grid {
     grid-template-columns: minmax(0, 1fr) !important;

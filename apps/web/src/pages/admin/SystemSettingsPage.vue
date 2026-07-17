@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-system-settings system-settings-page system-main">
+  <div class="ops-system-settings system-settings-page system-main">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
@@ -371,7 +371,7 @@ function onHeaderAction(event) {
 </script>
 
 <style scoped>
-.admin-system-settings {
+.ops-system-settings {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -780,7 +780,7 @@ function onHeaderAction(event) {
 }
 
 @media (max-width: 900px) {
-  .admin-system-settings {
+  .ops-system-settings {
     gap: 12px;
   }
 

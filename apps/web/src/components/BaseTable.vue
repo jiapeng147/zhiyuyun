@@ -1,5 +1,5 @@
 <template>
-  <div class="base-table-wrap naive-admin-table">
+  <div class="base-table-wrap zy-shell-table">
     <table class="base-table">
       <thead>
         <tr>

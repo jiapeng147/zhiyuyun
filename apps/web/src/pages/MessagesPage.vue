@@ -536,7 +536,7 @@ const events = ref([])
 const hasMoreContext = ref(false)
 const query = reactive({ xianyuAccountId: '', pageSize: 20 })
 const contextQuery = reactive({ limit: 50, offset: 0 })
-// 会话列表真分页状态（cursor 分页，模仿目标项目 ChatNew.tsx）
+// 会话列表真分页状态（cursor 分页）
 const conversationCursor = ref(null)     // 下一页的 cursor
 const conversationHasMore = ref(false)   // 是否还有更多会话可加载
 const loadingMoreConversations = ref(false)  // 是否正在加载下一页
@@ -1118,7 +1118,7 @@ function resolveConversationName(conv) {
 }
 
 function formatMessageDay(value) {
-  // 对齐参考项目 ChatNew.tsx formatTime：今天显示 HH:mm，非今天显示 MM/DD HH:mm
+  // 今天显示 HH:mm，非今天显示 MM/DD HH:mm
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
@@ -1735,7 +1735,7 @@ function toDisplayConversation(dto) {
   const lastMessageTime = parseMessageTimestamp(
     dto.lastMessageTime || dto.updatedTime || dto.createdTime || dto.messageTime || 0
   )
-  // 仅过滤时间无法解析的会话；保留所有历史会话以匹配目标项目的完整会话列表行为
+  // 仅过滤时间无法解析的会话；保留所有历史会话以匹配完整会话列表行为
   if (!lastMessageTime) {
     return null
   }
@@ -2080,7 +2080,7 @@ async function loadConversations(preserveSelected = true, { background = preserv
 }
 
 /**
- * 分批查询缺头像会话的头像（模仿目标项目 ChatNew.tsx 的头像查询逻辑）
+ * 分批查询缺头像会话的头像。
  * - 找出缺头像或昵称为纯数字的会话
  * - 以 cid 去重，并跨轮询排除正在请求或退避中的 cid
  * - 每批 3 个，调用 POST /msg/avatars

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="totalPages > 1 || showTotal" class="pagination naive-admin-pagination">
+  <div v-if="totalPages > 1 || showTotal" class="pagination zy-shell-pagination">
     <n-pagination
       v-if="totalPages > 1"
       :page="currentNum"

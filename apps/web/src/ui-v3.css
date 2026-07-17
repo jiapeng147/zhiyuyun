@@ -82,14 +82,14 @@ textarea {
   background: var(--admin-bg) !important;
 }
 
-.app-shell.naive-real-layout {
+.app-shell.zy-layout-root {
   display: flex !important;
   width: 100% !important;
   min-height: 100vh !important;
   background: var(--admin-bg) !important;
 }
 
-.naive-real-body {
+.zy-layout-body {
   min-width: 0 !important;
   min-height: 100vh !important;
   width: calc(100% - var(--sidebar)) !important;
@@ -97,7 +97,7 @@ textarea {
   background: var(--admin-bg) !important;
 }
 
-.naive-real-sider {
+.zy-layout-sider {
   width: var(--sidebar) !important;
   min-width: var(--sidebar) !important;
   max-width: var(--sidebar) !important;
@@ -111,13 +111,13 @@ textarea {
   overflow: hidden !important;
 }
 
-.naive-real-sider .n-layout-sider-scroll-container {
+.zy-layout-sider .n-layout-sider-scroll-container {
   height: 100dvh !important;
   min-height: 100dvh !important;
   background: var(--admin-sider) !important;
 }
 
-.naive-real-header {
+.zy-layout-header {
   height: var(--topbar) !important;
   position: sticky !important;
   top: 0 !important;
@@ -134,7 +134,7 @@ textarea {
   background: var(--admin-bg) !important;
 }
 
-.app-shell.naive-real-layout .main.naive-real-content {
+.app-shell.zy-layout-root .main.zy-layout-content {
   width: 100% !important;
   min-width: 0 !important;
   min-height: calc(100vh - var(--topbar)) !important;
@@ -149,7 +149,7 @@ textarea {
 
 /* Sider */
 .sidebar,
-.naive-admin-sider {
+.zy-shell-sider {
   position: fixed !important;
   inset: 0 auto 0 0 !important;
   width: var(--sidebar) !important;
@@ -163,8 +163,8 @@ textarea {
   flex-direction: column !important;
 }
 
-.naive-real-sider .sidebar,
-.naive-real-sider .naive-admin-sider {
+.zy-layout-sider .sidebar,
+.zy-layout-sider .zy-shell-sider {
   position: relative !important;
   inset: auto !important;
   width: 100% !important;
@@ -179,7 +179,7 @@ textarea {
   display: none !important;
 }
 
-.naive-admin-logo {
+.zy-shell-logo {
   height: 56px !important;
   width: 100% !important;
   padding: 0 18px !important;
@@ -193,7 +193,7 @@ textarea {
   cursor: pointer !important;
 }
 
-.naive-admin-logo-mark {
+.zy-shell-logo-mark {
   width: 30px !important;
   height: 30px !important;
   border-radius: 6px !important;
@@ -207,35 +207,35 @@ textarea {
   box-shadow: none !important;
 }
 
-.naive-admin-logo-text {
+.zy-shell-logo-text {
   display: grid !important;
   gap: 0 !important;
   line-height: 1.15 !important;
 }
 
-.naive-admin-logo-text strong {
+.zy-shell-logo-text strong {
   color: #fff !important;
   font-size: 16px !important;
   font-weight: 700 !important;
 }
 
-.naive-admin-logo-text small {
+.zy-shell-logo-text small {
   color: rgba(255, 255, 255, .48) !important;
   font-size: 11px !important;
 }
 
-.naive-admin-menu-scroll {
+.zy-shell-menu-scroll {
   flex: 1 !important;
   min-height: 0 !important;
   padding: 8px 10px 12px !important;
 }
 
-.naive-admin-sider .naive-admin-menu,
-.naive-admin-sider .n-menu {
+.zy-shell-sider .zy-shell-menu,
+.zy-shell-sider .n-menu {
   background: transparent !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-content {
+.zy-shell-sider .zy-shell-menu .n-menu-item-content {
   height: 40px !important;
   margin: 1px 0 !important;
   padding-right: 12px !important;
@@ -246,18 +246,18 @@ textarea {
   transition: background .16s ease, color .16s ease !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-content:hover {
+.zy-shell-sider .zy-shell-menu .n-menu-item-content:hover {
   background: rgba(255, 255, 255, .08) !important;
   color: #fff !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-content--selected,
-.naive-admin-sider .naive-admin-menu .n-menu-item-content--selected:hover {
+.zy-shell-sider .zy-shell-menu .n-menu-item-content--selected,
+.zy-shell-sider .zy-shell-menu .n-menu-item-content--selected:hover {
   background: var(--primary) !important;
   color: #fff !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-content-header {
+.zy-shell-sider .zy-shell-menu .n-menu-item-content-header {
   min-width: 0 !important;
   height: 40px !important;
   display: flex !important;
@@ -270,7 +270,7 @@ textarea {
   text-overflow: ellipsis !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-content__icon {
+.zy-shell-sider .zy-shell-menu .n-menu-item-content__icon {
   width: 20px !important;
   min-width: 20px !important;
   height: 40px !important;
@@ -281,7 +281,7 @@ textarea {
   color: inherit !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-group-title {
+.zy-shell-sider .zy-shell-menu .n-menu-item-group-title {
   height: auto !important;
   min-height: 22px !important;
   padding: 14px 12px 5px !important;
@@ -292,18 +292,18 @@ textarea {
   letter-spacing: 0 !important;
 }
 
-.naive-admin-sider .naive-admin-menu .n-menu-item-group:first-child .n-menu-item-group-title {
+.zy-shell-sider .zy-shell-menu .n-menu-item-group:first-child .n-menu-item-group-title {
   padding-top: 6px !important;
 }
 
-.naive-admin-sider-bottom {
+.zy-shell-sider-bottom {
   padding: 12px !important;
   border-top: 0 !important;
   display: grid !important;
   gap: 10px !important;
 }
 
-.naive-admin-profile {
+.zy-shell-profile {
   height: 50px !important;
   width: 100% !important;
   padding: 0 8px !important;
@@ -318,23 +318,23 @@ textarea {
   cursor: pointer !important;
 }
 
-.naive-admin-profile span {
+.zy-shell-profile span {
   min-width: 0 !important;
   display: grid !important;
   line-height: 1.2 !important;
 }
 
-.naive-admin-profile strong {
+.zy-shell-profile strong {
   color: #fff !important;
   font-size: 13px !important;
 }
 
-.naive-admin-profile small {
+.zy-shell-profile small {
   color: rgba(255, 255, 255, .48) !important;
   font-size: 11px !important;
 }
 
-.naive-admin-logout,
+.zy-shell-logout,
 .sidebar-logout {
   height: 34px !important;
   border: 1px solid rgba(255, 255, 255, .12) !important;
@@ -344,7 +344,7 @@ textarea {
   font-weight: 500 !important;
 }
 
-.naive-admin-logout:hover,
+.zy-shell-logout:hover,
 .sidebar-logout:hover {
   border-color: rgba(208, 48, 80, .45) !important;
   background: rgba(208, 48, 80, .12) !important;
@@ -353,7 +353,7 @@ textarea {
 
 /* Header */
 .topbar,
-.naive-admin-header {
+.zy-shell-header {
   position: sticky !important;
   top: 0 !important;
   z-index: 40 !important;
@@ -369,8 +369,8 @@ textarea {
   backdrop-filter: none !important;
 }
 
-.naive-real-header .topbar,
-.naive-real-header .naive-admin-header {
+.zy-layout-header .topbar,
+.zy-layout-header .zy-shell-header {
   position: static !important;
   height: var(--topbar) !important;
   margin: 0 !important;
@@ -379,11 +379,11 @@ textarea {
   box-shadow: none !important;
 }
 
-.naive-admin-search {
+.zy-shell-search {
   width: min(460px, 42vw) !important;
 }
 
-.naive-admin-search kbd {
+.zy-shell-search kbd {
   height: 20px !important;
   padding: 0 6px !important;
   border: 1px solid var(--line) !important;
@@ -394,11 +394,11 @@ textarea {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
 }
 
-.naive-admin-header-spacer {
+.zy-shell-header-spacer {
   flex: 1 !important;
 }
 
-.naive-admin-user {
+.zy-shell-user {
   height: 38px !important;
   padding: 0 8px !important;
   border: 1px solid var(--line) !important;
@@ -411,28 +411,28 @@ textarea {
   cursor: pointer !important;
 }
 
-.naive-admin-user:hover {
+.zy-shell-user:hover {
   border-color: var(--line-strong) !important;
   background: #f9fafb !important;
 }
 
-.naive-admin-user span {
+.zy-shell-user span {
   display: grid !important;
   text-align: left !important;
   line-height: 1.12 !important;
 }
 
-.naive-admin-user strong {
+.zy-shell-user strong {
   color: var(--text) !important;
   font-size: 13px !important;
 }
 
-.naive-admin-user small {
+.zy-shell-user small {
   color: var(--muted) !important;
   font-size: 11px !important;
 }
 
-.naive-admin-status-dot {
+.zy-shell-status-dot {
   width: 6px !important;
   height: 6px !important;
   border-radius: 50% !important;
@@ -440,23 +440,23 @@ textarea {
   background: var(--orange) !important;
 }
 
-.naive-admin-status-dot.connected {
+.zy-shell-status-dot.connected {
   background: var(--green) !important;
 }
 
-.naive-admin-status-dot.failed,
-.naive-admin-status-dot.disconnected {
+.zy-shell-status-dot.failed,
+.zy-shell-status-dot.disconnected {
   background: var(--red) !important;
 }
 
-.naive-admin-notice-time {
+.zy-shell-notice-time {
   color: var(--muted) !important;
   font-size: 12px !important;
 }
 
 /* Page header */
 .page-head,
-.naive-admin-page-head {
+.zy-shell-page-head {
   min-height: 74px !important;
   margin: 0 0 16px !important;
   padding: 0 !important;
@@ -470,17 +470,17 @@ textarea {
   gap: 16px !important;
 }
 
-.naive-admin-title-block {
+.zy-shell-title-block {
   min-width: 0 !important;
   display: grid !important;
   gap: 8px !important;
 }
 
-.naive-admin-breadcrumb {
+.zy-shell-breadcrumb {
   font-size: 13px !important;
 }
 
-.naive-admin-title-row {
+.zy-shell-title-row {
   display: flex !important;
   align-items: baseline !important;
   gap: 12px !important;
@@ -504,7 +504,7 @@ textarea {
 
 .page-head-actions,
 .head-actions,
-.naive-admin-page-actions {
+.zy-shell-page-actions {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
@@ -513,7 +513,7 @@ textarea {
 }
 
 /* Naive primitives and active controls */
-.naive-admin-card,
+.zy-shell-card,
 .table-wrap,
 .xy-modal,
 .modal-card,
@@ -535,12 +535,12 @@ textarea {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.naive-admin-card:hover {
+.zy-shell-card:hover {
   border-color: var(--line-strong) !important;
 }
 
 .panel-head,
-.naive-admin-card-head,
+.zy-shell-card-head,
 .notify-panel-head,
 .xya-msg-card-head,
 .modal-head,
@@ -662,7 +662,7 @@ input:focus,
 .field-grid,
 .notify-form-grid,
 .cookie-field-grid,
-.admin-form-grid {
+  .ops-form-grid {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 16px !important;
@@ -686,7 +686,7 @@ label,
 }
 
 .app-btn,
-.naive-admin-button,
+.zy-shell-button,
 .n-button,
 .xya-msg-filter-btn,
 .xya-msg-head-btn,
@@ -707,7 +707,7 @@ label,
 }
 
 .app-btn.primary,
-.naive-admin-button.primary,
+.zy-shell-button.primary,
 .primary,
 .xya-msg-send-btn {
   border-color: var(--primary) !important;
@@ -716,7 +716,7 @@ label,
 }
 
 .app-btn.primary:hover,
-.naive-admin-button.primary:hover,
+.zy-shell-button.primary:hover,
 .primary:hover,
 .xya-msg-send-btn:hover {
   border-color: var(--primary-hover) !important;
@@ -742,7 +742,7 @@ label,
 
 /* Tables */
 .base-table-wrap,
-.naive-admin-table,
+.zy-shell-table,
 .table-wrap {
   width: 100% !important;
   overflow: auto !important;
@@ -815,7 +815,7 @@ table tbody tr:last-child td {
 }
 
 .pagination,
-.naive-admin-pagination,
+.zy-shell-pagination,
 .products-pagination {
   min-height: 40px !important;
   margin-top: 14px !important;
@@ -1130,7 +1130,7 @@ table tbody tr:last-child td {
 /* Dashboard sections should feel like navigation blocks, not bordered table panels. */
 .dashboard-page .dashboard-section .n-card-header,
 .dashboard-page .dashboard-section .panel-head,
-.dashboard-page .dashboard-section .naive-admin-card-head {
+.dashboard-page .dashboard-section .zy-shell-card-head {
   min-height: 0 !important;
   padding: 0 !important;
   border-bottom: 0 !important;
@@ -1502,7 +1502,7 @@ table tbody tr:last-child td {
 }
 
 .config-nav,
-.naive-admin-config-nav {
+.zy-shell-config-nav {
   position: sticky !important;
   top: 72px !important;
   min-height: calc(100vh - 112px) !important;
@@ -1814,29 +1814,29 @@ table tbody tr:last-child td {
     padding: 0 14px 24px !important;
   }
 
-  .naive-real-body {
+  .zy-layout-body {
     width: 100% !important;
     margin-left: 0 !important;
   }
 
   .topbar,
-  .naive-admin-header {
+  .zy-shell-header {
     margin: 0 -14px 14px !important;
     padding: 0 14px !important;
   }
 
-  .naive-admin-search {
+  .zy-shell-search {
     display: none !important;
   }
 
   .sidebar,
-  .naive-admin-sider {
+  .zy-shell-sider {
     transform: translateX(-100%) !important;
     transition: transform .2s ease !important;
   }
 
   .sidebar.open,
-  .naive-admin-sider.open {
+  .zy-shell-sider.open {
     transform: translateX(0) !important;
   }
 
@@ -1855,13 +1855,13 @@ table tbody tr:last-child td {
   }
 
   .page-head,
-  .naive-admin-page-head {
+  .zy-shell-page-head {
     min-height: auto !important;
     align-items: flex-start !important;
     flex-direction: column !important;
   }
 
-  .naive-admin-title-row {
+  .zy-shell-title-row {
     display: grid !important;
     gap: 4px !important;
   }
@@ -1875,7 +1875,7 @@ table tbody tr:last-child td {
   }
 
   .config-nav,
-  .naive-admin-config-nav {
+  .zy-shell-config-nav {
     position: static !important;
     min-height: auto !important;
   }

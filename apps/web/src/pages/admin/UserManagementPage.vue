@@ -203,14 +203,14 @@
         </div>
       </div>
 
-      <div class="billing-admin-grid">
-        <section class="billing-admin-panel">
+      <div class="billing-console-grid">
+        <section class="billing-console-panel">
           <div class="panel-title">
             <strong>订阅记录</strong>
             <span class="muted">{{ subscriptions.length }} 条</span>
           </div>
           <div class="table-wrap">
-            <table class="table billing-admin-table">
+            <table class="table billing-console-table">
               <thead>
                 <tr>
                   <th>用户</th><th>套餐</th><th>状态</th><th>开始</th><th>结束</th><th>来源订单</th>
@@ -232,13 +232,13 @@
             </table>
           </div>
         </section>
-        <section class="billing-admin-panel">
+        <section class="billing-console-panel">
           <div class="panel-title">
             <strong>订单记录</strong>
             <span class="muted">{{ billingOrders.length }} 条</span>
           </div>
           <div class="table-wrap">
-            <table class="table billing-admin-table">
+            <table class="table billing-console-table">
               <thead>
                 <tr>
                   <th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>付款凭证</th><th>有效期</th><th>操作</th>
@@ -299,14 +299,14 @@
         <strong>用量记录</strong>
         <span class="muted">每日用量与配额/权益拦截事件，最近各 30 条</span>
       </div>
-      <div class="billing-admin-grid usage-audit-grid">
-        <section class="billing-admin-panel">
+      <div class="billing-console-grid usage-audit-grid">
+        <section class="billing-console-panel">
           <div class="panel-title">
             <strong>每日用量</strong>
             <span class="muted">{{ usageDailyRows.length }} 条</span>
           </div>
           <div class="table-wrap">
-            <table class="table billing-admin-table audit-table">
+            <table class="table billing-console-table audit-table">
               <thead>
                 <tr>
                   <th>用户</th><th>日期</th><th>指标</th><th>已用</th><th>上限</th><th>更新时间</th>
@@ -328,13 +328,13 @@
             </table>
           </div>
         </section>
-        <section class="billing-admin-panel">
+        <section class="billing-console-panel">
           <div class="panel-title">
             <strong>配额事件</strong>
             <span class="muted">{{ quotaEventRows.length }} 条</span>
           </div>
           <div class="table-wrap">
-            <table class="table billing-admin-table audit-table">
+            <table class="table billing-console-table audit-table">
               <thead>
                 <tr>
                   <th>用户</th><th>指标</th><th>变化</th><th>来源</th><th>原因</th><th>时间</th>
@@ -461,7 +461,7 @@
               <td><strong>{{ u.username }}</strong></td>
               <td>{{ u.email || '—' }}</td>
               <td>
-                <span :class="['role-tag', u.role]">{{ u.role === 'superadmin' ? '平台负责人' : '运营成员' }}</span>
+                <span :class="['role-tag', u.role === 'superadmin' ? 'role-owner' : 'role-member']">{{ u.role === 'superadmin' ? '平台负责人' : '运营成员' }}</span>
               </td>
               <td>
                 <select
@@ -1454,11 +1454,11 @@ onMounted(loadAll)
 .billing-settings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end; margin-bottom: 14px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; }
 .billing-settings .wide { grid-column: span 2; }
 .billing-settings-actions { display: flex; align-items: flex-end; justify-content: flex-end; }
-.billing-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.billing-admin-panel { min-width: 0; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; }
+.billing-console-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.billing-console-panel { min-width: 0; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fbfdff; }
 .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .panel-title strong { color: #111827; font-size: 14px; }
-.billing-admin-table { min-width: 640px; }
+.billing-console-table { min-width: 640px; }
 .coupon-table { min-width: 920px; }
 .usage-audit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 16px 0 10px; }
 .usage-audit-head strong { color: #111827; font-size: 14px; }
@@ -1563,8 +1563,8 @@ onMounted(loadAll)
 .coupon-code-input { text-transform: uppercase; }
 .coupon-plan-scope { max-height: 180px; overflow: auto; }
 .role-tag { padding: 2px 8px; border-radius: 6px; font-size: 12px; }
-.role-tag.superadmin { background: rgba(20, 184, 166,.1); color: #0f766e; }
-.role-tag.user { background: #f0f0f0; color: #555; }
+.role-tag.role-owner { background: rgba(20, 184, 166,.1); color: #0f766e; }
+.role-tag.role-member { background: #f0f0f0; color: #555; }
 .dim { color: var(--muted, #999); }
 
 /* buttons */
@@ -1594,7 +1594,7 @@ onMounted(loadAll)
     grid-column: auto;
   }
 
-  .billing-admin-grid {
+  .billing-console-grid {
     grid-template-columns: 1fr;
   }
 

@@ -26,13 +26,13 @@
 
   <n-layout
     v-else
-    class="app-shell naive-real-layout"
+    class="app-shell zy-layout-root"
     :class="{ 'm-nav-open': mobileNavOpen, 'is-mobile': isMobile }"
     :has-sider="!isMobile"
   >
     <n-layout-sider
       v-if="!isMobile"
-      class="naive-real-sider"
+      class="zy-layout-sider"
       :width="260"
       :native-scrollbar="false"
       bordered
@@ -41,8 +41,8 @@
     </n-layout-sider>
     <Sidebar v-else :active="active" :user="currentUserInfo" :open="mobileNavOpen" @navigate="onSidebarNavigate" @close="mobileNavOpen = false" @logout="handleLogout" />
     <div v-if="isMobile && mobileNavOpen" class="m-nav-overlay" @click="mobileNavOpen = false"></div>
-    <n-layout class="naive-real-body">
-      <n-layout-header class="naive-real-header" bordered>
+    <n-layout class="zy-layout-body">
+      <n-layout-header class="zy-layout-header" bordered>
         <header v-if="isMobile" class="m-appbar">
           <button class="m-menu-btn" type="button" aria-label="打开菜单" @click="mobileNavOpen = true">
             <svg viewBox="0 0 24 24" class="ui-icon"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -63,7 +63,7 @@
         </header>
         <Topbar v-else :user="currentUserInfo" :sse-status="displaySseStatus" @logout="handleLogout" @open-profile-center="openProfileCenter" />
       </n-layout-header>
-      <n-layout-content class="main naive-real-content">
+      <n-layout-content class="main zy-layout-content">
         <TabsView
           v-if="!isMobile"
           :active="active"

@@ -379,12 +379,12 @@
           <section
             v-for="reply in detail.replies || []"
             :key="reply.id"
-            :class="['fbk-msg', reply.replierRole === 'admin' ? 'fbk-msg-admin' : 'fbk-msg-mine']"
+            :class="['fbk-msg', reply.replierRole === 'admin' ? 'fbk-msg-staff' : 'fbk-msg-mine']"
           >
-            <div class="fbk-msg-avatar" :class="{ admin: reply.replierRole === 'admin' }">
+            <div class="fbk-msg-avatar" :class="{ staff: reply.replierRole === 'admin' }">
               {{ reply.replierRole === 'admin' ? '客服' : '我' }}
             </div>
-            <div class="fbk-msg-bubble" :class="{ admin: reply.replierRole === 'admin' }">
+            <div class="fbk-msg-bubble" :class="{ staff: reply.replierRole === 'admin' }">
               <div class="fbk-msg-label">
                 {{ reply.replierRole === 'admin' ? (reply.replierUsername || '客服') + ' 回复' : '补充说明' }}
               </div>
@@ -1891,7 +1891,7 @@ onMounted(() => {
   justify-content: center;
 }
 
-.fbk-msg-avatar.admin {
+.fbk-msg-avatar.staff {
   background: linear-gradient(135deg, #16bf78, #0fa060);
 }
 
@@ -1905,7 +1905,7 @@ onMounted(() => {
   background: #f7faff;
 }
 
-.fbk-msg-bubble.admin {
+.fbk-msg-bubble.staff {
   background: #edf9f2;
   border-color: #cdebd8;
 }
@@ -1917,7 +1917,7 @@ onMounted(() => {
   margin-bottom: 4px;
 }
 
-.fbk-msg-bubble.admin .fbk-msg-label {
+.fbk-msg-bubble.staff .fbk-msg-label {
   color: #0f9c5e;
 }
 
