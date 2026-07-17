@@ -210,7 +210,7 @@ export function useOpenSourceSettings() {
       }, 3000)
       return saved
     } catch (e) {
-      error.value = e?.message || 'Failed to save open-source settings'
+      error.value = e?.message || '系统配置保存失败，请稍后重试'
       return null
     } finally {
       saving.value = false

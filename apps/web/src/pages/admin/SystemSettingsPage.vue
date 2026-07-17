@@ -73,115 +73,53 @@
       <n-card class="system-v7-card" :bordered="false">
         <template #header>
           <div class="system-card-head">
-            <h3>广告服务连接状态</h3>
-            <p>系统通过服务端拉取轮播图、文字广告与广告套餐，并提交广告投放申请。服务令牌、URL 等敏感信息仅在服务端配置，浏览器不可见。</p>
+            <h3>广告服务运营状态</h3>
+            <p>广告轮播、文字广告、套餐与投放申请由平台服务统一处理。敏感凭证仅在服务端保存，页面只展示业务可用性。</p>
           </div>
         </template>
-        <div v-if="!runtimeStatusAvailable" class="bridge-notice">
+        <div v-if="!runtimeStatusAvailable" class="service-notice">
           运行状态暂不可用，无法确认广告服务连接状态。点击上方「重新加载」可重试。
         </div>
-        <div v-else class="bridge-grid">
-          <div class="bridge-row">
-            <span class="bridge-label">服务模式</span>
-            <span
-              class="bridge-value"
-              :class="{ ok: runtimeStatus.commercialBridgeMode === 'commercial', warn: runtimeStatus.commercialBridgeMode !== 'commercial' }"
+        <div v-else class="ad-service-panel">
+          <div class="ad-service-summary" :class="{ ready: adServiceReady }">
+            <span>广告投放能力</span>
+            <strong>{{ adServiceReady ? '可用' : '待接通' }}</strong>
+            <p>{{ adServiceSummary }}</p>
+          </div>
+
+          <div class="ad-service-grid">
+            <article
+              v-for="item in adServiceCards"
+              :key="item.key"
+              class="ad-service-card"
+              :class="item.tone"
             >
-              {{ runtimeStatus.commercialBridgeMode === 'commercial' ? '已连接广告服务' : '服务未连接' }}
-            </span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">配置状态</span>
-            <span
-              class="bridge-value"
-              :class="{ ok: runtimeStatus.commercialBridgeConfigured, warn: !runtimeStatus.commercialBridgeConfigured }"
-            >
-              {{ runtimeStatus.commercialBridgeConfigured ? '已配置' : '未配置' }}
-            </span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">服务连通性</span>
-            <span
-              class="bridge-value"
-              :class="{ ok: runtimeStatus.commercialBridgeConnected, warn: !runtimeStatus.commercialBridgeConnected }"
-            >
-              {{ runtimeStatus.commercialBridgeConnected ? '已连通' : '未连通' }}
-            </span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">管理端健康</span>
-            <span
-              class="bridge-value"
-              :class="{ ok: runtimeStatus.commercialAdminHealthOk, warn: !runtimeStatus.commercialAdminHealthOk }"
-            >
-              {{ runtimeStatus.commercialAdminHealthOk ? '正常' : '不可达' }}
-            </span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">用户端健康</span>
-            <span
-              class="bridge-value"
-              :class="{ ok: runtimeStatus.commercialUserHealthOk, warn: !runtimeStatus.commercialUserHealthOk }"
-            >
-              {{ runtimeStatus.commercialUserHealthOk ? '正常' : '不可达' }}
-            </span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">站点代码</span>
-            <span class="bridge-value">{{ runtimeStatus.commercialBridgeSiteCode || '—' }}</span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">用户端地址</span>
-            <span class="bridge-value mono">{{ runtimeStatus.commercialFrontendUrl || '—' }}</span>
-          </div>
-          <div class="bridge-row">
-            <span class="bridge-label">管理端地址</span>
-            <span class="bridge-value mono">{{ runtimeStatus.commercialAdminUrl || '—' }}</span>
-          </div>
-          <div v-if="runtimeStatus.commercialBridgeMessage" class="bridge-row">
-            <span class="bridge-label">服务消息</span>
-            <span class="bridge-value">{{ runtimeStatus.commercialBridgeMessage }}</span>
+              <span>{{ item.title }}</span>
+              <strong>{{ item.value }}</strong>
+              <p>{{ item.desc }}</p>
+            </article>
           </div>
         </div>
 
-        <div v-if="runtimeStatusAvailable" class="bridge-capabilities">
-          <h4 class="capabilities-title">能力开关</h4>
+        <div v-if="runtimeStatusAvailable" class="service-capabilities">
+          <h4 class="capabilities-title">业务保护</h4>
           <div class="capability-grid">
-            <div class="capability-item">
-              <span class="capability-name">写入幂等</span>
-              <span
-                class="capability-status"
-                :class="{ ok: runtimeStatus.commercialMutationIdempotencyEnabled, warn: !runtimeStatus.commercialMutationIdempotencyEnabled }"
-              >
-                {{ runtimeStatus.commercialMutationIdempotencyEnabled ? '已开启' : '未开启' }}
+            <div
+              v-for="item in adCapabilityCards"
+              :key="item.key"
+              class="capability-item"
+            >
+              <span class="capability-name">{{ item.title }}</span>
+              <span class="capability-status" :class="item.ready ? 'ok' : 'warn'">
+                {{ item.ready ? '已就绪' : '待启用' }}
               </span>
-              <span class="capability-desc">广告申请写入支持幂等键，未开启时禁止提交申请。</span>
-            </div>
-            <div class="capability-item">
-              <span class="capability-name">支付幂等</span>
-              <span
-                class="capability-status"
-                :class="{ ok: runtimeStatus.commercialPaymentIdempotencyEnabled, warn: !runtimeStatus.commercialPaymentIdempotencyEnabled }"
-              >
-                {{ runtimeStatus.commercialPaymentIdempotencyEnabled ? '已开启' : '未开启' }}
-              </span>
-              <span class="capability-desc">支付订单支持幂等键，未开启时禁止创建订单。</span>
-            </div>
-            <div class="capability-item">
-              <span class="capability-name">付费展示</span>
-              <span
-                class="capability-status"
-                :class="{ ok: runtimeStatus.commercialPaidAdPlacementEnforced, warn: !runtimeStatus.commercialPaidAdPlacementEnforced }"
-              >
-                {{ runtimeStatus.commercialPaidAdPlacementEnforced ? '已开启' : '未开启' }}
-              </span>
-              <span class="capability-desc">仅已支付广告可激活展示，未开启时禁止展示广告。</span>
+              <span class="capability-desc">{{ item.desc }}</span>
             </div>
           </div>
-          <p v-if="!allBridgeCapabilitiesEnabled" class="bridge-hint">
-            三个能力开关必须全部开启后，系统才能完整使用广告展示与投放功能。开关由服务端通过检测后启用，前端页面无法直接修改。
+          <p v-if="!allAdCapabilitiesEnabled" class="service-hint">
+            业务保护全部就绪后，系统才会开放完整的广告展示、投放申请与支付能力。相关开关由服务端完成检测后启用。
           </p>
-          <p v-else class="bridge-hint ok">
+          <p v-else class="service-hint ok">
             全部能力已就绪，系统可正常展示广告并接受用户投放申请。
           </p>
         </div>
@@ -306,12 +244,79 @@ const systemStatCards = computed(() => [
   }
 ])
 
-const allBridgeCapabilitiesEnabled = computed(() => {
+const allAdCapabilitiesEnabled = computed(() => {
   if (!runtimeStatusAvailable.value) return false
   return Boolean(runtimeStatus.commercialMutationIdempotencyEnabled)
     && Boolean(runtimeStatus.commercialPaymentIdempotencyEnabled)
     && Boolean(runtimeStatus.commercialPaidAdPlacementEnforced)
 })
+
+const adServiceReady = computed(() => {
+  return runtimeStatusAvailable.value
+    && runtimeStatus.commercialBridgeMode === 'commercial'
+    && Boolean(runtimeStatus.commercialBridgeConnected)
+    && allAdCapabilitiesEnabled.value
+})
+
+const adServiceSummary = computed(() => {
+  if (!runtimeStatusAvailable.value) return '运行状态暂不可用，请稍后重试。'
+  if (!runtimeStatus.commercialBridgeConfigured) return '广告服务尚未接入，前台不会展示未确认的广告内容。'
+  if (!runtimeStatus.commercialBridgeConnected) return '广告服务已配置，但当前连通性待恢复。'
+  if (!allAdCapabilitiesEnabled.value) return '基础服务已连通，部分业务保护尚未完成检测。'
+  return '广告展示、投放申请与支付链路均已就绪。'
+})
+
+const adServiceCards = computed(() => [
+  {
+    key: 'access',
+    title: '服务接入',
+    value: runtimeStatus.commercialBridgeConnected ? '已接入' : (runtimeStatus.commercialBridgeConfigured ? '待恢复' : '未接入'),
+    desc: runtimeStatus.commercialBridgeConnected ? '服务端可正常获取广告业务数据' : '广告套餐、申请和支付保持关闭',
+    tone: runtimeStatus.commercialBridgeConnected ? 'is-ok' : 'is-warn',
+  },
+  {
+    key: 'application',
+    title: '投放申请',
+    value: runtimeStatus.commercialMutationIdempotencyEnabled ? '可提交' : '未开放',
+    desc: runtimeStatus.commercialMutationIdempotencyEnabled ? '申请提交具备重复提交保护' : '申请入口会保持禁用，避免产生不确定订单',
+    tone: runtimeStatus.commercialMutationIdempotencyEnabled ? 'is-ok' : 'is-info',
+  },
+  {
+    key: 'payment',
+    title: '支付链路',
+    value: runtimeStatus.commercialPaymentIdempotencyEnabled ? '可下单' : '未开放',
+    desc: runtimeStatus.commercialPaymentIdempotencyEnabled ? '支付订单具备重复请求保护' : '支付入口会保持禁用，避免重复扣费风险',
+    tone: runtimeStatus.commercialPaymentIdempotencyEnabled ? 'is-ok' : 'is-info',
+  },
+  {
+    key: 'display',
+    title: '广告展示',
+    value: runtimeStatus.commercialPaidAdPlacementEnforced ? '受保护' : '未开放',
+    desc: runtimeStatus.commercialPaidAdPlacementEnforced ? '仅已生效广告可进入展示位' : '前台不会回退展示未确认广告',
+    tone: runtimeStatus.commercialPaidAdPlacementEnforced ? 'is-ok' : 'is-info',
+  },
+])
+
+const adCapabilityCards = computed(() => [
+  {
+    key: 'application',
+    title: '申请保护',
+    ready: Boolean(runtimeStatus.commercialMutationIdempotencyEnabled),
+    desc: '避免同一投放申请被重复创建。',
+  },
+  {
+    key: 'payment',
+    title: '支付保护',
+    ready: Boolean(runtimeStatus.commercialPaymentIdempotencyEnabled),
+    desc: '避免同一支付订单被重复创建或关闭。',
+  },
+  {
+    key: 'display',
+    title: '展示保护',
+    ready: Boolean(runtimeStatus.commercialPaidAdPlacementEnforced),
+    desc: '确保只有已生效广告进入展示位。',
+  },
+])
 
 onMounted(() => {
   window.addEventListener('xya-header-action', onHeaderAction)
@@ -576,7 +581,7 @@ function onHeaderAction(event) {
   line-height: 1.7;
 }
 
-.bridge-notice {
+.service-notice {
   padding: 14px 16px;
   border-radius: 6px;
   border: 1px dashed #cfd8e8;
@@ -586,51 +591,85 @@ function onHeaderAction(event) {
   line-height: 1.7;
 }
 
-.bridge-grid {
+.ad-service-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.8fr);
+  gap: 14px;
+}
+
+.ad-service-summary {
+  min-height: 178px;
+  padding: 18px;
+  border-radius: 6px;
+  border: 1px solid #f0d6c8;
+  background: linear-gradient(180deg, #fff7ed 0%, #fff 100%);
+}
+
+.ad-service-summary.ready {
+  border-color: #b7e4c7;
+  background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%);
+}
+
+.ad-service-summary span,
+.ad-service-card span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ad-service-summary strong {
+  display: block;
+  margin-top: 12px;
+  color: #101828;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.ad-service-summary p,
+.ad-service-card p {
+  margin: 12px 0 0;
+  color: #667085;
+  line-height: 1.7;
+}
+
+.ad-service-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 18px;
-  padding: 14px 16px;
+  gap: 12px;
+}
+
+.ad-service-card {
+  min-height: 83px;
+  padding: 14px;
   border-radius: 6px;
-  border: 1px dashed #cfd8e8;
-  background: #f8fafc;
+  border: 1px solid #e3eaf5;
+  background: #fff;
 }
 
-.bridge-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+.ad-service-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #101828;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 900;
 }
 
-.bridge-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #6a7c98;
+.ad-service-card.is-ok {
+  border-top: 3px solid #16a34a;
 }
 
-.bridge-value {
-  font-size: 14px;
-  color: #1f2a44;
-  word-break: break-all;
+.ad-service-card.is-info {
+  border-top: 3px solid #2563eb;
 }
 
-.bridge-value.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px;
+.ad-service-card.is-warn {
+  border-top: 3px solid #f59e0b;
 }
 
-.bridge-value.ok {
-  color: #1f8a4c;
-  font-weight: 700;
-}
-
-.bridge-value.warn {
-  color: #b26a00;
-  font-weight: 700;
-}
-
-.bridge-capabilities {
+.service-capabilities {
   margin-top: 14px;
   padding: 14px 16px;
   border-radius: 6px;
@@ -686,7 +725,7 @@ function onHeaderAction(event) {
   line-height: 1.6;
 }
 
-.bridge-hint {
+.service-hint {
   margin: 12px 0 0;
   padding: 10px 12px;
   border-radius: 10px;
@@ -696,13 +735,14 @@ function onHeaderAction(event) {
   line-height: 1.7;
 }
 
-.bridge-hint.ok {
+.service-hint.ok {
   background: rgba(31, 138, 76, 0.08);
   color: #1f6b3a;
 }
 
 @media (max-width: 1100px) {
-  .bridge-grid {
+  .ad-service-panel,
+  .ad-service-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
