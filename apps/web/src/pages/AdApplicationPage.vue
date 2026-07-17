@@ -1,5 +1,5 @@
 <template>
-  <div class="ad-application-page ads-v8-shell">
+  <div class="ad-application-page ads-v9-shell">
     <div
       v-if="commercialState.available === false"
       class="global-notice warn commercial-unavailable"
@@ -22,16 +22,15 @@
 
     <section class="ads-hero">
       <div class="ads-hero-copy">
-        <span class="ads-hero-badge">首页广告合作</span>
-        <h2>广告申请与支付以真实服务为准</h2>
+        <span class="ads-hero-badge">商业投放</span>
+        <h2>广告投放申请台</h2>
         <p>
-          仅在广告服务已配置并返回真实套餐与支付渠道后，才可提交申请或创建支付订单。
-          系统不会生成临时套餐，也不会在服务不可用时保存申请。
+          选择真实广告档位，提交素材与联系人，商业服务确认后再创建支付订单。
         </p>
         <div class="ads-hero-points">
-          <span>套餐与价格来自商业服务</span>
-          <span>支付状态以商业服务回执为准</span>
-          <span>审核与上架时效以商业服务结果为准</span>
+          <span>真实套餐</span>
+          <span>安全支付</span>
+          <span>审核上架</span>
         </div>
       </div>
       <div class="ads-hero-side">
@@ -48,9 +47,14 @@
 
     <div class="ads-layout">
       <div class="ads-main">
-        <n-card class="ads-section ads-v4-card" :bordered="false">
-          <template #header>广告档位</template>
-          <template #header-extra><span class="ads-section-desc">仅展示广告服务实时返回的套餐、价格与状态。</span></template>
+        <section class="ads-section ads-panel plan-panel">
+          <header class="ads-section-head">
+            <div>
+              <span>投放档位</span>
+              <h3>广告档位</h3>
+            </div>
+            <p class="ads-section-desc">仅展示广告服务实时返回的套餐、价格与状态。</p>
+          </header>
           <div v-if="loading.plans" class="ads-state">正在加载广告档位...</div>
           <EmptyState
             v-else-if="!plans.length"
@@ -80,11 +84,16 @@
               </ul>
             </article>
           </div>
-        </n-card>
+        </section>
 
-        <n-card class="ads-section ads-v4-card" :bordered="false">
-          <template #header>提交申请</template>
-          <template #header-extra><span class="ads-section-desc">商业服务确认接收申请后，才会继续创建真实支付订单。</span></template>
+        <section class="ads-section ads-panel application-panel">
+          <header class="ads-section-head">
+            <div>
+              <span>申请录入</span>
+              <h3>提交申请</h3>
+            </div>
+            <p class="ads-section-desc">商业服务确认接收申请后，才会继续创建真实支付订单。</p>
+          </header>
           <form class="ads-form" @submit.prevent="handleSubmit">
             <div class="ads-form-grid">
               <label class="ads-field">
@@ -244,12 +253,17 @@
               </button>
             </div>
           </form>
-        </n-card>
+        </section>
       </div>
 
       <aside class="ads-side">
-        <n-card class="ads-section ads-v4-card" :bordered="false">
-          <template #header>扫码支付</template>
+        <section class="ads-section ads-panel payment-side-panel">
+          <header class="ads-section-head">
+            <div>
+              <span>支付订单</span>
+              <h3>扫码支付</h3>
+            </div>
+          </header>
           <section
             v-if="paymentAttempt.visible"
             :class="['payment-attempt-safety', `is-${paymentAttempt.status}`]"
@@ -372,15 +386,18 @@
               </button>
             </div>
           </div>
-        </n-card>
+        </section>
 
-        <n-card class="ads-section ads-v4-card" :bordered="false">
-          <template #header>我的申请记录</template>
-          <template #header-extra>
+        <section class="ads-section ads-panel records-panel">
+          <header class="ads-section-head">
+            <div>
+              <span>申请追踪</span>
+              <h3>我的申请记录</h3>
+            </div>
             <button class="ads-link-btn" type="button" :disabled="loading.records" @click="loadApplications">
               {{ loading.records ? '刷新中...' : '刷新' }}
             </button>
-          </template>
+          </header>
 
           <div v-if="loading.records" class="ads-state">正在加载申请记录...</div>
           <EmptyState
@@ -445,17 +462,22 @@
               </div>
             </article>
           </div>
-        </n-card>
+        </section>
 
-        <n-card class="ads-section ads-v4-card" :bordered="false">
-          <template #header>投放说明</template>
+        <section class="ads-section ads-panel guide-panel">
+          <header class="ads-section-head">
+            <div>
+              <span>投放规则</span>
+              <h3>投放说明</h3>
+            </div>
+          </header>
           <ol class="ads-steps">
             <li>平台负责人需先配置广告服务，并由商业服务提供真实套餐与支付方式。</li>
             <li>广告服务未配置时，系统不会提交、保存申请或创建支付订单。</li>
             <li>支付、审核、排期与上下架均以商业服务返回的状态为准。</li>
             <li>历史系统申请记录只读保留，不代表已进入任何审核或投放流程。</li>
           </ol>
-        </n-card>
+        </section>
       </aside>
     </div>
   </div>
@@ -463,7 +485,6 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NCard } from 'naive-ui'
 import EmptyState from '../components/EmptyState.vue'
 import {
   closeAdPaymentOrder,
@@ -1383,9 +1404,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .ad-application-page {
+  --ads-ink: #0f172a;
+  --ads-muted: #64748b;
+  --ads-line: #dfe7f1;
+  --ads-surface: #ffffff;
+  --ads-soft: #f8fafc;
+  --ads-blue: #2563eb;
+  --ads-teal: #0f766e;
+  --ads-amber: #d97706;
+  --ads-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
   gap: 18px;
+  color: var(--ads-ink);
 }
 
 .commercial-unavailable {
@@ -1396,14 +1427,26 @@ onBeforeUnmount(() => {
 }
 
 .ads-hero {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 240px;
   gap: 18px;
-  padding: 28px;
-  border-radius: 6px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  padding: 24px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(15, 118, 110, .06) 46%, rgba(217, 119, 6, .08)),
+    #fff;
+  border: 1px solid var(--ads-line);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
+}
+
+.ads-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ads-blue), var(--ads-teal), #f59e0b);
 }
 
 .ads-hero-badge {
@@ -1412,16 +1455,16 @@ onBeforeUnmount(() => {
   height: 30px;
   padding: 0 14px;
   border-radius: 6px;
-  background: #fff7ed;
-  color: #c2410c;
+  background: #eff6ff;
+  color: var(--ads-blue);
   font-size: 12px;
   font-weight: 800;
 }
 
 .ads-hero h2 {
   margin: 14px 0 10px;
-  color: #14213d;
-  font-size: 28px;
+  color: var(--ads-ink);
+  font-size: 32px;
   line-height: 1.15;
 }
 
@@ -1462,8 +1505,8 @@ onBeforeUnmount(() => {
   min-height: 110px;
   padding: 18px;
   border-radius: 6px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, .78);
+  border: 1px solid rgba(148, 163, 184, .32);
 }
 
 .ads-hero-stat strong {
@@ -1587,18 +1630,35 @@ onBeforeUnmount(() => {
 }
 
 .ads-section {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid var(--ads-line);
+  border-radius: 8px;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
 }
 
-.ads-v4-card :deep(.n-card__content) {
+.ads-panel {
   padding: 16px;
 }
 
-.ads-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.ads-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.ads-section-head span {
+  color: var(--ads-teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ads-section-head h3 {
+  margin: 4px 0 0;
+  color: var(--ads-ink);
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 .ads-section-desc {
@@ -1622,23 +1682,37 @@ onBeforeUnmount(() => {
 }
 
 .plan-card {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 220px;
   padding: 18px;
-  border-radius: 6px;
-  border: 1px solid #f7e3db;
-  background: linear-gradient(180deg, #ffffff, #FAFAFA);
+  border-radius: 8px;
+  border: 1px solid var(--ads-line);
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform 160ms var(--ads-ease), box-shadow 160ms var(--ads-ease), border-color 160ms var(--ads-ease), background 160ms var(--ads-ease);
 }
 
 .plan-card:hover,
 .plan-card.active {
   transform: translateY(-1px);
-  border-color: #ffb18f;
-  box-shadow: 0 18px 34px rgba(214, 90, 37, 0.12);
+  border-color: #bfdbfe;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, .08);
+}
+
+.plan-card.active {
+  background: linear-gradient(180deg, #eff6ff, #ffffff);
+}
+
+.plan-card.active::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--ads-blue);
 }
 
 .plan-head {
@@ -1666,14 +1740,14 @@ onBeforeUnmount(() => {
   height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: #eef5ff;
-  color: #e86229;
+  background: #eff6ff;
+  color: var(--ads-blue);
   font-size: 12px;
   font-weight: 800;
 }
 
 .plan-price {
-  color: #0f766e;
+  color: var(--ads-teal);
   font-size: 18px;
 }
 
@@ -1717,7 +1791,7 @@ onBeforeUnmount(() => {
 }
 
 .ads-field span {
-  color: #5d3f32;
+  color: #334155;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1727,10 +1801,10 @@ onBeforeUnmount(() => {
   width: 100%;
   color: #16233d;
   background: #fff;
-  border: 1px solid #f4e0d8;
-  border-radius: 14px;
+  border: 1px solid var(--ads-line);
+  border-radius: 8px;
   font-size: 14px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 160ms var(--ads-ease), box-shadow 160ms var(--ads-ease), background 160ms var(--ads-ease);
 }
 
 .ads-input {
@@ -1748,8 +1822,8 @@ onBeforeUnmount(() => {
 .ads-input:focus,
 .ads-textarea:focus {
   outline: none;
-  border-color: #ffa37b;
-  box-shadow: 0 0 0 4px rgba(24, 160, 88, 0.1);
+  border-color: var(--ads-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .ads-input:disabled,
@@ -1778,7 +1852,7 @@ onBeforeUnmount(() => {
 }
 
 .upload-head span {
-  color: #5d3f32;
+  color: #334155;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1802,10 +1876,22 @@ onBeforeUnmount(() => {
   gap: 8px;
   width: 220px;
   height: 132px;
-  border: 1px dashed #efb39a;
-  border-radius: 18px;
+  border: 1px dashed #93c5fd;
+  border-radius: 8px;
   background: linear-gradient(180deg, #FFFFFF, #f3f8ff);
-  color: #ff6d2f;
+  color: var(--ads-blue);
+  cursor: pointer;
+  transition: transform 160ms var(--ads-ease), border-color 160ms var(--ads-ease), box-shadow 160ms var(--ads-ease);
+}
+
+.upload-card:not(:disabled):hover {
+  transform: translateY(-1px);
+  border-color: var(--ads-blue);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
+}
+
+.upload-card:not(:disabled):active {
+  transform: scale(.98);
 }
 
 .upload-card:disabled {
@@ -1825,7 +1911,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: 8px;
 }
 
 .upload-meta p {
@@ -1851,7 +1937,7 @@ onBeforeUnmount(() => {
 }
 
 .payment-method-head span {
-  color: #5d3f32;
+  color: #334155;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1872,16 +1958,18 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 6px;
   padding: 14px;
-  border: 1px solid #f5e3db;
-  border-radius: 16px;
+  border: 1px solid var(--ads-line);
+  border-radius: 8px;
   background: #fff;
   text-align: left;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  cursor: pointer;
+  transition: border-color 160ms var(--ads-ease), box-shadow 160ms var(--ads-ease), transform 160ms var(--ads-ease), background 160ms var(--ads-ease);
 }
 
 .method-card.active {
-  border-color: #ff6d2f;
-  box-shadow: 0 14px 26px rgba(24, 160, 88, 0.12);
+  border-color: var(--ads-blue);
+  background: #eff6ff;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
   transform: translateY(-1px);
 }
 
@@ -1891,7 +1979,7 @@ onBeforeUnmount(() => {
 }
 
 .method-card strong {
-  color: #5c2c17;
+  color: var(--ads-ink);
   font-size: 14px;
 }
 
@@ -1911,9 +1999,20 @@ onBeforeUnmount(() => {
   min-width: 120px;
   height: 42px;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 800;
+  cursor: pointer;
+  transition: transform 140ms var(--ads-ease), box-shadow 140ms var(--ads-ease), border-color 140ms var(--ads-ease), background 140ms var(--ads-ease);
+}
+
+.ads-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
+}
+
+.ads-btn:not(:disabled):active {
+  transform: scale(.97);
 }
 
 .ads-btn:disabled,
@@ -1925,13 +2024,14 @@ onBeforeUnmount(() => {
 .ads-btn-ghost {
   color: #4b617f;
   background: #fff;
-  border-color: #f5e3db;
+  border-color: var(--ads-line);
 }
 
 .ads-btn-primary {
   color: #fff;
-  background: linear-gradient(90deg, #14b8a6, #ff5f1b);
-  box-shadow: 0 14px 30px rgba(20, 184, 166, 0.2);
+  background: var(--ads-blue);
+  border-color: var(--ads-blue);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18);
 }
 
 .ads-btn-danger {
@@ -1944,9 +2044,10 @@ onBeforeUnmount(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #f66b2f;
+  color: var(--ads-blue);
   font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .ads-link-btn.danger {
@@ -1967,7 +2068,7 @@ onBeforeUnmount(() => {
 
 .payment-top strong {
   display: block;
-  color: #5c2c17;
+  color: var(--ads-ink);
   font-size: 16px;
 }
 
@@ -1984,8 +2085,8 @@ onBeforeUnmount(() => {
   height: 28px;
   padding: 0 12px;
   border-radius: 999px;
-  background: #fff4e5;
-  color: #d97706;
+  background: #fffbeb;
+  color: var(--ads-amber);
   font-size: 12px;
   font-style: normal;
   font-weight: 800;
@@ -2000,9 +2101,9 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   padding: 18px;
-  border-radius: 20px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #FFFFFF, #F7F7F8);
-  border: 1px solid #e2eaf7;
+  border: 1px solid var(--ads-line);
 }
 
 .payment-qr {
@@ -2017,8 +2118,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   width: 220px;
   height: 220px;
-  border-radius: 18px;
-  background: #eef4ff;
+  border-radius: 8px;
+  background: #eff6ff;
   color: #6b7c96;
 }
 
@@ -2076,9 +2177,16 @@ onBeforeUnmount(() => {
 
 .application-card {
   padding: 16px;
-  border-radius: 18px;
-  border: 1px solid #e4ecf8;
+  border-radius: 8px;
+  border: 1px solid var(--ads-line);
   background: linear-gradient(180deg, #ffffff, #FFFFFF);
+  transition: border-color 160ms var(--ads-ease), box-shadow 160ms var(--ads-ease), transform 160ms var(--ads-ease);
+}
+
+.application-card:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
 }
 
 .application-head {
@@ -2144,7 +2252,7 @@ onBeforeUnmount(() => {
 .application-thumb {
   width: 84px;
   height: 64px;
-  border-radius: 14px;
+  border-radius: 8px;
   object-fit: cover;
   border: 1px solid #e5edf9;
 }
@@ -2200,71 +2308,32 @@ onBeforeUnmount(() => {
   margin-top: 8px;
 }
 
-.ads-v8-shell .ads-hero,
-.ads-v8-shell .ads-section,
-.ads-v8-shell .plan-card,
-.ads-v8-shell .upload-card,
-.ads-v8-shell .method-card,
-.ads-v8-shell .payment-attempt-safety,
-.ads-v8-shell .payment-safety-notice,
-.ads-v8-shell .payment-qr-wrap,
-.ads-v8-shell .payment-qr-fallback,
-.ads-v8-shell .application-card,
-.ads-v8-shell .commercial-unavailable {
-  border: 1px solid #dfe6f2;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: none;
+.ads-v9-shell .commercial-unavailable,
+.ads-v9-shell .payment-safety-notice,
+.ads-v9-shell .payment-attempt-safety,
+.ads-v9-shell .payment-poll-error {
+  border-radius: 8px;
 }
 
-.ads-v8-shell .ads-v4-card :deep(.n-card__content),
-.ads-v8-shell .ads-v4-card :deep(.n-card-header) {
-  border-radius: 6px;
-}
-
-.ads-v8-shell .ads-hero h2,
-.ads-v8-shell .ads-v4-card :deep(.n-card-header__main),
-.ads-v8-shell .plan-head h3,
-.ads-v8-shell .payment-top strong,
-.ads-v8-shell .application-head strong {
-  color: #101828;
+.ads-v9-shell .ads-section-head h3,
+.ads-v9-shell .plan-head h3,
+.ads-v9-shell .application-head strong {
+  color: var(--ads-ink);
   letter-spacing: 0;
 }
 
-.ads-v8-shell .ads-hero-badge,
-.ads-v8-shell .ads-hero-points span,
-.ads-v8-shell .plan-tag,
-.ads-v8-shell .payment-status,
-.ads-v8-shell .application-status,
-.ads-v8-shell .application-meta span,
-.ads-v8-shell .ads-btn,
-.ads-v8-shell .ads-input,
-.ads-v8-shell .ads-textarea,
-.ads-v8-shell .payment-poll-error,
-.ads-v8-shell .application-thumb {
-  border-radius: 6px;
-  box-shadow: none;
+.ads-v9-shell .plan-card.active .plan-head h3,
+.ads-v9-shell .method-card.active strong {
+  color: var(--ads-blue);
 }
 
-.ads-v8-shell .plan-card:hover,
-.ads-v8-shell .plan-card.active,
-.ads-v8-shell .method-card.active {
-  transform: none;
-  border-color: #bfdbfe;
-  background: #eef4ff;
-  box-shadow: none;
+.ads-v9-shell .ads-hero-points span {
+  border: 1px solid rgba(148, 163, 184, .25);
 }
 
-.ads-v8-shell .ads-btn-primary {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
-}
-
-.ads-v8-shell .ads-btn-danger {
-  background: #dc2626;
-  border-color: #dc2626;
-  color: #fff;
+.ads-v9-shell .payment-side-panel {
+  position: sticky;
+  top: 18px;
 }
 
 @media (max-width: 1200px) {
