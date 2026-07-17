@@ -6,7 +6,7 @@
     <div v-if="loading" class="aics-loading">配置加载中...</div>
     <div v-else-if="configAvailable === false" class="aics-unavailable" role="alert">
       <strong>AI 客服配置状态未知</strong>
-      <p>持久化配置读取失败。为避免用页面默认值覆盖现有配置，编辑、测试、上传与保存均已禁用。</p>
+      <p>持久化配置读取失败。为避免用页面默认值覆盖现有配置，编辑、验证、上传与保存均已禁用。</p>
       <button type="button" class="aics-retry-btn" @click="load">重试读取配置</button>
     </div>
     <div v-else class="aics-grid">
@@ -243,13 +243,13 @@
 
         <div class="aics-actions">
           <button type="button" class="aics-save-btn" :disabled="saving" @click="save">{{ saving ? '保存中...' : '保存配置' }}</button>
-          <button type="button" class="aics-test-btn" :disabled="testing" @click="openTestPanel">{{ testing ? '测试中...' : '测试 AI 回复' }}</button>
+          <button type="button" class="aics-test-btn" :disabled="testing" @click="openTestPanel">{{ testing ? '验证中...' : '验证 AI 回复' }}</button>
         </div>
       </div>
 
       <aside class="aics-side">
         <n-card class="aics-v7-card" :bordered="false">
-          <template #header>模型测试预览</template>
+          <template #header>回复效果预览</template>
           <div class="aics-preview">
             <div class="aics-bubble them">这个价格还能再优惠吗？</div>
             <div v-if="testReply" class="aics-bubble me">{{ testReply }}</div>
@@ -530,7 +530,7 @@ function openTestPanel() {
   // A previous successful test used to make this button a no-op. Always run a
   // fresh request so operators can validate a newly saved model configuration.
   if (configAvailable.value !== true) {
-    setError('配置状态未知，无法测试；请先重试读取配置')
+    setError('配置状态未知，无法验证；请先重试读取配置')
     return
   }
   runTest()
@@ -538,7 +538,7 @@ function openTestPanel() {
 
 async function runTest() {
   if (configAvailable.value !== true) {
-    setError('配置状态未知，无法测试；请先重试读取配置')
+    setError('配置状态未知，无法验证；请先重试读取配置')
     return
   }
   if (!testMessage.value.trim()) return

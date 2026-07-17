@@ -54,7 +54,7 @@
           <span>/ {{ displayLimit(usage.aiCallsToday.limit) }}</span>
         </div>
         <div class="quota-bar ai"><i :style="{ width: percent(usage.aiCallsToday.used, usage.aiCallsToday.limit) + '%' }"></i></div>
-        <p>AI 客服测试、RAG 对话、货源推荐等会计入调用次数。</p>
+        <p>AI 客服验证、RAG 对话、货源推荐等会计入调用次数。</p>
       </n-card>
     </div>
 

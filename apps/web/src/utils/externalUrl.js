@@ -1,4 +1,4 @@
-export function normalizeExternalUrl(value, baseUrl = globalThis.location?.origin || 'http://localhost') {
+export function normalizeExternalUrl(value, baseUrl = globalThis.location?.origin || '') {
   const raw = String(value || '').trim()
   if (!raw) return ''
   try {

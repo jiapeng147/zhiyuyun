@@ -730,14 +730,14 @@ const headerActions = computed(() => {
   if (active.value === 'settings-notify') {
     return [
       { text: '保存设置', type: 'primary', event: 'notify-save' },
-      { text: '测试发送', type: 'ghost', event: 'notify-test' },
-      { text: '刷新日志', type: 'ghost', event: 'notify-refresh' }
+      { text: '验证发送', type: 'ghost', event: 'notify-test' },
+      { text: '刷新记录', type: 'ghost', event: 'notify-refresh' }
     ]
   }
   if (active.value === 'settings-ai-cs') {
     return [
       { text: '重新加载', type: 'ghost', event: 'aics-reload' },
-      { text: '测试 AI 回复', type: 'ghost', event: 'aics-test' },
+      { text: '验证 AI 回复', type: 'ghost', event: 'aics-test' },
       { text: '保存配置', type: 'primary', event: 'aics-save' }
     ]
   }

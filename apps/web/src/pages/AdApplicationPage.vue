@@ -132,7 +132,7 @@
                   class="ads-input"
                   :disabled="commercialState.available !== true"
                   maxlength="300"
-                  placeholder="https://example.com/landing-page"
+                  placeholder="https://www.company.com/campaign"
                 />
               </label>
 

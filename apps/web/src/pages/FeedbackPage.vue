@@ -15,7 +15,7 @@
       <div class="fbk-hero-copy">
         <span class="fbk-hero-pill">反馈中心</span>
         <h2>反馈建议</h2>
-        <p>集中记录 Bug、功能建议与流程改进想法，反馈将进入支持队列由维护团队处理。</p>
+        <p>集中记录问题反馈、功能建议与流程改进想法，反馈将进入支持队列由维护团队处理。</p>
 
         <div class="fbk-hero-actions">
           <button type="button" class="fbk-btn-primary" @click="openSubmitModal">
@@ -238,7 +238,7 @@
           <div class="fbk-priority-grid">
             <div class="fbk-priority-item high">
               <strong>高优先</strong>
-              <p>阻断流程、核心功能不可用、关键 Bug。</p>
+              <p>阻断流程、核心功能不可用、关键问题。</p>
             </div>
             <div class="fbk-priority-item mid">
               <strong>中优先</strong>

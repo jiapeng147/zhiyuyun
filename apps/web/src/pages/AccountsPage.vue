@@ -470,7 +470,7 @@
             v-model="autoRateForm.apiUrl"
             class="input large"
             :disabled="!autoRateLoaded"
-            placeholder="https://example.com/xianyu/auto-rate"
+            placeholder="https://api.company.com/xianyu/auto-rate"
           >
           <label class="field-label">兜底评价内容 <span>可选</span></label>
           <textarea
