@@ -58,7 +58,7 @@ export function createDefaultAboutContent() {
         v: `v${APP_VERSION}`,
         t: releaseDate,
         tone: 'major',
-        d: '当前版本已完成账号登录、系统配置整合与广告投放服务接入；未配置的广告能力会明确显示为不可用。',
+        d: '平台已完成账号登录、系统配置整合与广告投放服务接入；未配置的广告能力会明确显示为不可用。',
         sections: [
           { t: '登录与账号', d: '使用账号密码登录模式，扫码登录仅用于闲鱼店铺授权，避免误连到外部旧环境。' },
           { t: '系统配置', d: '通用模型、向量模型、RAG 知识库与高德地图配置已统一收敛到系统配置页。' },
@@ -108,7 +108,7 @@ export function createDefaultAboutContent() {
       {
         label: '交流群',
         title: '微信群二维码',
-        desc: '用于平台自行维护的版本通知、使用答疑、投放交流与功能建议收集。',
+        desc: '用于平台自行维护的服务通知、使用答疑、投放交流与功能建议收集。',
         placeholderText: '社群',
         hint: '配置后可扫码',
         tone: 'blue',
@@ -131,7 +131,7 @@ export function createDefaultAboutContent() {
     links: [
       { label: '用户协议', icon: 'aboutShield', actionText: '查看', actionType: 'legal', actionValue: 'terms' },
       { label: '隐私政策', icon: 'aboutEye', actionText: '查看', actionType: 'legal', actionValue: 'privacy' },
-      { label: '版本说明', icon: 'refresh', actionText: '查看', actionType: 'toast', actionValue: `当前版本 v${APP_VERSION} 已包含账号登录、系统配置整合与广告投放服务。` },
+      { label: '服务说明', icon: 'refresh', actionText: '查看', actionType: 'toast', actionValue: `当前服务 v${APP_VERSION} 已包含账号登录、系统配置整合与广告投放服务。` },
       { label: '导出服务信息', icon: 'download', actionText: '导出', actionType: 'download', actionValue: 'service-info' },
     ],
     legalDocs: {

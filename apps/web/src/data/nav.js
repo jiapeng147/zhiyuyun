@@ -61,7 +61,7 @@ export const settingsTabs = [
   { key: 'settings-embedding', label: '向量模型', icon: 'ai' },
   { key: 'settings-rag', label: 'RAG 知识库', icon: 'message' },
   { key: 'settings-product', label: '商品操作', icon: 'product' },
-  { key: 'settings-about', label: '关于我们', icon: 'help' },
+  { key: 'settings-about', label: '平台信息', icon: 'help' },
 ]
 
 export const pageTitles = {
@@ -94,6 +94,6 @@ export const pageTitles = {
   'settings-rag': ['系统设置 / RAG 知识库', '单独管理知识库、文档上传与检索验证'],
   'settings-product': ['系统设置 / 商品操作', '管理商品相关系统级配置'],
   'settings-notify': ['系统设置 / 通知设置', '管理通知渠道、防重复发送与验证发送'],
-  'settings-about': ['系统设置 / 关于我们', '查看项目版本、更新日志与站点说明'],
+  'settings-about': ['系统设置 / 平台信息', '查看服务信息、服务动态与站点说明'],
   profile: ['个人中心', '管理个人资料、安全设置与平台概况'],
 }

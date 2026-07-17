@@ -6,7 +6,7 @@
       <div>
         <span class="eyebrow">套餐订阅</span>
         <h2>套餐账单</h2>
-        <p>查看当前版本、账号配额、AI 调用额度与订阅订单。</p>
+        <p>查看当前套餐、账号配额、AI 调用额度与订阅订单。</p>
       </div>
       <button class="billing-btn" type="button" :disabled="loading" @click="loadAll">
         {{ loading ? '刷新中...' : '刷新' }}

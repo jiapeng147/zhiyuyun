@@ -922,7 +922,7 @@ async function handleItemPolish(account) {
         description: isVerificationResume
           ? '仅当你已在闲鱼 App 完成安全验证时继续。系统会复用原任务和原范围，不会创建新任务。'
           : isResume
-          ? '将复用原任务和原商品范围，只恢复明确可安全执行的项目；未知结果不会重试。'
+          ? '将复用原任务和原商品范围，只恢复明确可安全执行的操作项；未知结果不会重试。'
           : '系统会先记录任务和逐项操作，再提交闲鱼真实擦亮请求。请求超时或中断将标记为结果未知并停止自动重试。',
         confirmText: isVerificationResume ? '我已完成验证，继续原任务' : (isResume ? '继续原任务' : '开始擦亮'),
       }

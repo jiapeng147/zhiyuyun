@@ -1,7 +1,7 @@
 <template>
   <div class="po-page">
     <div class="global-notice capability-notice" role="status">
-      当前版本尚未接入可持久恢复、带租约且能核验闲鱼平台结果的库存归零自动下架执行器。为避免把“已保存”误认为“会执行”，该能力保持禁用。
+      为避免库存误操作，库存归零自动下架暂未开放。请先完成库存核验和商品状态确认后，再进行手动下架。
     </div>
     <div class="po-grid">
       <div class="po-main">
@@ -12,7 +12,7 @@
             <div class="po-row po-row-toggle">
               <div>
                 <strong>库存归零自动下架（当前不可用）</strong>
-                <p>需先完成幂等任务、平台结果核验、未知结果人工复核与审计追踪后才能启用。</p>
+                <p>需先完成平台结果核验、异常人工复核与审计追踪后才能启用。</p>
               </div>
               <button type="button" class="po-switch" disabled aria-label="库存归零自动下架当前不可用">
                 <span class="po-switch-knob" />

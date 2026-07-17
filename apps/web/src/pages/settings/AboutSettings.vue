@@ -35,7 +35,7 @@
               <Icon name="aboutVersion" />
             </div>
             <div class="metric-info">
-              <span class="metric-label">当前版本</span>
+              <span class="metric-label">平台版本</span>
               <b class="metric-value">v{{ APP_VERSION }}</b>
             </div>
           </div>
@@ -63,8 +63,8 @@
           <n-card class="about-panel" :bordered="false">
             <template #header>
               <div class="about-panel-head">
-                <h3>更新日志</h3>
-                <p>版本迭代与功能演进记录</p>
+                <h3>服务动态</h3>
+                <p>平台能力与服务更新记录</p>
               </div>
             </template>
             <div class="changelog">
@@ -387,7 +387,7 @@ function handleAction(action = {}) {
       exportServiceInfo()
       return
     case 'toast':
-      toast(action.actionValue || `当前已是最新版本 v${APP_VERSION}`)
+      toast(action.actionValue || `当前服务信息已是最新 v${APP_VERSION}`)
       return
     default:
       if (action.actionValue) openExternal(action.actionValue, action.actionMessage || '')

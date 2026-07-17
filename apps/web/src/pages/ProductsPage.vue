@@ -866,7 +866,7 @@ async function executePolishScope({ accountId, goodsIds = [], label = '在售商
         description: isVerificationResume
           ? '仅当你已在闲鱼 App 完成安全验证时继续。系统会复用原任务和原商品范围，不创建新任务。'
           : isResume
-          ? '将复用原任务和原商品范围，只恢复明确可安全执行的项目；未知结果不会重试。'
+          ? '将复用原任务和原商品范围，只恢复明确可安全执行的操作项；未知结果不会重试。'
           : '系统会先记录逐项操作，再提交真实闲鱼擦亮请求。超时或连接中断会标记为结果未知并停止自动重试。',
         confirmText: isVerificationResume ? '我已完成验证，继续原任务' : (isResume ? '继续原任务' : '开始擦亮'),
       }
@@ -1177,7 +1177,7 @@ async function refreshSingle(row) {
   if (!ensureListAvailable('同步商品')) return
   const accountId = row.xianyuAccountId || Number(query.xianyuAccountId)
   if (!accountId) return showNotice('warn', '请先选择账号')
-  const ok = await confirmAction({ title:'确认同步该账号全部商品？', description:'当前版本会同步该账号的全部闲鱼商品，不是仅刷新单个商品。同步期间请避免重复点击。' })
+  const ok = await confirmAction({ title:'确认同步该账号全部商品？', description:'本次操作会同步该账号的全部闲鱼商品，不是仅刷新单个商品。同步期间请避免重复点击。' })
   if (!ok) return
   return withItemBusy(row, async () => { try { await refreshItems({ xianyuAccountId: accountId }); showNotice('info', '账号商品同步已提交'); await loadItems(); loadGoodsStats() } catch(e){ showNotice('error', e.message || '刷新失败') } })
 }

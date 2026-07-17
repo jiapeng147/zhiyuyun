@@ -143,7 +143,7 @@
             <div class="fbk-row-top">
               <div class="fbk-row-badges">
                 <span :class="['fbk-category-pill', `cat-${item.category || 'other'}`]">
-                  {{ categoryMeta[item.category]?.icon || '📌' }}
+                  {{ categoryMeta[item.category]?.icon || '?' }}
                   {{ categoryMeta[item.category]?.label || '其他' }}
                 </span>
                 <span :class="['fbk-tag', `tag-${item.status}`]">{{ statusMeta[item.status]?.label || '待处理' }}</span>
@@ -440,16 +440,16 @@ const detailAvailable = ref(null)
 const detailLoading = ref(false)
 
 const categoryOptions = [
-  { value: 'bug', label: '问题反馈', icon: '🐞' },
-  { value: 'feature', label: '功能建议', icon: '✨' },
-  { value: 'suggestion', label: '改进提议', icon: '💡' },
-  { value: 'other', label: '其他', icon: '📌' }
+  { value: 'bug', label: '问题反馈', icon: '!' },
+  { value: 'feature', label: '功能建议', icon: '+' },
+  { value: 'suggestion', label: '改进提议', icon: 'i' },
+  { value: 'other', label: '其他', icon: '?' }
 ]
 const categoryMeta = {
-  bug: { label: '问题反馈', icon: '🐞' },
-  feature: { label: '功能建议', icon: '✨' },
-  suggestion: { label: '改进提议', icon: '💡' },
-  other: { label: '其他', icon: '📌' }
+  bug: { label: '问题反馈', icon: '!' },
+  feature: { label: '功能建议', icon: '+' },
+  suggestion: { label: '改进提议', icon: 'i' },
+  other: { label: '其他', icon: '?' }
 }
 const statusMeta = {
   open: { label: '待处理' },

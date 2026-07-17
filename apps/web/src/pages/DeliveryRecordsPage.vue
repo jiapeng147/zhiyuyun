@@ -21,7 +21,7 @@
     </n-card>
 
     <n-alert class="delivery-records-v4-alert" type="warning" :bordered="false">
-      当前版本没有安全的发货记录自动重试执行器。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
+      为确保交易安全，发货记录暂不提供一键自动重试。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
     </n-alert>
 
     <section class="delivery-records-v4-stats">

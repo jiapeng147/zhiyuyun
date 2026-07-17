@@ -101,7 +101,7 @@
         <template #header>商品分类</template>
         <div class="category-selector">
           <div class="auto-category-hint">
-            <span class="hint-icon">💡</span>
+            <span class="hint-icon">i</span>
             <span>上传封面图之后自动获取分类</span>
             <span v-if="autoCategoryLoading" class="auto-category-spinner">检测中...</span>
           </div>
