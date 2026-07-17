@@ -1,19 +1,36 @@
 <template>
-  <div class="statement-v4">
-    <n-card class="statement-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">发货声明</n-tag>
-        <h1>发货声明</h1>
-        <p>配置发货声明文案与生效范围，买家确认声明后进入正式发货流程</p>
+  <div class="statement-console-page">
+    <section class="statement-command-center">
+      <div class="statement-command-main">
+        <div class="statement-command-kicker">
+          <span>发货声明</span>
+          <b>{{ enabled ? '声明已启用' : '声明未启用' }}</b>
+        </div>
+        <h2>发货声明控制台</h2>
+        <p>配置虚拟商品交付前的确认声明、变量内容和生效范围，降低售后争议并保持发货流程可控。</p>
+        <div class="statement-command-meta">
+          <span>{{ statementLoading ? '配置读取中' : (statementAvailable === true ? '配置可编辑' : '配置不可用') }}</span>
+          <span>{{ scope === 'all' ? '全店生效' : '指定商品生效' }}</span>
+          <span>{{ previewText ? '预览已生成' : '等待预览' }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <AppButton :disabled="statementLoading" @click="load">重新加载</AppButton>
-        <AppButton type="primary" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
-      </n-space>
-    </n-card>
+      <div class="statement-command-panel">
+        <div class="statement-command-panel-head">
+          <span>运营动作</span>
+          <strong>{{ saving ? '保存中' : '可操作' }}</strong>
+        </div>
+        <div class="statement-command-buttons">
+          <AppButton :disabled="statementLoading" @click="load">重新加载</AppButton>
+          <AppButton :disabled="!enabled || statementAvailable !== true" @click="refreshPreview">预览声明</AppButton>
+          <AppButton type="primary" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
+        </div>
+      </div>
+    </section>
 
-    <div v-if="error" class="global-notice error">{{ error }}</div>
-    <div v-if="success" class="global-notice success">{{ success }}</div>
+    <div v-if="error || success" class="statement-notices">
+      <div v-if="error" class="global-notice error">{{ error }}</div>
+      <div v-if="success" class="global-notice success">{{ success }}</div>
+    </div>
 
     <EmptyState
       v-if="statementLoading && statementAvailable !== true"
@@ -32,10 +49,16 @@
       </template>
     </EmptyState>
 
-    <div v-else class="statement-layout">
+    <div v-else class="statement-workspace">
       <div class="statement-main">
-        <n-card class="statement-v4-card" :bordered="false">
-          <template #header>发货声明配置</template>
+        <section class="statement-panel statement-editor-panel">
+          <header class="statement-panel-head">
+            <div>
+              <span>声明策略</span>
+              <h3>发货声明配置</h3>
+            </div>
+            <strong>{{ enabled ? '启用中' : '未启用' }}</strong>
+          </header>
           <button
             type="button"
             class="option-line statement-toggle"
@@ -76,20 +99,25 @@
               :disabled="!enabled"
               @click="insertVariable(v.key)"
             >
-{{ v.key }}
-</button>
+              {{ v.key }}
+            </button>
           </div>
 
           <div class="form-actions">
             <AppButton type="primary" :loading="saving" @click="save">保存配置</AppButton>
             <AppButton :disabled="saving || !enabled" @click="reset">恢复默认</AppButton>
           </div>
-        </n-card>
+        </section>
       </div>
 
       <div class="statement-side">
-        <n-card class="statement-v4-card" :bordered="false">
-          <template #header>预览</template>
+        <section class="statement-panel statement-preview-panel">
+          <header class="statement-panel-head">
+            <div>
+              <span>买家视角</span>
+              <h3>声明预览</h3>
+            </div>
+          </header>
           <div class="preview-box">
             <div v-if="!enabled" class="subtle" style="text-align:center;padding:20px 0">发货声明已禁用，启用后可预览效果</div>
             <div v-else-if="!previewText" class="subtle" style="text-align:center;padding:20px 0">点击下方按钮预览声明效果</div>
@@ -98,17 +126,22 @@
           <div style="margin-top:12px">
             <AppButton :disabled="!enabled" @click="refreshPreview">预览声明</AppButton>
           </div>
-        </n-card>
+        </section>
 
-        <n-card class="statement-v4-card" :bordered="false" style="margin-top:16px">
-          <template #header>变量说明</template>
+        <section class="statement-panel statement-variable-panel">
+          <header class="statement-panel-head">
+            <div>
+              <span>变量库</span>
+              <h3>变量说明</h3>
+            </div>
+          </header>
           <div class="var-desc-list">
             <div v-for="v in variables" :key="v.key" class="var-desc-item">
               <code class="var-desc-key">{{ v.key }}</code>
               <span class="var-desc-text">{{ v.desc }}</span>
             </div>
           </div>
-        </n-card>
+        </section>
       </div>
     </div>
   </div>
@@ -116,7 +149,6 @@
 
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { NCard, NSpace, NTag } from 'naive-ui'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -286,91 +318,239 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.statement-v4 {
+.statement-console-page {
   display: grid;
+  gap: 18px;
+  min-width: 0;
+  color: #111827;
+}
+
+.statement-console-page * {
+  box-sizing: border-box;
+}
+
+.statement-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
   gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dbe4ef;
+  border-left: 5px solid #2563eb;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(15, 118, 110, .05) 48%, rgba(255, 255, 255, .96)),
+    #fff;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .08);
+}
+
+.statement-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.statement-command-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.statement-command-kicker span,
+.statement-command-kicker b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .1);
+}
+
+.statement-command-kicker b {
+  color: #0f766e;
+  background: rgba(15, 118, 110, .1);
+}
+
+.statement-command-main h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 760;
+  line-height: 1.2;
+}
+
+.statement-command-main p {
+  max-width: 760px;
+  margin: 0;
+  color: #526079;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.statement-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.statement-command-meta span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .82);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.statement-command-panel {
+  align-self: stretch;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .92);
+}
+
+.statement-command-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.statement-command-panel-head strong {
+  color: #2563eb;
+  font-size: 13px;
+}
+
+.statement-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.statement-notices {
+  display: grid;
+  gap: 8px;
+}
+
+.statement-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, .48fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.statement-main,
+.statement-side {
   min-width: 0;
 }
 
-.statement-v4-hero,
-.statement-v4-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.statement-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.statement-side {
+  display: grid;
   gap: 16px;
 }
 
-.statement-v4-hero h1 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
-}
-
-.statement-v4-hero p {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.statement-v4-card :deep(.n-card__content) {
+.statement-panel {
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
 }
 
-.statement-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.statement-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.statement-panel-head span {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.statement-panel-head h3 {
+  margin: 4px 0 0;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 730;
+  line-height: 1.35;
+}
+
+.statement-panel-head strong {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #2563eb;
+  font-size: 12px;
 }
 
 .statement-toggle {
   width: 100%;
-  border: 0;
-  background: transparent;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+  background: #f8fafc;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.statement-toggle:hover:not(:disabled) {
+  border-color: #b8c7dc;
+  background: #fff;
 }
 
 .statement-toggle:disabled {
   cursor: not-allowed;
   opacity: .65;
 }
-.statement-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 18px;
-}
-.statement-main {
-  min-width: 0;
-}
-.statement-side {
-  min-width: 0;
-}
+
 .preview-box {
-  border: 1px solid #E8E8E8;
-  border-radius: 12px;
-  padding: 12px;
-  background: #FFFFFF;
-  min-height: 80px;
+  min-height: 132px;
+  padding: 14px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, .9), rgba(255, 255, 255, .98)),
+    #fff;
 }
+
 .preview-content {
   white-space: pre-wrap;
   font-family: inherit;
   margin: 0;
-  color: #333;
-  line-height: 1.6;
+  color: #1f2937;
+  line-height: 1.7;
   font-size: 14px;
 }
+
 .var-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -387,21 +567,21 @@ onBeforeUnmount(() => {
 .var-chip {
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  padding: 0 10px;
+  min-height: 32px;
+  padding: 0 11px;
   background: #fff;
-  border: 1px solid #dbe8ff;
+  border: 1px solid #cfe0ff;
   border-radius: 7px;
   font-size: 12px;
-  color: #e3642d;
+  color: #2563eb;
   cursor: pointer;
   font-weight: 650;
   transition: all .15s;
   white-space: nowrap;
 }
 .var-chip:hover:not(:disabled) {
-  background: #e0e8ff;
-  border-color: #ffcdb8;
+  background: #eef6ff;
+  border-color: #93b4ff;
   transform: translateY(-1px);
 }
 .var-chip:disabled {
@@ -413,26 +593,31 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
 }
+
 .var-desc-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
-  background: #f5f7fa;
+  padding: 9px 10px;
+  border: 1px solid #e4ebf5;
   border-radius: 8px;
+  background: #f8fafc;
 }
+
 .var-desc-key {
-  background: #eef2f7;
-  padding: 2px 8px;
+  background: #e0f2fe;
+  padding: 3px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #0f766e;
+  color: #0369a1;
   white-space: nowrap;
 }
+
 .var-desc-text {
   color: #344054;
   font-size: 13px;
 }
+
 .field-desc {
   color: #667085;
   font-size: 13px;
@@ -444,97 +629,99 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 6px;
 }
+
 .form-row label {
   font-size: 13px;
   font-weight: 700;
   color: #34425d;
 }
+
 .form-row textarea {
   width: 100%;
-  min-height: 110px;
+  min-height: 190px;
   padding: 12px;
-  border: 1px solid #E5E5E5;
-  border-radius: 7px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
   font-family: inherit;
+  font-size: 14px;
+  line-height: 1.65;
   resize: vertical;
   box-sizing: border-box;
   outline: none;
+  background: #fff;
 }
+
 .form-row textarea:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(20, 184, 166,.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
 }
+
 .form-actions {
   margin-top: 20px;
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
+
 .subtle {
   color: #758198;
   font-size: 13px;
 }
+
 .success {
   background: #ecfdf3;
   color: #067647;
   border-color: #abefc6;
 }
-@media (max-width:1200px) {
-  .statement-layout {
+
+@media (max-width: 1200px) {
+  .statement-workspace {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .statement-layout > * {
-    min-width: 0;
   }
 }
 
-/* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
-  .statement-v4 {
+  .statement-console-page {
     gap: 12px;
   }
 
-  .statement-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .statement-command-center,
+  .statement-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .statement-command-center,
+  .statement-panel {
     padding: 14px;
   }
 
-  .statement-v4-card :deep(.n-card__content) {
-    padding: 12px;
-  }
-
-  /* 页头：大字体收窄、高度自适应 */
-  .page-head {
-    height: auto;
-    min-height: 48px;
-    margin-bottom: 8px;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .page-head h1 {
+  .statement-command-main h2 {
     font-size: 22px;
-    line-height: 1.2;
-  }
-  .page-head p {
-    margin: 6px 0 0;
-    font-size: 13px;
   }
 
-  /* 主布局已在 1200px 变单列，这里收窄间距 */
-  .statement-layout {
+  .statement-command-buttons {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .statement-panel-head {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .statement-side {
     gap: 12px;
   }
 
-  /* 预览框内边距收窄 */
   .preview-box {
     padding: 10px;
-    min-height: 64px;
+    min-height: 96px;
   }
+
   .preview-content {
     font-size: 13px;
     line-height: 1.5;
   }
 
-  /* 变量插入按钮：换行展示、点击区增大 */
   .var-buttons {
     gap: 6px;
     margin-top: 10px;
@@ -543,12 +730,11 @@ onBeforeUnmount(() => {
     font-size: 13px;
   }
   .var-chip {
-    height: 34px;
+    min-height: 34px;
     padding: 0 12px;
     font-size: 12px;
   }
 
-  /* 变量说明列表：允许换行，避免横向溢出 */
   .var-desc-list {
     gap: 8px;
   }
@@ -570,7 +756,6 @@ onBeforeUnmount(() => {
     line-height: 1.5;
   }
 
-  /* 表单行与文本域内边距收窄 */
   .form-row {
     gap: 6px;
   }
@@ -582,7 +767,6 @@ onBeforeUnmount(() => {
     padding: 10px;
   }
 
-  /* 表单操作按钮间距收窄 */
   .form-actions {
     margin-top: 14px;
     gap: 8px;
