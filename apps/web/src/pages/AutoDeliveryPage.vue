@@ -1,39 +1,55 @@
 <template>
-  <div class="auto-delivery-v4">
+  <div class="auto-delivery-page">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <n-card class="auto-delivery-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">自动发货</n-tag>
-        <h2>自动发货工作台</h2>
+    <section class="delivery-command-center">
+      <div class="delivery-command-main">
+        <div class="delivery-command-kicker">
+          <span>自动发货</span>
+          <b>{{ activeAccountLabel }}</b>
+        </div>
+        <h2>发货运营控制台</h2>
         <p>按商品配置付款后、确认收货后和好评后的发货策略，支持文本、卡密和货源库引用。</p>
+        <div class="delivery-command-meta">
+          <span>{{ goodsAvailable ? `当前 ${filteredGoods.length} 个商品` : '商品配置读取中' }}</span>
+          <span>启用 {{ statsMetric(stats.enabledGoods) }}</span>
+          <span>待处理 {{ statsMetric(stats.pendingOrders) }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <n-button size="small" @click="goSourceLibrary">管理货源库</n-button>
-        <n-button size="small" type="primary" @click="showBatchDialog = true">批量配置</n-button>
-        <n-button size="small" :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
-      </n-space>
-    </n-card>
+      <div class="delivery-command-panel">
+        <div class="delivery-command-panel-head">
+          <span>发货动作</span>
+          <strong>{{ filteredConfigUnknownCount > 0 ? '存在未知配置' : '可操作' }}</strong>
+        </div>
+        <div class="delivery-command-buttons">
+          <n-button @click="goSourceLibrary">管理货源库</n-button>
+          <n-button type="primary" @click="showBatchDialog = true">批量配置</n-button>
+          <n-button :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
+        </div>
+      </div>
+    </section>
 
-    <section class="auto-delivery-v4-stats">
-      <n-card
+    <section class="delivery-metric-rail">
+      <article
         v-for="item in deliveryStatCards"
         :key="item.key"
-        class="auto-delivery-v4-stat"
+        class="delivery-metric-card"
         :class="item.tone"
-        :bordered="false"
       >
-        <span class="auto-delivery-v4-stat-icon">{{ item.symbol }}</span>
+        <span class="delivery-metric-icon">{{ item.symbol }}</span>
         <n-statistic :label="item.title" :value="item.value" />
         <small>{{ item.change }}</small>
-      </n-card>
+      </article>
     </section>
 
     <div class="delivery-body">
-      <div class="filter-panel">
-        <n-card class="auto-delivery-v4-filter-card" :bordered="false">
-          <template #header>筛选条件</template>
+      <aside class="delivery-filter-panel">
+        <section class="delivery-filter-card">
+          <header class="delivery-filter-head">
+            <span>筛选条件</span>
+            <strong>{{ goodsAvailable ? filteredGoods.length : '—' }}</strong>
+          </header>
           <div class="filter-section">
             <label class="filter-label">闲鱼账号</label>
             <n-select v-model:value="query.accountId" :options="accountFilterOptions" @update:value="loadGoods" />
@@ -54,12 +70,12 @@
             <label class="filter-label">商品状态</label>
             <n-select v-model:value="query.goodsStatus" :options="goodsStatusOptions" />
           </div>
-          <n-space vertical :size="8" style="margin-top:8px">
+          <div class="delivery-filter-actions">
             <n-button type="primary" block @click="applyFilter">应用筛选</n-button>
             <n-button block @click="resetFilter">重置筛选</n-button>
-          </n-space>
-        </n-card>
-      </div>
+          </div>
+        </section>
+      </aside>
 
       <div class="main-content">
         <div class="timing-notice">
@@ -67,14 +83,17 @@
           <span><b>付款后发货</b>会由系统定时扫描自动执行；<b>确认收货后赠送</b>和<b>好评后赠送</b>可在发货记录页手动触发，也可接入后续事件自动化。</span>
         </div>
 
-        <n-card class="auto-delivery-v4-table-card" :bordered="false">
-          <template #header>商品发货配置</template>
-          <template #header-extra>
-            <n-tag size="small" :bordered="false">共 {{ goodsAvailable ? filteredGoods.length : '—' }} 个商品</n-tag>
-          </template>
-          <div class="toolbar" style="margin-bottom:12px">
+        <section class="delivery-table-panel">
+          <header class="delivery-table-head">
+            <div>
+              <span>商品配置</span>
+              <h3>商品发货配置</h3>
+            </div>
+            <b>共 {{ goodsAvailable ? filteredGoods.length : '—' }} 个商品</b>
+          </header>
+          <div class="delivery-table-toolbar">
             <span class="table-info">共 <b>{{ goodsAvailable ? filteredGoods.length : '—' }}</b> 个商品</span>
-            <span style="margin-left:12px" class="subtle">点击状态列可快速进入对应时机配置。</span>
+            <span class="subtle">点击状态列可快速进入对应时机配置。</span>
           </div>
           <div v-if="filteredConfigUnknownCount > 0" class="global-notice error">
             {{ filteredConfigUnknownCount }} 个商品的发货配置暂不可用；为避免覆盖未知配置，批量操作已禁用。
@@ -133,7 +152,7 @@
             </template>
           </BaseTable>
           <Pagination :total="filteredGoods.length" :current="current" :page-size="pageSize" @page-change="goPage" />
-        </n-card>
+        </section>
 
         <div v-if="configTarget" class="modal-overlay" @click.self="closeConfig">
           <div class="modal-content config-modal">
@@ -323,7 +342,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NStatistic } from 'naive-ui'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
 import BaseTable from '../components/BaseTable.vue'
@@ -427,6 +446,11 @@ const accountFilterOptions = computed(() => [
   { label: '全部账号', value: '' },
   ...accounts.value.map(account => ({ label: accountName(account), value: String(account.id) }))
 ])
+const activeAccountLabel = computed(() => {
+  if (!query.accountId) return '全部账号'
+  const match = accounts.value.find(account => String(account.id) === String(query.accountId))
+  return match ? accountName(match) : '当前账号'
+})
 const deliveryTypeOptions = [
   { label: '全部', value: '' },
   { label: '文本发货', value: 'text' },
@@ -909,99 +933,183 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.auto-delivery-v4 {
+.auto-delivery-page {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
-.auto-delivery-v4-hero,
-.auto-delivery-v4-filter-card,
-.auto-delivery-v4-table-card,
-.auto-delivery-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.auto-delivery-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.delivery-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfe8e4;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(255, 250, 245, .94) 48%, rgba(246, 248, 252, .98)),
+    #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
 }
 
-.auto-delivery-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
+.delivery-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.delivery-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.delivery-command-kicker span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, .1);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.delivery-command-kicker b {
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delivery-command-main h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.25;
 }
 
-.auto-delivery-v4-hero p {
+.delivery-command-main p {
   margin: 0;
-  color: #64748b;
+  max-width: 720px;
+  color: #526079;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.auto-delivery-v4-stats {
+.delivery-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.delivery-command-meta span {
+  padding: 6px 10px;
+  border: 1px solid rgba(15, 118, 110, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.delivery-command-panel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.delivery-command-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.delivery-command-panel-head strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.delivery-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.delivery-command-buttons :deep(.n-button) {
+  min-width: 0;
+}
+
+.delivery-metric-rail {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
-.auto-delivery-v4-stat :deep(.n-card__content) {
+.delivery-metric-card {
+  position: relative;
+  min-width: 0;
   padding: 16px;
   display: grid;
   gap: 8px;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+  overflow: hidden;
 }
 
-.auto-delivery-v4-stat-icon {
+.delivery-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 0 14px;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #dbeafe;
+}
+
+.delivery-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.auto-delivery-v4-stat.tone-green .auto-delivery-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.auto-delivery-v4-stat.tone-orange .auto-delivery-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-.auto-delivery-v4-stat.tone-blue .auto-delivery-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.auto-delivery-v4-stat.tone-red .auto-delivery-v4-stat-icon { background: #fef2f2; color: #dc2626; }
-.auto-delivery-v4-stat.tone-cyan .auto-delivery-v4-stat-icon { background: #ecfeff; color: #0891b2; }
+.delivery-metric-card.tone-green .delivery-metric-icon { background: #ecfdf5; color: #059669; }
+.delivery-metric-card.tone-orange .delivery-metric-icon { background: #fff7ed; color: #ea580c; }
+.delivery-metric-card.tone-blue .delivery-metric-icon { background: #eff6ff; color: #2563eb; }
+.delivery-metric-card.tone-red .delivery-metric-icon { background: #fef2f2; color: #dc2626; }
+.delivery-metric-card.tone-cyan .delivery-metric-icon { background: #ecfeff; color: #0891b2; }
 
-.auto-delivery-v4-stat :deep(.n-statistic .n-statistic-label) {
+.delivery-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.auto-delivery-v4-stat :deep(.n-statistic .n-statistic-value) {
+.delivery-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
   font-weight: 700;
 }
 
-.auto-delivery-v4-stat small {
+.delivery-metric-card small {
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
-}
-
-.auto-delivery-v4-filter-card :deep(.n-card__content),
-.auto-delivery-v4-table-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.auto-delivery-v4-filter-card :deep(.n-card-header),
-.auto-delivery-v4-table-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
 }
 
 .page-head {
@@ -1032,14 +1140,74 @@ onBeforeUnmount(() => {
   align-items: start;
 }
 
-.filter-panel,
+.delivery-filter-panel,
 .main-content {
   min-width: 0;
 }
 
-.filter-panel {
+.delivery-filter-panel {
   position: sticky;
   top: 118px;
+}
+
+.delivery-filter-card,
+.delivery-table-panel {
+  min-width: 0;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
+}
+
+.delivery-filter-card {
+  padding: 16px;
+}
+
+.delivery-filter-head,
+.delivery-table-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.delivery-filter-head span,
+.delivery-table-head span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.delivery-filter-head strong,
+.delivery-table-head b {
+  color: #101828;
+  font-size: 13px;
+}
+
+.delivery-table-head h3 {
+  margin: 4px 0 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.delivery-filter-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.delivery-table-panel {
+  padding: 16px;
+}
+
+.delivery-table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .filter-section {
@@ -1256,37 +1424,43 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .auto-delivery-v4-stats {
+  .delivery-metric-rail {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .delivery-command-center {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .delivery-body {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .filter-panel {
+  .delivery-filter-panel {
     position: static;
   }
 }
 
 /* ===== 移动端响应式 (max-width: 900px) ===== */
 @media (max-width: 900px) {
-  .auto-delivery-v4 {
+  .auto-delivery-page {
     gap: 12px;
   }
 
-  .auto-delivery-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .delivery-command-center,
+  .delivery-filter-card,
+  .delivery-table-panel {
     padding: 14px;
+    border-radius: 12px;
   }
 
-  .auto-delivery-v4-stats {
+  .delivery-command-main h2 {
+    font-size: 24px;
+  }
+
+  .delivery-command-buttons,
+  .delivery-metric-rail {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .auto-delivery-v4-filter-card :deep(.n-card__content),
-  .auto-delivery-v4-table-card :deep(.n-card__content) {
-    padding: 12px;
   }
 
   /* 页头大字号收敛 */
@@ -1318,7 +1492,7 @@ onBeforeUnmount(() => {
   .delivery-body > * {
     min-width: 0;
   }
-  .filter-panel,
+  .delivery-filter-panel,
   .main-content {
     min-width: 0;
   }
