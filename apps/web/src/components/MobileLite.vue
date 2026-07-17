@@ -3,12 +3,11 @@
     <header v-if="!subPage" class="m-topbar">
       <button type="button" class="m-brand" aria-label="返回移动端首页" @click="activeTab = 'home'">
         <div class="m-brand-mark">
-          <span></span>
-          <span></span>
+          <img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-mobile" alt="" />
         </div>
         <div class="m-brand-text">
           <div class="m-brand-name">智鱼云</div>
-          <div class="m-brand-sub">智鱼云</div>
+          <div class="m-brand-sub">运营工作台</div>
         </div>
       </button>
       <button type="button" class="m-user" aria-label="打开个人中心" @click="activeTab = 'profile'">
@@ -297,23 +296,13 @@ onMounted(() => {
 .m-brand-mark {
   width: 40px;
   height: 40px;
-  position: relative;
   flex-shrink: 0;
 }
-.m-brand-mark span {
-  position: absolute;
-  left: 16px;
-  top: 0;
-  width: 12px;
-  height: 43px;
-  border-radius: 3px;
-  background: #2563eb;
-  transform: rotate(42deg);
-  box-shadow: none;
-}
-.m-brand-mark span + span {
-  transform: rotate(-42deg);
-  background: #0f172a;
+.m-brand-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 .m-brand-name {
   font-size: 17px;

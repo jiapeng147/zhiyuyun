@@ -20,7 +20,9 @@
 
         <div class="auth-dashboard-preview" aria-hidden="true">
           <div class="auth-preview-sidebar">
-            <div class="auth-preview-mark">ZY</div>
+            <div class="auth-preview-mark">
+              <img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-auth" alt="" />
+            </div>
             <span class="active"></span>
             <span></span>
             <span></span>
@@ -88,7 +90,9 @@
 
       <section class="auth-v3-panel">
         <div class="auth-v3-panel-head">
-          <span class="auth-v3-brand-dot">ZY</span>
+          <span class="auth-v3-brand-dot">
+            <img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-auth" alt="" />
+          </span>
           <div>
             <span class="auth-panel-kicker">{{ pageKey === 'register' ? '创建商业账户' : '安全登录' }}</span>
             <h2>{{ pageKey === 'register' ? '创建账号' : '登录后台' }}</h2>
@@ -331,9 +335,14 @@ function openDoc(title) {
   place-items: center;
   border-radius: 10px;
   background: #fff;
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 800;
+  overflow: hidden;
+}
+
+.auth-v8-shell .auth-preview-mark img {
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
 }
 
 .auth-v8-shell .auth-preview-sidebar span {
@@ -578,12 +587,17 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-brand-dot {
-  background: #2563eb !important;
-  color: #fff !important;
-  border-color: #2563eb !important;
-  font-weight: 800;
-  font-size: 12px;
+  background: #fff !important;
+  color: #2563eb !important;
+  border-color: #d8e2f1 !important;
   margin-top: 2px;
+}
+
+.auth-v8-shell .auth-v3-brand-dot img {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
 }
 
 .auth-v8-shell .auth-panel-kicker {

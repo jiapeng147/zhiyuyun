@@ -5,7 +5,9 @@
     </button>
 
     <button class="zy-shell-logo" type="button" @click="$emit('navigate', 'data')">
-      <span class="zy-shell-logo-mark">ZY</span>
+      <span class="zy-shell-logo-mark">
+        <img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-shell" alt="" />
+      </span>
       <span v-if="!collapsed" class="zy-shell-logo-text">
         <strong>智鱼云</strong>
         <small>运营工作台</small>
@@ -107,7 +109,7 @@ const iconMap = {
 
 const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '运营成员')
 const roleLabel = computed(() => props.user?.role === 'superadmin' ? '平台负责人' : '运营成员')
-const initials = computed(() => (displayName.value || 'ZY').slice(0, 2).toUpperCase())
+const initials = computed(() => (displayName.value || '智鱼').slice(0, 2).toUpperCase())
 
 const activeMenuKey = computed(() => {
   if (props.active.startsWith('settings-') && props.active !== 'settings-notify') return 'settings-system'

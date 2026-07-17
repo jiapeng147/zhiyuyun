@@ -1,6 +1,6 @@
 /* ===================================================================
-   Naive Admin template layer
-   Loaded last to reshape legacy page CSS without changing business logic.
+   Zhiyuyun platform shell layer
+   Loaded last to normalize application page CSS without changing business logic.
    =================================================================== */
 
 :root {
@@ -29,10 +29,10 @@
   --purple-soft: #f3f0ff !important;
   --cyan: #2080f0 !important;
   --cyan-soft: #e8f2ff !important;
-  --admin-sider: #001529 !important;
-  --admin-sider-soft: #0b2545 !important;
-  --admin-header: #ffffff !important;
-  --admin-bg: #f5f7fa !important;
+  --platform-sider: #001529 !important;
+  --platform-sider-soft: #0b2545 !important;
+  --platform-header: #ffffff !important;
+  --platform-bg: #f5f7fa !important;
   --radius-sm: 4px !important;
   --radius: 4px !important;
   --radius-md: 6px !important;
@@ -57,7 +57,7 @@ html,
 body,
 #app {
   min-height: 100% !important;
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
   color: var(--text) !important;
 }
 
@@ -79,14 +79,14 @@ textarea {
 .app-shell {
   min-height: 100vh !important;
   display: flex !important;
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
 }
 
 .app-shell.zy-layout-root {
   display: flex !important;
   width: 100% !important;
   min-height: 100vh !important;
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
 }
 
 .zy-layout-body {
@@ -94,7 +94,7 @@ textarea {
   min-height: 100vh !important;
   width: calc(100% - var(--sidebar)) !important;
   margin-left: var(--sidebar) !important;
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
 }
 
 .zy-layout-sider {
@@ -106,7 +106,7 @@ textarea {
   position: fixed !important;
   inset: 0 auto 0 0 !important;
   z-index: 50 !important;
-  background: var(--admin-sider) !important;
+  background: var(--platform-sider) !important;
   box-shadow: 2px 0 8px rgba(29, 35, 41, .05) !important;
   overflow: hidden !important;
 }
@@ -114,7 +114,7 @@ textarea {
 .zy-layout-sider .n-layout-sider-scroll-container {
   height: 100dvh !important;
   min-height: 100dvh !important;
-  background: var(--admin-sider) !important;
+  background: var(--platform-sider) !important;
 }
 
 .zy-layout-header {
@@ -122,7 +122,7 @@ textarea {
   position: sticky !important;
   top: 0 !important;
   z-index: 45 !important;
-  background: var(--admin-header) !important;
+  background: var(--platform-header) !important;
   box-shadow: 0 1px 4px rgba(15, 23, 42, .04) !important;
 }
 
@@ -131,7 +131,7 @@ textarea {
   min-height: 100vh !important;
   margin-left: var(--sidebar) !important;
   padding: 0 24px 32px !important;
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
 }
 
 .app-shell.zy-layout-root .main.zy-layout-content {
@@ -140,7 +140,7 @@ textarea {
   min-height: calc(100vh - var(--topbar)) !important;
   margin-left: 0 !important;
   padding: 16px 24px 32px !important;
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
 }
 
 .main > :not(.topbar):not(.page-head) {
@@ -155,7 +155,7 @@ textarea {
   width: var(--sidebar) !important;
   padding: 0 !important;
   border: 0 !important;
-  background: var(--admin-sider) !important;
+  background: var(--platform-sider) !important;
   color: rgba(255, 255, 255, .82) !important;
   box-shadow: 2px 0 8px rgba(29, 35, 41, .05) !important;
   z-index: 50 !important;
@@ -200,11 +200,16 @@ textarea {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: var(--primary) !important;
-  color: #fff !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
+  background: transparent !important;
   box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.zy-shell-logo-mark img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
 }
 
 .zy-shell-logo-text {
@@ -361,7 +366,7 @@ textarea {
   margin: 0 -24px 16px !important;
   padding: 0 24px !important;
   border-bottom: 1px solid var(--line) !important;
-  background: var(--admin-header) !important;
+  background: var(--platform-header) !important;
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
@@ -1788,7 +1793,7 @@ table tbody tr:last-child td {
 .mobile-lite,
 .m-page,
 .m-topbar {
-  background: var(--admin-bg) !important;
+  background: var(--platform-bg) !important;
   color: var(--text) !important;
 }
 
