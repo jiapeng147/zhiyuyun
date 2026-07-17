@@ -1,27 +1,40 @@
 <template>
-  <div class="accounts-page-v4" v-bind="$attrs">
-    <main class="accounts-v4-main">
-      <n-card class="accounts-v4-hero" :bordered="false">
-        <div class="accounts-v4-hero-copy">
-          <n-tag size="small" type="success" :bordered="false">账号运营</n-tag>
-          <h2>闲鱼账号工作台</h2>
-          <p>
-            统一处理账号列表、扫码登录、登录凭证维护、资料刷新、实时连接状态与账号级策略。
-          </p>
+  <div class="accounts-page" v-bind="$attrs">
+    <main class="accounts-main">
+      <section class="accounts-command-center">
+        <div class="accounts-command-main">
+          <div class="accounts-command-kicker">
+            <span>账号资产</span>
+            <b>{{ selected ? accountTitle(selected) : '未选择账号' }}</b>
+          </div>
+          <h2>账号资产控制台</h2>
+          <p>统一管理闲鱼账号、登录凭证、资料刷新、实时连接、账号策略与商品擦亮任务。</p>
+          <div class="accounts-command-meta">
+            <span>{{ loading ? '账号刷新中' : `当前 ${accountMetric(stats.total)} 个账号` }}</span>
+            <span>正常 {{ accountMetric(stats.normal) }}</span>
+            <span>在线 {{ accountMetric(stats.wsOnline) }}</span>
+          </div>
         </div>
-        <n-space class="accounts-v4-actions" :size="8" align="center">
-          <n-button type="primary" size="small" @click="openModal('scan')">扫码加账号</n-button>
-          <n-button size="small" @click="openModal('manual')">手动添加</n-button>
-          <n-button size="small" tertiary :loading="loading" @click="loadAccounts">刷新账号</n-button>
-        </n-space>
-      </n-card>
+        <div class="accounts-command-panel">
+          <div class="accounts-command-panel-head">
+            <span>账号动作</span>
+            <strong>{{ selected ? '已选账号' : '全局操作' }}</strong>
+          </div>
+          <div class="accounts-command-buttons">
+            <n-button type="primary" @click="openModal('scan')">扫码加账号</n-button>
+            <n-button @click="openModal('manual')">手动添加</n-button>
+            <n-button tertiary :loading="loading" @click="loadAccounts">刷新账号</n-button>
+          </div>
+          <p>扫码登录、手动添加、删除、资料刷新与实时连接均由平台服务统一处理。</p>
+        </div>
+      </section>
 
-      <n-alert class="accounts-v4-alert" type="info" :bordered="false">
-        账号列表、手动添加、删除、资料刷新、实时连接状态与扫码登录均由平台服务统一处理。
-        扫码前请确认这是你信任的平台服务；若服务不可用，页面会显示明确的不可用状态与重试入口。
-      </n-alert>
+      <div class="accounts-intel-banner">
+        <Icon name="shield" />
+        <span>扫码前请确认这是你信任的平台服务；若服务不可用，页面会显示明确的不可用状态与重试入口。</span>
+      </div>
 
-      <div class="accounts-v4-notices">
+      <div class="accounts-notices">
         <div v-if="error" class="global-notice error">{{ error }}</div>
         <div v-if="accountListWarning" class="global-notice warning" role="status">{{ accountListWarning }}</div>
         <div v-if="qrSuccessMsg" class="global-notice success">{{ qrSuccessMsg }}</div>
@@ -35,39 +48,45 @@
         @refresh="refreshActivePolishConflict"
       />
 
-      <section class="accounts-v4-stats">
-        <n-card
+      <section class="accounts-metric-rail">
+        <article
           v-for="item in accountStatCards"
           :key="item.key"
-          class="accounts-v4-stat"
+          class="accounts-metric-card"
           :class="item.tone"
-          :bordered="false"
         >
-          <span class="accounts-v4-stat-icon"><Icon :name="item.icon" /></span>
+          <span class="accounts-metric-icon"><Icon :name="item.icon" /></span>
           <n-statistic :label="item.title" :value="item.value" />
           <small>{{ item.change }}</small>
-        </n-card>
+        </article>
       </section>
 
-      <n-card class="accounts-v4-toolbar" :bordered="false">
-        <n-space :size="10" align="center" wrap>
+      <section class="accounts-workspace">
+        <header class="accounts-workspace-head">
+          <div>
+            <span class="accounts-workspace-eyebrow">账号列表</span>
+            <h3>账号数据与连接状态</h3>
+          </div>
+          <div class="accounts-workspace-tags">
+            <n-tag size="small" :bordered="false">{{ dataAvailable === true ? `共 ${total} 条` : '等待加载' }}</n-tag>
+            <n-tag size="small" type="info" :bordered="false">第 {{ current }} 页</n-tag>
+          </div>
+        </header>
+        <div class="accounts-control-board">
           <n-input
             v-model:value="keyword"
             clearable
-            class="accounts-v4-search"
+            class="accounts-search"
             placeholder="搜索昵称 / UID / 备注"
             @keyup.enter="loadAccounts"
           />
           <n-select
             v-model:value="statusFilter"
-            class="accounts-v4-filter"
+            class="accounts-filter"
             :options="statusOptions"
           />
           <n-button :loading="loading" @click="loadAccounts">刷新</n-button>
-        </n-space>
-      </n-card>
-
-      <n-card class="accounts-v4-table-card" :bordered="false">
+        </div>
         <div v-if="accountsRefreshing" class="refresh-status" role="status" aria-live="polite">
           正在刷新账号列表，现有数据仍可查看。
         </div>
@@ -99,9 +118,9 @@
           </template>
         </BaseTable>
         <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
-      </n-card>
+      </section>
     </main>
-    <aside class="accounts-v4-side">
+    <aside class="accounts-side">
       <aside class="right-drawer account-detail-drawer">
   <div class="detail-title-row">
     <h3>账号详情</h3>
@@ -637,7 +656,7 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NAlert, NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'; import Badge from '../components/Badge.vue'; import AppButton from '../components/AppButton.vue'; import Icon from '../components/Icon.vue'; import Pagination from '../components/Pagination.vue'; import EmptyState from '../components/EmptyState.vue'
 import { checkAccountAuth, deleteAccount, getAccounts, createAccountByCookie, refreshAccountProfile, updateAccountCookie, getAccountAutoRateConfig, saveAccountAutoRateConfig, getAccountStrategyConfig, saveAccountStrategyConfig } from '../api/accounts.js'
 import { startWebSocket, stopWebSocket, websocketStatus } from '../api/websocket.js'
@@ -1762,198 +1781,373 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.accounts-page-v4 {
+.accounts-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
   align-items: start;
 }
 
-.accounts-v4-main,
-.accounts-v4-side {
+.accounts-main,
+.accounts-side {
   min-width: 0;
   display: grid;
   gap: 16px;
 }
 
-.accounts-v4-side {
+.accounts-side {
   position: sticky;
   top: 118px;
 }
 
-.accounts-v4-hero,
-.accounts-v4-toolbar,
-.accounts-v4-table-card,
-.accounts-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.accounts-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.accounts-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfe8e4;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(246, 248, 252, .98) 48%, rgba(255, 250, 245, .94)),
+    #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
 }
 
-.accounts-v4-hero-copy {
+.accounts-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.accounts-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 
-.accounts-v4-hero-copy h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
+.accounts-command-kicker span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, .1);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.accounts-command-kicker b {
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accounts-command-main h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.25;
 }
 
-.accounts-v4-hero-copy p {
+.accounts-command-main p {
   margin: 0;
-  color: #64748b;
+  max-width: 720px;
+  color: #526079;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.accounts-v4-actions {
+.accounts-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.accounts-command-meta span {
+  padding: 6px 10px;
+  border: 1px solid rgba(15, 118, 110, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.accounts-command-panel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.accounts-command-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.accounts-command-panel-head strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.accounts-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.accounts-command-buttons :deep(.n-button) {
+  min-width: 0;
+}
+
+.accounts-command-panel p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.accounts-intel-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.accounts-intel-banner :deep(.ui-icon) {
   flex: 0 0 auto;
-  justify-content: flex-end;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
 }
 
-.accounts-v4-alert {
-  border-radius: 6px;
-}
-
-.accounts-v4-notices {
+.accounts-notices {
   display: grid;
   gap: 8px;
 }
 
-.accounts-v4-stats {
+.accounts-metric-rail {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
-.accounts-v4-stat :deep(.n-card__content) {
+.accounts-metric-card {
+  position: relative;
+  min-width: 0;
   padding: 16px;
   display: grid;
   gap: 8px;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+  overflow: hidden;
 }
 
-.accounts-v4-stat-icon {
+.accounts-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 0 14px;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #dbeafe;
+}
+
+.accounts-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.accounts-v4-stat-icon :deep(.ui-icon) {
+.accounts-metric-icon :deep(.ui-icon) {
   width: 19px;
   height: 19px;
 }
 
-.accounts-v4-stat.tone-blue .accounts-v4-stat-icon {
+.accounts-metric-card.tone-blue .accounts-metric-icon {
   background: #eff6ff;
   color: #2563eb;
 }
 
-.accounts-v4-stat.tone-green .accounts-v4-stat-icon {
+.accounts-metric-card.tone-green .accounts-metric-icon {
   background: #ecfdf5;
   color: #059669;
 }
 
-.accounts-v4-stat.tone-orange .accounts-v4-stat-icon {
+.accounts-metric-card.tone-orange .accounts-metric-icon {
   background: #fff7ed;
   color: #ea580c;
 }
 
-.accounts-v4-stat.tone-purple .accounts-v4-stat-icon {
+.accounts-metric-card.tone-purple .accounts-metric-icon {
   background: #f5f3ff;
   color: #7c3aed;
 }
 
-.accounts-v4-stat :deep(.n-statistic .n-statistic-label) {
+.accounts-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.accounts-v4-stat :deep(.n-statistic .n-statistic-value) {
+.accounts-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
   font-weight: 700;
 }
 
-.accounts-v4-stat small {
+.accounts-metric-card small {
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.accounts-v4-toolbar :deep(.n-card__content),
-.accounts-v4-table-card :deep(.n-card__content) {
+.accounts-workspace {
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
 
-.accounts-v4-search {
+.accounts-workspace-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.accounts-workspace-eyebrow {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.accounts-workspace-head h3 {
+  margin: 4px 0 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.accounts-workspace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.accounts-control-board {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.accounts-search {
   width: min(360px, 42vw);
 }
 
-.accounts-v4-filter {
+.accounts-filter {
   width: 150px;
 }
 
-.accounts-v4-table-card {
-  overflow: hidden;
+.accounts-workspace > .empty-state,
+.accounts-workspace > .base-table-wrap,
+.accounts-workspace > .pagination {
+  margin-top: 12px;
 }
 
 @media (max-width: 1500px) {
-  .accounts-v4-stats {
+  .accounts-metric-rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .accounts-command-center {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-command-buttons {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1280px) {
-  .accounts-page-v4 {
+  .accounts-page {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .accounts-v4-side {
+  .accounts-side {
     position: static;
   }
 }
 
 @media (max-width: 900px) {
-  .accounts-page-v4,
-  .accounts-v4-main,
-  .accounts-v4-side {
+  .accounts-page,
+  .accounts-main,
+  .accounts-side {
     gap: 12px;
   }
 
-  .accounts-v4-hero :deep(.n-card__content) {
+  .accounts-command-center,
+  .accounts-workspace {
     padding: 14px;
-    flex-direction: column;
+    border-radius: 12px;
   }
 
-  .accounts-v4-hero-copy h2 {
-    font-size: 20px;
+  .accounts-command-main h2 {
+    font-size: 24px;
   }
 
-  .accounts-v4-actions {
-    justify-content: flex-start;
-  }
-
-  .accounts-v4-stats {
+  .accounts-command-buttons {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .accounts-v4-search,
-  .accounts-v4-filter {
+  .accounts-metric-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-workspace-head {
+    display: grid;
+  }
+
+  .accounts-workspace-tags {
+    justify-content: flex-start;
+  }
+
+  .accounts-control-board {
+    display: grid;
+  }
+
+  .accounts-search,
+  .accounts-filter {
     width: 100%;
   }
 }
