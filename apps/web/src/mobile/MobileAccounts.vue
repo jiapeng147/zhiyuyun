@@ -26,7 +26,7 @@
         </div>
         <div class="m-acc-stat-info">
           <div class="m-acc-stat-val">{{ summaryAvailable ? stats.online : '—' }}</div>
-          <div class="m-acc-stat-label">WS 在线</div>
+          <div class="m-acc-stat-label">实时在线</div>
         </div>
       </div>
       <div class="m-acc-stat-card">

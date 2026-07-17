@@ -26,7 +26,7 @@ export function normalizeScheduledTaskPayload(form) {
   const accountValue = String(form?.accountId ?? '').trim()
   const accountId = Number(accountValue)
   if (!Number.isSafeInteger(accountId) || accountId <= 0) {
-    throw new Error('账号 ID 必须是正整数')
+    throw new Error('账号编号必须是正整数')
   }
   const configValue = String(form?.configJson || '{}').trim() || '{}'
   const config = JSON.parse(configValue)

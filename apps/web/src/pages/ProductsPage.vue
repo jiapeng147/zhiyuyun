@@ -825,7 +825,7 @@ async function executePolishScope({ accountId, goodsIds = [], label = '在售商
     showNotice(
       authState === false ? 'error' : 'warn',
       authState === false
-        ? '账号登录状态不可用，请先到闲鱼账号页重新扫码或更新 Cookie。'
+        ? '账号登录状态不可用，请先到闲鱼账号页重新扫码或更新登录凭证。'
         : '账号登录状态尚未确认，请先到闲鱼账号页执行登录验证。',
     )
     return null
@@ -1480,7 +1480,7 @@ async function deleteProduct(row) {
       : '服务端会依次确认平台删除与本地软删除。若平台结果未知，记录会保留并要求先到闲鱼 App 核对；该操作不可逆！'
   const confirmOptions = isLocalDraft
     ? { title: '确认删除该商品？', description: confirmDesc }
-    : { title: '确认删除该商品？', description: confirmDesc, dangerous: true, confirmText: 'DELETE' }
+    : { title: '确认删除该商品？', description: confirmDesc, dangerous: true, confirmText: '删除' }
   if (!await confirmAction(confirmOptions)) return
 
   return withItemBusy(row, async () => {
@@ -1545,7 +1545,7 @@ async function batchDeleteProducts() {
     ? `选中 ${selectedRows.length} 件商品（已发布到闲鱼 ${publishedCount} 件，本地草稿 ${draftCount} 件）。已发布商品由服务端逐件确认平台删除与本地软删除；结果未知时不会自动重试。该操作不可逆！`
     : `选中 ${selectedRows.length} 件本地草稿商品，删除后将从本地数据库移除。`
   const confirmOptions = publishedCount > 0
-    ? { title: '确认批量删除选中商品？', description: desc, dangerous: true, confirmText: 'DELETE' }
+    ? { title: '确认批量删除选中商品？', description: desc, dangerous: true, confirmText: '删除' }
     : { title: '确认批量删除选中商品？', description: desc }
   if (!await confirmAction(confirmOptions)) return
 

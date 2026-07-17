@@ -125,7 +125,7 @@
 
             <div class="aics-row">
               <div class="aics-label-row">
-                <label>系统提示词（System Prompt）</label>
+                <label>系统提示词</label>
                 <button type="button" class="aics-restore-btn" @click="restoreDefault('systemPrompt')">恢复默认</button>
               </div>
               <textarea

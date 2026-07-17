@@ -43,7 +43,7 @@ export function buildPublishIntentSummary(payload, resolveAccountName = () => ''
   const intent = payload && typeof payload === 'object' ? payload : {}
   const accountId = intent.xianyuAccountId ?? intent.accountId ?? ''
   const resolvedAccount = resolveAccountName(accountId)
-  const account = resolvedAccount || (accountId ? `账号 ID ${accountId}` : '未选择')
+  const account = resolvedAccount || (accountId ? `账号编号 ${accountId}` : '未选择')
   const title = String(intent.title || '未填写')
   const category = String(intent.category || '未选择')
   const price = String(intent.price ?? '0.00')

@@ -6,7 +6,7 @@
           <n-tag size="small" type="success" :bordered="false">账号运营</n-tag>
           <h2>闲鱼账号工作台</h2>
           <p>
-            统一处理账号列表、扫码登录、Cookie 维护、资料刷新、WebSocket 状态与账号级策略。
+            统一处理账号列表、扫码登录、登录凭证维护、资料刷新、实时连接状态与账号级策略。
           </p>
         </div>
         <n-space class="accounts-v4-actions" :size="8" align="center">
@@ -17,7 +17,7 @@
       </n-card>
 
       <n-alert class="accounts-v4-alert" type="info" :bordered="false">
-        账号列表、手动添加、删除、资料刷新、WebSocket 状态与扫码登录均由当前部署的服务端处理。
+        账号列表、手动添加、删除、资料刷新、实时连接状态与扫码登录均由当前部署的服务端处理。
         扫码前请确认这是你信任的部署；若服务不可用，页面会显示明确的不可用状态与重试入口。
       </n-alert>
 
@@ -173,7 +173,7 @@
       </div>
       <div class="diagnosis-actions">
         <button type="button" class="link" @click="refreshProfile(selected.id)">刷新资料</button>
-        <button type="button" class="link" @click="openCookieEdit(selected)">更新 Cookie</button>
+        <button type="button" class="link" @click="openCookieEdit(selected)">更新登录凭证</button>
         <button type="button" class="link" @click="openRescanModal(selected)">重新扫码</button>
         <button type="button" class="link" :disabled="selectedWs.connected == null || selectedWsPending || isWsBusy(selected.id)" @click="toggleWs(selected)">{{ selectedWsPending ? '启动中' : (selectedWs.connected === true ? '断开连接' : (selectedWs.connected === false ? '启动连接' : '状态未知')) }}</button>
       </div>
@@ -291,7 +291,7 @@
         <div class="scan-steps">
           <div class="scan-step" :class="{ active: qrReady }"><b>1</b><span>{{ qrReady ? '二维码已生成' : '等待生成二维码' }}</span></div>
           <i></i><div class="scan-step" :class="{active: qr.status==='scanned'}"><b>2</b><span>扫码确认</span></div>
-          <i></i><div class="scan-step" :class="{active: qr.status==='confirmed'}"><b>3</b><span>{{ qr.mode === 'rescan' ? '更新账号 Cookie' : '自动添加账号' }}</span></div>
+          <i></i><div class="scan-step" :class="{active: qr.status==='confirmed'}"><b>3</b><span>{{ qr.mode === 'rescan' ? '更新账号凭证' : '自动添加账号' }}</span></div>
         </div>
         <div class="scan-main">
           <div>
@@ -309,7 +309,7 @@
             <h4>{{ qr.mode === 'rescan' ? '重新扫码流程' : '添加流程' }}</h4>
             <p>1. {{ qrReady ? '系统已生成真实二维码' : '点击生成并等待真实二维码返回' }}</p>
             <p>2. 使用闲鱼 App 扫码并确认登录</p>
-            <p>3. {{ qr.mode === 'rescan' ? '系统会把新的登录 Cookie 回写到当前账号并刷新状态' : '系统自动添加账号并刷新资料' }}</p>
+            <p>3. {{ qr.mode === 'rescan' ? '系统会把新的登录凭证回写到当前账号并刷新状态' : '系统自动添加账号并刷新资料' }}</p>
             <div class="session-box">
               <h4>会话信息</h4>
               <div v-if="qr.accountId"><span>目标账号：</span><b>{{ selected?.nickname || selected?.displayName || selected?.externalUid || qr.accountId }}</b></div>
@@ -321,7 +321,7 @@
         <div class="notice-box">
           <b><Icon name="help" /> 说明</b>
           <p>{{ qrReady ? '二维码已生成，可使用闲鱼 App 扫码登录。' : '当前没有可扫码二维码，请等待二维码生成成功后再扫码。' }}</p>
-          <p>{{ qr.mode === 'rescan' ? '登录成功后会更新当前账号 Cookie，并重新同步该账号状态。' : '登录成功后将自动添加账号并刷新资料。' }}</p>
+          <p>{{ qr.mode === 'rescan' ? '登录成功后会更新当前账号登录凭证，并重新同步该账号状态。' : '登录成功后将自动添加账号并刷新资料。' }}</p>
           <p>闲鱼 App 显示的登录地点由部署服务器的网络出口决定。若地点与预期不符，请取消扫码并联系当前部署的管理员核验服务器区域。</p>
         </div>
         <div class="modal-actions"><AppButton @click="closeModal">取消</AppButton><AppButton type="primary" :loading="qr.loading" :disabled="qr.loading" @click="startQrLogin">{{ qrReady ? '刷新二维码' : '生成二维码' }}</AppButton></div>
@@ -332,7 +332,7 @@
         <h2>手动添加账号</h2>
         <label class="field-label">账号备注 <span>可选</span></label>
         <div class="modal-input-wrap"><input v-model="manual.accountNote" placeholder="请输入备注名称（可选，不填写显示闲鱼昵称）"><em>{{ manual.accountNote.length }}/50</em></div>
-        <label class="field-label required">Cookie <span>必填</span></label>
+        <label class="field-label required">登录 Cookie <span>必填</span></label>
         <textarea v-model="manual.cookie" class="cookie-area" placeholder="请输入闲鱼账号 Cookie 字符串"></textarea>
 
         <!-- Cookie 解析预览 -->
@@ -351,11 +351,11 @@
                 <code>{{ manualCookieParsed.masked.unb }}</code>
               </div>
               <div class="cookie-field-item" :class="{ missing: !manualCookieParsed.keyFields.mH5Tk }">
-                <label>_m_h5_tk（签名Token）</label>
+                <label>_m_h5_tk（签名令牌）</label>
                 <code>{{ manualCookieParsed.masked.mH5Tk }}</code>
               </div>
               <div v-if="manualCookieParsed.keyFields.userId" class="cookie-field-item">
-                <label>user_id</label>
+                <label>用户 ID（user_id）</label>
                 <code>{{ manualCookieParsed.masked.userId }}</code>
               </div>
             </div>
@@ -366,24 +366,24 @@
         </div>
 
         <div v-if="manualError" class="input-error">{{ manualError }}</div>
-        <div class="modal-hint"><Icon name="help" /> 提交后调用 /api/xianyu/accounts/manual-cookie，后端会解析并保存账号信息</div>
+        <div class="modal-hint"><Icon name="help" /> 提交后由服务端解析并保存账号信息</div>
         <div class="usage-box">
           <h4><Icon name="map" /> 使用说明</h4>
-          <div><span><Icon name="shield" /></span>Cookie 为空时会进行前端校验</div>
+          <div><span><Icon name="shield" /></span>提交前会先校验登录 Cookie 格式</div>
           <div><span><Icon name="shield" /></span>添加成功后自动刷新账号列表</div>
-          <div><span><Icon name="shield" /></span>请勿把 Cookie 暴露给不可信页面或日志</div>
+          <div><span><Icon name="shield" /></span>请勿把登录凭证暴露给不可信页面或日志</div>
         </div>
         <div class="manual-actions"><AppButton @click="closeModal">取消</AppButton><AppButton type="primary" :disabled="manualCookieParsed && !manualCookieParsed.validation.valid" @click="submitManual">{{ submitting ? '添加中...' : '添加' }}</AppButton></div>
       </section>
 
       <section v-if="modal==='cookieEdit'" class="xy-modal manual-modal">
         <button class="modal-close" @click="closeModal"><Icon name="close" /></button>
-        <h2>编辑账号 Cookie</h2>
+        <h2>编辑账号登录凭证</h2>
         <div class="edit-account-info">
           <span>账号：</span><b>{{ selected?.nickname || selected?.displayName || selected?.externalUid || selected?.unb || selected?.id }}</b>
           <span v-if="selected?.unb" class="current-unb-tag">UNB: {{ maskValue(selected.unb) }}</span>
         </div>
-        <label class="field-label required">Cookie <span>必填</span></label>
+        <label class="field-label required">登录 Cookie <span>必填</span></label>
         <textarea v-model="cookieEdit.cookie" class="cookie-area" placeholder="请输入闲鱼账号 Cookie 字符串（从浏览器 F12 开发者工具中复制）"></textarea>
 
         <!-- Cookie 解析预览 -->
@@ -410,15 +410,15 @@
                 <code>{{ cookieEditParsed.masked.unb }}</code>
               </div>
               <div class="cookie-field-item" :class="{ missing: !cookieEditParsed.keyFields.mH5Tk }">
-                <label>_m_h5_tk（签名Token）</label>
+                <label>_m_h5_tk（签名令牌）</label>
                 <code>{{ cookieEditParsed.masked.mH5Tk }}</code>
               </div>
               <div v-if="cookieEditParsed.keyFields.userId" class="cookie-field-item">
-                <label>user_id</label>
+                <label>用户 ID（user_id）</label>
                 <code>{{ cookieEditParsed.masked.userId }}</code>
               </div>
               <div v-if="cookieEditParsed.keyFields.loginToken" class="cookie-field-item">
-                <label>_cookie_login_token_</label>
+                <label>登录令牌</label>
                 <code>{{ cookieEditParsed.masked.loginToken }}</code>
               </div>
             </div>
@@ -430,12 +430,12 @@
         </div>
 
         <div v-if="cookieEditError" class="input-error">{{ cookieEditError }}</div>
-        <div class="modal-hint"><Icon name="help" /> 提交后自动提取 unb、_m_h5_tk 等关键字段并重置 Cookie 状态为正常。保存后建议重新连接 WebSocket。</div>
+        <div class="modal-hint"><Icon name="help" /> 提交后自动提取 unb、_m_h5_tk 等关键字段并重置登录凭证状态。保存后建议重新启动实时连接。</div>
         <div class="usage-box">
           <h4><Icon name="map" /> 使用说明</h4>
-          <div><span><Icon name="shield" /></span>遇到"被挤爆"滑块验证时需要更换 Cookie</div>
-          <div><span><Icon name="shield" /></span>Cookie 从浏览器 F12 → Application → Cookies 中复制</div>
-          <div><span><Icon name="shield" /></span>请勿把 Cookie 暴露给不可信页面或日志</div>
+          <div><span><Icon name="shield" /></span>遇到"被挤爆"滑块验证时需要更换登录 Cookie</div>
+          <div><span><Icon name="shield" /></span>登录 Cookie 从浏览器 F12 → Application → Cookies 中复制</div>
+          <div><span><Icon name="shield" /></span>请勿把登录凭证暴露给不可信页面或日志</div>
         </div>
         <div class="manual-actions"><AppButton @click="closeModal">取消</AppButton><AppButton type="primary" :disabled="cookieEditSubmitting || (cookieEditParsed && !cookieEditParsed.validation.valid)" @click="submitCookieEdit">{{ cookieEditSubmitting ? '保存中...' : '保存' }}</AppButton></div>
       </section>
@@ -545,7 +545,7 @@
           </button>
           <button type="button" class="batch-auth-card" :disabled="unifiedConfigBusy" @click="runBatchAuthCheckForVisibleAccounts">
             <strong>统一登录校验</strong>
-            <span>批量检查当前列表账号的登录状态、Cookie 和会话有效性。</span>
+            <span>批量检查当前列表账号的登录状态、登录凭证和会话有效性。</span>
           </button>
         </div>
         <div v-if="unifiedConfigBusy" class="modal-hint" style="margin-top:14px"><Icon name="help" /> 正在执行：{{ unifiedConfigTaskText }}</div>
@@ -892,7 +892,7 @@ async function handleItemPolish(account) {
     setPolishNotice(
       authState === false ? 'error' : 'warn',
       authState === false
-        ? '账号登录状态不可用，请先重新扫码或更新 Cookie，再执行擦亮。'
+        ? '账号登录状态不可用，请先重新扫码或更新登录凭证，再执行擦亮。'
         : '账号登录状态尚未确认，请先点击“登录验证”。',
     )
     return
@@ -981,7 +981,7 @@ const accountDiagnostics = computed(() => {
   const accountStateKnown = a.status !== undefined && a.status !== null
   return [
     {
-      title: 'Cookie 状态',
+      title: '登录凭证状态',
       level: authState === true ? 'ok' : (authState === false ? 'danger' : 'warn'),
       text: accountCookieLabel(a),
       tip: authState === true ? '认证探测已确认可用。' : accountLoginHint(a)
@@ -995,7 +995,7 @@ const accountDiagnostics = computed(() => {
     {
       title: '消息连接',
       level: ws.connected === true ? 'ok' : 'warn',
-      text: ws.connected === true ? 'WebSocket 在线' : (ws.connected === false ? (isWsPending(a.id) ? '启动中' : '未连接') : '状态未知'),
+      text: ws.connected === true ? '实时连接在线' : (ws.connected === false ? (isWsPending(a.id) ? '启动中' : '未连接') : '状态未知'),
       tip: ws.connected === true ? '状态探测已确认连接在线。' : (ws.connected === false ? '自动回复前请启动并等待连接确认。' : '连接探测失败，当前不会按离线处理。')
     }
   ]
@@ -1255,7 +1255,7 @@ async function runBatchAuthCheckForVisibleAccounts() {
 
 function handleHeaderAction(e){ if(e.detail === 'open-scan-account') openModal('scan'); if(e.detail === 'open-manual-account') openModal('manual'); if(e.detail === 'refresh-accounts') loadAccounts() }
 
-const cols=[{key:'account',title:'账号信息'},{key:'uid',title:'UID'},{key:'area',title:'地区'},{key:'level',title:'等级'},{key:'status',title:'账号状态'},{key:'cookie',title:'Cookie状态'},{key:'ws',title:'WS状态'},{key:'sync',title:'资料同步'},{key:'op',title:'操作'}]
+const cols=[{key:'account',title:'账号信息'},{key:'uid',title:'UID'},{key:'area',title:'地区'},{key:'level',title:'等级'},{key:'status',title:'账号状态'},{key:'cookie',title:'登录凭证'},{key:'ws',title:'实时连接'},{key:'sync',title:'资料同步'},{key:'op',title:'操作'}]
 
 const rowClass = (row) => row.raw?.id === selectedId.value ? 'row-selected' : ''
 
@@ -1309,16 +1309,16 @@ const statusOptions = [
   { label: '全部状态', value: 'all' },
   { label: '正常', value: 'normal' },
   { label: '需验证', value: 'verify' },
-  { label: 'Cookie异常', value: 'cookieWarn' },
-  { label: 'WS在线', value: 'wsOnline' },
+  { label: '登录凭证异常', value: 'cookieWarn' },
+  { label: '实时在线', value: 'wsOnline' },
 ]
 
 const accountStatCards = computed(() => [
   { key: 'total', title: '账号总数', value: accountMetric(stats.value.total), change: '全部记录', icon: 'users', tone: 'tone-blue' },
   { key: 'normal', title: '正常账号', value: accountMetric(stats.value.normal), change: '当前页', icon: 'account', tone: 'tone-green' },
   { key: 'verify', title: '需验证', value: accountMetric(stats.value.verify), change: '当前页', icon: 'shield', tone: 'tone-orange' },
-  { key: 'wsOnline', title: 'WS 在线', value: accountMetric(stats.value.wsOnline), change: '当前页已探测', icon: 'link', tone: 'tone-purple' },
-  { key: 'cookieWarn', title: 'Cookie 异常', value: accountMetric(stats.value.cookieWarn), change: '当前页已确认', icon: 'opportunity', tone: 'tone-orange' },
+  { key: 'wsOnline', title: '实时在线', value: accountMetric(stats.value.wsOnline), change: '当前页已探测', icon: 'link', tone: 'tone-purple' },
+  { key: 'cookieWarn', title: '登录凭证异常', value: accountMetric(stats.value.cookieWarn), change: '当前页已确认', icon: 'opportunity', tone: 'tone-orange' },
 ])
 
 function accountMetric(value) {
@@ -1463,7 +1463,7 @@ async function toggleWs(account) {
       await new Promise(resolve => setTimeout(resolve, 800))
       const stoppedState = await loadWsStatus(account.id)
       if (stoppedState.connected === false) {
-        qrSuccessMsg.value = 'WebSocket 已确认断开'
+        qrSuccessMsg.value = '实时连接已确认断开'
       } else {
         error.value = '断开请求已提交，但连接仍显示在线，请稍后刷新核对。'
       }
@@ -1472,12 +1472,12 @@ async function toggleWs(account) {
       const data = res?.data || {}
       wsMap[account.id] = { ...initialState, ...data }
       if (typeof data.connected !== 'boolean') {
-        throw new Error('WebSocket 启动响应缺少连接状态')
+        throw new Error('实时连接启动响应缺少连接状态')
       }
       if (data.connected === true) {
         qrSuccessMsg.value = data.optimistic
-          ? 'WS 连接已提交，未检测到滑块/验证'
-          : 'WS 连接已就绪，正在接收消息'
+          ? '实时连接已提交，未检测到滑块/验证'
+          : '实时连接已就绪，正在接收消息'
       } else {
         qrSuccessMsg.value = data.message || '连接请求返回未连接状态，请刷新后确认'
       }
@@ -1494,7 +1494,7 @@ async function toggleWs(account) {
       loadAccounts()
     }
   } catch (e) {
-    error.value = e.message || 'WebSocket 操作失败'
+    error.value = e.message || '实时连接操作失败'
   } finally {
     wsBusyMap[account.id] = false
   }
@@ -1521,7 +1521,7 @@ async function executeDelete() {
 
 async function submitManual() {
   manualError.value = ''
-  if (!manual.cookie.trim()) return (manualError.value = '请输入 Cookie 字符串')
+  if (!manual.cookie.trim()) return (manualError.value = '请输入登录 Cookie 字符串')
   // 前端预校验
   const validation = validateCookie(manual.cookie)
   if (!validation.valid) {
@@ -1558,7 +1558,7 @@ function openCookieEdit(account) {
 async function submitCookieEdit() {
   cookieEditError.value = ''
   if (!cookieEdit.cookie.trim()) {
-    cookieEditError.value = '请输入 Cookie 字符串'
+    cookieEditError.value = '请输入登录 Cookie 字符串'
     return
   }
   // 前端预校验
@@ -1585,11 +1585,11 @@ async function submitCookieEdit() {
       mH5Tk: keyFields.mH5Tk,
     })
     closeModal()
-    qrSuccessMsg.value = 'Cookie 更新成功'
-    setTimeout(() => { if (qrSuccessMsg.value === 'Cookie 更新成功') qrSuccessMsg.value = '' }, 4000)
+    qrSuccessMsg.value = '登录凭证更新成功'
+    setTimeout(() => { if (qrSuccessMsg.value === '登录凭证更新成功') qrSuccessMsg.value = '' }, 4000)
     await loadAccounts()
   } catch (e) {
-    cookieEditError.value = e.message || '更新 Cookie 失败'
+    cookieEditError.value = e.message || '更新登录凭证失败'
   } finally {
     cookieEditSubmitting.value = false
   }
@@ -1651,7 +1651,7 @@ async function checkQrStatus() {
         if (isRescan) {
           qrSuccessMsg.value = data.message || (data.authUsable === false
             ? (data.loginStatusMessage || '重新扫码成功，但统一登录校验未通过')
-            : '账号 Cookie 已更新')
+            : '账号登录凭证已更新')
         }
         if (!isRescan) {
           current.value = 1
@@ -1728,18 +1728,18 @@ async function handleSseEvent(e) {
       account.cookieStatus = newStatus
       account.authUsable = Number(newStatus) === 1
       account.loginStatusCode = Number(newStatus) === 1 ? 'OK' : 'COOKIE_EXPIRED'
-      account.loginStatusMessage = Number(newStatus) === 1 ? '账号登录状态正常' : 'Cookie 已失效，请重新登录闲鱼账号'
+      account.loginStatusMessage = Number(newStatus) === 1 ? '账号登录状态正常' : '登录凭证已失效，请重新登录闲鱼账号'
       if (selected.value && selected.value.id === targetId) {
         selected.value.cookieStatus = newStatus
         selected.value.authUsable = Number(newStatus) === 1
         selected.value.loginStatusCode = Number(newStatus) === 1 ? 'OK' : 'COOKIE_EXPIRED'
-        selected.value.loginStatusMessage = Number(newStatus) === 1 ? '账号登录状态正常' : 'Cookie 已失效，请重新登录闲鱼账号'
+        selected.value.loginStatusMessage = Number(newStatus) === 1 ? '账号登录状态正常' : '登录凭证已失效，请重新登录闲鱼账号'
       }
     }
     // 显示提示信息
     if (newStatus === 0) {
-      qrSuccessMsg.value = `账号 ${targetId} Cookie 已失效（可能遇到滑块验证），请更换 Cookie 或重新扫码登录`
-      setTimeout(() => { if (qrSuccessMsg.value && qrSuccessMsg.value.includes('Cookie 已失效')) qrSuccessMsg.value = '' }, 8000)
+      qrSuccessMsg.value = `账号 ${targetId} 登录凭证已失效（可能遇到滑块验证），请更换登录 Cookie 或重新扫码登录`
+      setTimeout(() => { if (qrSuccessMsg.value && qrSuccessMsg.value.includes('登录凭证已失效')) qrSuccessMsg.value = '' }, 8000)
     }
     // 从服务端重新拉取，确保数据同步
     loadAccounts()

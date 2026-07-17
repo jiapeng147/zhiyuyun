@@ -98,7 +98,7 @@
           <n-input ref="taskNameInputRef" v-model:value="form.taskName" />
         </div>
         <div class="form-field">
-          <label>账号 ID</label>
+          <label>账号编号</label>
           <n-input v-model:value="form.accountId" inputmode="numeric" placeholder="必填，例如 8" />
           <span v-if="accountError" class="input-error">{{ accountError }}</span>
         </div>
@@ -184,7 +184,7 @@ const taskTypeOptions = normalizeScheduledTaskTypes(DEFAULT_SCHEDULED_TASK_TYPES
 
 const columns = [
   { key: 'taskName', title: '任务名称' },
-  { key: 'accountId', title: '账号 ID' },
+  { key: 'accountId', title: '账号编号' },
   { key: 'taskType', title: '任务类型' },
   { key: 'cronExpression', title: 'Cron' },
   { key: 'enabled', title: '启用状态' },
@@ -322,7 +322,7 @@ async function save() {
   cronError.value = validateCron(form.cronExpression)
   jsonError.value = validateJson(form.configJson)
   const accountId = Number(String(form.accountId || '').trim())
-  accountError.value = Number.isSafeInteger(accountId) && accountId > 0 ? '' : '账号 ID 必须是正整数'
+  accountError.value = Number.isSafeInteger(accountId) && accountId > 0 ? '' : '账号编号必须是正整数'
   if (cronError.value || jsonError.value || accountError.value) return
 
   saving.value = true

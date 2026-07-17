@@ -296,7 +296,7 @@ function formatEventText(evt) {
   const dir = String(evt.direction || '').toUpperCase()
   if (t === 'message' && dir !== 'OUT') return '收到新消息'
   if (t === 'message' && dir === 'OUT') return '消息已发送'
-  if (t.includes('cookie')) return 'Cookie 状态已更新'
+  if (t.includes('cookie')) return '登录凭证状态已更新'
   if (t.includes('account')) return '账号状态变更'
   if (t.includes('delivery')) return '自动发货通知'
   if (t.includes('workflow')) return '工作流执行通知'

@@ -4,7 +4,7 @@
       <div>
         <n-tag size="small" type="success" :bordered="false">连接中心</n-tag>
         <h2>连接管理工作台</h2>
-        <p>集中查看闲鱼账号 Cookie、WebSocket、心跳与启动状态，异常账号可直接进入详情处理。</p>
+        <p>集中查看闲鱼账号登录凭证、实时连接、心跳与启动状态，异常账号可直接进入详情处理。</p>
       </div>
       <n-space :size="8" align="center" wrap>
         <n-button size="small" :loading="loading" @click="load">刷新连接</n-button>
@@ -33,7 +33,7 @@
             <option value="online">仅在线</option>
             <option value="offline">仅离线</option>
             <option value="unknown">状态未知</option>
-            <option value="warning">Cookie/验证异常</option>
+            <option value="warning">登录/验证异常</option>
           </select>
           <input v-model="keyword" class="input large" placeholder="搜索 账号昵称/用户名">
           <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新' }}</AppButton>
@@ -55,19 +55,19 @@
       </n-card>
       <div class="grid two-col connections-v4-subgrid" style="margin-top:16px">
         <n-card class="connections-v4-card" title="实时连接日志" :bordered="false"><EmptyState v-if="logs.length===0" icon="📡" title="暂无本次页面操作日志" description="本页执行的连接、断开、重连操作会显示在这里。" /><div v-for="l in logs" :key="l.text+l.time" class="option-line"><span><i class="dot"></i>{{ l.text }}</span><span class="subtle">{{ l.time }}</span></div></n-card>
-        <n-card class="connections-v4-card" title="异常告警列表" :bordered="false"><EmptyState v-if="dataAvailable === false" icon="⚠️" title="告警状态不可用" description="账号列表加载失败，当前无法确认是否有连接或 Cookie 异常。" /><EmptyState v-else-if="alerts.length===0" icon="✅" title="暂无已确认异常" description="当前已加载且已探测的账号中没有发现连接或 Cookie 异常。" /><div v-for="e in alerts" :key="e.id" class="option-line"><span><i class="dot orange"></i>{{ e.text }}</span><AppButton @click="handleAlert(e)">查看</AppButton></div></n-card>
+        <n-card class="connections-v4-card" title="异常告警列表" :bordered="false"><EmptyState v-if="dataAvailable === false" icon="⚠️" title="告警状态不可用" description="账号列表加载失败，当前无法确认是否有连接或登录凭证异常。" /><EmptyState v-else-if="alerts.length===0" icon="✅" title="暂无已确认异常" description="当前已加载且已探测的账号中没有发现连接或登录凭证异常。" /><div v-for="e in alerts" :key="e.id" class="option-line"><span><i class="dot orange"></i>{{ e.text }}</span><AppButton @click="handleAlert(e)">查看</AppButton></div></n-card>
       </div>
     </div>
     <div class="right-drawer connections-v4-detail">
       <div style="display:flex;justify-content:space-between"><h3>连接详情</h3><button class="link" @click="selected = null">×</button></div>
       <template v-if="selected">
         <div class="product-cell"><img v-if="selected.avatar" :src="selected.avatar" class="avatar" alt=""><div v-else class="avatar"></div><div><strong>{{ selected.name }} <Badge type="blue">账号</Badge></strong><p class="subtle">{{ selected.user }}</p></div><b :style="{marginLeft:'auto',color:selected.connected === true ? 'var(--green)' : (selected.connected === false ? '#ef4444' : '#8c98ae')}">{{ selected.ws }}</b></div>
-        <div class="donut-row" style="margin:22px 0"><div class="health-summary-card"><div class="health-summary-title">实时状态</div><div class="health-summary-desc">{{ selectedStatusSummary }}</div></div><div class="donut-legend"><div><i :style="{ background: selected.connected === true ? '#16bf78' : (selected.connected === false ? '#ef4444' : '#98a2b3') }"></i><span>WebSocket</span><b>{{ selected.ws }}</b></div><div><i :style="{ background: selected.connected === true ? '#16bf78' : '#98a2b3' }"></i><span>心跳状态</span><b>{{ selected.heartbeat }}</b></div><div><i :style="{ background: selected.authState === true ? '#16bf78' : (selected.authState === false ? '#ef4444' : '#98a2b3') }"></i><span>Cookie</span><b>{{ selected.cookie }}</b></div><div><i :style="{ background: selected.lastError ? '#ef4444' : '#98a2b3' }"></i><span>状态</span><b>{{ selected.lastError || selected.status || selected.phase || '-' }}</b></div></div></div>
-        <n-card class="connections-v4-card" title="连接信息" :bordered="false"><div class="option-line"><span>账号 ID</span><b>{{ selected.id }}</b></div><div class="option-line"><span>Cookie 状态</span><b>{{ selected.cookie }}</b></div><div class="option-line"><span>连接阶段</span><b>{{ selected.phase || '-' }}</b></div><div class="option-line"><span>最近错误</span><b v-if="selected.refreshError" style="color:#ef4444">{{ selected.refreshError }}</b><b v-else>{{ selected.lastError || '-' }}</b></div><div class="option-line"><span>WS Token</span><b>{{ selected.wsTokenStatus || '-' }}</b></div><div class="option-line"><span>最近消息</span><b>{{ selected.last }}</b></div><div v-if="selected.refreshError" class="option-line"><span>操作</span><AppButton size="small" @click="refresh(selected)">重新刷新状态</AppButton></div></n-card>
+        <div class="donut-row" style="margin:22px 0"><div class="health-summary-card"><div class="health-summary-title">实时状态</div><div class="health-summary-desc">{{ selectedStatusSummary }}</div></div><div class="donut-legend"><div><i :style="{ background: selected.connected === true ? '#16bf78' : (selected.connected === false ? '#ef4444' : '#98a2b3') }"></i><span>实时连接</span><b>{{ selected.ws }}</b></div><div><i :style="{ background: selected.connected === true ? '#16bf78' : '#98a2b3' }"></i><span>心跳状态</span><b>{{ selected.heartbeat }}</b></div><div><i :style="{ background: selected.authState === true ? '#16bf78' : (selected.authState === false ? '#ef4444' : '#98a2b3') }"></i><span>登录凭证</span><b>{{ selected.cookie }}</b></div><div><i :style="{ background: selected.lastError ? '#ef4444' : '#98a2b3' }"></i><span>状态</span><b>{{ selected.lastError || selected.status || selected.phase || '-' }}</b></div></div></div>
+        <n-card class="connections-v4-card" title="连接信息" :bordered="false"><div class="option-line"><span>账号编号</span><b>{{ selected.id }}</b></div><div class="option-line"><span>登录凭证状态</span><b>{{ selected.cookie }}</b></div><div class="option-line"><span>连接阶段</span><b>{{ selected.phase || '-' }}</b></div><div class="option-line"><span>最近错误</span><b v-if="selected.refreshError" style="color:#ef4444">{{ selected.refreshError }}</b><b v-else>{{ selected.lastError || '-' }}</b></div><div class="option-line"><span>连接令牌</span><b>{{ selected.wsTokenStatus || '-' }}</b></div><div class="option-line"><span>最近消息</span><b>{{ selected.last }}</b></div><div v-if="selected.refreshError" class="option-line"><span>操作</span><AppButton size="small" @click="refresh(selected)">重新刷新状态</AppButton></div></n-card>
         <div class="grid" style="grid-template-columns:repeat(2,1fr);margin:16px 0">
           <AppButton type="primary" :disabled="isBusy(selected.id) || selected.connected == null || selected.operationPending" @click="toggle(selected)">{{ selected.operationPending ? '启动中' : '启动/断开' }}</AppButton>
           <AppButton type="danger" :disabled="isBusy(selected.id) || selected.connected !== true" @click="stop(selected)">断开连接</AppButton>
-          <AppButton :disabled="isBusy(selected.id)" @click="refreshCookieAction(selected)">刷新 Cookie</AppButton>
+          <AppButton :disabled="isBusy(selected.id)" @click="refreshCookieAction(selected)">刷新登录凭证</AppButton>
           <AppButton :disabled="isBusy(selected.id)" @click="checkLoginAction(selected)">检查登录</AppButton>
         </div>
         <n-card class="connections-v4-card" title="重连策略" :bordered="false"><div class="option-line"><span>前端策略</span><Badge>手动控制</Badge></div><div class="option-line"><span>验证码</span><b>{{ selected.captcha || '-' }}</b></div><div class="option-line"><span>接口状态</span><b>{{ selected.status || '-' }}</b></div></n-card>
@@ -88,7 +88,7 @@ import { useDebouncedRef } from '../composables/useDebouncedRef.js'
 import { checkLogin, refreshCookie, startWebSocket, stopWebSocket, websocketStatus } from '../api/websocket.js'
 import { accountAuthState, accountCookieLabel, accountWsConnected } from '../utils/accountAuth.js'
 import { accountName } from '../utils/format.js'
-const cols=[{key:'info',title:'账号信息'},{key:'cookie',title:'Cookie状态'},{key:'ws',title:'WS状态'},{key:'heartbeat',title:'心跳'},{key:'latency',title:'延迟'},{key:'last',title:'最近消息时间'},{key:'proxy',title:'代理'},{key:'op',title:'操作'}]
+const cols=[{key:'info',title:'账号信息'},{key:'cookie',title:'登录凭证'},{key:'ws',title:'实时连接'},{key:'heartbeat',title:'心跳'},{key:'latency',title:'延迟'},{key:'last',title:'最近消息时间'},{key:'proxy',title:'代理'},{key:'op',title:'操作'}]
 const accounts = ref([])
 const statusMap = ref({})
 const selected = ref(null)
@@ -148,13 +148,13 @@ const rows = computed(() => accounts.value.map(a => {
 }))
 const selectedStatusSummary = computed(() => {
   if (!selected.value) return '未选择账号'
-  if (selected.value.authState === false) return 'Cookie 不可用，请重新登录'
-  if (selected.value.authState == null) return 'Cookie 登录状态尚未验证'
+  if (selected.value.authState === false) return '登录凭证不可用，请重新登录'
+  if (selected.value.authState == null) return '登录状态尚未验证'
   if (selected.value.connected == null) return '连接状态探测失败，请先刷新状态'
   if (selected.value.operationPending) return '启动命令已提交，正在等待服务端确认连接'
   if (selected.value.lastError) return `连接异常：${selected.value.lastError}`
-  if (selected.value.connected) return 'WebSocket 与心跳均已连接'
-  return 'Cookie 可用，WebSocket 当前未连接'
+  if (selected.value.connected) return '实时连接与心跳均正常'
+  return '登录凭证可用，实时连接当前未启动'
 })
 const filteredRows = computed(() => rows.value.filter(r => {
   const kw = debouncedKeyword.value.trim().toLowerCase()
@@ -175,7 +175,7 @@ const connectionStatCards = computed(() => [
   { key: 'online', title: '在线连接数', value: connectionMetric(onlineCount.value), change: '当前页已探测', symbol: '连', tone: 'tone-green' },
   { key: 'offline', title: '离线连接数', value: connectionMetric(offlineCount.value), change: '当前页已探测', symbol: '断', tone: 'tone-orange' },
   { key: 'unknown', title: '状态未知', value: connectionMetric(unknownCount.value), change: '当前页需刷新', symbol: '未', tone: 'tone-purple' },
-  { key: 'cookie', title: 'Cookie正常', value: connectionMetric(cookieOkCount.value), change: '当前页实际状态', symbol: 'CK', tone: 'tone-cyan' },
+  { key: 'cookie', title: '凭证正常', value: connectionMetric(cookieOkCount.value), change: '当前页实际状态', symbol: '凭', tone: 'tone-cyan' },
   { key: 'error', title: '认证异常', value: connectionMetric(errorCount.value), change: '当前页实际状态', symbol: '异', tone: 'tone-red' }
 ])
 const alerts = computed(() => rows.value
@@ -183,7 +183,7 @@ const alerts = computed(() => rows.value
   .map(r => ({
     id: r.id,
     row: r,
-    text: `${r.name}：${r.authState === false ? '账号登录异常' : 'WebSocket 断开'}`
+    text: `${r.name}：${r.authState === false ? '账号登录异常' : '实时连接断开'}`
   }))
   .slice(0, 5))
 function connectionMetric(value) { return dataAvailable.value === true ? value : '—' }
@@ -282,12 +282,12 @@ async function toggle(row){
     const startRes = await startWebSocket(row.id)
     const startData = startRes?.data || {}
     statusMap.value = { ...statusMap.value, [row.id]: { ...(statusMap.value[row.id] || {}), ...startData } }
-    if (typeof startData.connected !== 'boolean') throw new Error('WebSocket 启动响应缺少连接状态')
+    if (typeof startData.connected !== 'boolean') throw new Error('实时连接启动响应缺少连接状态')
 
     if (startData.connected === true) {
       showNotice(startData.optimistic
-        ? `${row.name}：WS 连接已提交，未检测到滑块/验证`
-        : `${row.name}：WS 连接已确认就绪`)
+        ? `${row.name}：实时连接已提交，未检测到滑块/验证`
+        : `${row.name}：实时连接已确认就绪`)
       log(startData.optimistic
         ? `${row.name} 连接已提交（乐观确认），未检测到验证`
         : `${row.name} 连接成功（状态探测确认）`)
@@ -352,8 +352,8 @@ async function refreshCookieAction(row){
     await load()
     await refresh(row, { silent: true })
     syncSelected(row.id)
-    log(`${row.name} Cookie 刷新完成`)
-    showNotice('Cookie 刷新完成')
+    log(`${row.name} 登录凭证刷新完成`)
+    showNotice('登录凭证刷新完成')
   } catch(e){ error.value=e.message }
   finally { setBusy(row.id, false) }
 }
@@ -393,7 +393,7 @@ function handleAlert(alert){
   select(alert.row)
   showNotice(alert.row.authState === true
     ? '已打开连接详情，请核对状态后手动处理。'
-    : 'Cookie 或登录状态异常，请先到账号管理更新授权信息。')
+    : '登录凭证或登录状态异常，请先到账号管理更新授权信息。')
 }
 function onHeader(e){
   if(e.detail === 'connections-batch-start') batchStart()
@@ -410,7 +410,7 @@ function onSseEvent(e) {
     patchAccountAuth(accountId, {
       cookieStatus,
       authUsable: !invalid,
-      loginStatusMessage: event.reason || (invalid ? 'Cookie 已失效，请重新登录闲鱼账号' : '账号登录状态正常'),
+      loginStatusMessage: event.reason || (invalid ? '登录凭证已失效，请重新登录闲鱼账号' : '账号登录状态正常'),
       loginStatusCode: invalid ? 'COOKIE_EXPIRED' : 'OK',
     })
     if (invalid) {
@@ -419,14 +419,14 @@ function onSseEvent(e) {
         [accountId]: {
           ...(statusMap.value[accountId] || {}),
           connected: false,
-          lastError: event.reason || 'Cookie 已失效',
+          lastError: event.reason || '登录凭证已失效',
           phase: 'cookie_expired',
-          status: 'Cookie 失效',
+          status: '登录凭证失效',
         }
       }
-      log(`账号 ${accountId} Cookie 已失效，连接已断开`)
+      log(`账号 ${accountId} 登录凭证已失效，连接已断开`)
     } else {
-      log(`账号 ${accountId} Cookie 状态已恢复正常`)
+      log(`账号 ${accountId} 登录凭证状态已恢复正常`)
     }
   }
 }

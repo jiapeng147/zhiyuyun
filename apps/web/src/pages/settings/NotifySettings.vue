@@ -309,7 +309,7 @@
                   <li>权限管理勾选：发送消息、上传图片、读取用户信息</li>
                 </ol>
                 <p style="margin-top: 8px; color: #ff9800;">
-                  <strong>提示：</strong>账号 Session 过期时，系统会通过此渠道主动推送通知。飞书对话不提供二维码自动登录；请前往管理端的账号管理页，选择账号后使用“重新扫码”安全登录。
+                  <strong>提示：</strong>账号登录会话过期时，系统会通过此渠道主动推送通知。飞书对话不提供二维码自动登录；请前往管理端的账号管理页，选择账号后使用“重新扫码”安全登录。
                 </p>
               </div>
             </section>
@@ -319,7 +319,7 @@
               <div class="notify-form-grid two">
                 <label class="notify-field notify-field-full">
                   <span>PushPlus 令牌</span>
-                  <input v-model="selectedChannel.receiver" type="text" placeholder="请输入 PushPlus Token" />
+                  <input v-model="selectedChannel.receiver" type="text" placeholder="请输入 PushPlus 令牌" />
                 </label>
                 <label class="notify-field">
                   <span>超时时间（秒）</span>
@@ -739,7 +739,7 @@ const CHANNEL_LIBRARY = [
     name: '飞书自建应用（双向对话）',
     icon: 'notifyFeishu',
     accent: 'cyan',
-    description: '支持双向对话、账号状态查询与 Session 过期通知。飞书二维码自动登录当前不可用，请在 Web 账号管理页使用“重新扫码”。需在飞书开放平台创建自建应用。'
+    description: '支持双向对话、账号状态查询与登录会话过期通知。飞书二维码自动登录当前不可用，请在账号管理页使用“重新扫码”。需在飞书开放平台创建自建应用。'
   },
   {
     key: 'dingtalk',
@@ -947,20 +947,20 @@ const CHANNEL_TUTORIALS = {
   pushplus: {
     icon: 'notifySms',
     eyebrow: '适合个人强提醒和高优先级触达',
-    summary: '当前页面里短信通知走的是 PushPlus 方式，最核心的就是拿到可用 Token 并确认对应账号已激活。',
+    summary: '当前页面里短信通知走的是 PushPlus 方式，最核心的是拿到可用令牌并确认对应账号已激活。',
     goal: '适合高优先级告警、客诉通知或需要第一时间推送到个人设备的消息。',
     eta: '约 1 分钟完成',
-    preparation: ['先登录 PushPlus', '复制个人 Token', '确认接收端已绑定公众号或客户端'],
+    preparation: ['先登录 PushPlus', '复制个人令牌', '确认接收端已绑定公众号或客户端'],
     steps: [
       {
-        title: '先到 PushPlus 控制台复制 Token',
-        detail: '登录后进入个人中心或发送配置页，复制当前账号的 Token，作为这个渠道的唯一凭证。',
-        tip: '如果 Token 复制错账号，通知会发到别人的接收端。'
+        title: '先到 PushPlus 控制台复制令牌',
+        detail: '登录后进入个人中心或发送配置页，复制当前账号的令牌，作为这个渠道的唯一凭证。',
+        tip: '如果令牌复制错账号，通知会发到别人的接收端。'
       },
       {
-        title: '把 Token 填到 PushPlus Token 字段',
-        detail: '当前页面把 Token 放在接收凭证字段里，直接整段粘贴即可，不需要额外加前缀。',
-        tip: 'Token 一般较长，粘贴后可先保存一次，避免刷新丢失。'
+        title: '把令牌填到 PushPlus 令牌字段',
+        detail: '当前页面把令牌放在接收凭证字段里，直接整段粘贴即可，不需要额外加前缀。',
+        tip: '令牌一般较长，粘贴后可先保存一次，避免刷新丢失。'
       },
       {
         title: '按告警级别设置模板和重试',
@@ -974,17 +974,17 @@ const CHANNEL_TUTORIALS = {
       }
     ],
     fields: [
-      { label: 'PushPlus Token', detail: '这是唯一必填项，决定消息最终推送到哪个账号或设备。' },
+      { label: 'PushPlus 令牌', detail: '这是唯一必填项，决定消息最终推送到哪个账号或设备。' },
       { label: '超时时间', detail: '通常保持默认即可，只有在网络较慢或代理转发时才需要调大。' },
       { label: '重试次数', detail: '用于覆盖偶发网络抖动；高优先级消息建议保留默认重试。' },
       { label: '消息模板', detail: '推荐用短句模板，方便在移动端通知栏直接看清重点。' }
     ],
     checklist: [
-      'Token 对应的 PushPlus 账号已经正常激活，并且接收端可用。',
+      '令牌对应的 PushPlus 账号已经正常激活，并且接收端可用。',
       '测试通知已经真实出现在手机或接收设备上，而不是只有页面显示成功。',
       '模板足够简短，移动端一屏内就能看到核心信息。'
     ],
-    tip: '先确认 Token 和接收端没问题，再去细调模板文案；否则很容易把问题误判成格式问题。'
+    tip: '先确认令牌和接收端没问题，再去细调模板文案；否则很容易把问题误判成格式问题。'
   },
   email: {
     icon: 'notifyEmail',
@@ -1043,7 +1043,7 @@ const EVENT_GROUPS = [
     label: '账号与风控',
     icon: 'notifyRisk',
     tone: 'amber',
-    events: ['账号掉线', 'Cookie 到期', '人机验证', '人机验证成功']
+    events: ['账号掉线', '登录凭证到期', '人机验证', '人机验证成功']
   },
   {
     key: 'ops',

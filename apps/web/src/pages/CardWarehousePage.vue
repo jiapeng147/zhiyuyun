@@ -625,7 +625,7 @@ async function saveGroup() {
 }
 
 async function removeGroup(id) {
-  if (!await confirmAction({ title: '确认删除卡密分组？', description: '该操作会影响自动发货库存，请确认没有正在使用的发货规则。', dangerous: true, confirmText: 'DELETE' })) return
+  if (!await confirmAction({ title: '确认删除卡密分组？', description: '该操作会影响自动发货库存，请确认没有正在使用的发货规则。', dangerous: true, confirmText: '删除' })) return
   try {
     await deleteCard(id)
     success.value = '卡密分组已删除'

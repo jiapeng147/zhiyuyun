@@ -91,7 +91,7 @@
           </div>
           <div class="m-menu-info">
             <div class="m-menu-title">账号管理</div>
-            <div class="m-menu-desc">扫码登录、Cookie 更新和账号巡检</div>
+            <div class="m-menu-desc">扫码登录、凭证更新和账号巡检</div>
           </div>
           <MIcon name="chevronRight" :size="16" class="m-menu-arrow" />
         </button>

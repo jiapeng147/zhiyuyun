@@ -640,7 +640,7 @@ async function triggerAutoCategory() {
     if (!data.success) {
       // 自动分类失败，如果是 cookie 问题提示重新登录
       if (data.fallbackReason === 'COOKIE_EXPIRED' || data.fallbackReason === 'COOKIE_MISSING_M_H5_TK') {
-        autoCategoryMessage.value = '账号 Cookie 已失效，请重新登录后再试'
+        autoCategoryMessage.value = '账号登录凭证已失效，请重新登录后再试'
         autoCategoryMsgType.value = 'error'
       } else if (data.fallbackReason && data.fallbackReason.includes('LOW_CONFIDENCE')) {
         autoCategoryMessage.value = '封面图自动识别置信度不足，已切换到本地分类'
