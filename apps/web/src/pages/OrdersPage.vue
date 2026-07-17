@@ -1,88 +1,103 @@
 <template>
-  <div class="orders-page-v4">
-    <main class="orders-v4-main">
-      <div class="orders-v4-notices">
+  <div class="orders-page">
+    <main class="orders-main">
+      <div class="orders-notices">
         <div v-if="error" class="global-notice error" role="alert">{{ error }}</div>
         <div v-if="warning" class="global-notice warning" role="status">{{ warning }}</div>
         <div v-if="success" class="global-notice success" role="status">{{ success }}</div>
       </div>
 
-      <n-card class="orders-v4-hero" :bordered="false">
-        <div class="orders-v4-hero-copy">
-          <n-tag size="small" type="success" :bordered="false">订单履约</n-tag>
-          <h2>订单履约台</h2>
-          <p>集中同步闲鱼真实订单，跟进买家、商品、付款状态与手动发货进度。</p>
+      <section class="orders-command-center">
+        <div class="orders-command-main">
+          <div class="orders-command-kicker">
+            <span>订单履约</span>
+            <b>{{ selectedAccountName }}</b>
+          </div>
+          <h2>订单履约控制台</h2>
+          <p>集中同步闲鱼真实订单，跟进买家、商品、付款状态、发货进度与手动履约结果。</p>
+          <div class="orders-command-meta">
+            <span>{{ ordersLoading ? '订单刷新中' : `当前 ${total} 笔订单` }}</span>
+            <span>本页 {{ rows.length }} 笔</span>
+            <span>待发货 {{ pendingDeliveryCount }} 笔</span>
+          </div>
         </div>
-        <n-space class="orders-v4-hero-actions" :size="8" align="center" wrap>
-          <n-button type="primary" size="small" :loading="ordersLoading" @click="loadOrders">刷新订单</n-button>
-          <n-button
-            size="small"
-            :loading="syncingList"
-            :disabled="!query.accountId"
-            @click="syncAccountOrders"
-          >
-            {{ syncingList ? '同步中...' : '同步当前账号' }}
-          </n-button>
-        </n-space>
-      </n-card>
-
-      <section class="orders-v4-stats">
-        <n-card
-          v-for="item in orderStatCards"
-          :key="item.key"
-          class="orders-v4-stat"
-          :class="item.tone"
-          :bordered="false"
-        >
-          <span class="orders-v4-stat-icon">{{ item.symbol }}</span>
-          <n-statistic :label="item.title" :value="item.value" />
-          <small>{{ item.change }}</small>
-        </n-card>
+        <div class="orders-command-panel">
+          <div class="orders-command-panel-head">
+            <span>履约动作</span>
+            <strong>{{ query.accountId ? '账号范围' : '全局范围' }}</strong>
+          </div>
+          <div class="orders-command-buttons">
+            <n-button type="primary" :loading="ordersLoading" @click="loadOrders">刷新订单</n-button>
+            <n-button
+              :loading="syncingList"
+              :disabled="!query.accountId"
+              @click="syncAccountOrders"
+            >
+              {{ syncingList ? '同步中...' : '同步当前账号' }}
+            </n-button>
+          </div>
+          <p>选择账号后可同步该账号的真实订单和发货状态。</p>
+        </div>
       </section>
 
-      <n-card class="orders-v4-filter-card" :bordered="false">
-        <div class="orders-v4-filter-grid">
-          <div class="orders-v4-filter-left">
-            <n-select
-              v-model:value="query.accountId"
-              class="orders-v4-account-select"
-              :disabled="accountsAvailable === false"
-              :options="accountFilterOptions"
-              @update:value="search"
-            />
-            <n-select
-              v-model:value="query.status"
-              class="orders-v4-status-select"
-              :options="orderStatusOptions"
-              @update:value="search"
-            />
-          </div>
-          <div class="orders-v4-search">
-            <n-input
-              v-model:value="query.keyword"
-              clearable
-              placeholder="搜索订单号 / 买家 / 商品"
-              @keyup.enter="search"
-            />
-            <n-space :size="8" align="center" wrap>
-              <n-button type="primary" :loading="ordersLoading" @click="search">查询</n-button>
-              <n-button :disabled="ordersLoading" @click="resetFilters">重置</n-button>
-            </n-space>
-          </div>
-        </div>
-        <div class="sync-tip">
-          选择账号后，列表查询会优先同步该账号的闲鱼真实订单，再展示当前筛选结果。
-        </div>
-      </n-card>
+      <section class="orders-metric-rail">
+        <article
+          v-for="item in orderStatCards"
+          :key="item.key"
+          class="orders-metric-card"
+          :class="item.tone"
+        >
+          <span class="orders-metric-icon">{{ item.symbol }}</span>
+          <n-statistic :label="item.title" :value="item.value" />
+          <small>{{ item.change }}</small>
+        </article>
+      </section>
 
-      <n-card class="orders-v4-table-card" :bordered="false">
-        <template #header>订单列表</template>
-        <template #header-extra>
-          <n-space :size="8" align="center">
+      <section class="orders-workspace">
+        <header class="orders-workspace-head">
+          <div>
+            <span class="orders-workspace-eyebrow">订单列表</span>
+            <h3>订单数据与履约进度</h3>
+          </div>
+          <div class="orders-workspace-tags">
             <n-tag size="small" :bordered="false">{{ selectedAccountName }}</n-tag>
             <n-tag size="small" type="info" :bordered="false">第 {{ query.current }} 页</n-tag>
-          </n-space>
-        </template>
+          </div>
+        </header>
+        <div class="orders-control-board">
+          <div class="orders-filter-grid">
+            <div class="orders-filter-left">
+              <n-select
+                v-model:value="query.accountId"
+                class="orders-account-select"
+                :disabled="accountsAvailable === false"
+                :options="accountFilterOptions"
+                @update:value="search"
+              />
+              <n-select
+                v-model:value="query.status"
+                class="orders-status-select"
+                :options="orderStatusOptions"
+                @update:value="search"
+              />
+            </div>
+            <div class="orders-search">
+              <n-input
+                v-model:value="query.keyword"
+                clearable
+                placeholder="搜索订单号 / 买家 / 商品"
+                @keyup.enter="search"
+              />
+              <div class="orders-search-actions">
+                <n-button type="primary" :loading="ordersLoading" @click="search">查询</n-button>
+                <n-button :disabled="ordersLoading" @click="resetFilters">重置</n-button>
+              </div>
+            </div>
+          </div>
+          <div class="orders-sync-tip">
+            选择账号后，列表查询会优先同步该账号的闲鱼真实订单，再展示当前筛选结果。
+          </div>
+        </div>
         <div v-if="ordersRefreshing" class="refresh-status" role="status" aria-live="polite">
           正在刷新订单列表，现有数据仍可查看。
         </div>
@@ -147,7 +162,7 @@
           </template>
         </BaseTable>
         <Pagination v-if="ordersAvailable === true" :total="total" :current="query.current" :page-size="query.size" @page-change="goPage" />
-      </n-card>
+      </section>
     </main>
 
     <!-- 订单详情弹窗 -->
@@ -267,7 +282,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -709,134 +724,262 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.orders-page-v4 {
+.orders-page {
   width: 100%;
   min-width: 0;
 }
 
-.orders-v4-main {
+.orders-main {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
-.orders-v4-notices {
+.orders-notices {
   display: grid;
   gap: 8px;
 }
 
-.orders-v4-hero,
-.orders-v4-filter-card,
-.orders-v4-table-card,
-.orders-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.orders-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.orders-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfe6f1;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(255, 250, 243, .94) 48%, rgba(247, 249, 252, .98)),
+    #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
 }
 
-.orders-v4-hero-copy {
+.orders-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.orders-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 
-.orders-v4-hero-copy h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
+.orders-command-kicker span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .1);
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.orders-command-kicker b {
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orders-command-main h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.25;
 }
 
-.orders-v4-hero-copy p {
+.orders-command-main p {
   margin: 0;
-  color: #64748b;
+  max-width: 720px;
+  color: #526079;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.orders-v4-hero-actions {
-  flex: 0 0 auto;
-  justify-content: flex-end;
+.orders-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.orders-v4-stats {
+.orders-command-meta span {
+  padding: 6px 10px;
+  border: 1px solid rgba(37, 99, 235, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.orders-command-panel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.orders-command-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.orders-command-panel-head strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.orders-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.orders-command-buttons :deep(.n-button) {
+  min-width: 0;
+}
+
+.orders-command-panel p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.orders-metric-rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
-.orders-v4-stat :deep(.n-card__content) {
+.orders-metric-card {
+  position: relative;
+  min-width: 0;
   padding: 16px;
   display: grid;
   gap: 8px;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+  overflow: hidden;
 }
 
-.orders-v4-stat-icon {
+.orders-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 0 14px;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #dbeafe;
+}
+
+.orders-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.orders-v4-stat.tone-blue .orders-v4-stat-icon {
+.orders-metric-card.tone-blue .orders-metric-icon {
   background: #eff6ff;
   color: #2563eb;
 }
 
-.orders-v4-stat.tone-green .orders-v4-stat-icon {
+.orders-metric-card.tone-green .orders-metric-icon {
   background: #ecfdf5;
   color: #059669;
 }
 
-.orders-v4-stat.tone-orange .orders-v4-stat-icon {
+.orders-metric-card.tone-orange .orders-metric-icon {
   background: #fff7ed;
   color: #ea580c;
 }
 
-.orders-v4-stat.tone-cyan .orders-v4-stat-icon {
+.orders-metric-card.tone-cyan .orders-metric-icon {
   background: #ecfeff;
   color: #0891b2;
 }
 
-.orders-v4-stat :deep(.n-statistic .n-statistic-label) {
+.orders-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.orders-v4-stat :deep(.n-statistic .n-statistic-value) {
+.orders-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
   font-weight: 700;
 }
 
-.orders-v4-stat small {
+.orders-metric-card small {
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.orders-v4-filter-card :deep(.n-card__content),
-.orders-v4-table-card :deep(.n-card__content) {
+.orders-workspace {
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
 
-.orders-v4-table-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.orders-workspace-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.orders-v4-filter-grid {
+.orders-workspace-eyebrow {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.orders-workspace-head h3 {
+  margin: 4px 0 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.orders-workspace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.orders-control-board {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.orders-filter-grid {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -845,7 +988,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
-.orders-v4-filter-left {
+.orders-filter-left {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -853,15 +996,15 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.orders-v4-account-select {
+.orders-account-select {
   width: 180px;
 }
 
-.orders-v4-status-select {
+.orders-status-select {
   width: 140px;
 }
 
-.orders-v4-search {
+.orders-search {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -869,8 +1012,17 @@ onBeforeUnmount(() => {
   min-width: 280px;
 }
 
-.orders-v4-table-card {
-  overflow: hidden;
+.orders-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.orders-workspace > .empty-state,
+.orders-workspace > .base-table-wrap,
+.orders-workspace > .pagination {
+  margin-top: 12px;
 }
 
 /* 订单详情弹窗 */
@@ -981,19 +1133,7 @@ onBeforeUnmount(() => {
   color: #b42318;
 }
 
-.wrap {
-  flex-wrap: wrap;
-}
-
-.select {
-  max-width: 220px;
-}
-
-.grow {
-  flex: 1 1 240px;
-}
-
-.sync-tip {
+.orders-sync-tip {
   margin-top: 10px;
   color: #6b7a90;
   font-size: 12px;
@@ -1181,55 +1321,64 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1280px) {
-  .orders-v4-stats {
+  .orders-metric-rail {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .orders-command-center {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .orders-command-panel {
+    max-width: none;
   }
 }
 
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
-  .orders-v4-main {
+  .orders-main {
     gap: 12px;
   }
 
-  .orders-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .orders-command-center,
+  .orders-workspace {
     padding: 14px;
+    border-radius: 12px;
   }
 
-  .orders-v4-hero-copy h2 {
-    font-size: 20px;
+  .orders-command-main h2 {
+    font-size: 24px;
   }
 
-  .orders-v4-hero-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .orders-v4-stats {
+  .orders-command-buttons {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .orders-v4-filter-card :deep(.n-card__content),
-  .orders-v4-table-card :deep(.n-card__content) {
-    padding: 12px;
+  .orders-metric-rail {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .orders-v4-table-card :deep(.n-card-header) {
-    padding: 12px 12px 0;
-    align-items: flex-start;
+  .orders-workspace-head {
+    display: grid;
   }
 
-  .orders-v4-filter-grid,
-  .orders-v4-filter-left,
-  .orders-v4-search {
+  .orders-workspace-tags {
+    justify-content: flex-start;
+  }
+
+  .orders-filter-grid,
+  .orders-filter-left,
+  .orders-search,
+  .orders-search-actions {
     display: grid;
     width: 100%;
     min-width: 0;
   }
 
-  .orders-v4-account-select,
-  .orders-v4-status-select {
+  .orders-account-select,
+  .orders-status-select {
     width: 100%;
   }
 
@@ -1264,16 +1413,6 @@ onBeforeUnmount(() => {
     margin-top: 12px;
     padding: 12px;
     border-radius: 10px;
-  }
-
-  /* 工具栏筛选元素全宽堆叠 */
-  .select {
-    max-width: 100%;
-    width: 100%;
-  }
-  .grow {
-    flex: 1 1 100%;
-    width: 100%;
   }
 
   /* 商品缩略图与标题缩窄 */
