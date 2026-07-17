@@ -1,170 +1,187 @@
 <template>
-  <div class="ops-system-settings system-settings-page system-main">
+  <div class="ops-system-settings system-settings-page system-main system-v9-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <section class="page-hero system-hero">
-      <div class="page-hero-copy">
-        <span class="page-pill">系统总览</span>
-        <h1>系统配置</h1>
+    <section class="system-hero">
+      <div class="system-hero-copy">
+        <span class="system-kicker">System Operations</span>
+        <h1>系统运营控制台</h1>
         <p>
-          这里是系统总览页面与站点基础配置入口。高德地图 API Key、通用模型配置、向量模型配置与 RAG 知识库已经拆分为独立导航项，
-          可在左侧切换至对应页面单独维护。
+          这里维护站点基础信息、广告服务运营状态和关键服务概览。高德地图、通用模型、向量模型与 RAG 知识库已经拆分成独立控制台，
+          系统总览只保留平台级状态和基础配置。
         </p>
 
-        <div class="page-actions">
-          <AppButton type="primary" :loading="saving" :disabled="!configAvailable" @click="save">保存配置</AppButton>
-          <AppButton :loading="loading" @click="loadPage">重新加载</AppButton>
+        <div class="system-hero-actions">
+          <button type="button" class="system-save-btn" :disabled="saving || !configAvailable" @click="save">{{ saving ? '保存中...' : '保存配置' }}</button>
+          <button type="button" class="system-reload-btn" :disabled="loading" @click="loadPage">{{ loading ? '加载中...' : '重新加载' }}</button>
         </div>
       </div>
+
+      <aside class="system-status-panel" :class="{ ready: configAvailable && runtimeStatusAvailable }" aria-label="系统状态">
+        <span>平台状态</span>
+        <strong>{{ configAvailable ? '配置可用' : '状态未知' }}</strong>
+        <div class="system-status-meter">
+          <i :style="{ width: adServiceReady ? '82%' : (runtimeStatusAvailable ? '56%' : '28%') }"></i>
+        </div>
+        <p>{{ adServiceReady ? '广告服务与基础保护均已就绪。' : '站点配置可维护，部分服务请查看下方运行状态。' }}</p>
+      </aside>
     </section>
 
-    <div class="grid stat-grid system-v7-stats">
-      <n-card
+    <section class="system-stat-grid" aria-label="系统服务状态">
+      <article
         v-for="item in systemStatCards"
         :key="item.key"
-        class="system-v7-stat"
+        class="system-stat-card"
         :class="item.tone"
-        :bordered="false"
       >
-        <span class="system-v7-stat-label">{{ item.title }}</span>
+        <span class="system-stat-label">{{ item.title }}</span>
         <strong>{{ item.value }}</strong>
-        <span class="system-v7-stat-desc">{{ item.change }}</span>
-      </n-card>
-    </div>
+        <span class="system-stat-desc">{{ item.change }}</span>
+      </article>
+    </section>
 
-    <div class="page-grid">
-      <n-card class="system-v7-card" :bordered="false">
-        <template #header>
+    <div class="system-workspace">
+      <div class="system-main-column">
+        <section class="system-v9-card">
           <div class="system-card-head">
-            <h3>站点基础配置</h3>
+            <div>
+              <span>Site Profile</span>
+              <h3>站点基础配置</h3>
+            </div>
             <p>站点名称、ICP 备案、Logo 与爬虫服务地址，会用于页面展示与平台服务调用。</p>
           </div>
-        </template>
-        <div class="field-grid two">
-          <label class="field">
-            <span>站点名称（siteName）</span>
-            <input v-model="form.siteName" class="input" placeholder="智鱼云" />
-          </label>
 
-          <label class="field">
-            <span>ICP 备案号（icp）</span>
-            <input v-model="form.icp" class="input" placeholder="例如：京ICP备XXXXXXXX号" />
-          </label>
+          <div class="field-grid two">
+            <label class="field">
+              <span>站点名称（siteName）</span>
+              <input v-model="form.siteName" class="input" placeholder="智鱼云" />
+            </label>
 
-          <label class="field">
-            <span>站点 Logo 地址</span>
-            <input v-model="form.logoUrl" class="input" placeholder="例如：/static/logo.png" />
-          </label>
+            <label class="field">
+              <span>ICP 备案号（icp）</span>
+              <input v-model="form.icp" class="input" placeholder="例如：京ICP备XXXXXXXX号" />
+            </label>
 
-          <label class="field">
-            <span>爬虫服务地址（服务只读）</span>
-            <input
-              :value="form.crawlerBaseUrl"
-              class="input"
-              readonly
-              aria-readonly="true"
-              title="由 CRAWLER_BASE_URL 配置并在重启后生效"
-            />
-          </label>
-        </div>
-      </n-card>
+            <label class="field">
+              <span>站点 Logo 地址</span>
+              <input v-model="form.logoUrl" class="input" placeholder="例如：/static/logo.png" />
+            </label>
 
-      <n-card class="system-v7-card" :bordered="false">
-        <template #header>
+            <label class="field">
+              <span>爬虫服务地址（服务只读）</span>
+              <input
+                :value="form.crawlerBaseUrl"
+                class="input"
+                readonly
+                aria-readonly="true"
+                title="由 CRAWLER_BASE_URL 配置并在重启后生效"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section class="system-v9-card">
           <div class="system-card-head">
-            <h3>广告服务运营状态</h3>
+            <div>
+              <span>Commercial Runtime</span>
+              <h3>广告服务运营状态</h3>
+            </div>
             <p>广告轮播、文字广告、套餐与投放申请由平台服务统一处理。敏感凭证仅在平台服务保存，页面只展示业务可用性。</p>
           </div>
-        </template>
-        <div v-if="!runtimeStatusAvailable" class="service-notice">
-          运行状态暂不可用，无法确认广告服务连接状态。点击上方「重新加载」可重试。
-        </div>
-        <div v-else class="ad-service-panel">
-          <div class="ad-service-summary" :class="{ ready: adServiceReady }">
-            <span>广告投放能力</span>
-            <strong>{{ adServiceReady ? '可用' : '待接通' }}</strong>
-            <p>{{ adServiceSummary }}</p>
-          </div>
 
-          <div class="ad-service-grid">
-            <article
-              v-for="item in adServiceCards"
-              :key="item.key"
-              class="ad-service-card"
-              :class="item.tone"
-            >
-              <span>{{ item.title }}</span>
-              <strong>{{ item.value }}</strong>
-              <p>{{ item.desc }}</p>
-            </article>
+          <div v-if="!runtimeStatusAvailable" class="service-notice">
+            运行状态暂不可用，无法确认广告服务连接状态。点击上方「重新加载」可重试。
           </div>
-        </div>
+          <div v-else class="ad-service-panel">
+            <div class="ad-service-summary" :class="{ ready: adServiceReady }">
+              <span>广告投放能力</span>
+              <strong>{{ adServiceReady ? '可用' : '待接通' }}</strong>
+              <p>{{ adServiceSummary }}</p>
+            </div>
 
-        <div v-if="runtimeStatusAvailable" class="service-capabilities">
-          <h4 class="capabilities-title">业务保护</h4>
-          <div class="capability-grid">
-            <div
-              v-for="item in adCapabilityCards"
-              :key="item.key"
-              class="capability-item"
-            >
-              <span class="capability-name">{{ item.title }}</span>
-              <span class="capability-status" :class="item.ready ? 'ok' : 'warn'">
-                {{ item.ready ? '已就绪' : '待启用' }}
-              </span>
-              <span class="capability-desc">{{ item.desc }}</span>
+            <div class="ad-service-grid">
+              <article
+                v-for="item in adServiceCards"
+                :key="item.key"
+                class="ad-service-card"
+                :class="item.tone"
+              >
+                <span>{{ item.title }}</span>
+                <strong>{{ item.value }}</strong>
+                <p>{{ item.desc }}</p>
+              </article>
             </div>
           </div>
-          <p v-if="!allAdCapabilitiesEnabled" class="service-hint">
-            业务保护全部就绪后，系统才会开放完整的广告展示、投放申请与支付能力。相关开关由平台服务完成检测后启用。
-          </p>
-          <p v-else class="service-hint ok">
-            全部能力已就绪，系统可正常展示广告并接受用户投放申请。
-          </p>
-        </div>
-      </n-card>
 
-      <n-card class="system-v7-card" :bordered="false">
-        <template #header>
+          <div v-if="runtimeStatusAvailable" class="service-capabilities">
+            <h4 class="capabilities-title">业务保护</h4>
+            <div class="capability-grid">
+              <div
+                v-for="item in adCapabilityCards"
+                :key="item.key"
+                class="capability-item"
+              >
+                <span class="capability-name">{{ item.title }}</span>
+                <span class="capability-status" :class="item.ready ? 'ok' : 'warn'">
+                  {{ item.ready ? '已就绪' : '待启用' }}
+                </span>
+                <span class="capability-desc">{{ item.desc }}</span>
+              </div>
+            </div>
+            <p v-if="!allAdCapabilitiesEnabled" class="service-hint">
+              业务保护全部就绪后，系统才会开放完整的广告展示、投放申请与支付能力。相关开关由平台服务完成检测后启用。
+            </p>
+            <p v-else class="service-hint ok">
+              全部能力已就绪，系统可正常展示广告并接受用户投放申请。
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="system-side-column">
+        <section class="system-v9-card">
           <div class="system-card-head">
-            <h3>配置说明</h3>
+            <div>
+              <span>Configuration Notes</span>
+              <h3>配置说明</h3>
+            </div>
             <p>常见配置项的取值规则与注意事项。</p>
           </div>
-        </template>
-        <ul class="hint-list">
-          <li><strong>站点名称</strong>：显示在浏览器标题栏和登录页，建议保持简短（建议 ≤ 16 个字符）。</li>
-          <li><strong>ICP 备案号</strong>：中国大陆服务器必须填写，否则前端底部不显示备案信息。海外服务器可留空。</li>
-          <li><strong>站点 Logo 地址</strong>：可填写站内资源路径或公开可访问的图片地址。</li>
-          <li><strong>爬虫服务地址</strong>：该地址会接收账号授权信息，只能由平台服务通过 <code>CRAWLER_BASE_URL</code> 配置并在重启后生效，浏览器页面不可修改。</li>
-          <li><strong>高德地图 Key</strong>：用于发布商品页的地址搜索，请到"高德地图"页签配置。</li>
-          <li><strong>通用模型 / 向量模型</strong>：分别到"模型配置"和"向量模型"页签配置。</li>
-          <li><strong>RAG 知识库</strong>：到"RAG 知识库"页签管理文档与检索验证。</li>
-        </ul>
-      </n-card>
 
-      <n-card class="system-v7-card" :bordered="false">
-        <template #header>
+          <ul class="hint-list">
+            <li><strong>站点名称</strong>：显示在浏览器标题栏和登录页，建议保持简短（建议 ≤ 16 个字符）。</li>
+            <li><strong>ICP 备案号</strong>：中国大陆服务器必须填写，否则前端底部不显示备案信息。海外服务器可留空。</li>
+            <li><strong>站点 Logo 地址</strong>：可填写站内资源路径或公开可访问的图片地址。</li>
+            <li><strong>爬虫服务地址</strong>：该地址会接收账号授权信息，只能由平台服务通过 <code>CRAWLER_BASE_URL</code> 配置并在重启后生效，浏览器页面不可修改。</li>
+            <li><strong>高德地图 Key</strong>：用于发布商品页的地址搜索，请到"高德地图"页签配置。</li>
+            <li><strong>通用模型 / 向量模型</strong>：分别到"模型配置"和"向量模型"页签配置。</li>
+            <li><strong>RAG 知识库</strong>：到"RAG 知识库"页签管理文档与检索验证。</li>
+          </ul>
+        </section>
+
+        <section class="system-v9-card">
           <div class="system-card-head">
-            <h3>知识库列表</h3>
+            <div>
+              <span>Knowledge Snapshot</span>
+              <h3>知识库概览</h3>
+            </div>
             <p>系统总览页保留一个轻量概览，便于确认 RAG 知识库模块是否已经接入。</p>
           </div>
-        </template>
-        <div class="knowledge-summary">
-          <strong>{{ knowledgeBaseSummary.available ? knowledgeBaseSummary.total : '—' }}</strong>
-          <span>当前知识库数量</span>
-          <p v-if="!knowledgeBaseSummary.available" class="global-notice error">知识库概览暂不可用，当前无法确认数量。</p>
-          <p>如需查看文档、切片与检索验证，请前往左侧“RAG 知识库”页签继续操作。</p>
-        </div>
-      </n-card>
+          <div class="knowledge-summary">
+            <strong>{{ knowledgeBaseSummary.available ? knowledgeBaseSummary.total : '—' }}</strong>
+            <span>当前知识库数量</span>
+            <p v-if="!knowledgeBaseSummary.available" class="global-notice error">知识库概览暂不可用，当前无法确认数量。</p>
+            <p>如需查看文档、切片与检索验证，请前往左侧“RAG 知识库”页签继续操作。</p>
+          </div>
+        </section>
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive } from 'vue'
-import { NCard } from 'naive-ui'
-import AppButton from '../../components/AppButton.vue'
 import { listKnowledgeBases } from '../../api/rag.js'
 import {
   cloneOpenSourceConfig,
@@ -371,141 +388,303 @@ function onHeaderAction(event) {
 </script>
 
 <style scoped>
-.ops-system-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.page-hero {
+.system-v9-shell {
+  --system-primary: #2563eb;
+  --system-primary-dark: #1d4ed8;
+  --system-accent: #0f766e;
+  --system-warning: #f59e0b;
+  --system-text: #111827;
+  --system-muted: #64748b;
+  --system-line: #e5e7eb;
+  --system-panel: #ffffff;
+  --system-soft: #f8fafc;
+  --system-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
-  padding: 22px;
-  border-radius: 6px;
-  border: 1px solid #dfe6f2;
-  background: #fff;
-  box-shadow: none;
+  color: var(--system-text);
 }
 
-.page-pill {
+.system-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.system-hero-copy,
+.system-status-panel,
+.system-stat-card,
+.system-v9-card {
+  border: 1px solid var(--system-line);
+  border-radius: 8px;
+  background: var(--system-panel);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 42px rgba(15, 23, 42, 0.06);
+}
+
+.system-hero-copy {
+  position: relative;
+  overflow: hidden;
+  min-height: 236px;
+  padding: 28px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.96)),
+    repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.06) 0 1px, transparent 1px 40px);
+}
+
+.system-hero-copy::before {
+  content: '';
+  position: absolute;
+  right: 30px;
+  bottom: 26px;
+  width: 238px;
+  height: 132px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(15, 118, 110, 0.1) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.68;
+  transform: rotate(-3deg);
+}
+
+.system-kicker {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
+  height: 28px;
   padding: 0 10px;
-  border-radius: 4px;
-  background: #eef4ff;
-  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--system-primary-dark);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.page-hero-copy h1 {
-  margin: 10px 0 0;
-  font-size: 28px;
-  color: #13213d;
+.system-hero-copy h1 {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 10px;
+  color: var(--system-text);
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.page-hero-copy p {
-  margin: 10px 0 0;
+.system-hero-copy p {
+  position: relative;
+  z-index: 1;
   max-width: 760px;
+  margin: 0;
+  color: var(--system-muted);
+  font-size: 14px;
   line-height: 1.8;
-  color: #60738e;
 }
 
-.page-actions {
+.system-hero-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 22px;
 }
 
-.stat-grid {
+.system-save-btn,
+.system-reload-btn {
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 140ms var(--system-ease),
+    box-shadow 160ms var(--system-ease),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.system-save-btn {
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--system-primary), var(--system-accent));
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.18);
+}
+
+.system-reload-btn {
+  border: 1px solid #bfdbfe;
+  background: #ffffff;
+  color: var(--system-primary-dark);
+}
+
+.system-save-btn:disabled,
+.system-reload-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.system-status-panel {
   display: grid;
+  align-content: space-between;
+  gap: 14px;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fffbeb 100%),
+    repeating-linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0 1px, transparent 1px 18px);
+}
+
+.system-status-panel.ready {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%),
+    repeating-linear-gradient(135deg, rgba(15, 118, 110, 0.06) 0 1px, transparent 1px 18px);
+}
+
+.system-status-panel span,
+.system-card-head span {
+  color: var(--system-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.system-status-panel strong {
+  color: var(--system-warning);
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.system-status-panel.ready strong {
+  color: var(--system-accent);
+}
+
+.system-status-panel p {
+  margin: 0;
+  color: var(--system-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.system-status-meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.system-status-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--system-primary), var(--system-accent));
+  transition: width 220ms var(--system-ease);
+}
+
+.system-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
-.system-v7-stats {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.system-v7-stat,
-.system-v7-card {
-  border: 1px solid #dfe6f2;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: none;
-}
-
-.system-v7-stat :deep(.n-card__content) {
+.system-stat-card {
   display: grid;
   gap: 8px;
   padding: 16px;
+  border-top: 3px solid var(--system-primary);
+  transition:
+    transform 180ms var(--system-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--system-ease);
 }
 
-.system-v7-stat-label {
-  color: #667085;
+.system-stat-label {
+  color: var(--system-muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 850;
 }
 
-.system-v7-stat strong {
-  color: #101828;
+.system-stat-card strong {
+  color: var(--system-text);
   font-size: 24px;
   line-height: 1.15;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.system-v7-stat-desc {
-  color: #667085;
+.system-stat-desc {
+  color: var(--system-muted);
   font-size: 12px;
   line-height: 1.5;
 }
 
-.system-v7-stat.is-ok {
-  border-top: 3px solid #16a34a;
+.system-stat-card.is-ok {
+  border-top-color: #16a34a;
 }
 
-.system-v7-stat.is-info {
-  border-top: 3px solid #2563eb;
+.system-stat-card.is-info {
+  border-top-color: var(--system-primary);
 }
 
-.system-v7-stat.is-warn {
-  border-top: 3px solid #f59e0b;
+.system-stat-card.is-warn {
+  border-top-color: var(--system-warning);
 }
 
-.system-v7-card :deep(.n-card-header) {
-  padding: 18px 20px 0;
+.system-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
 }
 
-.system-v7-card :deep(.n-card__content) {
-  padding: 14px 20px 20px;
+.system-main-column,
+.system-side-column {
+  display: grid;
+  gap: 16px;
+}
+
+.system-side-column {
+  position: sticky;
+  top: 12px;
+}
+
+.system-v9-card {
+  padding: 18px;
+  transition:
+    transform 180ms var(--system-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--system-ease);
 }
 
 .system-card-head {
-  display: grid;
-  gap: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 16px;
 }
 
 .system-card-head h3 {
-  margin: 0;
-  color: #101828;
-  font-size: 16px;
-  line-height: 1.3;
-  font-weight: 800;
+  margin: 4px 0 0;
+  color: var(--system-text);
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
 .system-card-head p {
+  max-width: 460px;
   margin: 0;
-  color: #667085;
+  color: var(--system-muted);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
   font-weight: 400;
-}
-
-.page-grid {
-  display: grid;
-  gap: 16px;
 }
 
 .field-grid {
@@ -521,72 +700,51 @@ function onHeaderAction(event) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .field span {
+  color: var(--system-text);
   font-size: 13px;
-  font-weight: 700;
-  color: #6a7c98;
+  font-weight: 850;
 }
 
 .field .input {
+  width: 100%;
   height: 40px;
   padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid #ebdcd6;
-  background: #fff;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--system-text);
   font-size: 14px;
-  color: #1f2a44;
   outline: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.field .input:hover {
+  border-color: #bfdbfe;
 }
 
 .field .input:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+  border-color: var(--system-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-.hint-list {
-  margin: 0;
-  padding-left: 18px;
-  color: #667892;
-  line-height: 1.8;
-}
-
-.knowledge-summary {
-  padding: 18px;
-  border-radius: 6px;
-  border: 1px dashed #cfd8e8;
-  background: #f8fafc;
-}
-
-.knowledge-summary strong {
-  display: block;
-  color: #13213d;
-  font-size: 30px;
-  line-height: 1;
-}
-
-.knowledge-summary span {
-  display: block;
-  margin-top: 8px;
-  color: #d45e2c;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.knowledge-summary p {
-  margin: 10px 0 0;
-  color: #6e7e98;
-  line-height: 1.7;
+.field .input[readonly] {
+  background: var(--system-soft);
+  color: var(--system-muted);
 }
 
 .service-notice {
   padding: 14px 16px;
-  border-radius: 6px;
-  border: 1px dashed #cfd8e8;
-  background: #f8fafc;
-  color: #6e7e98;
+  border: 1px dashed #bfdbfe;
+  border-radius: 8px;
+  background: #f8fbff;
+  color: var(--system-muted);
   font-size: 13px;
   line-height: 1.7;
 }
@@ -600,37 +758,42 @@ function onHeaderAction(event) {
 .ad-service-summary {
   min-height: 178px;
   padding: 18px;
-  border-radius: 6px;
-  border: 1px solid #f0d6c8;
-  background: linear-gradient(180deg, #fff7ed 0%, #fff 100%);
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #fffbeb 0%, #ffffff 100%),
+    repeating-linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0 1px, transparent 1px 18px);
 }
 
 .ad-service-summary.ready {
-  border-color: #b7e4c7;
-  background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%);
+  border-color: #99f6e4;
+  background:
+    linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%),
+    repeating-linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0 1px, transparent 1px 18px);
 }
 
 .ad-service-summary span,
 .ad-service-card span {
   display: block;
-  color: #667085;
+  color: var(--system-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .ad-service-summary strong {
   display: block;
   margin-top: 12px;
-  color: #101828;
+  color: var(--system-text);
   font-size: 34px;
   line-height: 1;
   font-weight: 900;
+  letter-spacing: 0;
 }
 
 .ad-service-summary p,
 .ad-service-card p {
   margin: 12px 0 0;
-  color: #667085;
+  color: var(--system-muted);
   line-height: 1.7;
 }
 
@@ -643,45 +806,46 @@ function onHeaderAction(event) {
 .ad-service-card {
   min-height: 83px;
   padding: 14px;
-  border-radius: 6px;
-  border: 1px solid #e3eaf5;
-  background: #fff;
+  border: 1px solid var(--system-line);
+  border-radius: 8px;
+  background: var(--system-soft);
+  border-top: 3px solid var(--system-primary);
 }
 
 .ad-service-card strong {
   display: block;
   margin-top: 8px;
-  color: #101828;
+  color: var(--system-text);
   font-size: 20px;
   line-height: 1.2;
   font-weight: 900;
 }
 
 .ad-service-card.is-ok {
-  border-top: 3px solid #16a34a;
+  border-top-color: #16a34a;
 }
 
 .ad-service-card.is-info {
-  border-top: 3px solid #2563eb;
+  border-top-color: var(--system-primary);
 }
 
 .ad-service-card.is-warn {
-  border-top: 3px solid #f59e0b;
+  border-top-color: var(--system-warning);
 }
 
 .service-capabilities {
   margin-top: 14px;
   padding: 14px 16px;
-  border-radius: 6px;
-  border: 1px solid #e3eaf5;
-  background: #fff;
+  border: 1px solid var(--system-line);
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .capabilities-title {
   margin: 0 0 10px;
+  color: var(--system-text);
   font-size: 14px;
-  font-weight: 800;
-  color: #13213d;
+  font-weight: 900;
 }
 
 .capability-grid {
@@ -695,168 +859,195 @@ function onHeaderAction(event) {
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #e3eaf5;
-  background: #FFFFFF;
+  border: 1px solid var(--system-line);
+  border-radius: 8px;
+  background: var(--system-soft);
 }
 
 .capability-name {
+  color: var(--system-primary-dark);
   font-size: 13px;
-  font-weight: 700;
-  color: #d45e2c;
+  font-weight: 850;
 }
 
 .capability-status {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 850;
 }
 
 .capability-status.ok {
-  color: #1f8a4c;
+  color: #0f766e;
 }
 
 .capability-status.warn {
-  color: #b26a00;
+  color: #b45309;
 }
 
 .capability-desc {
+  color: var(--system-muted);
   font-size: 12px;
-  color: #6e7e98;
   line-height: 1.6;
 }
 
 .service-hint {
   margin: 12px 0 0;
   padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(178, 106, 0, 0.08);
-  color: #8a4a00;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
   font-size: 12px;
   line-height: 1.7;
 }
 
 .service-hint.ok {
-  background: rgba(31, 138, 76, 0.08);
-  color: #1f6b3a;
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.hint-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--system-muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.hint-list li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.hint-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--system-accent);
+}
+
+.hint-list code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: var(--system-primary-dark);
+  font-size: 12px;
+}
+
+.hint-list strong {
+  color: var(--system-text);
+}
+
+.knowledge-summary {
+  padding: 18px;
+  border: 1px dashed #bfdbfe;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%),
+    repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.04) 0 1px, transparent 1px 28px);
+}
+
+.knowledge-summary strong {
+  display: block;
+  color: var(--system-text);
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.knowledge-summary span {
+  display: block;
+  margin-top: 8px;
+  color: var(--system-primary-dark);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.knowledge-summary p {
+  margin: 10px 0 0;
+  color: var(--system-muted);
+  line-height: 1.7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .system-stat-card:hover,
+  .system-v9-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 24px 54px rgba(37, 99, 235, 0.11);
+  }
+
+  .system-save-btn:hover:not(:disabled),
+  .system-reload-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.system-save-btn:active,
+.system-reload-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 1220px) {
+  .system-hero,
+  .system-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .system-side-column {
+    position: static;
+  }
 }
 
 @media (max-width: 1100px) {
   .ad-service-panel,
-  .ad-service-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+  .ad-service-grid,
   .capability-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
-.hint-list code {
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
-  padding: 1px 6px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.hint-list strong {
-  color: #13213d;
-}
-
-@media (max-width: 1200px) {
-  .stat-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-  }
-}
-
 @media (max-width: 920px) {
-  .stat-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
+  .system-stat-grid,
   .field-grid.two {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .system-hero-copy {
+    min-height: 0;
+    padding: 22px;
+  }
+
+  .system-hero-copy::before {
+    display: none;
+  }
+
+  .system-hero-copy h1 {
+    font-size: 28px;
+  }
+
+  .system-card-head {
+    flex-direction: column;
   }
 }
 
-@media (max-width: 900px) {
-  .ops-system-settings {
-    gap: 12px;
+@media (max-width: 620px) {
+  .system-hero-actions,
+  .system-save-btn,
+  .system-reload-btn {
+    width: 100%;
   }
 
-  .page-hero {
-    padding: 14px;
-    border-radius: 16px;
-  }
-
-  .page-hero-copy h1 {
-    font-size: 20px;
-  }
-
-  .page-hero-copy p {
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .page-actions {
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .stat-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 10px;
-  }
-
-  .page-grid {
-    gap: 12px;
-  }
-
-  .field-grid {
-    gap: 12px;
-  }
-
-  .field-grid.two {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .stat-grid > *,
-  .field-grid.two > * {
-    min-width: 0;
-  }
-
-  .field .input {
-    height: 40px;
-    font-size: 13px;
-  }
-
-  .knowledge-summary {
-    padding: 12px;
-    border-radius: 14px;
-  }
-
+  .system-status-panel strong,
+  .ad-service-summary strong,
   .knowledge-summary strong {
-    font-size: 22px;
-  }
-
-  .knowledge-summary span {
-    font-size: 12px;
-  }
-
-  .knowledge-summary p {
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .hint-list {
-    padding-left: 16px;
-    font-size: 13px;
-    line-height: 1.7;
-  }
-
-  .hint-list code {
-    font-size: 11px;
-    word-break: break-all;
+    font-size: 28px;
   }
 }
 </style>
