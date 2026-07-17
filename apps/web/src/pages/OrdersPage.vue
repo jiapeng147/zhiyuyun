@@ -1,5 +1,5 @@
 <template>
-  <div class="orders-page">
+  <div class="orders-page orders-v10-shell">
     <main class="orders-main">
       <div class="orders-notices">
         <div v-if="error" class="global-notice error" role="alert">{{ error }}</div>
@@ -27,8 +27,9 @@
             <strong>{{ query.accountId ? '账号范围' : '全局范围' }}</strong>
           </div>
           <div class="orders-command-buttons">
-            <n-button type="primary" :loading="ordersLoading" @click="loadOrders">刷新订单</n-button>
+            <n-button type="primary" :title="orderActionHint" :loading="ordersLoading" @click="loadOrders">刷新订单</n-button>
             <n-button
+              :title="orderActionHint"
               :loading="syncingList"
               :disabled="!query.accountId"
               @click="syncAccountOrders"
@@ -36,7 +37,7 @@
               {{ syncingList ? '同步中...' : '同步当前账号' }}
             </n-button>
           </div>
-          <p>选择账号后可同步该账号的真实订单和发货状态。</p>
+          <p class="orders-action-hint">{{ orderActionHint }}</p>
         </div>
       </section>
 
@@ -148,14 +149,14 @@
           <template #delivery="{ row }">
             <div>
               <Badge :type="row.deliveryBadge">{{ row.deliveryStatusText }}</Badge>
-              <div class="subtle" style="margin-top: 4px">{{ row.platformSyncTimeText }}</div>
+              <div class="subtle platform-sync-time">{{ row.platformSyncTimeText }}</div>
             </div>
           </template>
           <template #op="{ row }">
             <div class="inline-actions">
               <button class="link" @click.stop="selectOrder(row)">查看详情</button>
               <button class="link" @click.stop="openManualDelivery(row)">手动发货</button>
-              <button class="link" @click.stop="syncCurrentOrder(row)">
+              <button class="link" :disabled="Boolean(syncingOrderId)" @click.stop="syncCurrentOrder(row)">
                 {{ syncingOrderId === row.id ? '同步中...' : '同步' }}
               </button>
             </div>
@@ -178,7 +179,16 @@
           >
             <Icon name="close" />
           </button>
-          <h2 class="order-modal-title">订单详情</h2>
+          <header class="order-modal-head">
+            <div>
+              <span class="order-modal-eyebrow">订单履约详情</span>
+              <h2 class="order-modal-title">{{ detailView.externalOrderId || '订单详情' }}</h2>
+            </div>
+            <div class="order-modal-badges">
+              <Badge :type="detailView.orderStatusBadge">{{ detailView.orderStatusText }}</Badge>
+              <Badge :type="detailView.deliveryBadge">{{ detailView.deliveryStatusText }}</Badge>
+            </div>
+          </header>
 
           <div class="order-modal-body">
             <div class="detail-section">
@@ -267,8 +277,8 @@
               </div>
             </div>
 
-            <div v-if="!manualForm.visible" class="inline-actions" style="margin-top: 16px">
-              <AppButton type="primary" :loading="syncingOrderId === detailView.id" @click="syncCurrentOrder(detailView)">
+            <div v-if="!manualForm.visible" class="inline-actions order-modal-actions">
+              <AppButton type="primary" :loading="syncingOrderId === detailView.id" :disabled="Boolean(syncingOrderId)" @click="syncCurrentOrder(detailView)">
                 {{ syncingOrderId === detailView.id ? '同步中...' : '同步当前订单' }}
               </AppButton>
               <AppButton @click="toggleManualDelivery(true)">手动发货</AppButton>
@@ -354,6 +364,15 @@ const columns = [
 const rows = computed(() => orders.value.map(buildOrderRowViewModel))
 const ordersRefreshing = computed(() => ordersLoading.value && ordersAvailable.value === true)
 const detailView = computed(() => (selected.value ? buildOrderDetailViewModel(selected.value) : null))
+const orderActionHint = computed(() => {
+  if (syncingList.value) return '正在同步当前账号的真实订单和发货状态。'
+  if (ordersLoading.value) return ordersAvailable.value === true
+    ? '订单列表正在后台刷新，当前数据仍可查看。'
+    : '订单列表正在首次加载，请稍候。'
+  if (ordersAvailable.value === false) return '订单列表加载失败，请先刷新订单。'
+  if (!query.accountId) return '选择账号后可同步该账号的真实订单和发货状态。'
+  return `当前范围：${selectedAccountName.value}，可刷新列表或同步该账号订单。`
+})
 const accountFilterOptions = computed(() => [
   { label: '全部账号', value: '' },
   ...accounts.value.map(account => ({ label: accountName(account), value: String(account.id) }))
@@ -725,6 +744,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .orders-page {
+  --orders-text: #101828;
+  --orders-muted: #64748b;
+  --orders-line: #e5eaf0;
+  --orders-primary: #1d4ed8;
+  --orders-ease: cubic-bezier(0.23, 1, 0.32, 1);
   width: 100%;
   min-width: 0;
 }
@@ -746,7 +770,7 @@ onBeforeUnmount(() => {
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe6f1;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(255, 250, 243, .94) 48%, rgba(247, 249, 252, .98)),
     #fff;
@@ -823,7 +847,7 @@ onBeforeUnmount(() => {
   align-content: center;
   padding: 14px;
   border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -851,9 +875,10 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.orders-command-panel p {
+.orders-action-hint {
   margin: 0;
-  color: #6b7280;
+  min-height: 18px;
+  color: var(--orders-muted);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -871,7 +896,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 8px;
   border: 1px solid #e5eaf0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
   overflow: hidden;
@@ -889,7 +914,7 @@ onBeforeUnmount(() => {
 .orders-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -938,7 +963,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   padding: 16px;
   border: 1px solid #e5eaf0;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
@@ -975,7 +1000,7 @@ onBeforeUnmount(() => {
   margin-bottom: 14px;
   padding: 12px;
   border: 1px solid #edf1f5;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8fafc;
 }
 
@@ -1019,6 +1044,10 @@ onBeforeUnmount(() => {
   flex: 0 0 auto;
 }
 
+.platform-sync-time {
+  margin-top: 4px;
+}
+
 .orders-workspace > .empty-state,
 .orders-workspace > .base-table-wrap,
 .orders-workspace > .pagination {
@@ -1027,6 +1056,7 @@ onBeforeUnmount(() => {
 
 /* 订单详情弹窗 */
 .order-modal-mask {
+  --orders-ease: cubic-bezier(0.23, 1, 0.32, 1);
   position: fixed;
   inset: 0;
   background: rgba(20, 36, 58, .58);
@@ -1035,6 +1065,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: orderMaskIn 160ms var(--orders-ease);
 }
 
 .order-modal {
@@ -1044,11 +1075,12 @@ onBeforeUnmount(() => {
   max-height: 85vh;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 18px;
+  border-radius: 8px;
   box-shadow: 0 28px 80px rgba(17, 35, 67, .25);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: orderModalIn 220ms var(--orders-ease);
 }
 
 .order-modal-close {
@@ -1065,6 +1097,16 @@ onBeforeUnmount(() => {
   justify-content: center;
   cursor: pointer;
   z-index: 1;
+  border-radius: 8px;
+  transition: background-color 150ms var(--orders-ease), transform 150ms var(--orders-ease);
+}
+
+.order-modal-close:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.order-modal-close:active:not(:disabled) {
+  transform: scale(.96);
 }
 
 .order-modal-close .ui-icon {
@@ -1076,13 +1118,35 @@ onBeforeUnmount(() => {
   opacity: .45;
 }
 
-.order-modal-title {
-  margin: 0;
-  padding: 20px 24px 12px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
+.order-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 64px 16px 24px;
   border-bottom: 1px solid #f0f3f8;
+}
+
+.order-modal-eyebrow {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.order-modal-title {
+  margin: 4px 0 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: break-all;
+}
+
+.order-modal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .order-modal-body {
@@ -1095,7 +1159,7 @@ onBeforeUnmount(() => {
   margin-top: 16px;
   padding: 16px;
   background: #f8fafc;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #E8E8E8;
 }
 
@@ -1262,7 +1326,7 @@ onBeforeUnmount(() => {
 .item-row {
   padding: 10px 12px;
   border: 1px solid #e6ecf5;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #FAFAFA;
 }
 
@@ -1270,7 +1334,7 @@ onBeforeUnmount(() => {
   min-height: 64px;
   padding: 12px;
   border: 1px solid #e6ecf5;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #FFFFFF;
   white-space: pre-wrap;
   word-break: break-word;
@@ -1300,8 +1364,64 @@ onBeforeUnmount(() => {
   min-height: 120px;
   padding: 10px 12px;
   border: 1px solid #f0e0d9;
-  border-radius: 10px;
+  border-radius: 8px;
   resize: vertical;
+}
+
+.orders-v10-shell .link {
+  transition:
+    color 150ms var(--orders-ease),
+    opacity 150ms var(--orders-ease),
+    transform 150ms var(--orders-ease);
+}
+
+.orders-v10-shell .link:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.orders-v10-shell .link:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.order-modal-actions {
+  margin-top: 16px;
+}
+
+@keyframes orderMaskIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes orderModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .orders-workspace,
+  .orders-metric-card {
+    transition: border-color 180ms var(--orders-ease), box-shadow 180ms var(--orders-ease);
+  }
+
+  .orders-workspace:hover,
+  .orders-metric-card:hover {
+    border-color: rgba(29, 78, 216, .22);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-modal-mask,
+  .order-modal {
+    animation: none;
+  }
 }
 
 .strong {
@@ -1345,7 +1465,7 @@ onBeforeUnmount(() => {
   .orders-command-center,
   .orders-workspace {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .orders-command-main h2 {
@@ -1390,7 +1510,7 @@ onBeforeUnmount(() => {
     width: 100vw;
     max-width: 100vw;
     max-height: 90vh;
-    border-radius: 20px 20px 0 0;
+    border-radius: 8px 8px 0 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -1400,8 +1520,14 @@ onBeforeUnmount(() => {
     width: 36px;
     height: 36px;
   }
-  .order-modal-title {
+  .order-modal-head {
     padding: 14px 14px 10px;
+    display: grid;
+  }
+  .order-modal-badges {
+    justify-content: flex-start;
+  }
+  .order-modal-title {
     font-size: 18px;
   }
   .order-modal-body {
@@ -1412,7 +1538,7 @@ onBeforeUnmount(() => {
   .manual-delivery-section {
     margin-top: 12px;
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   /* 商品缩略图与标题缩窄 */
