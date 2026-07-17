@@ -69,46 +69,61 @@
         @refresh="refreshActivePolishConflict"
       />
 
-      <n-card class="products-v4-hero" :bordered="false">
-        <div class="products-v4-hero-copy">
-          <n-tag size="small" type="success" :bordered="false">商品运营</n-tag>
-          <h2>商品运营台</h2>
-          <p>按账号同步闲鱼商品，集中处理上下架、自动发货、自动回复、批量删除和商品擦亮。</p>
+      <section class="products-command-center">
+        <div class="products-command-main">
+          <div class="products-command-kicker">
+            <span>商品资产</span>
+            <b>{{ selectedAccountName }}</b>
+          </div>
+          <h2>商品资产工作台</h2>
+          <p>集中管理闲鱼商品资产，按账号同步数据，处理上下架、自动发货、自动回复、批量删除与安全擦亮。</p>
+          <div class="products-command-meta">
+            <span>{{ loading ? '列表刷新中' : `当前 ${totalCount} 件商品` }}</span>
+            <span>已选 {{ selectedKeys.length }} 件</span>
+            <span>{{ autoSyncState.active ? '同步运行中' : '同步待命' }}</span>
+          </div>
         </div>
-        <n-space class="products-v4-hero-actions" :size="8" align="center" wrap>
-          <n-button type="primary" size="small" @click="emit('navigate','product-publish')">发布商品</n-button>
-          <n-button
-            size="small"
-            :disabled="listAvailable === false || syncing || autoSyncState.active"
-            :loading="syncing || autoSyncState.active"
-            @click="syncProducts"
-          >
-            {{ syncing || autoSyncState.active ? (autoSyncState.accountTotal > 1 ? `同步中 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal}...` : '同步中...') : '同步闲鱼商品' }}
-          </n-button>
-          <n-button size="small" tertiary :loading="loading" @click="loadItems">刷新列表</n-button>
-        </n-space>
-      </n-card>
-
-      <section class="products-v4-stats">
-        <n-card
-          v-for="item in productStatCards"
-          :key="item.key"
-          class="products-v4-stat"
-          :class="item.tone"
-          :bordered="false"
-        >
-          <span class="products-v4-stat-icon">{{ item.symbol }}</span>
-          <n-statistic :label="item.title" :value="item.value" />
-          <small>{{ item.change }}</small>
-        </n-card>
+        <div class="products-command-panel">
+          <div class="products-command-panel-head">
+            <span>运营动作</span>
+            <strong>{{ query.xianyuAccountId ? '账号范围' : '全局范围' }}</strong>
+          </div>
+          <div class="products-command-buttons">
+            <n-button type="primary" @click="emit('navigate','product-publish')">发布商品</n-button>
+            <n-button
+              :disabled="listAvailable === false || syncing || autoSyncState.active"
+              :loading="syncing || autoSyncState.active"
+              @click="syncProducts"
+            >
+              {{ syncing || autoSyncState.active ? (autoSyncState.accountTotal > 1 ? `同步中 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal}...` : '同步中...') : '同步闲鱼商品' }}
+            </n-button>
+            <n-button tertiary :loading="loading" @click="loadItems">刷新列表</n-button>
+          </div>
+        </div>
       </section>
 
-      <n-card class="products-table-card products-v4-table-card" :bordered="false">
-        <template #header>商品列表</template>
-        <template #header-extra>
+      <section class="products-metric-rail">
+        <article
+          v-for="item in productStatCards"
+          :key="item.key"
+          class="products-metric-card"
+          :class="item.tone"
+        >
+          <span class="products-metric-icon">{{ item.symbol }}</span>
+          <n-statistic :label="item.title" :value="item.value" />
+          <small>{{ item.change }}</small>
+        </article>
+      </section>
+
+      <section class="products-workspace">
+        <header class="products-workspace-head">
+          <div>
+            <span class="products-workspace-eyebrow">商品列表</span>
+            <h3>商品数据与运营开关</h3>
+          </div>
           <n-tag size="small" :bordered="false">{{ selectedAccountName }}</n-tag>
-        </template>
-        <div class="products-toolbar products-v4-toolbar">
+        </header>
+        <div class="products-control-board">
           <div class="toolbar-filter">
             <div class="filter-left">
               <n-select
@@ -117,7 +132,7 @@
                 :options="accountFilterOptions"
                 @update:value="onAccountChange"
               />
-              <n-space class="products-v4-status-tabs" :size="6" align="center" wrap>
+              <n-space class="products-status-tabs" :size="6" align="center" wrap>
                 <n-button size="small" :type="query.status === '' ? 'primary' : 'default'" :secondary="query.status !== ''" @click="setStatus('')">全部</n-button>
                 <n-button size="small" :type="query.status === 0 ? 'primary' : 'default'" :secondary="query.status !== 0" @click="setStatus(0)">在售</n-button>
                 <n-button size="small" :type="query.status === 1 ? 'primary' : 'default'" :secondary="query.status !== 1" @click="setStatus(1)">下架/草稿</n-button>
@@ -256,18 +271,24 @@
             <button class="page-no" :disabled="query.pageNum * query.pageSize >= totalCount" @click="nextPage">›</button>
           </div>
         </div>
-      </n-card>
+      </section>
 
-      <n-card title="同步任务历史" class="products-v4-sync-card" :bordered="false">
-        <div class="toolbar compact products-v4-sync-toolbar">
+      <section class="products-sync-panel">
+        <header class="products-sync-head">
+          <div>
+            <span class="products-workspace-eyebrow">同步审计</span>
+            <h3>同步任务历史</h3>
+          </div>
+          <span class="products-sync-hint">展示当前账号最近同步记录，服务重启后仍可恢复查看。</span>
+        </header>
+        <div class="products-sync-toolbar">
           <n-select
             v-model:value="syncQuery.status"
-            class="products-v4-sync-select"
+            class="products-sync-select"
             :options="syncStatusOptions"
             @update:value="loadSyncTasks"
           />
           <n-button :disabled="syncTasksLoading" @click="loadSyncTasks">刷新任务</n-button>
-          <span class="muted">展示当前账号最近同步记录，服务重启后仍可恢复查看。</span>
         </div>
         <EmptyState v-if="syncTasksAvailable === false" icon="⚠" title="同步任务历史暂不可用" description="无法读取持久化任务记录，未知状态不会显示为零条任务。">
           <template #actions><AppButton :loading="syncTasksLoading" @click="loadSyncTasks">重试加载</AppButton></template>
@@ -280,7 +301,7 @@
           <template #error="{row}"><span :title="row.errorMessage">{{ shortText(row.errorMessage || '-', 30) }}</span></template>
         </BaseTable>
         <div v-if="syncTasksAvailable === true" class="pagination"><span>{{ syncTasksLoading ? '加载中...' : `共 ${syncTaskTotal} 条任务` }}</span><button type="button" class="page-no" :disabled="syncTasksLoading || syncQuery.current <= 1" aria-label="上一页同步任务" @click="prevSyncPage">‹</button><span class="page-no active" aria-current="page">{{ syncQuery.current }}</span><button type="button" class="page-no" :disabled="syncTasksLoading || syncQuery.current * syncQuery.size >= syncTaskTotal" aria-label="下一页同步任务" @click="nextSyncPage">›</button></div>
-      </n-card>
+      </section>
     </div>
     <div v-if="selected && listAvailable === true" class="right-drawer products-drawer">
       <div class="drawer-header">
@@ -2011,110 +2032,257 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   align-content: start;
   gap: 16px;
 }
-.products-v4-hero,
-.products-v4-table-card,
-.products-v4-sync-card,
-.products-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-.products-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.products-v4-hero-copy {
-  min-width: 0;
-}
-.products-v4-hero-copy h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
-}
-.products-v4-hero-copy p {
-  max-width: 760px;
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.65;
-}
-.products-v4-hero-actions {
-  flex: 0 0 auto;
-  justify-content: flex-end;
-}
-.products-v4-stats {
+
+.products-command-center {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfe8e4;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(255, 250, 245, .94) 48%, rgba(246, 248, 252, .98)),
+    #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
+}
+
+.products-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: center;
   gap: 12px;
 }
-.products-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+
+.products-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.products-command-kicker span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, .1);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.products-command-kicker b {
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.products-command-main h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.18;
+}
+
+.products-command-main p {
+  max-width: 760px;
+  margin: 0;
+  color: #526071;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.products-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.products-command-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 118, 110, .14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .68);
+  color: #344054;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.products-command-panel {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(15, 118, 110, .16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+
+.products-command-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.products-command-panel-head strong {
+  color: #0f766e;
+}
+
+.products-command-buttons {
   display: grid;
   gap: 8px;
 }
-.products-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+
+.products-command-buttons :deep(.n-button) {
+  width: 100%;
+}
+
+.products-metric-rail {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.products-metric-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  display: grid;
+  gap: 8px;
+}
+
+.products-metric-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: #0f766e;
+  background: #eefaf5;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
-.products-v4-stat.tone-blue .products-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.products-v4-stat.tone-green .products-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.products-v4-stat.tone-orange .products-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-.products-v4-stat.tone-purple .products-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
-.products-v4-stat.tone-cyan .products-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.products-v4-stat.tone-gray .products-v4-stat-icon { background: #f1f5f9; color: #475569; }
-.products-v4-stat :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
+
+.products-metric-card.tone-blue .products-metric-icon { background: #eff6ff; color: #2563eb; }
+.products-metric-card.tone-green .products-metric-icon { background: #ecfdf5; color: #059669; }
+.products-metric-card.tone-orange .products-metric-icon { background: #fff7ed; color: #ea580c; }
+.products-metric-card.tone-purple .products-metric-icon { background: #f5f3ff; color: #7c3aed; }
+.products-metric-card.tone-cyan .products-metric-icon { background: #ecfeff; color: #0891b2; }
+.products-metric-card.tone-gray .products-metric-icon { background: #f1f5f9; color: #475569; }
+
+.products-metric-card :deep(.n-statistic .n-statistic-label) {
+  color: #667085;
   font-size: 12px;
 }
-.products-v4-stat :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
+
+.products-metric-card :deep(.n-statistic .n-statistic-value) {
+  color: #101828;
+  font-size: 23px;
+  font-weight: 800;
 }
-.products-v4-stat small {
-  color: #64748b;
+
+.products-metric-card small {
+  color: #667085;
   font-size: 12px;
   line-height: 1.4;
 }
-.products-v4-table-card :deep(.n-card-header),
-.products-v4-sync-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+
+.products-workspace,
+.products-sync-panel {
+  min-width: 0;
+  border: 1px solid #e3e8ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
-.products-v4-table-card :deep(.n-card__content),
-.products-v4-sync-card :deep(.n-card__content) {
-  padding: 16px;
+
+.products-workspace-head,
+.products-sync-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 0;
 }
-.products-v4-sync-toolbar {
-  margin-bottom: 14px;
+
+.products-workspace-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
 }
-.products-v4-sync-select {
+
+.products-workspace-head h3,
+.products-sync-head h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.products-control-board {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 18px;
+  padding: 12px;
+  border: 1px solid #edf1f6;
+  border-radius: 12px;
+  background: #f8fafc;
+  flex-wrap: wrap;
+}
+
+.products-sync-head {
+  align-items: center;
+}
+
+.products-sync-hint {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.products-sync-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px 12px;
+  flex-wrap: wrap;
+}
+
+.products-sync-panel > .empty-state,
+.products-sync-panel > .base-table-wrap,
+.products-sync-panel > .pagination {
+  margin: 0 18px 18px;
+}
+
+.products-workspace .table-scroll-wrap {
+  padding: 0 18px;
+}
+
+.products-workspace .products-pagination {
+  margin: 14px 18px 18px;
+}
+.products-sync-select {
   width: 150px;
 }
 .products-stat-grid {
   margin-bottom: 16px;
-}
-.products-table-card {
-  min-width: 0;
-}
-.products-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 0 14px;
-  flex-wrap: wrap;
 }
 .toolbar-filter {
   display: flex;
@@ -2589,7 +2757,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 
 @media (max-width: 1280px) {
-  .products-v4-stats {
+  .products-metric-rail {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -2604,6 +2772,14 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   }
 }
 @media (max-width: 1100px) {
+  .products-command-center {
+    grid-template-columns: 1fr;
+  }
+
+  .products-command-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .toolbar-filter {
     flex-direction: column;
     align-items: stretch;
@@ -2628,19 +2804,44 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
     padding-right: 0;
     gap: 12px;
   }
-  .products-v4-hero :deep(.n-card__content) {
+  .products-command-center {
     padding: 14px;
-    flex-direction: column;
+    gap: 12px;
   }
-  .products-v4-hero-copy h2 {
-    font-size: 20px;
+  .products-command-main h2 {
+    font-size: 22px;
   }
-  .products-v4-hero-actions {
-    justify-content: flex-start;
+  .products-command-buttons {
+    grid-template-columns: 1fr;
   }
-  .products-v4-stats {
+  .products-metric-rail {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+  .products-workspace-head,
+  .products-sync-head {
+    padding: 14px 14px 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .products-sync-hint {
+    text-align: left;
+  }
+  .products-control-board {
+    margin: 14px;
+    align-items: stretch;
+  }
+  .products-sync-toolbar {
+    padding: 14px;
+  }
+  .products-workspace .table-scroll-wrap {
+    padding: 0 14px;
+  }
+  .products-workspace .products-pagination,
+  .products-sync-panel > .empty-state,
+  .products-sync-panel > .base-table-wrap,
+  .products-sync-panel > .pagination {
+    margin: 14px;
   }
   .products-drawer {
     /* 移动端：恢复全宽自适应，不限制高度 */
@@ -2655,13 +2856,6 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
     gap: 10px;
     margin-bottom: 12px;
   }
-  /* 工具栏：纵向堆叠，筛选/搜索/操作分行 */
-  .products-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
   .toolbar-filter {
     flex-direction: column;
     align-items: stretch;
@@ -2674,7 +2868,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   .toolbar-select {
     width: 100%;
   }
-  .products-v4-sync-select {
+  .products-sync-select {
     width: 100%;
   }
   .filter-search {
