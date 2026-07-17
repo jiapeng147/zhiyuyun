@@ -1,66 +1,86 @@
 <template>
-  <div class="delivery-records-v4">
-    <div class="delivery-records-v4-notices">
+  <div class="delivery-records-page">
+    <div class="delivery-records-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="warning" class="global-notice warning" role="status">{{ warning }}</div>
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <n-card class="delivery-records-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">发货审计</n-tag>
-        <h2>发货记录审计</h2>
+    <section class="delivery-records-command-center">
+      <div class="delivery-records-command-main">
+        <div class="delivery-records-command-kicker">
+          <span>发货审计</span>
+          <b>{{ recordsAvailable === true ? `共 ${total} 条` : '记录未确认' }}</b>
+        </div>
+        <h2>发货记录控制台</h2>
         <p>集中查看真实发货执行结果、失败原因、卡密/文本方式和订单闭环状态。</p>
+        <div class="delivery-records-command-meta">
+          <span>{{ recordsLoading ? '记录刷新中' : '记录已就绪' }}</span>
+          <span>当前页 {{ rows.length }} 条</span>
+          <span>{{ detailView ? '详情已展开' : '未选择详情' }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <n-button size="small" :loading="recordsLoading" @click="load">刷新记录</n-button>
-        <n-button size="small" type="primary" :disabled="recordsAvailable !== true || exportLoading" @click="exportCsv">
-          {{ exportLoading ? '导出中...' : '导出 CSV' }}
-        </n-button>
-      </n-space>
-    </n-card>
-
-    <n-alert class="delivery-records-v4-alert" type="warning" :bordered="false">
-      为确保交易安全，发货记录暂不提供一键自动重试。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
-    </n-alert>
-
-    <section class="delivery-records-v4-stats">
-      <n-card
-        v-for="item in recordStatCards"
-        :key="item.key"
-        class="delivery-records-v4-stat"
-        :class="item.tone"
-        :bordered="false"
-      >
-        <span class="delivery-records-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
+      <div class="delivery-records-command-panel">
+        <div class="delivery-records-command-panel-head">
+          <span>审计动作</span>
+          <strong>{{ exportLoading ? '导出中' : '可操作' }}</strong>
+        </div>
+        <div class="delivery-records-command-buttons">
+          <n-button :loading="recordsLoading" @click="load">刷新记录</n-button>
+          <n-button type="primary" :disabled="recordsAvailable !== true || exportLoading" @click="exportCsv">
+            {{ exportLoading ? '导出中...' : '导出 CSV' }}
+          </n-button>
+        </div>
+      </div>
     </section>
 
-    <n-card class="delivery-records-v4-filter" :bordered="false">
-      <div class="delivery-records-v4-filter-grid">
-        <n-select v-model:value="query.status" class="delivery-records-v4-select" :options="statusOptions" />
-        <n-select v-model:value="query.timing" class="delivery-records-v4-select" :options="timingOptions" />
-        <n-select v-model:value="query.deliveryMode" class="delivery-records-v4-select" :options="modeOptions" />
+    <div class="delivery-records-safety-note" role="status">
+      为确保交易安全，发货记录暂不提供一键自动重试。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
+    </div>
+
+    <section class="delivery-records-metric-rail">
+      <article
+        v-for="item in recordStatCards"
+        :key="item.key"
+        class="delivery-records-metric-card"
+        :class="item.tone"
+      >
+        <span class="delivery-records-metric-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </article>
+    </section>
+
+    <section class="delivery-records-panel delivery-records-filter-panel">
+      <header class="delivery-records-panel-head">
+        <div>
+          <span>筛选条件</span>
+          <h3>记录检索</h3>
+        </div>
+        <b>第 {{ query.current }} 页</b>
+      </header>
+      <div class="delivery-records-filter-grid">
+        <n-select v-model:value="query.status" class="delivery-records-select" :options="statusOptions" />
+        <n-select v-model:value="query.timing" class="delivery-records-select" :options="timingOptions" />
+        <n-select v-model:value="query.deliveryMode" class="delivery-records-select" :options="modeOptions" />
         <n-input v-model:value="query.goodsKeyword" clearable placeholder="商品关键词" />
         <n-input v-model:value="query.buyerKeyword" clearable placeholder="买家关键词" />
         <n-input v-model:value="query.orderKeyword" clearable placeholder="订单号 / 外部订单号" @keyup.enter="search" />
-        <n-space :size="8" align="center" wrap>
+        <div class="delivery-records-filter-actions">
           <n-button type="primary" :loading="recordsLoading" @click="search">搜索</n-button>
           <n-button :disabled="recordsLoading" @click="resetFilters">重置</n-button>
-        </n-space>
+        </div>
       </div>
-    </n-card>
+    </section>
 
-    <n-card class="delivery-records-v4-table" :bordered="false">
-      <template #header>发货记录</template>
-      <template #header-extra>
-        <n-space :size="8" align="center">
-          <n-tag size="small" :bordered="false">共 {{ recordsAvailable === true ? total : '—' }} 条</n-tag>
-          <n-tag size="small" type="info" :bordered="false">第 {{ query.current }} 页</n-tag>
-        </n-space>
-      </template>
+    <section class="delivery-records-panel delivery-records-table-panel">
+      <header class="delivery-records-panel-head">
+        <div>
+          <span>执行流水</span>
+          <h3>发货记录</h3>
+        </div>
+        <b>共 {{ recordsAvailable === true ? total : '—' }} 条</b>
+      </header>
       <div v-if="recordsRefreshing" class="refresh-status" role="status" aria-live="polite">
         正在刷新发货记录，现有数据仍可查看。
       </div>
@@ -101,10 +121,16 @@
         </template>
       </BaseTable>
       <Pagination v-if="recordsAvailable === true" :total="total" :current="query.current" :page-size="query.size" @page-change="goPage" />
-    </n-card>
+    </section>
 
-    <n-card v-if="detailView" class="delivery-records-v4-detail" :bordered="false">
-      <template #header>发货记录详情</template>
+    <section v-if="detailView" class="delivery-records-panel delivery-records-detail-panel">
+      <header class="delivery-records-panel-head">
+        <div>
+          <span>单据详情</span>
+          <h3>发货记录详情</h3>
+        </div>
+        <b>{{ detailView.deliveryStatusText }}</b>
+      </header>
       <div class="detail-grid">
         <div><b>记录 ID：</b> {{ detailView.id || '-' }}</div>
         <div><b>订单号：</b> {{ detailView.orderId || '-' }}</div>
@@ -129,13 +155,13 @@
         <div class="section-title">错误信息</div>
         <div class="content-box">{{ detailView.errorMessageText }}</div>
       </div>
-    </n-card>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NAlert, NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NStatistic } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -397,120 +423,267 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.delivery-records-v4 {
+.delivery-records-page {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
+  color: #111827;
 }
 
-.delivery-records-v4-notices {
+.delivery-records-page * {
+  box-sizing: border-box;
+}
+
+.delivery-records-notices {
   display: grid;
   gap: 8px;
 }
 
-.delivery-records-v4-hero,
-.delivery-records-v4-filter,
-.delivery-records-v4-table,
-.delivery-records-v4-detail,
-.delivery-records-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.delivery-records-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.delivery-records-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
   gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dbe4ef;
+  border-left: 5px solid #2563eb;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(15, 118, 110, .05) 48%, rgba(255, 255, 255, .96)),
+    #fff;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .08);
 }
 
-.delivery-records-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
+.delivery-records-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
 }
 
-.delivery-records-v4-hero p {
+.delivery-records-command-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.delivery-records-command-kicker span,
+.delivery-records-command-kicker b {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .1);
+}
+
+.delivery-records-command-kicker b {
+  color: #0f766e;
+  background: rgba(15, 118, 110, .1);
+}
+
+.delivery-records-command-main h2 {
   margin: 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 760;
+  line-height: 1.2;
+}
+
+.delivery-records-command-main p {
+  max-width: 760px;
+  margin: 0;
+  color: #526079;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.delivery-records-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.delivery-records-command-meta span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .82);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.delivery-records-command-panel {
+  align-self: stretch;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .92);
+}
+
+.delivery-records-command-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   color: #64748b;
+  font-size: 12px;
+}
+
+.delivery-records-command-panel-head strong {
+  color: #2563eb;
+  font-size: 13px;
+}
+
+.delivery-records-command-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.delivery-records-safety-note {
+  padding: 12px 14px;
+  border: 1px solid #f7c97a;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  background: #fff8e8;
+  color: #8a4b08;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.delivery-records-v4-alert {
-  border-radius: 6px;
-}
-
-.delivery-records-v4-stats {
+.delivery-records-metric-rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
-.delivery-records-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+.delivery-records-metric-card {
+  min-width: 0;
+  min-height: 132px;
   display: grid;
+  grid-template-rows: auto 1fr auto;
   gap: 8px;
+  padding: 14px;
+  border: 1px solid #e4ebf5;
+  border-top: 3px solid #64748b;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
 }
 
-.delivery-records-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.delivery-records-metric-icon {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
+  color: #fff;
+  background: #64748b;
+  font-size: 12px;
+  font-weight: 750;
 }
 
-.delivery-records-v4-stat.tone-blue .delivery-records-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.delivery-records-v4-stat.tone-green .delivery-records-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.delivery-records-v4-stat.tone-cyan .delivery-records-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.delivery-records-v4-stat.tone-orange .delivery-records-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.delivery-records-metric-card.tone-blue { border-top-color: #2563eb; }
+.delivery-records-metric-card.tone-blue .delivery-records-metric-icon { background: #2563eb; }
+.delivery-records-metric-card.tone-green { border-top-color: #059669; }
+.delivery-records-metric-card.tone-green .delivery-records-metric-icon { background: #059669; }
+.delivery-records-metric-card.tone-cyan { border-top-color: #0891b2; }
+.delivery-records-metric-card.tone-cyan .delivery-records-metric-icon { background: #0891b2; }
+.delivery-records-metric-card.tone-orange { border-top-color: #ea580c; }
+.delivery-records-metric-card.tone-orange .delivery-records-metric-icon { background: #ea580c; }
 
-.delivery-records-v4-stat :deep(.n-statistic .n-statistic-label) {
+.delivery-records-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.delivery-records-v4-stat :deep(.n-statistic .n-statistic-value) {
+.delivery-records-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 760;
 }
 
-.delivery-records-v4-stat small {
+.delivery-records-metric-card small {
   color: #64748b;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.delivery-records-v4-filter :deep(.n-card__content),
-.delivery-records-v4-table :deep(.n-card__content),
-.delivery-records-v4-detail :deep(.n-card__content) {
+.delivery-records-panel {
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
 }
 
-.delivery-records-v4-table :deep(.n-card-header),
-.delivery-records-v4-detail :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.delivery-records-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef2f7;
 }
 
-.delivery-records-v4-filter-grid {
+.delivery-records-panel-head span {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.delivery-records-panel-head h3 {
+  margin: 4px 0 0;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 730;
+  line-height: 1.35;
+}
+
+.delivery-records-panel-head b {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+}
+
+.delivery-records-filter-grid {
   display: grid;
-  grid-template-columns: 150px 150px 150px repeat(3, minmax(150px, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(140px, .7fr)) repeat(3, minmax(160px, 1fr)) auto;
   gap: 10px;
   align-items: center;
 }
 
-.delivery-records-v4-select {
+.delivery-records-select {
   min-width: 0;
+}
+
+.delivery-records-filter-actions {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 8px;
+  align-items: center;
 }
 
 .wrap {
@@ -593,32 +766,45 @@ onBeforeUnmount(() => {
   border-color: #abefc6;
 }
 
-/* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
-  .delivery-records-v4 {
+  .delivery-records-page {
     gap: 12px;
   }
 
-  .delivery-records-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .delivery-records-command-center,
+  .delivery-records-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .delivery-records-command-center,
+  .delivery-records-panel {
     padding: 14px;
   }
 
-  .delivery-records-v4-stats {
+  .delivery-records-command-main h2 {
+    font-size: 22px;
+  }
+
+  .delivery-records-command-buttons,
+  .delivery-records-filter-actions {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .delivery-records-v4-filter :deep(.n-card__content),
-  .delivery-records-v4-table :deep(.n-card__content),
-  .delivery-records-v4-detail :deep(.n-card__content) {
+  .delivery-records-metric-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .delivery-records-metric-card {
+    min-height: 124px;
     padding: 12px;
   }
 
-  .delivery-records-v4-filter-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .delivery-records-panel-head {
+    gap: 10px;
+    margin-bottom: 12px;
   }
 
-  /* 筛选工具栏：narrow / grow 全宽堆叠 */
   .narrow {
     max-width: 100%;
     width: 100%;
@@ -628,7 +814,6 @@ onBeforeUnmount(() => {
     width: 100%;
   }
 
-  /* 详情双列网格 → 单列堆叠 */
   .detail-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
@@ -637,7 +822,6 @@ onBeforeUnmount(() => {
     min-width: 0;
   }
 
-  /* 面板间距收窄 */
   .panel-block {
     margin-top: 12px;
   }
@@ -645,13 +829,11 @@ onBeforeUnmount(() => {
     margin-bottom: 6px;
   }
 
-  /* 内容框内边距收窄 */
   .content-box {
     min-height: 48px;
     padding: 10px;
   }
 
-  /* 错误信息省略宽度收窄 */
   .cell-ellipsis {
     max-width: 140px;
   }
