@@ -1398,7 +1398,7 @@ async function persistConversationStatus(action, localPatch, successText) {
 
 async function transferSession() {
   if (!selected.value?.sid) return
-  if (!await confirmAction({ title: '确认将当前会话标记为已转接？', description: '该操作会写入后台状态和审计日志。' })) return
+  if (!await confirmAction({ title: '确认将当前会话标记为已转接？', description: '该操作会写入会话状态和操作记录。' })) return
   await persistConversationStatus('transferred', { sessionStatus: 'transferred', badgeText: '已转接', unreadCount: 0 }, '会话已转接')
 }
 
@@ -1663,7 +1663,7 @@ async function sendImageByUrl() {
     if (unknownCount > 0) {
       error.value = `${unknownCount} 张图片发送结果待核对，请先在闲鱼 App 检查；系统已禁止直接重试。`
     } else if (failedCount > 0) {
-      error.value = `${failedCount} 张图片被平台明确拒绝，可在排查后安全重试。`
+      error.value = `${failedCount} 张图片被平台明确拒绝，核对后可安全重试。`
     }
   } catch {
     const outcome = resolveManualMessageError()
@@ -2481,7 +2481,7 @@ function applyManualMessageOutcome(message, outcome) {
 
 function manualMessageErrorText(outcome, label = '消息') {
   if (outcome.status === 'failed' && outcome.retrySafe) {
-    return outcome.message || `${label}明确未发送，排查账号或会话状态后可安全重试。`
+    return outcome.message || `${label}明确未发送，核对账号或会话状态后可安全重试。`
   }
   return outcome.message || `${label}发送结果未确认，请先在闲鱼 App 核对；请勿直接重试。`
 }

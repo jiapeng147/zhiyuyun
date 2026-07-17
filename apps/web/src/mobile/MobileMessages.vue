@@ -725,7 +725,7 @@ async function sendCurrentMessage() {
     }
     if (outcome.status !== 'confirmed') {
       sendError.value = outcome.status === 'failed' && outcome.retrySafe
-        ? (outcome.message || '平台明确未接收消息，可在排查后重新发送。')
+        ? (outcome.message || '平台明确未接收消息，核对后可重新发送。')
         : (outcome.message || '发送结果未确认，请先在闲鱼 App 核对；请勿直接重发。')
     }
   } catch (error) {
