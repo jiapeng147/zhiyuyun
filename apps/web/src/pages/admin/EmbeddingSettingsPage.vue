@@ -1,33 +1,64 @@
 <template>
-  <div class="embedding-settings-page">
+  <div class="embedding-settings-page embedding-v9-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <section class="page-hero">
-      <div class="page-hero-copy">
-        <span class="page-pill">向量模型</span>
-        <h1>向量模型配置</h1>
-        <p>向量模型（Embedding）独立维护，用于 RAG 知识库的文档向量化与语义召回。聊天与文本生成请前往“模型配置”页签。</p>
+    <section class="embedding-hero">
+      <div class="embedding-hero-copy">
+        <span class="embedding-kicker">Embedding Gateway</span>
+        <h1>向量检索控制台</h1>
+        <p>独立维护 Embedding 模型的供应商、模型名、接口地址和密钥。知识库导入、文档向量化、语义召回和 RAG 检索都会读取这里的专用配置。</p>
 
-        <div class="page-actions">
-          <AppButton type="primary" :loading="saving" :disabled="!configAvailable" @click="save">保存配置</AppButton>
-          <AppButton :loading="loading" @click="loadPage">重新加载</AppButton>
+        <div class="embedding-hero-actions">
+          <button type="button" class="embedding-save-btn" :disabled="saving || !configAvailable" @click="save">{{ saving ? '保存中...' : '保存配置' }}</button>
+          <button type="button" class="embedding-reload-btn" :disabled="loading" @click="loadPage">{{ loading ? '加载中...' : '重新加载' }}</button>
         </div>
       </div>
 
-      <div class="hero-badges">
-        <div class="status-card" :class="runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? 'green' : 'purple'">
-          <span>向量模型</span>
-          <strong>{{ runtimeStatusAvailable ? (runtimeStatus.embeddingModelConfigured ? '已配置' : '未设置') : '状态未知' }}</strong>
-          <small>Embedding / RAG 检索</small>
+      <aside class="embedding-status-panel" :class="runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? 'green' : 'orange'" aria-label="向量模型状态">
+        <span>向量模型</span>
+        <strong>{{ runtimeStatusAvailable ? (runtimeStatus.embeddingModelConfigured ? '已配置' : '未设置') : '状态未知' }}</strong>
+        <div class="embedding-status-meter">
+          <i :style="{ width: runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? '78%' : '32%' }"></i>
         </div>
-      </div>
+        <p>Embedding / RAG / Semantic Search</p>
+      </aside>
     </section>
 
-    <div class="page-grid">
-      <n-card class="settings-v7-card" :bordered="false">
-        <template #header>向量模型（Embedding）</template>
-        <template #header-extra><span class="settings-v7-desc">RAG 知识库建索引、召回相似内容与检索增强回答，都会优先使用这里的嵌入模型配置。</span></template>
+    <section class="embedding-summary-grid" aria-label="向量检索摘要">
+      <article class="embedding-summary-card">
+        <span class="embedding-summary-icon blue">01</span>
+        <div>
+          <strong>文档向量化</strong>
+          <p>知识库导入和切片索引会用这里的模型把文本转换为向量，形成可检索的语义索引。</p>
+        </div>
+      </article>
+      <article class="embedding-summary-card">
+        <span class="embedding-summary-icon green">02</span>
+        <div>
+          <strong>语义召回</strong>
+          <p>用户提问会先匹配相似内容，再交给通用模型生成回答，减少凭空发挥。</p>
+        </div>
+      </article>
+      <article class="embedding-summary-card">
+        <span class="embedding-summary-icon amber">03</span>
+        <div>
+          <strong>密钥保护</strong>
+          <p>保存后的 Key 不完整回显；切换接口主机时建议重新输入，避免把密钥发往错误地址。</p>
+        </div>
+      </article>
+    </section>
+
+    <div class="embedding-workspace">
+      <section class="embedding-v9-card embedding-config-panel">
+        <div class="embedding-card-head">
+          <div>
+            <span>向量模型</span>
+            <h2>检索接入参数</h2>
+          </div>
+          <p>RAG 知识库建索引、召回相似内容与检索增强回答都会优先使用这里的 Embedding 配置。</p>
+        </div>
+
         <div class="config-overview">
           <article class="overview-card">
             <span>用途边界</span>
@@ -86,11 +117,17 @@
             />
           </OpsConfigField>
         </div>
-      </n-card>
+      </section>
 
-      <n-card class="settings-v7-card" :bordered="false">
-        <template #header>使用说明</template>
-        <template #header-extra><span class="settings-v7-desc">先理解向量模型的职责边界，再去调整供应商和模型选型，会少走很多弯路。</span></template>
+      <aside class="embedding-v9-card embedding-guide-panel">
+        <div class="embedding-card-head compact">
+          <div>
+            <span>检索建议</span>
+            <h2>使用说明</h2>
+          </div>
+          <p>先确认向量模型的职责边界，再去调整供应商和模型选型，可以减少索引失败和召回偏差。</p>
+        </div>
+
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">R</div>
@@ -122,16 +159,14 @@
           <li>接口地址通常以 <code>/v1</code> 结尾，必须使用公网 HTTPS；当前默认安全策略不允许直接连接本机或内网模型服务。</li>
           <li>API Key 不会完整回显；需要更换时直接覆盖，切换接口主机时也必须重新输入并保存。</li>
         </ul>
-      </n-card>
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
-import { NCard } from 'naive-ui'
 import OpsConfigField from '../../components/OpsConfigField.vue'
-import AppButton from '../../components/AppButton.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
   cloneOpenSourceConfig,
@@ -203,101 +238,324 @@ function onHeaderAction(event) {
 </script>
 
 <style scoped>
-.embedding-settings-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.page-hero {
+.embedding-v9-shell {
+  --embedding-primary: #2563eb;
+  --embedding-primary-dark: #1d4ed8;
+  --embedding-accent: #0f766e;
+  --embedding-warning: #f59e0b;
+  --embedding-text: #111827;
+  --embedding-muted: #64748b;
+  --embedding-line: #e5e7eb;
+  --embedding-panel: #ffffff;
+  --embedding-soft: #f8fafc;
+  --embedding-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
-  padding: 22px;
-  border-radius: 24px;
-  border: 1px solid rgba(231, 237, 247, 0.95);
-  background:
-    radial-gradient(circle at top left, rgba(255, 104, 39, 0.1), transparent 32%),
-    radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 35%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92));
-  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
+  color: var(--embedding-text);
 }
 
-.page-pill {
+.embedding-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.embedding-hero-copy,
+.embedding-status-panel,
+.embedding-summary-card,
+.embedding-v9-card {
+  border: 1px solid var(--embedding-line);
+  border-radius: 8px;
+  background: var(--embedding-panel);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 42px rgba(15, 23, 42, 0.06);
+}
+
+.embedding-hero-copy {
+  position: relative;
+  overflow: hidden;
+  min-height: 236px;
+  padding: 28px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.96)),
+    repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.06) 0 1px, transparent 1px 40px);
+}
+
+.embedding-hero-copy::before {
+  content: '';
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  width: 240px;
+  height: 126px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.13) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(15, 118, 110, 0.11) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.68;
+  transform: rotate(-3deg);
+}
+
+.embedding-hero-copy::after {
+  content: '';
+  position: absolute;
+  right: 80px;
+  bottom: 60px;
+  width: 128px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.18), rgba(15, 118, 110, 0.16));
+  opacity: 0.72;
+}
+
+.embedding-kicker {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
+  height: 28px;
   padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--embedding-primary-dark);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.page-hero-copy h1 {
-  margin: 10px 0 0;
-  font-size: 28px;
-  color: #13213d;
+.embedding-hero-copy h1 {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 10px;
+  color: var(--embedding-text);
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.page-hero-copy p {
-  margin: 10px 0 0;
-  max-width: 760px;
+.embedding-hero-copy p {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0;
+  color: var(--embedding-muted);
+  font-size: 14px;
   line-height: 1.8;
-  color: #60738e;
 }
 
-.page-actions {
+.embedding-hero-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 22px;
 }
 
-.hero-badges {
+.embedding-save-btn,
+.embedding-reload-btn {
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 140ms var(--embedding-ease),
+    box-shadow 160ms var(--embedding-ease),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.embedding-save-btn {
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--embedding-primary), var(--embedding-accent));
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.18);
+}
+
+.embedding-reload-btn {
+  border: 1px solid #bfdbfe;
+  background: #ffffff;
+  color: var(--embedding-primary-dark);
+}
+
+.embedding-save-btn:disabled,
+.embedding-reload-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.embedding-status-panel {
   display: grid;
-  gap: 12px;
+  align-content: space-between;
+  gap: 14px;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%),
+    repeating-linear-gradient(135deg, rgba(15, 118, 110, 0.06) 0 1px, transparent 1px 18px);
 }
 
-.status-card {
-  padding: 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(231, 237, 247, 0.95);
+.embedding-status-panel.orange {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fffbeb 100%),
+    repeating-linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0 1px, transparent 1px 18px);
 }
 
-.status-card span {
-  display: block;
+.embedding-status-panel span,
+.embedding-card-head span {
+  color: var(--embedding-muted);
   font-size: 12px;
-  font-weight: 700;
-  color: #6B6B6B;
+  font-weight: 850;
 }
 
-.status-card strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 20px;
-  color: #13213d;
+.embedding-status-panel strong {
+  color: var(--embedding-warning);
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.status-card small {
-  display: block;
-  margin-top: 6px;
+.embedding-status-panel.green strong {
+  color: var(--embedding-accent);
+}
+
+.embedding-status-panel p {
+  margin: 0;
+  color: var(--embedding-muted);
+  font-size: 13px;
   line-height: 1.65;
-  color: #667892;
 }
 
-.status-card.green {
-  background: linear-gradient(180deg, rgba(236, 253, 243, 0.98), rgba(255, 255, 255, 0.96));
+.embedding-status-meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
 }
 
-.status-card.purple {
-  background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(255, 255, 255, 0.96));
+.embedding-status-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--embedding-primary), var(--embedding-accent));
+  transition: width 220ms var(--embedding-ease);
 }
 
-.page-grid {
+.embedding-status-panel.orange .embedding-status-meter i {
+  background: linear-gradient(90deg, var(--embedding-warning), var(--embedding-accent));
+}
+
+.embedding-summary-grid {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.embedding-summary-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  transition:
+    transform 180ms var(--embedding-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--embedding-ease);
+}
+
+.embedding-summary-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--embedding-primary);
+  background: #eff6ff;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.embedding-summary-icon.green {
+  color: var(--embedding-accent);
+  background: #f0fdfa;
+}
+
+.embedding-summary-icon.amber {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.embedding-summary-card strong,
+.embedding-card-head h2,
+.overview-card strong,
+.guide-card strong {
+  color: var(--embedding-text);
+  font-weight: 850;
+}
+
+.embedding-summary-card p,
+.embedding-card-head p,
+.overview-card p,
+.guide-card p {
+  margin: 6px 0 0;
+  color: var(--embedding-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.embedding-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
+  align-items: start;
+}
+
+.embedding-v9-card {
+  padding: 18px;
+  transition:
+    transform 180ms var(--embedding-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--embedding-ease);
+}
+
+.embedding-guide-panel {
+  position: sticky;
+  top: 12px;
+}
+
+.embedding-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.embedding-card-head.compact {
+  display: grid;
+  gap: 8px;
+}
+
+.embedding-card-head h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.embedding-card-head p {
+  max-width: 420px;
+  margin-top: 0;
 }
 
 .config-overview {
@@ -309,35 +567,31 @@ function onHeaderAction(event) {
 
 .overview-card {
   padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(225, 233, 245, 0.98);
-  background: linear-gradient(135deg, #FFFFFF, #f5f9ff);
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%),
+    repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.04) 0 1px, transparent 1px 28px);
 }
 
 .overview-card span {
   display: inline-flex;
-  min-height: 22px;
   align-items: center;
+  min-height: 24px;
   padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--embedding-primary-dark);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .overview-card strong {
   display: block;
   margin-top: 12px;
-  color: #13213d;
   font-size: 15px;
-}
-
-.overview-card p {
-  margin: 8px 0 0;
-  color: #6e7e98;
-  line-height: 1.7;
-  font-size: 13px;
+  line-height: 1.45;
 }
 
 .field-grid {
@@ -349,235 +603,214 @@ function onHeaderAction(event) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.embedding-v9-shell :deep(.ops-config-field) {
+  border-color: var(--embedding-line);
+  border-radius: 8px;
+  background: var(--embedding-soft);
+  box-shadow: none;
+  transition:
+    transform 180ms var(--embedding-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--embedding-ease);
+}
+
+.embedding-v9-shell :deep(.ops-config-field:hover) {
+  border-color: #bfdbfe;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.08);
+}
+
+.embedding-v9-shell :deep(.ops-config-field-label) {
+  color: var(--embedding-text);
+  letter-spacing: 0;
+}
+
+.embedding-v9-shell :deep(.ops-config-field-badge) {
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--embedding-primary-dark);
+}
+
+.embedding-v9-shell :deep(.ops-config-field-required) {
+  border-radius: 8px;
+}
+
+.embedding-v9-shell :deep(.ops-config-field-hint),
+.embedding-v9-shell :deep(.ops-config-field-meta) {
+  color: var(--embedding-muted);
+}
+
+.embedding-v9-shell :deep(.config-input),
+.embedding-v9-shell :deep(.config-textarea),
+.embedding-v9-shell :deep(.secret-input) {
+  border-color: #dbe3ee;
+  border-radius: 8px;
+  color: var(--embedding-text);
+  background: #ffffff;
+}
+
+.embedding-v9-shell :deep(.config-input:hover),
+.embedding-v9-shell :deep(.config-textarea:hover),
+.embedding-v9-shell :deep(.secret-input:hover) {
+  border-color: #bfdbfe;
+}
+
+.embedding-v9-shell :deep(.config-input:focus),
+.embedding-v9-shell :deep(.config-input:focus-visible),
+.embedding-v9-shell :deep(.config-textarea:focus),
+.embedding-v9-shell :deep(.config-textarea:focus-visible),
+.embedding-v9-shell :deep(.secret-input:focus-within) {
+  border-color: var(--embedding-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.embedding-v9-shell :deep(.secret-input-control) {
+  color: var(--embedding-text);
+}
+
+.embedding-v9-shell :deep(.secret-input-toggle) {
+  border-left-color: var(--embedding-line);
+  background: #f8fbff;
+  color: var(--embedding-primary-dark);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
 .guide-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
 
 .guide-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
   gap: 12px;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(225, 233, 245, 0.98);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+  padding: 14px;
+  border: 1px solid var(--embedding-line);
+  border-radius: 8px;
+  background: var(--embedding-soft);
 }
 
 .guide-icon {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: #edf4ff;
-  color: #0f766e;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--embedding-primary-dark);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .guide-card strong {
   display: block;
-  color: #13213d;
   font-size: 14px;
 }
 
-.guide-card p {
-  margin: 6px 0 0;
-  color: #6d7c96;
-  line-height: 1.7;
-  font-size: 12.5px;
+.hint-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--embedding-muted);
+  font-size: 12px;
+  line-height: 1.75;
 }
 
-.hint-list {
-  margin: 0;
-  padding-left: 18px;
-  color: #667892;
-  line-height: 1.8;
+.hint-list li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.hint-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--embedding-accent);
 }
 
 .hint-list code {
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
   padding: 1px 6px;
   border-radius: 6px;
+  background: #eff6ff;
+  color: var(--embedding-primary-dark);
   font-size: 12px;
 }
 
-@media (max-width: 1180px) {
-  .page-hero,
-  .config-overview,
-  .guide-grid {
+@media (hover: hover) and (pointer: fine) {
+  .embedding-summary-card:hover,
+  .embedding-v9-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 24px 54px rgba(37, 99, 235, 0.11);
+  }
+
+  .embedding-save-btn:hover:not(:disabled),
+  .embedding-reload-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.embedding-save-btn:active,
+.embedding-reload-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 1220px) {
+  .embedding-hero,
+  .embedding-workspace {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .embedding-guide-panel {
+    position: static;
   }
 }
 
 @media (max-width: 920px) {
-  .field-grid.two {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .embedding-settings-page {
-    gap: 12px;
-  }
-
-  .page-hero {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 14px;
-    border-radius: 16px;
-  }
-
-  .page-hero-copy h1 {
-    font-size: 20px;
-  }
-
-  .page-hero-copy p {
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .page-actions {
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .hero-badges {
-    gap: 10px;
-  }
-
-  .status-card {
-    padding: 12px;
-    border-radius: 14px;
-  }
-
-  .status-card strong {
-    font-size: 16px;
-  }
-
-  .status-card small {
-    font-size: 12px;
-  }
-
-  .page-grid {
-    gap: 12px;
-  }
-
-  .config-overview {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .overview-card {
-    padding: 12px;
-    border-radius: 14px;
-  }
-
-  .overview-card strong {
-    margin-top: 8px;
-    font-size: 14px;
-  }
-
-  .overview-card p {
-    margin-top: 6px;
-    font-size: 12.5px;
-    line-height: 1.6;
-  }
-
-  .field-grid {
-    gap: 12px;
-  }
-
+  .embedding-summary-grid,
+  .config-overview,
   .field-grid.two {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .guide-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
+  .embedding-hero-copy {
+    min-height: 0;
+    padding: 22px;
   }
 
-  .page-hero > *,
-  .config-overview > *,
-  .guide-grid > *,
-  .field-grid.two > * {
-    min-width: 0;
+  .embedding-hero-copy::before,
+  .embedding-hero-copy::after {
+    display: none;
   }
 
-  .guide-card {
-    padding: 12px;
-    border-radius: 14px;
-    gap: 10px;
+  .embedding-hero-copy h1 {
+    font-size: 28px;
   }
 
-  .guide-card strong {
-    font-size: 13.5px;
-  }
-
-  .guide-card p {
-    font-size: 12px;
-    line-height: 1.6;
-  }
-
-  .guide-icon {
-    width: 26px;
-    height: 26px;
-    font-size: 12px;
-  }
-
-  .hint-list {
-    padding-left: 16px;
-    font-size: 13px;
-    line-height: 1.7;
-  }
-
-  .hint-list code {
-    font-size: 11px;
-    word-break: break-all;
+  .embedding-card-head {
+    flex-direction: column;
   }
 }
 
-.page-hero,
-.settings-v7-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
+@media (max-width: 620px) {
+  .embedding-hero-actions,
+  .embedding-save-btn,
+  .embedding-reload-btn {
+    width: 100%;
+  }
 
-.page-hero {
-  background: #fff;
-}
-
-.page-pill {
-  border-radius: 6px;
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.page-hero-copy h1 {
-  color: #111827;
-  letter-spacing: 0;
-}
-
-.settings-v7-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.settings-v7-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
-}
-
-.settings-v7-desc {
-  max-width: 380px;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.5;
+  .embedding-status-panel strong {
+    font-size: 28px;
+  }
 }
 </style>
