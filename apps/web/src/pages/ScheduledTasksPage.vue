@@ -1,46 +1,62 @@
 <template>
-  <div class="scheduled-v4">
-    <div class="scheduled-v4-notices">
+  <div class="scheduled-tasks-page">
+    <div class="scheduled-tasks-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <n-card class="scheduled-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">定时任务</n-tag>
-        <h2>定时任务编排</h2>
+    <section class="scheduled-command-center">
+      <div class="scheduled-command-main">
+        <div class="scheduled-command-kicker">
+          <span>任务调度</span>
+          <b>{{ tasksAvailable === true ? `共 ${total} 条` : '任务未确认' }}</b>
+        </div>
+        <h2>定时任务控制台</h2>
         <p>统一配置商品同步、订单同步和手动触发执行，旧任务类型会被明确标记为不可用。</p>
+        <div class="scheduled-command-meta">
+          <span>{{ tasksAvailable === null ? '任务读取中' : (tasksAvailable === true ? '任务可管理' : '任务不可用') }}</span>
+          <span>{{ runningTaskId ? `任务 #${runningTaskId} 执行中` : '暂无运行任务' }}</span>
+          <span>{{ form.id ? `编辑 #${form.id}` : '新建配置' }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <n-button size="small" :loading="tasksAvailable === null" @click="load">刷新任务</n-button>
-        <n-button size="small" type="primary" @click="reset">创建任务</n-button>
-      </n-space>
-    </n-card>
-
-    <n-alert class="scheduled-v4-alert" type="info" :bordered="false">
-      调度服务支持“同步商品”和“同步订单”。旧任务类型不会执行，可在列表中删除后重新创建。
-    </n-alert>
-
-    <section class="scheduled-v4-stats">
-      <n-card
-        v-for="item in taskStatCards"
-        :key="item.key"
-        class="scheduled-v4-stat"
-        :class="item.tone"
-        :bordered="false"
-      >
-        <span class="scheduled-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
+      <div class="scheduled-command-panel">
+        <div class="scheduled-command-panel-head">
+          <span>调度动作</span>
+          <strong>{{ saving ? '保存中' : '可操作' }}</strong>
+        </div>
+        <div class="scheduled-command-buttons">
+          <n-button :loading="tasksAvailable === null" @click="load">刷新任务</n-button>
+          <n-button type="primary" @click="reset">创建任务</n-button>
+        </div>
+      </div>
     </section>
 
-    <div class="layout-grid scheduled-v4-grid">
-      <n-card class="scheduled-v4-table-card" :bordered="false">
-        <template #header>定时任务</template>
-        <template #header-extra>
-          <n-tag size="small" :bordered="false">共 {{ tasksAvailable === true ? total : '—' }} 条</n-tag>
-        </template>
+    <div class="scheduled-service-note" role="status">
+      调度服务支持“同步商品”和“同步订单”。旧任务类型不会执行，可在列表中删除后重新创建。
+    </div>
+
+    <section class="scheduled-metric-rail">
+      <article
+        v-for="item in taskStatCards"
+        :key="item.key"
+        class="scheduled-metric-card"
+        :class="item.tone"
+      >
+        <span class="scheduled-metric-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </article>
+    </section>
+
+    <div class="scheduled-workspace">
+      <section class="scheduled-panel scheduled-table-panel">
+        <header class="scheduled-panel-head">
+          <div>
+            <span>任务队列</span>
+            <h3>定时任务</h3>
+          </div>
+          <b>共 {{ tasksAvailable === true ? total : '—' }} 条</b>
+        </header>
         <EmptyState v-if="tasksAvailable === false" icon="⚠️" title="定时任务列表暂不可用" description="当前无法确认是否存在任务，不会把加载失败显示为空列表。">
           <template #actions><AppButton @click="load">重新加载</AppButton></template>
         </EmptyState>
@@ -89,10 +105,16 @@
           </template>
         </BaseTable>
         <Pagination v-if="tasksAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
-      </n-card>
+      </section>
 
-      <n-card class="scheduled-v4-form-card" :bordered="false">
-        <template #header>{{ form.id ? '编辑任务' : '创建任务' }}</template>
+      <section class="scheduled-panel scheduled-form-panel">
+        <header class="scheduled-panel-head">
+          <div>
+            <span>任务配置</span>
+            <h3>{{ form.id ? '编辑任务' : '创建任务' }}</h3>
+          </div>
+          <b>{{ form.enabled ? '启用' : '禁用' }}</b>
+        </header>
         <div class="form-field">
           <label>任务名称</label>
           <n-input ref="taskNameInputRef" v-model:value="form.taskName" />
@@ -116,24 +138,24 @@
           <n-input v-model:value="form.configJson" type="textarea" :autosize="{ minRows: 8, maxRows: 14 }" />
           <span v-if="jsonError" class="input-error">{{ jsonError }}</span>
         </div>
-        <div class="scheduled-v4-switch-row">
+        <div class="scheduled-switch-row">
           <span>启用自动调度</span>
           <n-switch v-model:value="form.enabled" />
         </div>
-        <n-space :size="8" align="center" wrap>
+        <div class="scheduled-form-actions">
           <n-button type="primary" :loading="saving" @click="save">
             {{ saving ? '保存中...' : '保存任务' }}
           </n-button>
           <n-button @click="reset">重置</n-button>
-        </n-space>
-      </n-card>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NAlert, NButton, NCard, NInput, NSelect, NSpace, NStatistic, NSwitch, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NStatistic, NSwitch } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -421,113 +443,256 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.scheduled-v4 {
+.scheduled-tasks-page {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
+  color: #111827;
 }
 
-.scheduled-v4-notices {
+.scheduled-tasks-page * {
+  box-sizing: border-box;
+}
+
+.scheduled-tasks-notices {
   display: grid;
   gap: 8px;
 }
 
-.scheduled-v4-hero,
-.scheduled-v4-table-card,
-.scheduled-v4-form-card,
-.scheduled-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.scheduled-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.scheduled-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
   gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dbe4ef;
+  border-left: 5px solid #2563eb;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(15, 118, 110, .05) 48%, rgba(255, 255, 255, .96)),
+    #fff;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .08);
 }
 
-.scheduled-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
+.scheduled-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
 }
 
-.scheduled-v4-hero p {
+.scheduled-command-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.scheduled-command-kicker span,
+.scheduled-command-kicker b {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .1);
+}
+
+.scheduled-command-kicker b {
+  color: #0f766e;
+  background: rgba(15, 118, 110, .1);
+}
+
+.scheduled-command-main h2 {
   margin: 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 760;
+  line-height: 1.2;
+}
+
+.scheduled-command-main p {
+  max-width: 760px;
+  margin: 0;
+  color: #526079;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.scheduled-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.scheduled-command-meta span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .82);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.scheduled-command-panel {
+  align-self: stretch;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .92);
+}
+
+.scheduled-command-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   color: #64748b;
+  font-size: 12px;
+}
+
+.scheduled-command-panel-head strong {
+  color: #2563eb;
+  font-size: 13px;
+}
+
+.scheduled-command-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.scheduled-service-note {
+  padding: 12px 14px;
+  border: 1px solid #bcd7ff;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.scheduled-v4-alert {
-  border-radius: 6px;
-}
-
-.scheduled-v4-stats {
+.scheduled-metric-rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
-.scheduled-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+.scheduled-metric-card {
+  min-width: 0;
+  min-height: 132px;
   display: grid;
+  grid-template-rows: auto 1fr auto;
   gap: 8px;
+  padding: 14px;
+  border: 1px solid #e4ebf5;
+  border-top: 3px solid #64748b;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
 }
 
-.scheduled-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.scheduled-metric-icon {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
+  color: #fff;
+  background: #64748b;
+  font-size: 12px;
+  font-weight: 750;
 }
 
-.scheduled-v4-stat.tone-blue .scheduled-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.scheduled-v4-stat.tone-green .scheduled-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.scheduled-v4-stat.tone-cyan .scheduled-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.scheduled-v4-stat.tone-orange .scheduled-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.scheduled-metric-card.tone-blue { border-top-color: #2563eb; }
+.scheduled-metric-card.tone-blue .scheduled-metric-icon { background: #2563eb; }
+.scheduled-metric-card.tone-green { border-top-color: #059669; }
+.scheduled-metric-card.tone-green .scheduled-metric-icon { background: #059669; }
+.scheduled-metric-card.tone-cyan { border-top-color: #0891b2; }
+.scheduled-metric-card.tone-cyan .scheduled-metric-icon { background: #0891b2; }
+.scheduled-metric-card.tone-orange { border-top-color: #ea580c; }
+.scheduled-metric-card.tone-orange .scheduled-metric-icon { background: #ea580c; }
 
-.scheduled-v4-stat :deep(.n-statistic .n-statistic-label) {
+.scheduled-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.scheduled-v4-stat :deep(.n-statistic .n-statistic-value) {
+.scheduled-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 760;
 }
 
-.scheduled-v4-stat small {
+.scheduled-metric-card small {
   color: #64748b;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.scheduled-v4-table-card :deep(.n-card__content),
-.scheduled-v4-form-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.scheduled-v4-table-card :deep(.n-card-header),
-.scheduled-v4-form-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
-}
-
-.layout-grid {
+.scheduled-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, .48fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.scheduled-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
+}
+
+.scheduled-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.scheduled-panel-head span {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.scheduled-panel-head h3 {
+  margin: 4px 0 0;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 730;
+  line-height: 1.35;
+}
+
+.scheduled-panel-head b {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
 }
 
 .form-field {
@@ -552,7 +717,7 @@ onBeforeUnmount(() => {
   margin-bottom: 14px;
 }
 
-.scheduled-v4-switch-row {
+.scheduled-switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -565,6 +730,13 @@ onBeforeUnmount(() => {
   color: #334155;
   font-size: 13px;
   font-weight: 600;
+}
+
+.scheduled-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .inline-actions {
@@ -605,38 +777,52 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1080px) {
-  .layout-grid {
+  .scheduled-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
-  .layout-grid > * {
+  .scheduled-workspace > * {
     min-width: 0;
   }
 }
 
-/* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
-  .scheduled-v4 {
+  .scheduled-tasks-page {
     gap: 12px;
   }
 
-  .scheduled-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .scheduled-command-center,
+  .scheduled-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scheduled-command-center,
+  .scheduled-panel {
     padding: 14px;
   }
 
-  .scheduled-v4-stats {
+  .scheduled-command-main h2 {
+    font-size: 22px;
+  }
+
+  .scheduled-command-buttons {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .scheduled-v4-table-card :deep(.n-card__content),
-  .scheduled-v4-form-card :deep(.n-card__content) {
+  .scheduled-metric-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .scheduled-metric-card {
+    min-height: 124px;
     padding: 12px;
   }
 
-  .layout-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+  .scheduled-panel-head {
+    gap: 10px;
+    margin-bottom: 12px;
   }
+
   .form-field {
     gap: 5px;
     margin-bottom: 10px;
@@ -656,7 +842,7 @@ onBeforeUnmount(() => {
   .inline-actions .link {
     font-size: 13px;
   }
-  /* 宽表格横向滚动 */
+
   :deep(.base-table) {
     display: block;
     overflow-x: auto;
