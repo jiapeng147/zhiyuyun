@@ -1,10 +1,10 @@
 <template>
   <AuthShell
     page-key="login"
-    title-lead="让闲鱼运营"
-    title-accent="更简单"
-    title-tail="更高效"
-    description="智鱼云通过账号密码登录管理后台。"
+    title-lead="把闲鱼运营"
+    title-accent="收进一个"
+    title-tail="工作台"
+    description="统一管理账号、商品、消息、订单与自动化任务，进入后台后继续处理你的运营流程。"
     legal-description="该页面用于说明 Zhiyuyun 登录、身份验证与账号安全相关规则。"
     @navigate="emit('navigate', $event)"
   >
@@ -63,10 +63,11 @@
     </form>
 
     <div class="auth-agreement" role="note">
-      当前部署尚未配置经审核的正式协议文本，登录不代表已完成知情同意。部署方商用前必须补齐
+      登录前请确认当前部署方已配置并公示
       <button type="button" class="auth-text-link" @click="openDoc('用户协议')">用户协议</button>
       和
-      <button type="button" class="auth-text-link" @click="openDoc('隐私政策')">隐私政策</button>。
+      <button type="button" class="auth-text-link" @click="openDoc('隐私政策')">隐私政策</button>
+      。
     </div>
   </AuthShell>
 </template>

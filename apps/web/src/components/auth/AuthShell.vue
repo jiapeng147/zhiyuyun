@@ -4,6 +4,7 @@
       <button type="button" class="auth-v3-brand" @click="emit('navigate', 'data')">
         <span><img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-auth" alt="" /></span>
         <strong>智鱼云</strong>
+        <em>Admin</em>
       </button>
       <button type="button" class="auth-v3-ghost" @click="openDoc('用户协议')">服务条款</button>
     </header>
@@ -18,29 +19,63 @@
         </h1>
         <p>{{ description }}</p>
 
-        <div class="auth-v3-console" aria-hidden="true">
-          <div class="auth-v3-console-head">
-            <i></i><i></i><i></i>
-            <span>operations map</span>
+        <div class="auth-dashboard-preview" aria-hidden="true">
+          <div class="auth-preview-sidebar">
+            <div class="auth-preview-mark">ZY</div>
+            <span class="active"></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
-          <div class="auth-v3-console-grid">
-            <div class="auth-v3-metric">
-              <small>Accounts</small>
-              <b>24</b>
-              <em>+12.8%</em>
+
+          <div class="auth-preview-main">
+            <div class="auth-preview-toolbar">
+              <div>
+                <b>运营工作台</b>
+                <small>消息、商品、订单集中处理</small>
+              </div>
+              <span>Live</span>
             </div>
-            <div class="auth-v3-metric">
-              <small>Orders</small>
-              <b>1,286</b>
-              <em>+8.4%</em>
+
+            <div class="auth-preview-stats">
+              <div>
+                <small>今日咨询</small>
+                <b>326</b>
+              </div>
+              <div>
+                <small>自动回复</small>
+                <b>89%</b>
+              </div>
+              <div>
+                <small>待发货</small>
+                <b>18</b>
+              </div>
             </div>
-            <div class="auth-v3-metric wide">
-              <small>Automation</small>
-              <span><i style="width:78%"></i></span>
+
+            <div class="auth-preview-content">
+              <div class="auth-preview-chart">
+                <span style="height:42%"></span>
+                <span style="height:68%"></span>
+                <span style="height:54%"></span>
+                <span style="height:82%"></span>
+                <span style="height:63%"></span>
+                <span style="height:74%"></span>
+              </div>
+              <div class="auth-preview-list">
+                <div><i></i><span></span><b></b></div>
+                <div><i></i><span></span><b></b></div>
+                <div><i></i><span></span><b></b></div>
+              </div>
             </div>
           </div>
-          <div class="auth-v3-timeline">
-            <span></span><span></span><span></span><span></span>
+
+          <div class="auth-preview-float auth-preview-message">
+            <strong>新消息</strong>
+            <span>买家咨询已进入队列</span>
+          </div>
+          <div class="auth-preview-float auth-preview-health">
+            <strong>96%</strong>
+            <span>账号健康度</span>
           </div>
         </div>
 
@@ -56,11 +91,17 @@
         <div class="auth-v3-panel-head">
           <span class="auth-v3-brand-dot">ZY</span>
           <div>
+            <span class="auth-panel-kicker">{{ pageKey === 'register' ? 'Create Account' : 'Secure Login' }}</span>
             <h2>{{ pageKey === 'register' ? '创建账号' : '登录后台' }}</h2>
             <p>{{ pageKey === 'register' ? '使用邮箱验证码开通账户' : '进入你的运营工作台' }}</p>
           </div>
         </div>
         <slot />
+        <div class="auth-panel-assurance" aria-hidden="true">
+          <span>加密会话</span>
+          <span>权限隔离</span>
+          <span>本地数据</span>
+        </div>
       </section>
     </main>
 
@@ -105,7 +146,10 @@ function openDoc(title) {
   min-height: 100vh !important;
   display: grid !important;
   grid-template-rows: 64px minmax(0, 1fr) 48px !important;
-  background: #f4f7fb !important;
+  background:
+    linear-gradient(135deg, rgba(245, 158, 11, .08), transparent 28%),
+    linear-gradient(315deg, rgba(20, 184, 166, .08), transparent 30%),
+    #f5f7fb !important;
   color: #101828;
   overflow-x: hidden;
 }
@@ -180,6 +224,20 @@ function openDoc(title) {
   letter-spacing: 0;
 }
 
+.auth-v8-shell .auth-v3-brand em {
+  height: 22px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #dfe6f2;
+  border-radius: 999px;
+  color: #667085;
+  background: #f8fafc;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .auth-v8-shell .auth-v3-ghost,
 .auth-v8-shell .auth-v3-footer button {
   min-height: 32px;
@@ -195,35 +253,36 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-main {
-  width: min(1180px, calc(100vw - 48px)) !important;
-  margin: 28px auto !important;
+  width: min(1220px, calc(100vw - 48px)) !important;
+  margin: 30px auto !important;
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 430px !important;
-  gap: 18px !important;
+  grid-template-columns: minmax(0, 1fr) 420px !important;
+  gap: 22px !important;
   align-items: stretch !important;
 }
 
 .auth-v8-shell .auth-v3-showcase,
 .auth-v8-shell .auth-v3-panel {
   min-width: 0;
-  border: 1px solid #dfe6f2 !important;
-  border-radius: 8px !important;
+  border: 1px solid #dbe4f0 !important;
+  border-radius: 12px !important;
   background: #fff !important;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, .08) !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .09) !important;
 }
 
 .auth-v8-shell .auth-v3-showcase {
-  min-height: 560px !important;
-  padding: 40px !important;
+  position: relative;
+  min-height: 590px !important;
+  padding: 42px !important;
   display: grid !important;
   align-content: start !important;
-  gap: 24px !important;
+  gap: 22px !important;
   overflow: hidden;
 }
 
 .auth-v8-shell .auth-v3-eyebrow {
   width: fit-content;
-  padding: 5px 10px;
+  padding: 6px 11px;
   color: #2563eb !important;
   background: #eef4ff;
   border: 1px solid #dbe7ff;
@@ -235,10 +294,10 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-showcase h1 {
-  max-width: 620px;
+  max-width: 600px;
   margin: 0 !important;
   color: #101828 !important;
-  font-size: clamp(36px, 4vw, 56px) !important;
+  font-size: clamp(38px, 4.2vw, 58px) !important;
   line-height: 1.08 !important;
   font-weight: 800 !important;
   letter-spacing: 0 !important;
@@ -256,132 +315,235 @@ function openDoc(title) {
   line-height: 1.8;
 }
 
-.auth-v8-shell .auth-v3-console {
-  margin-top: 6px;
-  border: 1px solid #1e2d49 !important;
-  border-radius: 8px !important;
-  background: #101828 !important;
-  color: #fff;
-  box-shadow: 0 18px 38px rgba(16, 24, 40, .22) !important;
-  overflow: hidden;
-}
-
-.auth-v8-shell .auth-v3-console-head {
-  min-height: 42px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, .1);
-  color: #98a2b3;
-  font-size: 12px;
-}
-
-.auth-v8-shell .auth-v3-console-head i {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #475467;
-}
-
-.auth-v8-shell .auth-v3-console-head i:first-child {
-  background: #ef4444;
-}
-
-.auth-v8-shell .auth-v3-console-head i:nth-child(2) {
-  background: #f59e0b;
-}
-
-.auth-v8-shell .auth-v3-console-head i:nth-child(3) {
-  background: #22c55e;
-}
-
-.auth-v8-shell .auth-v3-console-head span {
-  margin-left: auto;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-
-.auth-v8-shell .auth-v3-console-grid {
-  padding: 16px;
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 12px !important;
-}
-
-.auth-v8-shell .auth-v3-metric {
-  min-height: 104px;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, .1) !important;
-  border-radius: 8px !important;
-  background: rgba(255, 255, 255, .06) !important;
+.auth-v8-shell .auth-dashboard-preview {
+  position: relative;
+  margin-top: 4px;
+  min-height: 292px;
   display: grid;
-  align-content: space-between;
-  box-shadow: none !important;
-}
-
-.auth-v8-shell .auth-v3-metric small,
-.auth-v8-shell .auth-v3-metric em {
-  color: #98a2b3;
-  font-size: 12px;
-  font-style: normal;
-}
-
-.auth-v8-shell .auth-v3-metric b {
+  grid-template-columns: 72px minmax(0, 1fr);
+  border: 1px solid #d9e3f1;
+  border-radius: 14px;
+  background: #0f172a;
   color: #fff;
-  font-size: 28px;
-  line-height: 1;
+  overflow: hidden;
+  box-shadow: 0 22px 48px rgba(15, 23, 42, .22);
 }
 
-.auth-v8-shell .auth-v3-metric em {
-  color: #60a5fa !important;
+.auth-v8-shell .auth-preview-sidebar {
+  padding: 16px 12px;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, .06);
+  border-right: 1px solid rgba(255, 255, 255, .1);
 }
 
-.auth-v8-shell .auth-v3-metric.wide {
-  grid-column: 1 / -1;
-  min-height: 78px;
+.auth-v8-shell .auth-preview-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #fff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.auth-v8-shell .auth-v3-metric.wide span {
+.auth-v8-shell .auth-preview-sidebar span {
+  width: 32px;
   height: 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, .12);
-  overflow: hidden;
+  background: rgba(255, 255, 255, .18);
 }
 
-.auth-v8-shell .auth-v3-metric.wide span i {
-  height: 100%;
-  display: block;
-  border-radius: inherit;
+.auth-v8-shell .auth-preview-sidebar span.active {
+  width: 38px;
   background: #60a5fa;
 }
 
-.auth-v8-shell .auth-v3-timeline {
-  padding: 0 16px 16px;
+.auth-v8-shell .auth-preview-main {
+  min-width: 0;
+  padding: 18px;
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 14px;
+  background:
+    linear-gradient(135deg, rgba(96, 165, 250, .16), transparent 42%),
+    linear-gradient(315deg, rgba(20, 184, 166, .12), transparent 38%),
+    #111827;
+}
+
+.auth-v8-shell .auth-preview-toolbar,
+.auth-v8-shell .auth-preview-stats,
+.auth-v8-shell .auth-preview-content,
+.auth-v8-shell .auth-preview-list div,
+.auth-v8-shell .auth-preview-float {
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .07);
+  border-radius: 10px;
+}
+
+.auth-v8-shell .auth-preview-toolbar {
+  min-height: 54px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-v8-shell .auth-preview-toolbar b,
+.auth-v8-shell .auth-preview-toolbar small {
+  display: block;
+}
+
+.auth-v8-shell .auth-preview-toolbar b {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.auth-v8-shell .auth-preview-toolbar small {
+  margin-top: 4px;
+  color: #a7b3c7;
+  font-size: 12px;
+}
+
+.auth-v8-shell .auth-preview-toolbar > span {
+  height: 24px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  color: #86efac;
+  background: rgba(22, 163, 74, .14);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.auth-v8-shell .auth-preview-stats {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.auth-v8-shell .auth-preview-stats div {
+  min-width: 0;
+}
+
+.auth-v8-shell .auth-preview-stats small {
+  display: block;
+  color: #a7b3c7;
+  font-size: 11px;
+}
+
+.auth-v8-shell .auth-preview-stats b {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.auth-v8-shell .auth-preview-content {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 14px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.auth-v8-shell .auth-preview-chart {
+  min-height: 112px;
+  display: flex;
+  align-items: end;
   gap: 8px;
 }
 
-.auth-v8-shell .auth-v3-timeline span {
-  height: 10px;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, .1);
+.auth-v8-shell .auth-preview-chart span {
+  flex: 1;
+  min-width: 8px;
+  border-radius: 999px 999px 5px 5px;
+  background: linear-gradient(180deg, #60a5fa, #14b8a6);
 }
 
-.auth-v8-shell .auth-v3-timeline span:nth-child(1) {
-  width: 86%;
+.auth-v8-shell .auth-preview-list {
+  display: grid;
+  gap: 9px;
+  align-content: center;
 }
 
-.auth-v8-shell .auth-v3-timeline span:nth-child(2) {
-  width: 66%;
+.auth-v8-shell .auth-preview-list div {
+  min-height: 30px;
+  padding: 0 9px;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, .06);
 }
 
-.auth-v8-shell .auth-v3-timeline span:nth-child(3) {
-  width: 74%;
+.auth-v8-shell .auth-preview-list i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f59e0b;
 }
 
-.auth-v8-shell .auth-v3-timeline span:nth-child(4) {
-  width: 52%;
+.auth-v8-shell .auth-preview-list div:nth-child(2) i {
+  background: #14b8a6;
+}
+
+.auth-v8-shell .auth-preview-list div:nth-child(3) i {
+  background: #60a5fa;
+}
+
+.auth-v8-shell .auth-preview-list span,
+.auth-v8-shell .auth-preview-list b {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .18);
+}
+
+.auth-v8-shell .auth-preview-list b {
+  background: rgba(255, 255, 255, .28);
+}
+
+.auth-v8-shell .auth-preview-float {
+  position: absolute;
+  display: grid;
+  gap: 4px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .22);
+  backdrop-filter: blur(16px);
+}
+
+.auth-v8-shell .auth-preview-float strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.auth-v8-shell .auth-preview-float span {
+  color: #d6e1f1;
+  font-size: 12px;
+}
+
+.auth-v8-shell .auth-preview-message {
+  left: 92px;
+  bottom: 18px;
+  width: 178px;
+  padding: 12px;
+  background: rgba(37, 99, 235, .78);
+}
+
+.auth-v8-shell .auth-preview-health {
+  right: 18px;
+  top: 92px;
+  width: 132px;
+  padding: 12px;
+  background: rgba(15, 23, 42, .78);
 }
 
 .auth-v8-shell .auth-v3-feature-row {
@@ -414,16 +576,18 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-panel {
-  padding: 28px !important;
+  padding: 30px !important;
   display: grid;
   align-content: start;
+  align-self: center;
+  min-height: 0 !important;
 }
 
 .auth-v8-shell .auth-v3-panel-head {
-  margin-bottom: 20px !important;
-  padding-bottom: 18px !important;
+  margin-bottom: 22px !important;
+  padding-bottom: 20px !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   gap: 12px !important;
   border-bottom: 1px solid #edf0f5 !important;
 }
@@ -434,12 +598,23 @@ function openDoc(title) {
   border-color: #2563eb !important;
   font-weight: 800;
   font-size: 12px;
+  margin-top: 2px;
+}
+
+.auth-v8-shell .auth-panel-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .auth-v8-shell .auth-v3-panel-head h2 {
   margin: 0;
   color: #101828 !important;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.25;
   letter-spacing: 0;
 }
@@ -471,11 +646,18 @@ function openDoc(title) {
 }
 
 .auth-v8-shell :deep(.auth-field) {
-  min-height: 50px !important;
-  padding: 0 14px !important;
+  min-height: 52px !important;
+  padding: 0 15px !important;
   border: 1px solid #dfe6f2 !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
+  background: #fbfcff !important;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.auth-v8-shell :deep(.auth-field:focus-within) {
+  border-color: #2563eb !important;
   background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .1) !important;
 }
 
 .auth-v8-shell :deep(.auth-field-control) {
@@ -509,12 +691,13 @@ function openDoc(title) {
 }
 
 .auth-v8-shell :deep(.auth-submit) {
-  height: 46px !important;
-  margin-top: 0 !important;
+  height: 48px !important;
+  margin-top: 2px !important;
   border: 0 !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   font-weight: 700;
   letter-spacing: 0;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .18) !important;
 }
 
 .auth-v8-shell :deep(.auth-text-link) {
@@ -522,10 +705,32 @@ function openDoc(title) {
 }
 
 .auth-v8-shell :deep(.auth-agreement) {
-  margin-top: 16px;
+  margin-top: 14px;
+  padding: 12px 14px;
   color: #667085;
+  background: #f8fafc;
+  border: 1px solid #edf0f5;
+  border-radius: 10px;
   font-size: 12px;
   line-height: 1.7;
+}
+
+.auth-v8-shell .auth-panel-assurance {
+  margin-top: 18px;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-top: 1px solid #edf0f5;
+  color: #667085;
+  font-size: 12px;
+}
+
+.auth-v8-shell .auth-panel-assurance span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f8fafc;
 }
 
 .auth-v8-shell :deep(.form-error) {
@@ -556,6 +761,10 @@ function openDoc(title) {
   .auth-v8-shell .auth-v3-panel {
     width: min(100%, 460px);
     margin: 0 auto;
+  }
+
+  .auth-v8-shell .auth-v3-brand em {
+    display: none;
   }
 }
 
