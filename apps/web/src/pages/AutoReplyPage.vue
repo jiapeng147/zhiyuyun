@@ -1,5 +1,5 @@
 <template>
-  <div class="auto-reply-shell auto-reply-v8-shell">
+  <div class="auto-reply-shell auto-reply-v9-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
     <div v-if="availabilityNotice" class="global-notice warn auto-reply-availability-notice" role="status">
@@ -9,14 +9,13 @@
       </button>
     </div>
 
-    <n-card class="auto-reply-hero auto-reply-v4-hero" :bordered="false">
+    <section class="auto-reply-hero auto-reply-command-center">
       <div class="auto-reply-hero-head">
         <div class="auto-reply-hero-copy">
-          <span class="auto-reply-hero-pill">自动回复控制台</span>
-          <h1>自动回复</h1>
+          <span class="auto-reply-hero-pill">客服自动化</span>
+          <h1>自动回复作战台</h1>
           <p>
-            把账号范围、商品范围和 AI 客服摘要收拢到一个主工作台里，让“哪里已配置”和“配置如何继承”在同一
-            屏完成理解。
+            集中管理全局、账号、商品三级自动回复范围，先同步状态，再执行批量开关。
           </p>
         </div>
 
@@ -33,11 +32,10 @@
       </div>
 
       <div class="auto-reply-hero-main">
-        <span class="auto-reply-hero-kicker">推荐方向</span>
-        <h2>工作台总览</h2>
+        <span class="auto-reply-hero-kicker">当前范围</span>
+        <h2>范围策略总览</h2>
         <p>
-          左侧选择账号与商品，右侧展示当前作用域、启用状态和 AI 配置摘要。信息层级更清楚，批量
-          操作更像工作台而不是堆叠表单。
+          左侧负责账号与商品选择，右侧同步显示启用状态、继承关系和配置风险，避免在未知范围下提交修改。
         </p>
 
         <div class="auto-reply-hero-pill-row">
@@ -77,9 +75,9 @@
         <span class="auto-reply-side-pill">{{ scopeStatusLabel }}</span>
 
         <div class="auto-reply-side-note">
-          <strong>本页只做范围管理</strong>
+          <strong>操作边界</strong>
           <p>
-            AI 客服的话术、知识库与聊天规则仍在「AI 客服配置」统一维护，避免策略和内容配置分散。
+            本页只调整自动回复作用范围；话术、知识库与聊天规则仍在「AI 客服配置」统一维护。
           </p>
         </div>
 
@@ -109,7 +107,7 @@
           </div>
         </div>
       </aside>
-    </n-card>
+    </section>
 
     <section class="auto-reply-workspace">
       <div class="auto-reply-left-column">
@@ -415,9 +413,8 @@
                 </div>
 
                 <div class="auto-reply-impact-note">
-                  <strong>设计重点</strong>
-                  把“批量动作”从下角孤立按钮升级成和选择结果绑定的吸附条，同时让右侧策略卡更像结果页而不是表
-                  单页，整体会更容易一眼看懂。
+                  <strong>运营提醒</strong>
+                  批量开关会直接改变所选商品的商品级状态；如商品已单独关闭，会覆盖账号级开启策略。
                 </div>
               </div>
             </section>
@@ -430,7 +427,6 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { NCard } from 'naive-ui'
 import { getAccounts } from '../api/accounts.js'
 import { getAutoReplyScopeProducts, getAutoReplyScopeStatus, updateProductAutoReplyScope, updateAccountAutoReplyScope, batchUpdateAutoReplyScope } from '../api/autoReplyScope.js'
 import { getBusinessSettings } from '../api/businessSettings.js'
@@ -1332,8 +1328,18 @@ onMounted(async () => {
 
 <style scoped>
 .auto-reply-shell {
+  --auto-reply-ink: #0f172a;
+  --auto-reply-muted: #64748b;
+  --auto-reply-line: #dfe7f1;
+  --auto-reply-surface: #ffffff;
+  --auto-reply-soft: #f8fafc;
+  --auto-reply-teal: #0f766e;
+  --auto-reply-blue: #2563eb;
+  --auto-reply-amber: #d97706;
+  --auto-reply-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
   gap: 18px;
+  color: var(--auto-reply-ink);
 }
 
 .auto-reply-availability-notice {
@@ -1351,23 +1357,29 @@ onMounted(async () => {
   gap: 18px;
 }
 
-.auto-reply-v4-hero,
+.auto-reply-command-center,
 .auto-reply-panel {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  border: 1px solid var(--auto-reply-line);
+  border-radius: 8px;
+  background: var(--auto-reply-surface);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
 }
 
-.auto-reply-v4-hero :deep(.n-card__content) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 392px;
-  gap: 18px;
+.auto-reply-command-center {
+  position: relative;
+  overflow: hidden;
   padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, .08), rgba(37, 99, 235, .06) 45%, rgba(217, 119, 6, .08)),
+    #ffffff;
 }
 
-.auto-reply-v4-hero.auto-reply-hero {
-  display: block;
+.auto-reply-command-center::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--auto-reply-teal), var(--auto-reply-blue), #f59e0b);
 }
 
 .auto-reply-hero-head {
@@ -2108,7 +2120,7 @@ onMounted(async () => {
   color: #555555;
   cursor: pointer;
   font-size: 12px;
-  transition: all .2s;
+  transition: border-color 160ms var(--auto-reply-ease), color 160ms var(--auto-reply-ease), transform 160ms var(--auto-reply-ease);
 }
 .auto-reply-load-more .ghost:hover { border-color: var(--blue, #0f766e); color: var(--blue, #0f766e) }
 
@@ -2324,7 +2336,7 @@ onMounted(async () => {
   cursor: pointer;
   border-radius: 999px;
   background: #cbd5e1;
-  transition: 0.2s;
+  transition: background 180ms var(--auto-reply-ease);
 }
 
 .auto-reply-slider::before {
@@ -2337,7 +2349,7 @@ onMounted(async () => {
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 8px 16px rgba(166, 68, 26, 0.18);
-  transition: 0.2s;
+  transition: transform 180ms var(--auto-reply-ease), box-shadow 180ms var(--auto-reply-ease);
 }
 
 .auto-reply-switch-large .auto-reply-slider::before {
@@ -2551,7 +2563,6 @@ button:disabled {
 
 @media (max-width: 1480px) {
   .auto-reply-hero,
-  .auto-reply-v4-hero :deep(.n-card__content),
   .auto-reply-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2605,7 +2616,7 @@ button:disabled {
     gap: 12px;
   }
 
-  .auto-reply-v4-hero :deep(.n-card__content) {
+  .auto-reply-command-center {
     padding: 14px;
   }
 
@@ -3026,82 +3037,201 @@ button:disabled {
   }
 }
 
-.auto-reply-v8-shell .auto-reply-hero,
-.auto-reply-v8-shell .auto-reply-panel,
-.auto-reply-v8-shell .auto-reply-account-item,
-.auto-reply-v8-shell .auto-reply-product-item,
-.auto-reply-v8-shell .auto-reply-status-strip,
-.auto-reply-v8-shell .auto-reply-strategy-top,
-.auto-reply-v8-shell .auto-reply-toggle-box,
-.auto-reply-v8-shell .auto-reply-metric-card,
-.auto-reply-v8-shell .auto-reply-summary-block,
-.auto-reply-v8-shell .auto-reply-logic-step,
-.auto-reply-v8-shell .auto-reply-impact-row,
-.auto-reply-v8-shell .auto-reply-impact-note,
-.auto-reply-v8-shell .auto-reply-selection-bar,
-.auto-reply-v8-shell .auto-reply-unavailable {
-  border: 1px solid #dfe6f2;
-  border-radius: 6px;
+.auto-reply-v9-shell .auto-reply-panel,
+.auto-reply-v9-shell .auto-reply-account-item,
+.auto-reply-v9-shell .auto-reply-product-item,
+.auto-reply-v9-shell .auto-reply-status-strip,
+.auto-reply-v9-shell .auto-reply-strategy-top,
+.auto-reply-v9-shell .auto-reply-toggle-box,
+.auto-reply-v9-shell .auto-reply-metric-card,
+.auto-reply-v9-shell .auto-reply-summary-block,
+.auto-reply-v9-shell .auto-reply-logic-step,
+.auto-reply-v9-shell .auto-reply-impact-row,
+.auto-reply-v9-shell .auto-reply-impact-note,
+.auto-reply-v9-shell .auto-reply-selection-bar,
+.auto-reply-v9-shell .auto-reply-unavailable {
+  border: 1px solid var(--auto-reply-line);
+  border-radius: 8px;
   background: #fff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+}
+
+.auto-reply-v9-shell .auto-reply-hero-main,
+.auto-reply-v9-shell .auto-reply-hero-side,
+.auto-reply-v9-shell .auto-reply-side-note,
+.auto-reply-v9-shell .auto-reply-side-item {
+  border: 1px solid var(--auto-reply-line);
+  border-radius: 8px;
   box-shadow: none;
 }
 
-.auto-reply-v8-shell .auto-reply-hero :deep(.n-card__content) {
-  border-radius: 6px;
-  background: #fff;
+.auto-reply-v9-shell .auto-reply-hero-main {
+  background:
+    linear-gradient(150deg, rgba(15, 118, 110, .95), rgba(37, 99, 235, .88)),
+    #0f766e;
+  box-shadow: 0 20px 44px rgba(15, 118, 110, .18);
 }
 
-.auto-reply-v8-shell .auto-reply-hero-main,
-.auto-reply-v8-shell .auto-reply-hero-side,
-.auto-reply-v8-shell .auto-reply-side-note,
-.auto-reply-v8-shell .auto-reply-side-item {
-  border: 1px solid #dfe6f2;
-  border-radius: 6px;
+.auto-reply-v9-shell .auto-reply-hero-side,
+.auto-reply-v9-shell .auto-reply-side-note {
   background: #f8fafc;
+}
+
+.auto-reply-v9-shell .auto-reply-side-item,
+.auto-reply-v9-shell .auto-reply-metric-card,
+.auto-reply-v9-shell .auto-reply-summary-block,
+.auto-reply-v9-shell .auto-reply-logic-step,
+.auto-reply-v9-shell .auto-reply-impact-row {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+}
+
+.auto-reply-v9-shell .auto-reply-hero-pill,
+.auto-reply-v9-shell .auto-reply-tiny-chip,
+.auto-reply-v9-shell .auto-reply-side-pill,
+.auto-reply-v9-shell .auto-reply-status-chip,
+.auto-reply-v9-shell .auto-reply-status-pill,
+.auto-reply-v9-shell .auto-reply-filter-chip,
+.auto-reply-v9-shell .auto-reply-meta-badge,
+.auto-reply-v9-shell .auto-reply-insight-chip,
+.auto-reply-v9-shell .auto-reply-metric-card b {
+  border-radius: 999px;
   box-shadow: none;
 }
 
-.auto-reply-v8-shell .auto-reply-hero-pill,
-.auto-reply-v8-shell .auto-reply-tiny-chip,
-.auto-reply-v8-shell .auto-reply-side-pill,
-.auto-reply-v8-shell .auto-reply-status-chip,
-.auto-reply-v8-shell .auto-reply-status-pill,
-.auto-reply-v8-shell .auto-reply-filter-chip,
-.auto-reply-v8-shell .auto-reply-meta-badge,
-.auto-reply-v8-shell .auto-reply-insight-chip,
-.auto-reply-v8-shell .auto-reply-metric-card b {
-  border-radius: 6px;
+.auto-reply-v9-shell .auto-reply-panel-head {
+  border-bottom: 1px solid var(--auto-reply-line);
+}
+
+.auto-reply-v9-shell .auto-reply-action-button,
+.auto-reply-v9-shell .ghost,
+.auto-reply-v9-shell .fill,
+.auto-reply-v9-shell .auto-reply-search,
+.auto-reply-v9-shell .auto-reply-switch .auto-reply-slider,
+.auto-reply-v9-shell .auto-reply-checkbox {
+  border-radius: 8px;
   box-shadow: none;
 }
 
-.auto-reply-v8-shell .auto-reply-panel-head {
-  border-bottom: 1px solid #dfe6f2;
+.auto-reply-v9-shell .auto-reply-action-button,
+.auto-reply-v9-shell .ghost,
+.auto-reply-v9-shell .fill,
+.auto-reply-v9-shell .auto-reply-filter-chip,
+.auto-reply-v9-shell .auto-reply-account-item,
+.auto-reply-v9-shell .auto-reply-product-item {
+  transition:
+    transform 140ms var(--auto-reply-ease),
+    border-color 140ms var(--auto-reply-ease),
+    background 140ms var(--auto-reply-ease),
+    box-shadow 140ms var(--auto-reply-ease);
 }
 
-.auto-reply-v8-shell .auto-reply-action-button,
-.auto-reply-v8-shell .ghost,
-.auto-reply-v8-shell .fill,
-.auto-reply-v8-shell .auto-reply-search,
-.auto-reply-v8-shell .auto-reply-switch .auto-reply-slider,
-.auto-reply-v8-shell .auto-reply-checkbox {
-  border-radius: 6px;
-  box-shadow: none;
+.auto-reply-v9-shell .auto-reply-action-button:not(:disabled):hover,
+.auto-reply-v9-shell .ghost:not(:disabled):hover,
+.auto-reply-v9-shell .fill:not(:disabled):hover,
+.auto-reply-v9-shell .auto-reply-filter-chip:not(:disabled):hover,
+.auto-reply-v9-shell .auto-reply-account-item:not(:disabled):hover,
+.auto-reply-v9-shell .auto-reply-product-item:not(:disabled):hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
 }
 
-.auto-reply-v8-shell .auto-reply-action-button.primary,
-.auto-reply-v8-shell .fill,
-.auto-reply-v8-shell .auto-reply-filter-chip.active,
-.auto-reply-v8-shell .auto-reply-account-item.active,
-.auto-reply-v8-shell .auto-reply-product-item.selected {
+.auto-reply-v9-shell .auto-reply-action-button:not(:disabled):active,
+.auto-reply-v9-shell .ghost:not(:disabled):active,
+.auto-reply-v9-shell .fill:not(:disabled):active,
+.auto-reply-v9-shell .auto-reply-filter-chip:not(:disabled):active,
+.auto-reply-v9-shell .auto-reply-account-item:not(:disabled):active,
+.auto-reply-v9-shell .auto-reply-product-item:not(:disabled):active {
+  transform: scale(.98);
+}
+
+.auto-reply-v9-shell .auto-reply-action-button.primary,
+.auto-reply-v9-shell .fill,
+.auto-reply-v9-shell .auto-reply-filter-chip.active,
+.auto-reply-v9-shell .auto-reply-account-item.active,
+.auto-reply-v9-shell .auto-reply-product-item.selected {
   background: #2563eb;
   border-color: #2563eb;
   color: #fff;
 }
 
-.auto-reply-v8-shell .auto-reply-hero-copy h1,
-.auto-reply-v8-shell .auto-reply-hero-main h2,
-.auto-reply-v8-shell .auto-reply-panel-head h3 {
-  color: #101828;
+.auto-reply-v9-shell .auto-reply-account-item.active strong,
+.auto-reply-v9-shell .auto-reply-account-item.active span,
+.auto-reply-v9-shell .auto-reply-product-item.selected strong,
+.auto-reply-v9-shell .auto-reply-product-item.selected span,
+.auto-reply-v9-shell .auto-reply-filter-chip.active {
+  color: #fff;
+}
+
+.auto-reply-v9-shell .auto-reply-hero-copy h1,
+.auto-reply-v9-shell .auto-reply-panel-head h3,
+.auto-reply-v9-shell .auto-reply-strategy-copy h4,
+.auto-reply-v9-shell .auto-reply-account-main strong,
+.auto-reply-v9-shell .auto-reply-product-body strong,
+.auto-reply-v9-shell .auto-reply-side-item strong,
+.auto-reply-v9-shell .auto-reply-impact-row strong,
+.auto-reply-v9-shell .auto-reply-summary-block p,
+.auto-reply-v9-shell .auto-reply-metric-card strong,
+.auto-reply-v9-shell .auto-reply-impact-value {
+  color: var(--auto-reply-ink);
   letter-spacing: 0;
+}
+
+.auto-reply-v9-shell .auto-reply-hero-copy h1 {
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.auto-reply-v9-shell .auto-reply-hero-main h2 {
+  color: #fff;
+  letter-spacing: 0;
+}
+
+.auto-reply-v9-shell .auto-reply-hero-pill,
+.auto-reply-v9-shell .auto-reply-tiny-chip,
+.auto-reply-v9-shell .auto-reply-side-pill {
+  background: #ecfeff;
+  color: var(--auto-reply-teal);
+}
+
+.auto-reply-v9-shell .auto-reply-status-chip.blue,
+.auto-reply-v9-shell .auto-reply-status-pill.blue,
+.auto-reply-v9-shell .auto-reply-meta-badge.blue,
+.auto-reply-v9-shell .auto-reply-insight-chip,
+.auto-reply-v9-shell .auto-reply-metric-card b.blue {
+  background: #eff6ff;
+  color: var(--auto-reply-blue);
+}
+
+.auto-reply-v9-shell .auto-reply-status-chip.green,
+.auto-reply-v9-shell .auto-reply-status-pill.green,
+.auto-reply-v9-shell .auto-reply-meta-badge.green,
+.auto-reply-v9-shell .auto-reply-metric-card b.green {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.auto-reply-v9-shell .auto-reply-status-chip.amber,
+.auto-reply-v9-shell .auto-reply-meta-badge.amber,
+.auto-reply-v9-shell .auto-reply-metric-card b.amber {
+  background: #fffbeb;
+  color: var(--auto-reply-amber);
+}
+
+.auto-reply-v9-shell .auto-reply-status-chip.gray,
+.auto-reply-v9-shell .auto-reply-status-pill.gray,
+.auto-reply-v9-shell .auto-reply-meta-badge.gray {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.auto-reply-v9-shell .auto-reply-selection-bar {
+  background: linear-gradient(135deg, #0f766e, #2563eb);
+  color: #fff;
+}
+
+.auto-reply-v9-shell .auto-reply-impact-note {
+  background: #fffbeb;
+  color: #92400e;
 }
 </style>
