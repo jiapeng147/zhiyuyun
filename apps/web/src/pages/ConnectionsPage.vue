@@ -1,86 +1,237 @@
 <template>
-  <div class="connections-v4">
-    <n-card class="connections-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">连接中心</n-tag>
-        <h2>连接管理工作台</h2>
-        <p>集中查看闲鱼账号授权、消息连接与运行状态，异常账号可直接进入详情处理。</p>
-      </div>
-      <n-space :size="8" align="center" wrap>
-        <n-button size="small" :loading="loading" @click="load">刷新连接</n-button>
-        <n-button size="small" @click="batchStart">批量启动</n-button>
-        <n-button size="small" type="warning" @click="batchStop">批量断开</n-button>
-      </n-space>
-    </n-card>
-
-    <section class="connections-v4-stats">
-      <n-card v-for="item in connectionStatCards" :key="item.key" class="connections-v4-stat" :class="item.tone" :bordered="false">
-        <span class="connections-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
-    </section>
-
-  <div class="grid wide-right connections-v4-grid">
-    <div>
+  <div class="connections-console">
+    <div class="connections-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="notice" class="global-notice success">{{ notice }}</div>
-      <n-card class="connections-v4-card" :bordered="false">
-        <template #header>账号连接列表（{{ rows.length }}）</template>
-        <div class="toolbar">
-          <select v-model="statusFilter" class="input" style="max-width:150px">
-            <option value="all">全部状态</option>
-            <option value="online">仅在线</option>
-            <option value="offline">仅离线</option>
-            <option value="unknown">状态未知</option>
-            <option value="warning">登录/验证异常</option>
-          </select>
-          <input v-model="keyword" class="input large" placeholder="搜索 账号昵称/用户名">
-          <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新' }}</AppButton>
+    </div>
+
+    <section class="connections-command-center">
+      <div class="connections-command-main">
+        <div class="connections-command-kicker">
+          <span>连接中心</span>
+          <b>{{ dataAvailable === true ? '状态已同步' : '状态待确认' }}</b>
         </div>
-        <EmptyState v-if="dataAvailable === false" icon="⚠️" title="连接列表暂不可用" description="当前无法确认账号与连接状态，不会把失败显示为离线。">
-          <template #actions><AppButton @click="load">重新加载</AppButton></template>
-        </EmptyState>
-        <BaseTable v-else :columns="cols" :rows="filteredRows">
-          <template #info="{row}"><div class="product-cell"><img v-if="row.avatar" :src="row.avatar" class="avatar small" alt=""><div v-else class="avatar small"></div><div><strong>{{ row.name }}</strong><em>{{ row.user }}</em></div></div></template>
-          <template #cookie="{row}"><Badge :type="row.authState === true ? 'green' : (row.authState === false ? 'red' : 'gray')">{{ row.cookie }}</Badge></template>
-          <template #ws="{row}"><div><Badge :type="row.connected === true ? 'green' : (row.connected === false ? 'red' : 'orange')">{{ row.ws }}</Badge><p v-if="row.retrying" class="subtle" style="color:var(--blue);max-width:180px;white-space:normal">⏳ 第 {{ row.retryAttempt }}/{{ row.retryMax }} 次尝试</p><p v-else-if="row.refreshError" class="subtle" style="color:#ef4444;max-width:180px;white-space:normal">⚠ {{ row.refreshError }}</p><p v-else-if="row.phase || row.lastError" class="subtle" style="max-width:180px;white-space:normal">{{ row.lastError || row.phase }}</p></div></template>
-          <template #latency="{row}"><b :style="{color:row.connected === true ? '#16bf78' : (row.connected === false ? '#ff9f22' : '#8c98ae')}">{{ row.latency }}</b></template>
-          <template #op="{row}">
-            <button class="link" :disabled="isBusy(row.id) || row.isRefreshing || row.connected == null || row.operationPending" @click="toggle(row)">{{ isBusy(row.id) ? (row.retrying ? '确认中...' : '处理中...') : (row.operationPending ? '启动中' : (row.connected === true ? '断开' : (row.connected === false ? '启动' : '状态未知'))) }}</button>
-            <button class="link" :disabled="isBusy(row.id) || row.isRefreshing" @click="refresh(row)"><span :class="{ spinning: row.isRefreshing }">↻</span></button>
-            <button class="link" @click="select(row)">详情</button>
-          </template>
-        </BaseTable><Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
-      </n-card>
-      <div class="grid two-col connections-v4-subgrid" style="margin-top:16px">
-        <n-card class="connections-v4-card" title="本次操作记录" :bordered="false"><EmptyState v-if="logs.length===0" icon="📡" title="暂无本次操作记录" description="本页执行的连接、断开、重连操作会显示在这里。" /><div v-for="l in logs" :key="l.text+l.time" class="option-line"><span><i class="dot"></i>{{ l.text }}</span><span class="subtle">{{ l.time }}</span></div></n-card>
-        <n-card class="connections-v4-card" title="异常告警列表" :bordered="false"><EmptyState v-if="dataAvailable === false" icon="⚠️" title="告警状态不可用" description="账号列表加载失败，当前无法确认是否有连接或登录凭证异常。" /><EmptyState v-else-if="alerts.length===0" icon="✅" title="暂无已确认异常" description="当前已加载并确认的账号中没有发现连接或登录凭证异常。" /><div v-for="e in alerts" :key="e.id" class="option-line"><span><i class="dot orange"></i>{{ e.text }}</span><AppButton @click="handleAlert(e)">查看</AppButton></div></n-card>
+        <h2>账号连接运维台</h2>
+        <p>统一监控闲鱼账号登录凭证、消息通道和实时连接状态，异常账号可从右侧详情完成刷新、检查和断开处理。</p>
+        <div class="connections-command-meta">
+          <span>{{ loading ? '正在刷新连接' : '连接刷新就绪' }}</span>
+          <span>当前页 {{ rows.length }} 个账号</span>
+          <span>{{ selected ? `已选 ${selected.name}` : '未选择账号' }}</span>
+        </div>
       </div>
-    </div>
-    <div class="right-drawer connections-v4-detail">
-      <div style="display:flex;justify-content:space-between"><h3>连接详情</h3><button class="link" @click="selected = null">×</button></div>
-      <template v-if="selected">
-        <div class="product-cell"><img v-if="selected.avatar" :src="selected.avatar" class="avatar" alt=""><div v-else class="avatar"></div><div><strong>{{ selected.name }} <Badge type="blue">账号</Badge></strong><p class="subtle">{{ selected.user }}</p></div><b :style="{marginLeft:'auto',color:selected.connected === true ? 'var(--green)' : (selected.connected === false ? '#ef4444' : '#8c98ae')}">{{ selected.ws }}</b></div>
-        <div class="donut-row" style="margin:22px 0"><div class="health-summary-card"><div class="health-summary-title">实时状态</div><div class="health-summary-desc">{{ selectedStatusSummary }}</div></div><div class="donut-legend"><div><i :style="{ background: selected.connected === true ? '#16bf78' : (selected.connected === false ? '#ef4444' : '#98a2b3') }"></i><span>实时连接</span><b>{{ selected.ws }}</b></div><div><i :style="{ background: selected.connected === true ? '#16bf78' : '#98a2b3' }"></i><span>消息通道</span><b>{{ selected.heartbeat }}</b></div><div><i :style="{ background: selected.authState === true ? '#16bf78' : (selected.authState === false ? '#ef4444' : '#98a2b3') }"></i><span>登录凭证</span><b>{{ selected.cookie }}</b></div><div><i :style="{ background: selected.lastError ? '#ef4444' : '#98a2b3' }"></i><span>状态</span><b>{{ selected.lastError || selected.status || selected.phase || '-' }}</b></div></div></div>
-        <n-card class="connections-v4-card" title="连接详情" :bordered="false"><div class="option-line"><span>账号编号</span><b>{{ selected.id }}</b></div><div class="option-line"><span>登录凭证状态</span><b>{{ selected.cookie }}</b></div><div class="option-line"><span>连接进度</span><b>{{ selected.phase || '-' }}</b></div><div class="option-line"><span>最近提示</span><b v-if="selected.refreshError" style="color:#ef4444">{{ selected.refreshError }}</b><b v-else>{{ selected.lastError || '-' }}</b></div><div class="option-line"><span>连接凭证状态</span><b>{{ selected.wsTokenStatus || '-' }}</b></div><div class="option-line"><span>最近消息</span><b>{{ selected.last }}</b></div><div v-if="selected.refreshError" class="option-line"><span>操作</span><AppButton size="small" @click="refresh(selected)">重新刷新状态</AppButton></div></n-card>
-        <div class="grid" style="grid-template-columns:repeat(2,1fr);margin:16px 0">
-          <AppButton type="primary" :disabled="isBusy(selected.id) || selected.connected == null || selected.operationPending" @click="toggle(selected)">{{ selected.operationPending ? '启动中' : '启动/断开' }}</AppButton>
-          <AppButton type="danger" :disabled="isBusy(selected.id) || selected.connected !== true" @click="stop(selected)">断开连接</AppButton>
-          <AppButton :disabled="isBusy(selected.id)" @click="refreshCookieAction(selected)">刷新登录凭证</AppButton>
-          <AppButton :disabled="isBusy(selected.id)" @click="checkLoginAction(selected)">检查登录</AppButton>
+      <div class="connections-command-panel">
+        <div class="connections-command-panel-head">
+          <span>批量操作</span>
+          <strong>{{ filteredRows.length }} 个可见账号</strong>
         </div>
-        <n-card class="connections-v4-card" title="连接操作" :bordered="false"><div class="option-line"><span>操作方式</span><Badge>手动控制</Badge></div><div class="option-line"><span>安全验证</span><b>{{ selected.captcha || '-' }}</b></div><div class="option-line"><span>服务状态</span><b>{{ selected.status || '-' }}</b></div></n-card>
-      </template>
-      <EmptyState v-else icon="👈" title="请选择一个连接" description="从左侧列表选择账号，查看连接详情、重连策略和实时状态。" />
-    </div>
-  </div>
+        <div class="connections-command-buttons">
+          <button class="connections-action-btn" type="button" :disabled="loading" @click="load">
+            {{ loading ? '刷新中...' : '刷新连接' }}
+          </button>
+          <button class="connections-action-btn primary" type="button" @click="batchStart">批量启动</button>
+          <button class="connections-action-btn warn" type="button" @click="batchStop">批量断开</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="connections-metric-rail">
+      <article
+        v-for="item in connectionStatCards"
+        :key="item.key"
+        class="connections-metric-card"
+        :class="item.tone"
+      >
+        <span class="connections-metric-icon">{{ item.symbol }}</span>
+        <div>
+          <p>{{ item.title }}</p>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.change }}</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="connections-workbench">
+      <main class="connections-main">
+        <section class="connections-panel connections-list-panel">
+          <header class="connections-panel-head">
+            <div>
+              <span>连接列表</span>
+              <h3>账号连接队列</h3>
+            </div>
+            <b>{{ dataAvailable === true ? `共 ${total} 个` : '列表不可用' }}</b>
+          </header>
+          <div class="connections-filter-bar">
+            <select v-model="statusFilter" class="input connections-filter-select">
+              <option value="all">全部状态</option>
+              <option value="online">仅在线</option>
+              <option value="offline">仅离线</option>
+              <option value="unknown">状态未知</option>
+              <option value="warning">登录/验证异常</option>
+            </select>
+            <input v-model="keyword" class="input connections-search-input" placeholder="搜索账号昵称/用户名">
+            <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新' }}</AppButton>
+          </div>
+          <EmptyState v-if="dataAvailable === false" icon="!" title="连接列表暂不可用" description="当前无法确认账号与连接状态，不会把失败显示为离线。">
+            <template #actions><AppButton @click="load">重新加载</AppButton></template>
+          </EmptyState>
+          <BaseTable v-else :columns="cols" :rows="filteredRows">
+            <template #info="{row}">
+              <div class="connection-account-cell">
+                <img v-if="row.avatar" :src="row.avatar" class="connection-avatar small" alt="">
+                <div v-else class="connection-avatar small"></div>
+                <div>
+                  <strong>{{ row.name }}</strong>
+                  <em>{{ row.user }}</em>
+                </div>
+              </div>
+            </template>
+            <template #cookie="{row}">
+              <Badge :type="row.authState === true ? 'green' : (row.authState === false ? 'red' : 'gray')">{{ row.cookie }}</Badge>
+            </template>
+            <template #ws="{row}">
+              <div class="connection-state-cell">
+                <Badge :type="row.connected === true ? 'green' : (row.connected === false ? 'red' : 'orange')">{{ row.ws }}</Badge>
+                <p v-if="row.retrying" class="retrying">第 {{ row.retryAttempt }}/{{ row.retryMax }} 次尝试</p>
+                <p v-else-if="row.refreshError" class="danger">{{ row.refreshError }}</p>
+                <p v-else-if="row.phase || row.lastError">{{ row.lastError || row.phase }}</p>
+              </div>
+            </template>
+            <template #latency="{row}">
+              <b class="latency-text" :class="{ online: row.connected === true, offline: row.connected === false, unknown: row.connected == null }">{{ row.latency }}</b>
+            </template>
+            <template #op="{row}">
+              <div class="connections-row-actions">
+                <button class="link" :disabled="isBusy(row.id) || row.isRefreshing || row.connected == null || row.operationPending" @click="toggle(row)">{{ isBusy(row.id) ? (row.retrying ? '确认中...' : '处理中...') : (row.operationPending ? '启动中' : (row.connected === true ? '断开' : (row.connected === false ? '启动' : '状态未知'))) }}</button>
+                <button class="link" :disabled="isBusy(row.id) || row.isRefreshing" @click="refresh(row)"><span :class="{ spinning: row.isRefreshing }">↻</span></button>
+                <button class="link" @click="select(row)">详情</button>
+              </div>
+            </template>
+          </BaseTable>
+          <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="pageSize" @page-change="goPage" />
+        </section>
+
+        <div class="connections-secondary-grid">
+          <section class="connections-panel">
+            <header class="connections-panel-head compact">
+              <div>
+                <span>操作流水</span>
+                <h3>本次操作记录</h3>
+              </div>
+              <b>{{ logs.length }} 条</b>
+            </header>
+            <EmptyState v-if="logs.length===0" icon="·" title="暂无本次操作记录" description="本页执行的连接、断开、重连操作会显示在这里。" />
+            <div v-else class="connections-event-list">
+              <div v-for="l in logs" :key="l.text+l.time" class="connections-event-row">
+                <span>{{ l.text }}</span>
+                <time>{{ l.time }}</time>
+              </div>
+            </div>
+          </section>
+
+          <section class="connections-panel">
+            <header class="connections-panel-head compact">
+              <div>
+                <span>风险告警</span>
+                <h3>异常告警列表</h3>
+              </div>
+              <b>{{ alerts.length }} 条</b>
+            </header>
+            <EmptyState v-if="dataAvailable === false" icon="!" title="告警状态不可用" description="账号列表加载失败，当前无法确认是否有连接或登录凭证异常。" />
+            <EmptyState v-else-if="alerts.length===0" icon="✓" title="暂无已确认异常" description="当前已加载并确认的账号中没有发现连接或登录凭证异常。" />
+            <div v-else class="connections-alert-list">
+              <div v-for="e in alerts" :key="e.id" class="connections-alert-row">
+                <span>{{ e.text }}</span>
+                <AppButton @click="handleAlert(e)">查看</AppButton>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <aside class="connection-detail-panel">
+        <header class="connections-panel-head detail-head">
+          <div>
+            <span>账号详情</span>
+            <h3>连接诊断</h3>
+          </div>
+          <button class="link" type="button" @click="selected = null">关闭</button>
+        </header>
+        <template v-if="selected">
+          <div class="connection-detail-identity">
+            <img v-if="selected.avatar" :src="selected.avatar" class="connection-avatar" alt="">
+            <div v-else class="connection-avatar"></div>
+            <div>
+              <strong>{{ selected.name }} <Badge type="blue">账号</Badge></strong>
+              <p>{{ selected.user }}</p>
+            </div>
+            <b :class="{ online: selected.connected === true, offline: selected.connected === false }">{{ selected.ws }}</b>
+          </div>
+
+          <section class="connection-status-summary">
+            <span>实时状态</span>
+            <p>{{ selectedStatusSummary }}</p>
+          </section>
+
+          <section class="connection-health-list">
+            <div>
+              <i :class="{ online: selected.connected === true, offline: selected.connected === false }"></i>
+              <span>实时连接</span>
+              <b>{{ selected.ws }}</b>
+            </div>
+            <div>
+              <i :class="{ online: selected.connected === true }"></i>
+              <span>消息通道</span>
+              <b>{{ selected.heartbeat }}</b>
+            </div>
+            <div>
+              <i :class="{ online: selected.authState === true, offline: selected.authState === false }"></i>
+              <span>登录凭证</span>
+              <b>{{ selected.cookie }}</b>
+            </div>
+            <div>
+              <i :class="{ offline: selected.lastError }"></i>
+              <span>最近状态</span>
+              <b>{{ selected.lastError || selected.status || selected.phase || '-' }}</b>
+            </div>
+          </section>
+
+          <section class="connection-detail-block">
+            <header>连接详情</header>
+            <div class="connection-info-row"><span>账号编号</span><b>{{ selected.id }}</b></div>
+            <div class="connection-info-row"><span>登录凭证状态</span><b>{{ selected.cookie }}</b></div>
+            <div class="connection-info-row"><span>连接进度</span><b>{{ selected.phase || '-' }}</b></div>
+            <div class="connection-info-row"><span>最近提示</span><b v-if="selected.refreshError" class="danger">{{ selected.refreshError }}</b><b v-else>{{ selected.lastError || '-' }}</b></div>
+            <div class="connection-info-row"><span>连接凭证状态</span><b>{{ selected.wsTokenStatus || '-' }}</b></div>
+            <div class="connection-info-row"><span>最近消息</span><b>{{ selected.last }}</b></div>
+            <div v-if="selected.refreshError" class="connection-info-row"><span>操作</span><AppButton size="small" @click="refresh(selected)">重新刷新状态</AppButton></div>
+          </section>
+
+          <div class="connection-detail-actions">
+            <AppButton type="primary" :disabled="isBusy(selected.id) || selected.connected == null || selected.operationPending" @click="toggle(selected)">{{ selected.operationPending ? '启动中' : '启动/断开' }}</AppButton>
+            <AppButton type="danger" :disabled="isBusy(selected.id) || selected.connected !== true" @click="stop(selected)">断开连接</AppButton>
+            <AppButton :disabled="isBusy(selected.id)" @click="refreshCookieAction(selected)">刷新登录凭证</AppButton>
+            <AppButton :disabled="isBusy(selected.id)" @click="checkLoginAction(selected)">检查登录</AppButton>
+          </div>
+
+          <section class="connection-detail-block">
+            <header>连接操作</header>
+            <div class="connection-info-row"><span>操作方式</span><Badge>手动控制</Badge></div>
+            <div class="connection-info-row"><span>安全验证</span><b>{{ selected.captcha || '-' }}</b></div>
+            <div class="connection-info-row"><span>服务状态</span><b>{{ selected.status || '-' }}</b></div>
+          </section>
+        </template>
+        <EmptyState v-else icon=">" title="请选择一个连接" description="从左侧列表选择账号，查看连接详情、重连策略和实时状态。" />
+      </aside>
+    </section>
   </div>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { NButton, NCard, NSpace, NStatistic, NTag } from 'naive-ui'
-import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import AppButton from '../components/AppButton.vue';import Pagination from '../components/Pagination.vue';import EmptyState from '../components/EmptyState.vue'
+import BaseTable from '../components/BaseTable.vue'
+import Badge from '../components/Badge.vue'
+import AppButton from '../components/AppButton.vue'
+import Pagination from '../components/Pagination.vue'
+import EmptyState from '../components/EmptyState.vue'
 import { getAccounts } from '../api/accounts.js'
 import { recordsOf } from '../utils/apiData.js'
 import { globalConfirm } from '../composables/confirmState.js'
@@ -435,191 +586,546 @@ onBeforeUnmount(()=>{ window.removeEventListener('xya-header-action', onHeader);
 </script>
 
 <style scoped>
-.connections-v4 {
+.connections-console {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
 }
 
-.connections-v4-hero,
-.connections-v4-card,
-.connections-v4-stat,
-.connections-v4-detail {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+.connections-notices {
+  display: grid;
+  gap: 10px;
 }
 
-.connections-v4-hero :deep(.n-card__content) {
-  padding: 18px;
+.connections-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(29, 78, 216, .08), rgba(14, 165, 233, .05) 45%, rgba(16, 185, 129, .08)),
+    #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
+}
+
+.connections-command-main {
+  min-width: 0;
+}
+
+.connections-command-kicker,
+.connections-command-meta,
+.connections-command-panel-head,
+.connections-panel-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
-.connections-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
+.connections-command-kicker {
+  justify-content: flex-start;
 }
 
-.connections-v4-hero p {
+.connections-command-kicker span,
+.connections-command-panel-head span,
+.connections-panel-head span {
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.connections-command-kicker b,
+.connections-command-panel-head strong,
+.connections-panel-head b {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.connections-command-main h2 {
+  margin: 12px 0 8px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.connections-command-main p {
+  max-width: 760px;
   margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.65;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
 }
 
-.connections-v4-stats {
+.connections-command-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.connections-command-meta span,
+.connections-command-panel {
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.connections-command-meta span {
+  padding: 7px 10px;
+  color: #334155;
+  font-size: 12px;
+}
+
+.connections-command-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.connections-command-buttons {
+  display: grid;
+  gap: 10px;
+}
+
+.connections-action-btn {
+  min-height: 38px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.connections-action-btn.primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.connections-action-btn.warn {
+  border-color: #f59e0b;
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.connections-action-btn:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.connections-metric-rail {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
-.connections-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+.connections-metric-card {
   display: grid;
-  gap: 8px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
 }
 
-.connections-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.connections-metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.connections-v4-stat.tone-blue .connections-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.connections-v4-stat.tone-green .connections-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.connections-v4-stat.tone-orange .connections-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-.connections-v4-stat.tone-purple .connections-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
-.connections-v4-stat.tone-cyan .connections-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.connections-v4-stat.tone-red .connections-v4-stat-icon { background: #fef2f2; color: #dc2626; }
-
-.connections-v4-stat :deep(.n-statistic .n-statistic-label) {
+.connections-metric-card p {
+  margin: 0;
   color: #64748b;
   font-size: 12px;
 }
 
-.connections-v4-stat :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
+.connections-metric-card strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f172a;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.connections-v4-stat small {
+.connections-metric-card small {
+  display: block;
+  margin-top: 6px;
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.connections-v4-grid {
+.connections-metric-card.tone-blue .connections-metric-icon { background: #dbeafe; color: #1d4ed8; }
+.connections-metric-card.tone-green .connections-metric-icon { background: #dcfce7; color: #15803d; }
+.connections-metric-card.tone-orange .connections-metric-icon { background: #ffedd5; color: #c2410c; }
+.connections-metric-card.tone-purple .connections-metric-icon { background: #ede9fe; color: #6d28d9; }
+.connections-metric-card.tone-cyan .connections-metric-icon { background: #ccfbf1; color: #0f766e; }
+.connections-metric-card.tone-red .connections-metric-icon { background: #fee2e2; color: #dc2626; }
+
+.connections-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
   align-items: start;
-  grid-template-columns: minmax(0, 1fr) 360px;
 }
 
-.connections-v4-subgrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.connections-v4-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.connections-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
-}
-
-.connections-v4-detail {
-  position: sticky;
-  top: 16px;
-  padding: 16px;
+.connections-main {
+  display: grid;
+  gap: 16px;
   min-width: 0;
 }
 
-.connections-v4-detail h3 {
-  margin: 0 0 12px;
-  color: #111827;
-  font-size: 16px;
-  font-weight: 650;
+.connections-panel,
+.connection-detail-panel {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
 }
 
-/* === 移动端适配 (max-width: 900px) === */
+.connections-panel {
+  padding: 16px;
+}
+
+.connections-list-panel {
+  overflow: hidden;
+}
+
+.connections-panel-head {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.connections-panel-head.compact {
+  margin-bottom: 12px;
+}
+
+.connections-panel-head h3 {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.connections-filter-bar {
+  display: grid;
+  grid-template-columns: 170px minmax(220px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.connections-filter-select,
+.connections-search-input {
+  min-width: 0;
+}
+
+.connections-list-panel :deep(.base-table-wrap) {
+  border-radius: 8px;
+}
+
+.connection-account-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+}
+
+.connection-account-cell strong,
+.connection-detail-identity strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.connection-account-cell em {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.connection-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #dbeafe, #ccfbf1);
+  object-fit: cover;
+}
+
+.connection-avatar.small {
+  width: 34px;
+  height: 34px;
+}
+
+.connection-state-cell {
+  display: grid;
+  gap: 5px;
+  max-width: 210px;
+}
+
+.connection-state-cell p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.connection-state-cell .retrying {
+  color: #2563eb;
+}
+
+.connection-state-cell .danger,
+.connection-info-row .danger {
+  color: #dc2626;
+}
+
+.latency-text {
+  color: #8c98ae;
+}
+
+.latency-text.online {
+  color: #16bf78;
+}
+
+.latency-text.offline {
+  color: #f59e0b;
+}
+
+.connections-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.connections-secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.connections-event-list,
+.connections-alert-list {
+  display: grid;
+  gap: 10px;
+}
+
+.connections-event-row,
+.connections-alert-row,
+.connection-info-row {
+  display: grid;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.connections-event-row,
+.connections-alert-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.connections-event-row span,
+.connections-alert-row span {
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.connections-event-row time {
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.connection-detail-panel {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.detail-head {
+  margin-bottom: 0;
+}
+
+.connection-detail-identity {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.connection-detail-identity p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.connection-detail-identity > b {
+  color: #8c98ae;
+  font-size: 13px;
+}
+
+.connection-detail-identity > b.online {
+  color: #047857;
+}
+
+.connection-detail-identity > b.offline {
+  color: #dc2626;
+}
+
+.connection-status-summary {
+  padding: 14px;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(219, 234, 254, .7), rgba(240, 253, 250, .9));
+}
+
+.connection-status-summary span,
+.connection-detail-block header {
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.connection-status-summary p {
+  margin: 6px 0 0;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.connection-health-list {
+  display: grid;
+  gap: 9px;
+}
+
+.connection-health-list div {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.connection-health-list i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #98a2b3;
+}
+
+.connection-health-list i.online {
+  background: #16bf78;
+}
+
+.connection-health-list i.offline {
+  background: #ef4444;
+}
+
+.connection-health-list span,
+.connection-info-row span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.connection-health-list b,
+.connection-info-row b {
+  color: #0f172a;
+  font-size: 12px;
+  text-align: right;
+  word-break: break-word;
+}
+
+.connection-detail-block {
+  display: grid;
+  gap: 8px;
+}
+
+.connection-detail-block header {
+  padding: 0 2px;
+}
+
+.connection-info-row {
+  grid-template-columns: minmax(90px, .45fr) minmax(0, 1fr);
+  align-items: center;
+}
+
+.connection-detail-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 @media (max-width: 900px) {
-  .connections-v4 {
+  .connections-console {
     gap: 12px;
   }
 
-  .connections-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
-    padding: 14px;
-  }
-
-  .connections-v4-stats,
-  .connections-v4-grid,
-  .connections-v4-subgrid {
+  .connections-command-center,
+  .connections-workbench,
+  .connections-filter-bar,
+  .connections-secondary-grid,
+  .connection-detail-actions,
+  .connections-metric-rail {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .connections-v4-detail {
+  .connections-command-center {
+    padding: 16px;
+  }
+
+  .connection-detail-panel {
     position: static;
   }
 
-  .connections-v4-card :deep(.n-card__content) {
-    padding: 12px;
+  .connection-detail-identity,
+  .connections-event-row,
+  .connections-alert-row,
+  .connection-health-list div,
+  .connection-info-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  /* 覆盖右侧详情操作按钮区内联 grid: repeat(2,1fr) → 单列堆叠 */
-  .grid[style*="repeat(2,1fr)"] {
-    grid-template-columns: minmax(0, 1fr) !important;
-    margin: 12px 0 !important;
-    gap: 8px !important;
+  .connection-health-list b,
+  .connection-info-row b {
+    text-align: left;
   }
-  /* 健康度环形图行：移动端纵向堆叠 */
-  .donut-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 12px;
-    margin: 14px 0 !important;
-  }
-  .donut-row .health-summary-card,
-  .donut-row .donut-legend {
-    width: 100%;
-    max-width: none;
-  }
-  .donut-legend {
-    gap: 8px;
-  }
-  /* 右侧抽屉头部允许换行 */
-  .right-drawer > div:first-child {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  /* 右侧抽屉中的账号信息行允许换行，避免长文本溢出 */
-  .right-drawer .product-cell {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .right-drawer .product-cell b {
-    margin-left: 0 !important;
-    width: 100%;
-  }
-  /* 状态文本段落限制宽度，避免撑破布局 */
-  .right-drawer p {
-    max-width: 100% !important;
-    white-space: normal !important;
-    word-break: break-word;
-  }
-  /* 宽表格横向滚动 */
-  :deep(.base-table) {
+
+  .connections-list-panel :deep(.base-table) {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
