@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-center">
+  <div class="profile-center profile-v9-shell">
     <div v-if="notice.text" :class="['global-notice', notice.type]">
       {{ notice.text }}
     </div>
@@ -9,9 +9,10 @@
 
     <div class="profile-shell">
       <aside class="profile-side">
-        <div class="profile-v8-card profile-side-card">
+        <div class="profile-v9-card profile-side-card">
           <div class="profile-side-head">
-            <h2>个人中心</h2>
+            <span>Account Center</span>
+            <h2>账户工作台</h2>
           </div>
 
           <div class="profile-side-nav">
@@ -39,6 +40,21 @@
               <span class="profile-side-tab-label">{{ item.label }}</span>
             </button>
           </div>
+
+          <div class="profile-side-summary">
+            <div>
+              <span>账户状态</span>
+              <strong>{{ formatUserStatus(overview.status) }}</strong>
+            </div>
+            <div>
+              <span>当前套餐</span>
+              <strong>{{ planName }}</strong>
+            </div>
+            <div>
+              <span>最近登录</span>
+              <strong>{{ displayDate(overview.lastLoginTime) }}</strong>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -58,7 +74,7 @@
           <template #actions><button type="button" class="app-btn" :disabled="overviewLoading" @click="loadOverview">重新加载</button></template>
         </EmptyState>
         <div v-else-if="activeTab === 'overview'" class="profile-main-section profile-overview">
-          <section class="profile-v8-card welcome-hero">
+          <section class="profile-v9-card welcome-hero">
             <div class="welcome-content">
               <div class="welcome-avatar">
                 <svg viewBox="0 0 64 64" width="64" height="64">
@@ -75,8 +91,8 @@
               </div>
 
               <div class="welcome-text">
-                <h2>欢迎回来，{{ overview.nickname || overview.username || '用户' }} <span class="wave">👋</span></h2>
-                <p>管理账户资料、安全设置和平台运营能力，保障账户安全，提升使用效率。</p>
+                <h2>账户运营中心</h2>
+                <p>{{ overview.nickname || overview.username || '当前用户' }}，这里集中管理账户资料、安全状态和平台运营能力。</p>
 
                 <div class="welcome-tags">
                   <span class="chip plan-chip">{{ planName }}</span>
@@ -90,6 +106,12 @@
                     固定账号密码登录
                   </span>
                 </div>
+
+                <div class="profile-hero-meta">
+                  <span>套餐：{{ planName }}</span>
+                  <span>账号：{{ stats.xianyuAccountCount ?? '—' }}</span>
+                  <span>最近登录：{{ displayDate(overview.lastLoginTime) }}</span>
+                </div>
               </div>
             </div>
 
@@ -100,20 +122,20 @@
           </section>
 
           <div class="profile-stats">
-            <article v-for="item in statCards" :key="item.label" class="profile-v8-stat">
-              <div class="profile-v8-stat-main">
-                <div :class="['profile-v8-stat-icon', item.toneClass]">
-                  <img class="profile-v8-stat-icon-img" :src="item.iconSrc" alt="" />
+            <article v-for="item in statCards" :key="item.label" class="profile-v9-stat">
+              <div class="profile-v9-stat-main">
+                <div :class="['profile-v9-stat-icon', item.toneClass]">
+                  <img class="profile-v9-stat-icon-img" :src="item.iconSrc" alt="" />
                 </div>
-                <div class="profile-v8-stat-info">
+                <div class="profile-v9-stat-info">
                   <span>{{ item.label }}</span>
                   <strong>{{ item.value }}</strong>
                 </div>
               </div>
 
-              <div class="profile-v8-stat-foot">
+              <div class="profile-v9-stat-foot">
                 <em>{{ item.desc }}</em>
-                <svg :class="['profile-v8-stat-wave', item.toneClass]" viewBox="0 0 96 18" preserveAspectRatio="none" aria-hidden="true">
+                <svg :class="['profile-v9-stat-wave', item.toneClass]" viewBox="0 0 96 18" preserveAspectRatio="none" aria-hidden="true">
                   <path d="M2 11c7 0 7-8 14-8s7 8 14 8 7-8 14-8 7 8 14 8 7-8 14-8 7 8 14 8" />
                 </svg>
               </div>
@@ -121,7 +143,7 @@
           </div>
 
           <div class="two-col-grid">
-            <section class="profile-v8-card member-panel">
+            <section class="profile-v9-card member-panel">
               <div class="panel-head">
                 <div class="panel-title">
                   <span class="panel-head-mark gold" aria-hidden="true">
@@ -165,7 +187,7 @@
           </div>
 
           <div class="overview-bottom-grid">
-            <section class="profile-v8-card account-panel">
+            <section class="profile-v9-card account-panel">
               <div class="panel-head">
                 <div class="panel-title">
                   <span class="panel-head-mark blue" aria-hidden="true">
@@ -188,7 +210,7 @@
           </div>
         </div>
 
-        <div v-else-if="activeTab === 'security'" class="profile-v8-card security-panel content-panel">
+        <div v-else-if="activeTab === 'security'" class="profile-v9-card security-panel content-panel">
           <div class="panel-head">
             <div>
               <h3>账号安全</h3>
@@ -300,7 +322,7 @@
           </div>
         </div>
 
-        <div v-else-if="activeTab === 'password'" class="profile-v8-card form-panel content-panel">
+        <div v-else-if="activeTab === 'password'" class="profile-v9-card form-panel content-panel">
           <div class="panel-head">
             <div>
               <h3>修改密码</h3>
@@ -778,7 +800,7 @@ onBeforeUnmount(() => {
   gap: 14px;
 }
 
-.profile-v8-stat {
+.profile-v9-stat {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -793,19 +815,19 @@ onBeforeUnmount(() => {
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.profile-v8-stat:hover {
+.profile-v9-stat:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(94, 50, 31, 0.04), 0 16px 32px rgba(94, 50, 31, 0.08);
   border-color: rgba(20, 184, 166, 0.16);
 }
 
-.profile-v8-stat-main {
+.profile-v9-stat-main {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.profile-v8-stat .profile-v8-stat-icon {
+.profile-v9-stat .profile-v9-stat-icon {
   width: 48px;
   height: 48px;
   border-radius: 16px;
@@ -817,42 +839,42 @@ onBeforeUnmount(() => {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-.profile-v8-stat-icon-img {
+.profile-v9-stat-icon-img {
   width: 28px;
   height: 28px;
   object-fit: contain;
   filter: drop-shadow(0 8px 16px rgba(94, 50, 31, 0.12));
 }
 
-.profile-v8-stat .profile-v8-stat-icon.green {
+.profile-v9-stat .profile-v9-stat-icon.green {
   background: linear-gradient(145deg, #e8fbef 0%, #c9f2d8 100%);
   color: #16a34a;
 }
 
-.profile-v8-stat .profile-v8-stat-icon.orange {
+.profile-v9-stat .profile-v9-stat-icon.orange {
   background: linear-gradient(145deg, #fff6e8 0%, #ffe0ae 100%);
   color: #f59e0b;
 }
 
-.profile-v8-stat .profile-v8-stat-icon.purple {
+.profile-v9-stat .profile-v9-stat-icon.purple {
   background: linear-gradient(145deg, #f3ecff 0%, #ffe1d4 100%);
   color: #f68a5c;
 }
 
-.profile-v8-stat-info {
+.profile-v9-stat-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.profile-v8-stat-info span {
+.profile-v9-stat-info span {
   font-size: 13px;
   font-weight: 700;
   color: #6B6B6B;
 }
 
-.profile-v8-stat-info strong {
+.profile-v9-stat-info strong {
   font-size: 28px;
   line-height: 1;
   font-weight: 900;
@@ -860,7 +882,7 @@ onBeforeUnmount(() => {
   font-family: 'SF Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
 }
 
-.profile-v8-stat-foot {
+.profile-v9-stat-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -868,34 +890,34 @@ onBeforeUnmount(() => {
   margin-top: 14px;
 }
 
-.profile-v8-stat-foot em {
+.profile-v9-stat-foot em {
   font-style: normal;
   font-size: 11px;
   color: #6B6B6B;
 }
 
-.profile-v8-stat-wave {
+.profile-v9-stat-wave {
   width: 84px;
   height: 18px;
   flex: 0 0 auto;
 }
 
-.profile-v8-stat-wave path {
+.profile-v9-stat-wave path {
   fill: none;
   stroke: #ff8c5b;
   stroke-width: 3;
   stroke-linecap: round;
 }
 
-.profile-v8-stat-wave.green path {
+.profile-v9-stat-wave.green path {
   stroke: #22c55e;
 }
 
-.profile-v8-stat-wave.orange path {
+.profile-v9-stat-wave.orange path {
   stroke: #fb923c;
 }
 
-.profile-v8-stat-wave.purple path {
+.profile-v9-stat-wave.purple path {
   stroke: #f68a5c;
 }
 
@@ -2510,11 +2532,11 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .profile-v8-stat-info strong {
+  .profile-v9-stat-info strong {
     font-size: 22px;
   }
 
-  .profile-v8-stat {
+  .profile-v9-stat {
     padding: 12px;
     min-height: 0;
   }
@@ -2680,139 +2702,559 @@ onBeforeUnmount(() => {
     min-width: 0;
   }
 }
-.profile-center {
+.profile-v9-shell {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --accent: #14b8a6;
+  --warning: #f59e0b;
+  --text: #111827;
+  --muted: #64748b;
+  --soft: #f6f8fb;
+  --panel: #ffffff;
+  --line: #e5e7eb;
+  --line-strong: #d7dde8;
+  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 42px rgba(15, 23, 42, 0.06);
+  --shadow-hover: 0 1px 2px rgba(15, 23, 42, 0.05), 0 24px 54px rgba(37, 99, 235, 0.12);
+  --profile-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
-  gap: 16px;
+  gap: 18px;
+  color: var(--text);
 }
 
-.profile-side-card,
-.welcome-hero,
-.member-panel,
-.account-panel,
-.quick-panel,
-.content-panel,
-.profile-v8-stat,
-.security-card,
-.security-tips,
-.security-level-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+.profile-v9-shell .profile-shell {
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
-.profile-side-card {
-  padding: 10px;
-  background: #fff;
+.profile-v9-shell .profile-side-card,
+.profile-v9-shell .welcome-hero,
+.profile-v9-shell .member-panel,
+.profile-v9-shell .account-panel,
+.profile-v9-shell .content-panel,
+.profile-v9-shell .profile-v9-stat,
+.profile-v9-shell .security-card,
+.profile-v9-shell .security-tips,
+.profile-v9-shell .security-level-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
 }
 
-.profile-side-tab {
-  border-radius: 6px;
-  border-color: #e5e7eb;
-  background: #f8fafc;
+.profile-v9-shell .profile-side-card {
+  top: 14px;
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88)),
+    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.13), transparent 34%),
+    radial-gradient(circle at 100% 20%, rgba(20, 184, 166, 0.1), transparent 30%);
+}
+
+.profile-v9-shell .profile-side-head {
+  display: block;
+  padding: 4px 4px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profile-v9-shell .profile-side-head span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-v9-shell .profile-side-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.profile-v9-shell .profile-side-nav {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-v9-shell .profile-side-tab {
+  width: 100%;
+  flex: none;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #475569;
+  box-shadow: none;
+  transition:
+    transform 160ms var(--profile-ease),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms var(--profile-ease);
+}
+
+.profile-v9-shell .profile-side-tab::before {
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 999px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-v9-shell .profile-side-tab:hover {
+    transform: translateY(-1px);
+    border-color: #dbeafe;
+    background: #f8fbff;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+  }
+}
+
+.profile-v9-shell .profile-side-tab:active,
+.profile-v9-shell .app-btn:active,
+.profile-v9-shell .page-btn:active {
+  transform: scale(0.98);
+}
+
+.profile-v9-shell .profile-side-tab.active {
+  color: var(--primary-dark);
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdfa 100%);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.1);
+}
+
+.profile-v9-shell .profile-side-tab.active::before {
+  background: linear-gradient(180deg, var(--primary), var(--accent));
+}
+
+.profile-v9-shell .profile-side-tab-icon,
+.profile-v9-shell .profile-side-tab.active .profile-side-tab-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: var(--primary);
+}
+
+.profile-v9-shell .profile-side-tab.active .profile-side-tab-icon {
+  background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 100%);
+}
+
+.profile-v9-shell .profile-side-summary {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.profile-v9-shell .profile-side-summary div {
+  display: grid;
+  gap: 3px;
+}
+
+.profile-v9-shell .profile-side-summary span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.profile-v9-shell .profile-side-summary strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.profile-v9-shell .profile-main-section,
+.profile-v9-shell .profile-main {
+  min-width: 0;
+}
+
+.profile-v9-shell .welcome-hero {
+  min-height: 218px;
+  padding: 26px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 251, 255, 0.96) 46%, rgba(239, 246, 255, 0.9) 100%),
+    radial-gradient(circle at 84% 28%, rgba(20, 184, 166, 0.22), transparent 28%),
+    radial-gradient(circle at 72% 88%, rgba(245, 158, 11, 0.14), transparent 24%);
+}
+
+.profile-v9-shell .welcome-hero::before {
+  inset: auto 28px 28px auto;
+  width: 240px;
+  height: 140px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.14) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.55;
+  transform: rotate(-3deg);
+}
+
+.profile-v9-shell .welcome-hero::after {
+  inset: 12px;
+  border-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+}
+
+.profile-v9-shell .welcome-content {
+  max-width: calc(100% - 292px);
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.profile-v9-shell .welcome-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.profile-v9-shell .welcome-avatar svg {
+  width: 62px;
+  height: 62px;
+}
+
+.profile-v9-shell .welcome-text h2 {
+  color: var(--text);
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
+.profile-v9-shell .welcome-text p {
+  max-width: 620px;
+  margin: 10px 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.profile-v9-shell .welcome-tags,
+.profile-v9-shell .profile-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-v9-shell .chip,
+.profile-v9-shell .profile-hero-meta span {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+  color: #475569;
   box-shadow: none;
 }
 
-.profile-side-tab:hover,
-.profile-side-tab.active {
-  transform: none;
+.profile-v9-shell .chip {
+  padding: 7px 10px;
+}
+
+.profile-v9-shell .plan-chip {
+  color: var(--primary-dark);
   border-color: #bfdbfe;
   background: #eff6ff;
-  box-shadow: none;
 }
 
-.profile-side-tab.active::before {
-  background: #2563eb;
+.profile-v9-shell .profile-hero-meta {
+  margin-top: 12px;
 }
 
-.profile-side-tab-icon,
-.profile-side-tab.active .profile-side-tab-icon {
-  border-radius: 6px;
-  background: #dbeafe;
-  color: #2563eb;
+.profile-v9-shell .profile-hero-meta span {
+  padding: 8px 10px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.welcome-hero {
-  min-height: auto;
-  padding: 22px;
-  background: #fff;
+.profile-v9-shell .welcome-visual {
+  right: 24px;
+  top: 26px;
+  width: 248px;
+  height: 164px;
+  display: block;
+  opacity: 0.95;
 }
 
-.welcome-hero::before,
-.welcome-hero::after,
-.welcome-visual {
-  display: none;
+.profile-v9-shell .welcome-visual-glow {
+  inset: 18px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(20, 184, 166, 0.16));
+  filter: blur(18px);
 }
 
-.welcome-content {
-  max-width: 100%;
+.profile-v9-shell .welcome-visual-image {
+  filter: drop-shadow(0 18px 28px rgba(15, 23, 42, 0.12));
 }
 
-.welcome-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 6px;
-  border-color: #dbeafe;
-  background: #eff6ff;
-  box-shadow: none;
+.profile-v9-shell .profile-stats {
+  gap: 14px;
 }
 
-.welcome-avatar svg {
-  width: 58px;
-  height: 58px;
+.profile-v9-shell .profile-v9-stat {
+  min-height: 122px;
+  padding: 16px;
+  border-color: var(--line);
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 34%);
+  transition:
+    transform 180ms var(--profile-ease),
+    box-shadow 180ms var(--profile-ease),
+    border-color 180ms ease;
 }
 
-.welcome-text h2 {
-  color: #111827;
-  font-size: 28px;
-  text-shadow: none;
+@media (hover: hover) and (pointer: fine) {
+  .profile-v9-shell .profile-v9-stat:hover,
+  .profile-v9-shell .security-card.enhanced:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+.profile-v9-shell .profile-v9-stat .profile-v9-stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.profile-v9-shell .profile-v9-stat-info span,
+.profile-v9-shell .profile-v9-stat-foot em,
+.profile-v9-shell .benefits-label,
+.profile-v9-shell .panel-head p {
+  color: var(--muted);
+}
+
+.profile-v9-shell .profile-v9-stat-info strong {
+  color: var(--text);
+  font-size: 27px;
   letter-spacing: 0;
 }
 
-.welcome-text p {
-  color: #64748b;
+.profile-v9-shell .two-col-grid,
+.profile-v9-shell .overview-bottom-grid {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.chip {
-  border-radius: 6px;
-  border-color: #e5e7eb;
+.profile-v9-shell .profile-overview .member-panel,
+.profile-v9-shell .profile-overview .account-panel,
+.profile-v9-shell .content-panel {
+  padding: 18px;
+}
+
+.profile-v9-shell .panel-head h3,
+.profile-v9-shell .member-name-row strong,
+.profile-v9-shell .account-info-value-row strong,
+.profile-v9-shell .security-card b,
+.profile-v9-shell .security-tips-copy h4 {
+  color: var(--text);
+}
+
+.profile-v9-shell .member-panel {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fffaf0 100%),
+    radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.16), transparent 32%);
+}
+
+.profile-v9-shell .member-card-inner {
+  border-radius: 8px;
+  border-color: #fde68a;
+  background:
+    linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(255, 255, 255, 0.96)),
+    radial-gradient(circle at 10% 40%, rgba(245, 158, 11, 0.18), transparent 30%);
+  box-shadow: none;
+}
+
+.profile-v9-shell .deployment-badge-visual,
+.profile-v9-shell .benefit-feature,
+.profile-v9-shell .account-info-item,
+.profile-v9-shell .security-card-icon,
+.profile-v9-shell .security-risk-pill,
+.profile-v9-shell .profile-form input,
+.profile-v9-shell .page-btn,
+.profile-v9-shell .page-number {
+  border-radius: 8px;
+}
+
+.profile-v9-shell .benefits-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.profile-v9-shell .benefit-feature {
+  border-color: var(--line);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.profile-v9-shell .account-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.profile-v9-shell .account-info-item {
+  border-color: var(--line);
   background: #f8fafc;
   box-shadow: none;
 }
 
-.plan-chip {
-  color: #2563eb;
-  background: #eff6ff;
+.profile-v9-shell .security-panel {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 28%);
 }
 
-.profile-v8-stat {
-  min-height: 108px;
-  padding: 16px;
-}
-
-.profile-v8-stat:hover {
-  transform: none;
-  border-color: #dbe3ee;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.profile-v8-stat .profile-v8-stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
+.profile-v9-shell .security-level-card {
+  border-radius: 8px;
   box-shadow: none;
 }
 
-.profile-v8-stat-info strong {
-  color: #111827;
-  font-size: 24px;
+.profile-v9-shell .security-level-card::before {
+  border-radius: 8px;
+}
+
+.profile-v9-shell .security-level-text strong {
   letter-spacing: 0;
 }
 
-.profile-overview .member-panel,
-.profile-overview .account-panel,
-.profile-overview .quick-panel,
-.content-panel {
-  padding: 16px;
+.profile-v9-shell .security-progress-bar {
+  transition: width 240ms var(--profile-ease);
+}
+
+.profile-v9-shell .security-card {
+  border-radius: 8px;
+  box-shadow: none;
+  transition:
+    transform 180ms var(--profile-ease),
+    box-shadow 180ms var(--profile-ease),
+    border-color 180ms ease;
+}
+
+.profile-v9-shell .security-card .app-btn,
+.profile-v9-shell .app-btn {
+  transition:
+    transform 140ms var(--profile-ease),
+    box-shadow 160ms var(--profile-ease),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.profile-v9-shell .app-btn.primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  border-color: transparent;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.18);
+}
+
+.profile-v9-shell .security-tips {
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.profile-v9-shell .profile-form {
+  max-width: 520px;
+}
+
+.profile-v9-shell .profile-form input {
+  border-color: var(--line);
+  color: var(--text);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.profile-v9-shell .profile-form input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+@media (max-width: 1280px) {
+  .profile-v9-shell .welcome-content {
+    max-width: calc(100% - 250px);
+  }
+
+  .profile-v9-shell .benefits-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .profile-v9-shell .profile-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profile-v9-shell .profile-side-card {
+    position: static;
+  }
+
+  .profile-v9-shell .profile-side-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-v9-shell .profile-side-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-v9-shell .account-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .profile-v9-shell .welcome-content {
+    max-width: none;
+  }
+
+  .profile-v9-shell .welcome-visual {
+    display: none;
+  }
+
+  .profile-v9-shell .profile-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .profile-v9-shell .profile-side-nav,
+  .profile-v9-shell .profile-side-summary,
+  .profile-v9-shell .profile-stats,
+  .profile-v9-shell .benefits-grid,
+  .profile-v9-shell .account-info-grid,
+  .profile-v9-shell .security-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profile-v9-shell .welcome-hero {
+    padding: 20px;
+  }
+
+  .profile-v9-shell .welcome-content {
+    flex-direction: column;
+  }
+
+  .profile-v9-shell .welcome-text h2 {
+    font-size: 28px;
+  }
+
+  .profile-v9-shell .member-card-inner {
+    align-items: flex-start;
+  }
 }
 </style>
