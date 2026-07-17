@@ -68,7 +68,7 @@
     </div>
 
     <div class="auth-agreement" role="note">
-      注册即视为知悉：当前部署尚未配置经审核的正式协议文本，部署方商用前须补齐
+      注册即视为知悉：平台服务方尚未配置经审核的正式协议文本，商用前须补齐
       <button type="button" class="auth-text-link" @click="openDoc('用户协议')">用户协议</button>
       和
       <button type="button" class="auth-text-link" @click="openDoc('隐私政策')">隐私政策</button>。

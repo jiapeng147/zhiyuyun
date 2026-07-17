@@ -17,8 +17,8 @@
       </n-card>
 
       <n-alert class="accounts-v4-alert" type="info" :bordered="false">
-        账号列表、手动添加、删除、资料刷新、实时连接状态与扫码登录均由当前部署的服务端处理。
-        扫码前请确认这是你信任的部署；若服务不可用，页面会显示明确的不可用状态与重试入口。
+        账号列表、手动添加、删除、资料刷新、实时连接状态与扫码登录均由平台服务端处理。
+        扫码前请确认这是你信任的平台服务；若服务不可用，页面会显示明确的不可用状态与重试入口。
       </n-alert>
 
       <div class="accounts-v4-notices">
@@ -322,7 +322,7 @@
           <b><Icon name="help" /> 说明</b>
           <p>{{ qrReady ? '二维码已生成，可使用闲鱼 App 扫码登录。' : '当前没有可扫码二维码，请等待二维码生成成功后再扫码。' }}</p>
           <p>{{ qr.mode === 'rescan' ? '登录成功后会更新当前账号登录凭证，并重新同步该账号状态。' : '登录成功后将自动添加账号并刷新资料。' }}</p>
-          <p>闲鱼 App 显示的登录地点由部署服务器的网络出口决定。若地点与预期不符，请取消扫码并联系当前部署的管理员核验服务器区域。</p>
+          <p>闲鱼 App 显示的登录地点由平台服务器的网络出口决定。若地点与预期不符，请取消扫码并联系平台负责人核验服务器区域。</p>
         </div>
         <div class="modal-actions"><AppButton @click="closeModal">取消</AppButton><AppButton type="primary" :loading="qr.loading" :disabled="qr.loading" @click="startQrLogin">{{ qrReady ? '刷新二维码' : '生成二维码' }}</AppButton></div>
       </section>
@@ -560,7 +560,7 @@
           <Icon name="warning" />
         </div>
         <h2>确认删除该闲鱼账号？</h2>
-        <p class="confirm-delete-desc">删除后将移除该账号的本地连接、资料和后续自动化配置关联，请确认已不再运营该账号。</p>
+        <p class="confirm-delete-desc">删除后将移除该账号的系统连接、资料和后续自动化配置关联，请确认已不再运营该账号。</p>
         <div class="confirm-delete-actions">
           <AppButton @click="closeModal">取消</AppButton>
           <AppButton type="danger" @click="executeDelete">确认删除</AppButton>

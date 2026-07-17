@@ -106,8 +106,8 @@ const props = defineProps({
 
 const emit = defineEmits(['logout', 'open-profile-center'])
 
-const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '管理员')
-const roleLabel = computed(() => props.user?.role === 'superadmin' ? '超级管理员' : '运营成员')
+const displayName = computed(() => props.user?.username || props.user?.displayName || props.user?.name || '运营成员')
+const roleLabel = computed(() => props.user?.role === 'superadmin' ? '平台负责人' : '运营成员')
 const initials = computed(() => (displayName.value || 'ZY').slice(0, 2).toUpperCase())
 const sseLabel = computed(() => ({
   connected: '实时在线',

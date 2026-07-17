@@ -144,7 +144,7 @@ import { getProfileOverview } from '../api/profile.js'
 import { getCachedUsername } from '../utils/auth.js'
 
 const props = defineProps({
-  user: { type: Object, default: () => ({ username: '管理员' }) }
+  user: { type: Object, default: () => ({ username: '运营成员' }) }
 })
 defineEmits(['navigate', 'logout', 'force-desktop', 'tab-change'])
 
@@ -152,7 +152,7 @@ const overview = ref({})
 const overviewAvailable = ref(false)
 const overviewError = ref('')
 
-const displayName = computed(() => overview.value.nickname || overview.value.username || props.user?.username || getCachedUsername() || '管理员')
+const displayName = computed(() => overview.value.nickname || overview.value.username || props.user?.username || getCachedUsername() || '运营成员')
 
 const planName = computed(() => '商业运营版')
 

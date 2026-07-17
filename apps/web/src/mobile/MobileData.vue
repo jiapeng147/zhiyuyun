@@ -103,7 +103,7 @@
             <div class="m-stat-info">
               <div class="m-stat-label">商品总数</div>
               <div class="m-stat-value">{{ itemAvailable ? stats.itemCount : '—' }}</div>
-              <div class="m-stat-desc">{{ itemAvailable ? '本地商品记录' : '商品统计不可用' }}</div>
+              <div class="m-stat-desc">{{ itemAvailable ? '系统商品记录' : '商品统计不可用' }}</div>
             </div>
           </div>
         </div>

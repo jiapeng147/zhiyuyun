@@ -118,7 +118,7 @@
               <template #header>
                 <div class="about-panel-head">
                   <h3>服务支持</h3>
-                  <p>可用入口与响应能力以当前部署方实际配置为准</p>
+                  <p>可用入口与响应能力以平台实际配置为准</p>
                 </div>
               </template>
               <div class="support-grid">

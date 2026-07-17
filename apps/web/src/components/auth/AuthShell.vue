@@ -99,7 +99,7 @@
         <div class="auth-panel-assurance" aria-hidden="true">
           <span>加密会话</span>
           <span>权限隔离</span>
-          <span>本地数据</span>
+          <span>业务数据</span>
         </div>
       </section>
     </main>

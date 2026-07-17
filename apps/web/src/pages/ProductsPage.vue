@@ -908,7 +908,7 @@ async function polishCurrentAccount() {
 async function polishProduct(row) {
   const target = productPolishScope(row)
   if (!target.accountId || !target.goodsIds.length) {
-    showNotice('warn', '缺少有效账号或本地商品标识，无法建立安全擦亮意图。')
+    showNotice('warn', '缺少有效账号或商品记录标识，无法建立安全擦亮意图。')
     return
   }
   selectProduct(row)
@@ -1046,7 +1046,7 @@ function remoteDeleteStatusText(row) {
   return {
     pending: '删除待执行',
     in_progress: '平台删除中',
-    remote_confirmed: '待完成本地删除',
+    remote_confirmed: '待完成系统删除',
     failed: '平台已拒绝',
     unknown: '结果未知，需人工核对',
   }[state] || '删除状态待核对'
@@ -1059,7 +1059,7 @@ function remoteDeleteButtonText(row) {
   return {
     pending: '等待执行',
     in_progress: '删除中',
-    remote_confirmed: '完成本地删除',
+    remote_confirmed: '完成系统删除',
     failed: '重试删除',
     unknown: '需人工核对',
   }[row?.remoteDeleteAttempt?.status] || '删除'
@@ -1073,12 +1073,12 @@ function remoteDeleteFailure(error) {
     case 'unknown':
       return { type: 'warn', message: '平台删除结果未知，请先在闲鱼 App 核对；系统不会自动重试。' }
     case 'remote_confirmed':
-      return { type: 'warn', message: '平台删除已确认，但本地软删除尚未完成；再次操作只会重试本地收尾。' }
+      return { type: 'warn', message: '平台删除已确认，但系统记录删除尚未完成；再次操作只会重试系统收尾。' }
     case 'in_progress':
     case 'pending':
       return { type: 'info', message: '该商品的删除正在执行，请勿重复操作。' }
     default:
-      return { type: 'error', message: error?.message || '平台明确拒绝删除，本地商品保持不变。' }
+      return { type: 'error', message: error?.message || '平台明确拒绝删除，系统商品保持不变。' }
   }
 }
 function offShelfAttemptOf(value) {
@@ -1089,7 +1089,7 @@ function offShelfStatusText(row) {
   return {
     pending: '下架待执行',
     in_progress: '平台下架中',
-    remote_confirmed: '待完成本地状态',
+    remote_confirmed: '待完成系统状态',
     failed: attempt?.retrySafe ? '未执行，可重试' : '失败，需人工核对',
     unknown: '下架结果未知，需人工核对',
   }[attempt?.status] || '下架状态待核对'
@@ -1110,7 +1110,7 @@ function offShelfButtonText(row) {
   return {
     pending: '等待下架',
     in_progress: '下架中',
-    remote_confirmed: '完成本地状态',
+    remote_confirmed: '完成系统状态',
     failed: attempt?.retrySafe ? '重试下架' : '需人工核对',
     unknown: '需人工核对',
   }[attempt?.status] || '下架'
@@ -1122,7 +1122,7 @@ function offShelfFailure(error) {
   const state = String(error?.data?.status || 'failed')
   const retrySafe = error?.data?.retrySafe === true
   if (state === 'unknown') return { state, retrySafe: false, type: 'warn', message: '平台下架结果未知，请先在闲鱼 App 核对；系统不会自动重试。' }
-  if (state === 'remote_confirmed') return { state, retrySafe: true, type: 'warn', message: '平台下架已确认，但本地状态尚未完成；再次操作只会修复本地状态。' }
+  if (state === 'remote_confirmed') return { state, retrySafe: true, type: 'warn', message: '平台下架已确认，但系统状态尚未完成；再次操作只会修复系统状态。' }
   if (['pending', 'in_progress'].includes(state)) return { state, retrySafe: false, type: 'info', message: '该商品正在下架，请勿重复操作。' }
   return {
     state,
@@ -1291,15 +1291,15 @@ async function toggleOnShelf(row) {
 }
 async function offShelf(item) {
   if (!ensureListAvailable('下架商品')) return
-  if(!item?.externalGoodsId) return showNotice('warn', '本地草稿尚未发布到闲鱼，不能执行远端下架')
+  if(!item?.externalGoodsId) return showNotice('warn', '草稿商品尚未发布到闲鱼，不能执行远端下架')
   const goodsKey = String(item.id || '')
-  if (!goodsKey) return showNotice('warn', '缺少本地商品标识，无法建立安全下架意图')
+  if (!goodsKey) return showNotice('warn', '缺少商品记录标识，无法建立安全下架意图')
   const persisted = offShelfAttemptOf(item)
   if (isOffShelfLocked(item)) {
     return showNotice('warn', persisted?.message || '下架结果尚未确认，请先在闲鱼 App 核对；当前禁止重复操作。')
   }
   if (persisted?.status === 'confirmed') {
-    return showNotice('info', '该商品的平台与本地下架状态均已确认，无需重复操作。')
+    return showNotice('info', '该商品的平台与系统下架状态均已确认，无需重复操作。')
   }
   if (persisted?.status === 'failed' && persisted.retrySafe !== true) {
     return showNotice('warn', '上次下架无法确认是否执行，请先在闲鱼 App 核对并同步商品状态。')
@@ -1327,9 +1327,9 @@ async function offShelf(item) {
 
   const onlyRepairLocal = persisted?.status === 'remote_confirmed' || intent.status === 'remote_confirmed'
   const confirmed = await confirmAction({
-    title: onlyRepairLocal ? '确认仅修复本地下架状态？' : '确认下架该商品？',
+    title: onlyRepairLocal ? '确认仅修复系统下架状态？' : '确认下架该商品？',
     description: onlyRepairLocal
-      ? '闲鱼平台已确认下架。本次只补全本地商品状态，不会再次调用平台下架接口。'
+      ? '闲鱼平台已确认下架。本次只补全系统商品状态，不会再次调用平台下架接口。'
       : '服务端会先持久化下架意图再访问闲鱼。若请求超时或中断，将锁定为结果未知并要求先到闲鱼 App 核对。',
   })
   if (!confirmed) {
@@ -1343,7 +1343,7 @@ async function offShelf(item) {
         idempotencyKey: intent.idempotencyKey,
       })
       clearExternalOperationIntent(offShelfIntents, goodsKey)
-      showNotice('success', '商品已在闲鱼平台与本地确认下架')
+      showNotice('success', '商品已在闲鱼平台与系统记录中确认下架')
       await loadItems()
       loadGoodsStats()
     } catch(e) {
@@ -1422,9 +1422,9 @@ async function publishDraft(row) {
 
   const onlyRepairLocal = intent.status === 'remote_confirmed'
   if (!await confirmAction({
-    title: onlyRepairLocal ? '确认仅修复本地商品状态？' : `确认发布「${row.name}」？`,
+    title: onlyRepairLocal ? '确认仅修复系统商品状态？' : `确认发布「${row.name}」？`,
     description: onlyRepairLocal
-      ? '闲鱼平台已确认发布。本次只补全本地商品记录，不会再次调用发布接口。'
+      ? '闲鱼平台已确认发布。本次只补全系统商品记录，不会再次调用发布接口。'
       : '发布前请确认标题、描述、图片、价格和位置真实有效。',
   })) {
     if (isNewIntent) clearExternalOperationIntent(publishDraftIntents, intentKey)
@@ -1437,7 +1437,7 @@ async function publishDraft(row) {
       idempotencyKey: intent.idempotencyKey,
     })
     clearExternalOperationIntent(publishDraftIntents, intentKey)
-    showNotice('success', '发布成功，闲鱼平台与本地商品状态均已确认')
+    showNotice('success', '发布成功，闲鱼平台与系统商品状态均已确认')
     await loadItems()
     loadGoodsStats()
   } catch(e) {
@@ -1449,7 +1449,7 @@ async function publishDraft(row) {
     })
     saveExternalOperationIntents()
     if (state === 'remote_confirmed') {
-      showNotice('warn', '闲鱼已确认发布，但本地状态未完成。再次点击发布只会修复本地记录，绝不会重复发布。')
+      showNotice('warn', '闲鱼已确认发布，但系统状态未完成。再次点击发布只会修复系统记录，绝不会重复发布。')
     } else if (state === 'unknown') {
       showNotice('error', '发布结果未知。请先同步商品或到闲鱼 App 核对；当前禁止重试。')
     } else if (state === 'in_progress') {
@@ -1462,22 +1462,22 @@ async function publishDraft(row) {
 }
 
 /**
- * 统一删除商品：本地草稿由本地接口处理；已发布商品由服务端持久化
- * 状态机一次性负责平台删除与本地软删除，页面不拼接不可逆步骤。
+ * 统一删除商品：草稿商品由系统接口处理；已发布商品由服务端持久化
+ * 状态机一次性负责平台删除与系统记录删除，页面不拼接不可逆步骤。
  */
 async function deleteProduct(row) {
   if (!ensureListAvailable('删除商品')) return
-  if (isOffShelfBlockingOtherWrites(row)) return showNotice('warn', '下架流程尚未安全收尾，已阻止并发删除；请先完成本地状态或到闲鱼 App 核对。')
+  if (isOffShelfBlockingOtherWrites(row)) return showNotice('warn', '下架流程尚未安全收尾，已阻止并发删除；请先完成系统状态或到闲鱼 App 核对。')
   const item = row.raw || row
   if (!item?.id) return
   const isLocalDraft = row.isLocalDraft
   const remoteDeleteState = row.remoteDeleteAttempt?.status
 
   const confirmDesc = isLocalDraft
-    ? '该商品为本地草稿，删除后将从本地数据库移除。'
+    ? '该商品为草稿商品，删除后将从系统记录中移除。'
     : remoteDeleteState === 'remote_confirmed'
-      ? '平台删除已经确认，本次只会安全重试本地软删除收尾，不会再次调用闲鱼删除。'
-      : '服务端会依次确认平台删除与本地软删除。若平台结果未知，记录会保留并要求先到闲鱼 App 核对；该操作不可逆！'
+      ? '平台删除已经确认，本次只会安全重试系统记录删除收尾，不会再次调用闲鱼删除。'
+      : '服务端会依次确认平台删除与系统记录删除。若平台结果未知，记录会保留并要求先到闲鱼 App 核对；该操作不可逆！'
   const confirmOptions = isLocalDraft
     ? { title: '确认删除该商品？', description: confirmDesc }
     : { title: '确认删除该商品？', description: confirmDesc, dangerous: true, confirmText: '删除' }
@@ -1487,7 +1487,7 @@ async function deleteProduct(row) {
     try {
       if (isLocalDraft) {
         await deleteGoodsLocal(item.id)
-        showNotice('success', '本地商品记录已删除')
+        showNotice('success', '系统商品记录已删除')
       } else {
         const accountId = item.accountId || row.xianyuAccountId || Number(query.xianyuAccountId)
         if (!accountId) return showNotice('warn', '请先选择账号')
@@ -1502,7 +1502,7 @@ async function deleteProduct(row) {
           if (response?.data?.status !== 'confirmed') {
             return showNotice('warn', response?.data?.message || '删除尚未完成，请刷新状态后核对')
           }
-          showNotice('success', '平台删除与本地软删除均已确认完成')
+          showNotice('success', '平台删除与系统记录删除均已确认完成')
         } catch (e) {
           const failure = remoteDeleteFailure(e)
           showNotice(failure.type, failure.message)
@@ -1518,8 +1518,8 @@ async function deleteProduct(row) {
 
 /**
  * 批量删除商品：顺序逐个发起删除请求，复用现有单删端点。
- * - 本地草稿：直接 deleteGoodsLocal(item.id)
- * - 已发布商品：仅调用持久化远程删除状态机，不再由页面追加本地删除
+ * - 草稿商品：直接 deleteGoodsLocal(item.id)
+ * - 已发布商品：仅调用持久化远程删除状态机，不再由页面追加系统删除
  * 单个失败不影响后续，最终汇总成功/失败。
  */
 async function batchDeleteProducts() {
@@ -1542,8 +1542,8 @@ async function batchDeleteProducts() {
   const publishedCount = selectedRows.length - draftCount
 
   const desc = publishedCount > 0
-    ? `选中 ${selectedRows.length} 件商品（已发布到闲鱼 ${publishedCount} 件，本地草稿 ${draftCount} 件）。已发布商品由服务端逐件确认平台删除与本地软删除；结果未知时不会自动重试。该操作不可逆！`
-    : `选中 ${selectedRows.length} 件本地草稿商品，删除后将从本地数据库移除。`
+    ? `选中 ${selectedRows.length} 件商品（已发布到闲鱼 ${publishedCount} 件，草稿商品 ${draftCount} 件）。已发布商品由服务端逐件确认平台删除与系统记录删除；结果未知时不会自动重试。该操作不可逆！`
+    : `选中 ${selectedRows.length} 件草稿商品，删除后将从系统记录中移除。`
   const confirmOptions = publishedCount > 0
     ? { title: '确认批量删除选中商品？', description: desc, dangerous: true, confirmText: '删除' }
     : { title: '确认批量删除选中商品？', description: desc }
@@ -1618,7 +1618,7 @@ async function editPrice(row) {
   const accountId = row.xianyuAccountId || Number(query.xianyuAccountId)
   if (!accountId) return showNotice('warn', '请先选择账号')
   const xyGoodsId = row.xyGoodId
-  if (!xyGoodsId || String(xyGoodsId).startsWith('local:')) return showNotice('warn', '本地草稿不能远程改价')
+  if (!xyGoodsId || String(xyGoodsId).startsWith('local:')) return showNotice('warn', '草稿商品不能远程改价')
   const intentKey = String(row.raw?.id || `${accountId}:${xyGoodsId}`)
   let intent = priceIntents[intentKey]
   if (intent?.status === 'unknown') {
@@ -1630,8 +1630,8 @@ async function editPrice(row) {
 
   if (intent?.status === 'remote_confirmed') {
     const repair = await confirmAction({
-      title: '确认仅修复本地价格？',
-      description: `闲鱼平台已确认价格 ${intent.payload.price}。本次只补全本地商品状态，不会再次调用平台改价接口。`,
+      title: '确认仅修复系统价格？',
+      description: `闲鱼平台已确认价格 ${intent.payload.price}。本次只补全系统商品状态，不会再次调用平台改价接口。`,
     })
     if (!repair) return
   } else {
@@ -1662,7 +1662,7 @@ async function editPrice(row) {
         idempotencyKey: intent.idempotencyKey,
       })
       clearExternalOperationIntent(priceIntents, intentKey)
-      showNotice('success', '商品价格已在闲鱼平台和本地确认')
+      showNotice('success', '商品价格已在闲鱼平台和系统记录中确认')
       await loadItems()
     } catch (e) {
       const state = String(e?.data?.status || 'unknown')
@@ -1673,7 +1673,7 @@ async function editPrice(row) {
       })
       saveExternalOperationIntents()
       if (state === 'remote_confirmed') {
-        showNotice('warn', '闲鱼已确认改价，但本地价格未完成。再次点击改价只会修复本地状态。')
+        showNotice('warn', '闲鱼已确认改价，但系统价格未完成。再次点击改价只会修复系统状态。')
       } else if (state === 'unknown') {
         showNotice('error', '改价结果未知。请先同步商品或到闲鱼 App 核对；当前禁止重试。')
       } else if (state === 'in_progress') {

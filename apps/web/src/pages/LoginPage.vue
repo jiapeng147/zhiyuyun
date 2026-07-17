@@ -63,7 +63,7 @@
     </form>
 
     <div class="auth-agreement" role="note">
-      登录前请确认当前部署方已配置并公示
+      登录前请确认平台服务方已配置并公示
       <button type="button" class="auth-text-link" @click="openDoc('用户协议')">用户协议</button>
       和
       <button type="button" class="auth-text-link" @click="openDoc('隐私政策')">隐私政策</button>

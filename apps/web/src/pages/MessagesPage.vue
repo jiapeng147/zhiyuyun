@@ -790,7 +790,7 @@ async function toggleAiAutoReply(event) {
     if (!isCurrentRequest()) return
     if (requestedGoodsId) {
       const product = aiScopeProducts.value.find(item => String(item.goodsId || '') === requestedGoodsId)
-      if (!product?.id) throw new Error('未找到当前商品的本地记录')
+      if (!product?.id) throw new Error('未找到当前商品的系统记录')
       await updateProductAutoReplyScope(product.id, newValue)
     } else if (requestedAccountId) {
       await updateAccountAutoReplyScope(requestedAccountId, newValue)

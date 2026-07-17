@@ -10,7 +10,7 @@ export const resetPassword = (id, newPassword) =>
 // === 平台概览 ===
 export const getOverview = () => request.get('/admin/overview')
 
-// === 套餐管理 (超管) ===
+// === 套餐管理 (平台负责人) ===
 export const adminListPlans = () => request.get('/admin/plans')
 export const adminCreatePlan = (data) => request.post('/admin/plans', data)
 export const adminUpdatePlan = (id, data) => request.put(`/admin/plans/${id}`, data)

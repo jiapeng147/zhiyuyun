@@ -723,7 +723,7 @@ const CHANNEL_LIBRARY = [
     name: '通用 Webhook',
     icon: 'notifyWebhook',
     accent: 'blue',
-    description: '适用于自动化服务、自建中台或通用回调接口。'
+    description: '适用于自动化服务、业务中台或通用回调接口。'
   },
   {
     key: 'feishu',
@@ -778,9 +778,9 @@ const CHANNEL_LIBRARY = [
 const CHANNEL_TUTORIALS = {
   webhook: {
     icon: 'notifyWebhook',
-    eyebrow: '推荐给自动化服务与自建中台',
+    eyebrow: '推荐给自动化服务与业务中台',
     summary: '给当前通知渠道补一份一步一步的接入说明，保存前就能知道该填什么、先测什么。',
-    goal: '适合把通知转发给自建接口、工作流服务或任何支持 HTTP 回调的系统。',
+    goal: '适合把通知转发给业务接口、工作流服务或任何支持 HTTP 回调的系统。',
     eta: '约 2 分钟完成',
     preparation: ['准备一个可访问的 https 地址', '接收端支持 POST JSON', '建议先用测试环境验证'],
     steps: [

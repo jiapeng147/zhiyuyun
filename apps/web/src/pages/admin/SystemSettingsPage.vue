@@ -58,7 +58,7 @@
           </label>
 
           <label class="field">
-            <span>爬虫服务地址（部署只读）</span>
+            <span>爬虫服务地址（服务只读）</span>
             <input
               :value="form.crawlerBaseUrl"
               class="input"
@@ -87,7 +87,7 @@
               class="bridge-value"
               :class="{ ok: runtimeStatus.commercialBridgeMode === 'commercial', warn: runtimeStatus.commercialBridgeMode !== 'commercial' }"
             >
-              {{ runtimeStatus.commercialBridgeMode === 'commercial' ? '已连接广告服务' : '本地模式（未连接）' }}
+              {{ runtimeStatus.commercialBridgeMode === 'commercial' ? '已连接广告服务' : '服务未连接' }}
             </span>
           </div>
           <div class="bridge-row">
@@ -198,7 +198,7 @@
           <li><strong>站点名称</strong>：显示在浏览器标题栏和登录页，建议保持简短（建议 ≤ 16 个字符）。</li>
           <li><strong>ICP 备案号</strong>：中国大陆服务器必须填写，否则前端底部不显示备案信息。海外服务器可留空。</li>
           <li><strong>站点 Logo URL</strong>：可填写相对路径（如 <code>/static/logo.png</code>）或绝对 URL（如 <code>https://cdn.example.com/logo.png</code>）。</li>
-          <li><strong>爬虫服务地址</strong>：该地址会接收账号授权信息，只能由部署方通过 <code>CRAWLER_BASE_URL</code> 配置并在重启后生效，浏览器页面不可修改。</li>
+          <li><strong>爬虫服务地址</strong>：该地址会接收账号授权信息，只能由平台服务通过 <code>CRAWLER_BASE_URL</code> 配置并在重启后生效，浏览器页面不可修改。</li>
           <li><strong>高德地图 Key</strong>：用于发布商品页的地址搜索，请到"高德地图"页签配置。</li>
           <li><strong>通用模型 / 向量模型</strong>：分别到"模型配置"和"向量模型"页签配置。</li>
           <li><strong>RAG 知识库</strong>：到"RAG 知识库"页签管理文档与检索测试。</li>

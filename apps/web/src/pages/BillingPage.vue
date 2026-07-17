@@ -206,11 +206,11 @@
     <n-card v-if="paymentConfig.enabled || pendingOrders.length" class="billing-card" :bordered="false">
       <template #header>支付说明</template>
       <template #header-extra>
-        <span class="muted">付费订单需管理员确认后生效</span>
+        <span class="muted">付费订单需平台确认后生效</span>
       </template>
       <div class="payment-layout">
         <div class="payment-copy">
-          <p>{{ paymentConfig.instructions || '请联系管理员确认付款方式。付款完成后，管理员会在后台确认订单并开通套餐。' }}</p>
+          <p>{{ paymentConfig.instructions || '请联系平台确认付款方式。付款完成后，平台会确认订单并开通套餐。' }}</p>
           <div v-if="paymentConfig.contact" class="payment-line">
             <span>联系方式</span>
             <strong>{{ paymentConfig.contact }}</strong>

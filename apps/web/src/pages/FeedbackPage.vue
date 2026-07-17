@@ -5,10 +5,10 @@
       反馈将进入支持队列，由维护团队统一查看和处理。
     </div>
     <div v-else-if="feedbackStorageMode === 'local'" class="global-notice warn">
-      当前反馈将保存在本系统内，请由平台管理员在本页查看和处理。
+      当前反馈将保存在本系统内，请由维护团队在本页查看和处理。
     </div>
     <div v-else-if="feedbackStorageMode === 'unknown'" class="global-notice warn">
-      当前无法读取反馈记录，但反馈仍只会保存在本地部署，不会转交任何外部服务。
+      当前无法读取反馈记录，但反馈仍只会保存在本系统内，不会转交任何外部服务。
     </div>
 
     <section class="fbk-hero">
@@ -51,7 +51,7 @@
           >
             <small>待处理</small>
             <strong>{{ statsMetric(stats.open) }}</strong>
-            <span>等待平台管理员处理</span>
+            <span>等待维护团队处理</span>
           </button>
           <button
             type="button"
@@ -126,7 +126,7 @@
           variant="default"
           icon="📭"
           title="还没有反馈记录"
-          description="提交后仅保存在本部署，请确保部署管理员会查看。"
+          description="提交后仅保存在本系统，请确保维护团队会查看。"
         >
           <template #actions>
             <button type="button" class="fbk-btn-primary" @click="openSubmitModal">去提交反馈</button>
@@ -386,7 +386,7 @@
             </div>
             <div class="fbk-msg-bubble" :class="{ admin: reply.replierRole === 'admin' }">
               <div class="fbk-msg-label">
-                {{ reply.replierRole === 'admin' ? (reply.replierUsername || '管理员') + ' 回复' : '补充说明' }}
+                {{ reply.replierRole === 'admin' ? (reply.replierUsername || '客服') + ' 回复' : '补充说明' }}
               </div>
               <p class="fbk-msg-text">{{ reply.content }}</p>
               <div class="fbk-msg-time">{{ formatTime(reply.createdTime) }}</div>
@@ -507,12 +507,12 @@ const activeStatusLabel = computed(() => {
 const storageModeTitle = computed(() => {
   if (feedbackStorageMode.value === 'bridge') return '当前为团队协作模式'
   if (feedbackStorageMode.value === 'unknown') return '存储模式未知'
-  return '当前为本地记录模式'
+  return '当前为团队记录模式'
 })
 const storageModeDescription = computed(() => {
   if (feedbackStorageMode.value === 'bridge') return '反馈将进入支持队列，由维护团队统一查看和处理。'
   if (feedbackStorageMode.value === 'unknown') return '当前无法确认反馈存储模式，请稍后重试。'
-  return '当前记录由平台管理员在本系统内查看和处理。'
+  return '当前记录由维护团队在本系统内查看和处理。'
 })
 
 function statsMetric(value) {
@@ -657,7 +657,7 @@ function restoreFeedbackCreateIntent() {
       payload: record.payload,
     })
   } catch {
-    showNotice('浏览器中的反馈意图记录无法校验，已禁止创建新意图；请联系部署管理员处理站点存储。', 'error', 0)
+    showNotice('浏览器中的反馈意图记录无法校验，已禁止创建新意图；请联系平台负责人处理站点存储。', 'error', 0)
   }
 }
 
@@ -835,7 +835,7 @@ async function handleSubmit() {
     const response = await submitFeedback({ ...payload, idempotencyKey })
     confirmFeedbackCreateIntent(response?.data)
     updateStorageMode(response?.data?.storageMode)
-    showNotice('反馈已保存到本部署，请等待部署管理员处理', 'success')
+    showNotice('反馈已保存到本系统，请等待维护团队处理', 'success')
     resetForm()
     submitVisible.value = false
     filter.status = ''

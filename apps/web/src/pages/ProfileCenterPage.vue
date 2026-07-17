@@ -238,10 +238,10 @@
                     <strong>{{ securityLevel.label }}</strong>
                     <div class="security-level-summary">
                       <span v-if="!overview.lastSecurityUpdateTime" class="security-risk-pill">
-                        尚无管理员密码更新记录
+                        尚无登录密码更新记录
                       </span>
                       <span v-else class="security-risk-pill safe">
-                        已记录密码更新；部署安全仍需独立验收
+                        已记录密码更新；账号安全仍需持续维护
                       </span>
                     </div>
                     <p>{{ securityLevel.desc }}</p>
@@ -257,7 +257,7 @@
                 <div class="security-progress-labels">
                   <span :class="{ active: securityLevel.score === 1 }">待维护</span>
                   <span :class="{ active: securityLevel.score === 2 }">基础</span>
-                  <span :class="{ active: securityLevel.score >= 3 }">部署验收</span>
+                  <span :class="{ active: securityLevel.score >= 3 }">安全维护</span>
                 </div>
               </div>
 
@@ -361,13 +361,13 @@ const menuActiveKey = computed(() => {
   if (activeTab.value === 'password') return 'security'
   return activeTab.value
 })
-const planPeriodText = computed(() => '功能以当前部署和系统配置为准')
+const planPeriodText = computed(() => '功能以当前套餐和系统配置为准')
 
 const securityLevel = computed(() => {
   if (overview.lastSecurityUpdateTime) {
-    return { score: 2, label: '基础已维护', tone: 'medium', desc: '仅确认管理员密码已有更新记录；不代表部署、网络、备份或终端安全已通过验收', percent: 66 }
+    return { score: 2, label: '基础已维护', tone: 'medium', desc: '仅确认登录密码已有更新记录；仍需持续维护登录环境、网络与备份安全', percent: 66 }
   }
-  return { score: 1, label: '待维护', tone: 'low', desc: '尚无管理员密码更新时间证据，建议尽快轮换并持续使用高强度密码', percent: 33 }
+  return { score: 1, label: '待维护', tone: 'low', desc: '尚无登录密码更新时间证据，建议尽快轮换并持续使用高强度密码', percent: 33 }
 })
 
 const securityPasswordHint = computed(() => {
@@ -396,7 +396,7 @@ const securityAdviceList = [
   '定期更换密码，避免使用与其他平台相同的密码',
   '不要向任何人透露密码等敏感信息',
   '优先使用长度更长、包含大小写字母和数字的强密码',
-  '如发现异常登录，请立即修改密码、撤销现有会话并联系部署管理员核查日志'
+  '如发现异常登录，请立即修改密码、撤销现有会话并联系平台负责人核查日志'
 ]
 
 const accountInfoItems = computed(() => [
@@ -404,9 +404,9 @@ const accountInfoItems = computed(() => [
   { label: '昵称', value: overview.nickname || '-' },
   { label: '登录方式', value: '固定账号密码' },
   { label: '账户 ID', value: overview.userId ?? '-' },
-  { label: '部署实例', value: overview.tenantName || '-' },
+  { label: '平台实例', value: overview.tenantName || '-' },
   { label: '账号状态', value: formatUserStatus(overview.status) },
-  { label: '部署版本', value: planName.value || '-' },
+  { label: '套餐版本', value: planName.value || '-' },
   { label: '最近登录', value: displayDate(overview.lastLoginTime) },
   { label: '安全更新', value: displayDate(overview.lastSecurityUpdateTime) }
 ])

@@ -284,7 +284,7 @@ const bootMessage = ref('正在检查登录状态')
 const loggingIn = ref(false)
 const active = ref(initialRoute.page)
 const requestedRoute = ref(initialRoute.known ? '' : initialRoute.requestedPage)
-const currentUserInfo = ref({ username: getCachedUsername() || '管理员', avatar: '/xya/chat_ui_assets/chat_ui_assets_023.png' })
+const currentUserInfo = ref({ username: getCachedUsername() || '运营成员', avatar: '/xya/chat_ui_assets/chat_ui_assets_023.png' })
 const displaySseStatus = ref('disconnected')
 const globalNotice = ref(null)
 const globalRetrying = ref(false)
@@ -584,7 +584,7 @@ function startSse() {
 async function handleLoginSuccess(payload) {
   loggingIn.value = true
   if (payload?.token) setAuth(payload.token, payload.username, { remember: payload.remember })
-  currentUserInfo.value = { username: payload?.username || getCachedUsername() || '管理员', avatar: '/xya/chat_ui_assets/chat_ui_assets_023.png' }
+  currentUserInfo.value = { username: payload?.username || getCachedUsername() || '运营成员', avatar: '/xya/chat_ui_assets/chat_ui_assets_023.png' }
   try {
     await loadCurrentUser()
     startSse()
@@ -602,7 +602,7 @@ async function handleLogout() {
     clearAuth()
   }
   closeSse()
-  currentUserInfo.value = { username: '管理员', avatar: '/xya/chat_ui_assets/chat_ui_assets_023.png' }
+  currentUserInfo.value = { username: '运营成员', avatar: '/xya/chat_ui_assets/chat_ui_assets_023.png' }
   navigate('login')
 }
 

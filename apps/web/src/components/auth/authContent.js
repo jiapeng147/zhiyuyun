@@ -33,7 +33,7 @@ export const authIcons = {
 }
 
 export const authStats = [
-  { value: '专属部署', label: '运行与配置自主可控', icon: authIcons.user },
+  { value: '专属环境', label: '运行与配置自主可控', icon: authIcons.user },
   { value: '业务数据', label: '数据由当前系统统一管理', icon: authIcons.check },
   { value: '按需配置', label: '能力以实际启用模块为准', icon: authIcons.shield },
 ]

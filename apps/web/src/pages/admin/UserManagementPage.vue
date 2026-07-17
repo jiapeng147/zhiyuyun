@@ -17,7 +17,7 @@
     <!-- 平台概览 -->
     <n-card class="dashboard-section user-v4-card" :bordered="false">
       <template #header>平台概览</template>
-      <template #header-extra><span class="user-v4-desc">总用户/账号/商品/订单与活跃趋势（仅超管可见）</span></template>
+      <template #header-extra><span class="user-v4-desc">总用户/账号/商品/订单与活跃趋势（仅平台负责人可见）</span></template>
       <div v-if="overview" class="ov-grid">
         <div class="ov-card">
           <div class="ov-label">用户总数</div>
@@ -362,7 +362,7 @@
     <!-- 手动建用户 -->
     <n-card class="dashboard-section user-v4-card" :bordered="false">
       <template #header>手动建用户</template>
-      <template #header-extra><span class="user-v4-desc">超管可直接创建账号，绕过注册开关和邮箱验证。</span></template>
+      <template #header-extra><span class="user-v4-desc">平台负责人可直接创建账号，绕过注册开关和邮箱验证。</span></template>
       <form class="create-form" @submit.prevent="onCreateUser">
         <label class="field">
           <span>用户名 *</span>
@@ -384,7 +384,7 @@
         </label>
         <label class="field check">
           <input v-model="createForm.isSuper" type="checkbox" />
-          <span>超级管理员（请谨慎勾选）</span>
+          <span>平台负责人权限（请谨慎勾选）</span>
         </label>
         <div class="form-actions">
           <button class="btn primary" type="submit" :disabled="createBusy">{{ createBusy ? '创建中...' : '创建用户' }}</button>
@@ -461,7 +461,7 @@
               <td><strong>{{ u.username }}</strong></td>
               <td>{{ u.email || '—' }}</td>
               <td>
-                <span :class="['role-tag', u.role]">{{ u.role === 'superadmin' ? '超级管理员' : '普通用户' }}</span>
+                <span :class="['role-tag', u.role]">{{ u.role === 'superadmin' ? '平台负责人' : '运营成员' }}</span>
               </td>
               <td>
                 <select
@@ -540,7 +540,7 @@
               <div class="profile-meta">
                 <span>ID {{ profileData.user.id }}</span>
                 <span>{{ profileData.user.email || '未填写邮箱' }}</span>
-                <span>{{ profileData.user.role === 'superadmin' ? '超级管理员' : '普通用户' }}</span>
+                <span>{{ profileData.user.role === 'superadmin' ? '平台负责人' : '运营成员' }}</span>
               </div>
             </div>
             <div class="profile-plan">
@@ -1048,7 +1048,7 @@ async function loadAll() {
     emailConfigured.value = !!(cfg.smtpHost || cfg.smtpUser)
     if (!createForm.planCode && plans.value.length) createForm.planCode = plans.value[0].code
   } catch (e) {
-    flash(friendlyError(e, '加载失败，请确认你是超级管理员'), 'error')
+    flash(friendlyError(e, '加载失败，请确认你具备平台负责人权限'), 'error')
   }
 }
 

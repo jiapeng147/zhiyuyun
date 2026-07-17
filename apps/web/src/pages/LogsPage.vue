@@ -162,7 +162,7 @@ const OPERATION_TYPE_MAP = {
   WEBSOCKET_START: '启动连接',
   WEBSOCKET_STOP: '断开连接',
   PUBLISH_PRODUCT: '发布商品',
-  DELETE_LOCAL: '删除本地',
+  DELETE_LOCAL: '删除系统记录',
   OFF_SHELF: '下架商品',
   CARD_IMPORT: '卡密导入',
   CARD_DELETE: '卡密删除',

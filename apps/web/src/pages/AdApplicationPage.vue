@@ -26,7 +26,7 @@
         <h2>广告申请与支付以真实服务为准</h2>
         <p>
           仅在广告服务已配置并返回真实套餐与支付渠道后，才可提交申请或创建支付订单。
-          系统不会生成临时套餐，也不会在服务不可用时把申请保存在本地。
+          系统不会生成临时套餐，也不会在服务不可用时保存申请。
         </p>
         <div class="ads-hero-points">
           <span>套餐与价格来自商业服务</span>
@@ -57,7 +57,7 @@
             variant="dev"
             icon="📦"
             :title="commercialState.available === false ? '广告服务未配置' : '暂未返回可用广告档位'"
-            :description="commercialState.available === false ? '当前不展示临时套餐，提交与支付操作已禁用。' : '请由平台管理员检查广告服务中的套餐配置。'"
+            :description="commercialState.available === false ? '当前不展示临时套餐，提交与支付操作已禁用。' : '请由平台负责人检查广告服务中的套餐配置。'"
           />
           <div v-else class="plan-grid">
             <article
@@ -388,7 +388,7 @@
             variant="default"
             icon="📝"
             title="还没有广告申请"
-            description="商业服务返回真实申请后，这里会显示其支付与审核状态；历史本地记录仅供只读查看。"
+            description="商业服务返回真实申请后，这里会显示其支付与审核状态；历史系统记录仅供只读查看。"
           />
           <div v-else class="application-list">
             <article v-for="item in applications" :key="item.id" class="application-card">
@@ -450,10 +450,10 @@
         <n-card class="ads-section ads-v4-card" :bordered="false">
           <template #header>投放说明</template>
           <ol class="ads-steps">
-            <li>平台管理员需先配置广告服务，并由服务端提供真实套餐与支付方式。</li>
+            <li>平台负责人需先配置广告服务，并由服务端提供真实套餐与支付方式。</li>
             <li>广告服务未配置时，系统不会提交、保存申请或创建支付订单。</li>
             <li>支付、审核、排期与上下架均以商业服务返回的状态为准。</li>
-            <li>历史本地申请记录只读保留，不代表已进入任何审核或投放流程。</li>
+            <li>历史系统申请记录只读保留，不代表已进入任何审核或投放流程。</li>
           </ol>
         </n-card>
       </aside>

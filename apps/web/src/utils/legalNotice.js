@@ -12,7 +12,7 @@ export function showLegalNotice(title = '相关协议') {
   heading.textContent = String(title || '相关协议')
 
   const message = document.createElement('p')
-  message.textContent = `部署方尚未配置正式${heading.textContent}。商用上线前，请由部署主体提供并公示经审核的正式文本。`
+  message.textContent = `平台服务方尚未配置正式${heading.textContent}。商用上线前，请由服务主体提供并公示经审核的正式文本。`
 
   const close = document.createElement('button')
   close.type = 'button'

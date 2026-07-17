@@ -371,7 +371,7 @@ const publishSubmitDisabled = computed(() => !canSubmitPublishIntent({
   outcome: publishOutcome.value,
 }))
 const publishSubmitLabel = computed(() => {
-  if (publishOutcome.value?.status === 'remote_confirmed') return '仅修复本地状态'
+  if (publishOutcome.value?.status === 'remote_confirmed') return '仅修复系统状态'
   if (publishOutcome.value?.status === 'unknown') return '结果未知，禁止重试'
   if (publishOutcome.value?.status === 'in_progress') return '发布执行中'
   if (unsafePublishFailure.value) return '失败不可安全重试'
@@ -643,7 +643,7 @@ async function triggerAutoCategory() {
         autoCategoryMessage.value = '账号登录凭证已失效，请重新登录后再试'
         autoCategoryMsgType.value = 'error'
       } else if (data.fallbackReason && data.fallbackReason.includes('LOW_CONFIDENCE')) {
-        autoCategoryMessage.value = '封面图自动识别置信度不足，已切换到本地分类'
+        autoCategoryMessage.value = '封面图自动识别置信度不足，已切换到备用分类'
         autoCategoryMsgType.value = 'warn'
         // 展示能检测到的候选
         if (data.candidates && data.candidates.length) {
@@ -929,7 +929,7 @@ function onLocationInput() {
       if (searchVersion !== poiSearchVersion) return
       if (import.meta.env.DEV) console.warn('[poiSearch] failed')
       poiList.value = []
-      poiError.value = '位置搜索请求失败，请检查网络或联系管理员'
+      poiError.value = '位置搜索请求失败，请检查网络或联系平台支持'
     } finally {
       if (searchVersion === poiSearchVersion) poiLoading.value = false
     }
@@ -1263,7 +1263,7 @@ function restorePublishIntent() {
       if (publishOutcome.value.status === 'unknown') {
         warning.value = '检测到结果未知的发布意图。请先同步商品或到闲鱼 App 核对，当前禁止重试。'
       } else if (publishOutcome.value.status === 'remote_confirmed') {
-        warning.value = '闲鱼平台已确认发布；继续操作只会修复本地商品状态。'
+        warning.value = '闲鱼平台已确认发布；继续操作只会修复系统商品状态。'
       } else {
         warning.value = '检测到未完成的发布意图。继续操作只会恢复该意图；服务端会阻止重复发布。'
       }
@@ -1286,10 +1286,10 @@ async function submit() {
   const onlyRepairLocal = publishOutcome.value?.status === 'remote_confirmed'
   const confirmationSummary = buildPublishIntentSummary(confirmationPayload.value, resolveIntentAccountName)
   const ok = await confirmAction({
-    title: onlyRepairLocal ? '确认仅修复本地商品状态？' : '确认立即发布到闲鱼？',
+    title: onlyRepairLocal ? '确认仅修复系统商品状态？' : '确认立即发布到闲鱼？',
     description: onlyRepairLocal
-      ? `平台已经确认发布。本次仅补全本地商品库，不会再次调用闲鱼发布接口。\n\n${confirmationSummary}`
-      : `${confirmationSummary}\n发布成功后会同步保存到本地商品库。`,
+      ? `平台已经确认发布。本次仅补全系统商品库，不会再次调用闲鱼发布接口。\n\n${confirmationSummary}`
+      : `${confirmationSummary}\n发布成功后会同步保存到系统商品库。`,
     dangerous: true
   })
   if (!ok) return
@@ -1317,7 +1317,7 @@ async function submit() {
       poiName: runtime.defaultAddress || '',
     }
 
-    // 先发布到闲鱼，成功后再保存到本地数据库，避免发布失败时本地却显示商品
+    // 先发布到闲鱼，成功后再保存到系统记录，避免发布失败时系统内却显示商品
     if (!publishIntent.payload) {
       publishIntent.idempotencyKey = createPublishIntentKey()
       publishIntent.payload = {
@@ -1342,7 +1342,7 @@ async function submit() {
     })
 
     if (publishRes.code === 200) {
-      success.value = '发布成功，平台与本地商品库均已确认。'
+      success.value = '发布成功，平台与系统商品库均已确认。'
       clearPublishIntent()
       // 浏览器中的待同步标记只是可选的后续 UX，失败不得改写已确认的平台发布结果。
       const pendingSync = markPendingProductSync()
@@ -1362,7 +1362,7 @@ async function submit() {
     }
     savePublishIntent()
     if (state === 'remote_confirmed') {
-      warning.value = '闲鱼平台已确认发布，但本地商品库尚未完成。可点击“仅修复本地状态”，系统绝不会重复发布。'
+      warning.value = '闲鱼平台已确认发布，但系统商品库尚未完成。可点击“仅修复系统状态”，系统绝不会重复发布。'
     } else if (state === 'unknown') {
       error.value = '发布结果未知。请先同步商品或到闲鱼 App 核对；为避免重复发布，当前禁止重试。'
     } else if (state === 'in_progress') {
