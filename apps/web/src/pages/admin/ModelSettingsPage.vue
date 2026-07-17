@@ -1,33 +1,64 @@
 <template>
-  <div class="model-settings-page">
+  <div class="model-settings-page model-v9-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <section class="page-hero">
-      <div class="page-hero-copy">
-        <span class="page-pill">通用模型</span>
-        <h1>模型配置</h1>
-        <p>通用模型用于接待回复、文本生成、商品改写等场景。向量模型（Embedding）已拆分到独立页签维护，避免混填。</p>
+    <section class="model-hero">
+      <div class="model-hero-copy">
+        <span class="model-kicker">Model Gateway</span>
+        <h1>模型接入控制台</h1>
+        <p>统一维护通用大模型的供应商、模型名、接口地址、协议模式和密钥。客服回复、文本生成、商品改写等能力都会读取这里的通用模型配置。</p>
 
-        <div class="page-actions">
-          <AppButton type="primary" :loading="saving" :disabled="!configAvailable" @click="save">保存配置</AppButton>
-          <AppButton :loading="loading" @click="loadPage">重新加载</AppButton>
+        <div class="model-hero-actions">
+          <button type="button" class="model-save-btn" :disabled="saving || !configAvailable" @click="save">{{ saving ? '保存中...' : '保存配置' }}</button>
+          <button type="button" class="model-reload-btn" :disabled="loading" @click="loadPage">{{ loading ? '加载中...' : '重新加载' }}</button>
         </div>
       </div>
 
-      <div class="hero-badges">
-        <div class="status-card" :class="runtimeStatusAvailable && runtimeStatus.generalModelConfigured ? 'green' : 'orange'">
-          <span>通用模型</span>
-          <strong>{{ runtimeStatusAvailable ? (runtimeStatus.generalModelConfigured ? '已配置' : '未设置') : '状态未知' }}</strong>
-          <small>对话 / 改写 / 文本生成</small>
+      <aside class="model-status-panel" :class="runtimeStatusAvailable && runtimeStatus.generalModelConfigured ? 'green' : 'orange'" aria-label="通用模型状态">
+        <span>通用模型</span>
+        <strong>{{ runtimeStatusAvailable ? (runtimeStatus.generalModelConfigured ? '已配置' : '未设置') : '状态未知' }}</strong>
+        <div class="model-status-meter">
+          <i :style="{ width: runtimeStatusAvailable && runtimeStatus.generalModelConfigured ? '76%' : '34%' }"></i>
         </div>
-      </div>
+        <p>对话 / 改写 / 文本生成</p>
+      </aside>
     </section>
 
-    <div class="page-grid">
-      <n-card class="settings-v7-card" :bordered="false">
-        <template #header>通用模型</template>
-        <template #header-extra><span class="settings-v7-desc">所有通用 AI 调用都会优先读取这里的配置。建议按照“供应商 → 模型名 → 地址 → Key”的顺序填写。</span></template>
+    <section class="model-summary-grid" aria-label="模型接入摘要">
+      <article class="model-summary-card">
+        <span class="model-summary-icon blue">01</span>
+        <div>
+          <strong>兼容协议</strong>
+          <p>支持 Chat Completions 与 Responses 两种通用模式，适配官方接口和中转网关。</p>
+        </div>
+      </article>
+      <article class="model-summary-card">
+        <span class="model-summary-icon green">02</span>
+        <div>
+          <strong>密钥保护</strong>
+          <p>已保存的 Key 不会完整回显，切换接口主机时必须重新输入，降低误发风险。</p>
+        </div>
+      </article>
+      <article class="model-summary-card">
+        <span class="model-summary-icon amber">03</span>
+        <div>
+          <strong>策略增强</strong>
+          <p>润色关键词和禁止润色关键词用于区分文本处理场景，不替代模型能力。</p>
+        </div>
+      </article>
+    </section>
+
+    <div class="model-workspace">
+      <section class="model-v9-card model-config-panel">
+        <div class="model-card-head">
+          <div>
+            <span>通用模型</span>
+            <h2>接入参数</h2>
+          </div>
+          <p>所有通用 AI 调用都会优先读取这里的配置。建议按照“供应商 → 模型名 → 地址 → Key”的顺序填写。</p>
+        </div>
+
         <div class="config-overview">
           <article class="overview-card">
             <span>适用场景</span>
@@ -156,11 +187,17 @@
             />
           </OpsConfigField>
         </div>
-      </n-card>
+      </section>
 
-      <n-card class="settings-v7-card" :bordered="false">
-        <template #header>配置建议</template>
-        <template #header-extra><span class="settings-v7-desc">下面这些说明可以帮助你更快判断“应该填什么”，也能减少配置时的来回试错。</span></template>
+      <aside class="model-v9-card model-guide-panel">
+        <div class="model-card-head compact">
+          <div>
+            <span>接入建议</span>
+            <h2>配置建议</h2>
+          </div>
+          <p>下面这些说明可以帮助你更快判断“应该填什么”，也能减少配置时的来回试错。</p>
+        </div>
+
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">A</div>
@@ -191,16 +228,14 @@
           <li>如使用代理网关，请直接在“模型名称”中填写网关要求的模型字段，避免同一配置出现两个名称。</li>
           <li>建议为生产环境单独准备一套 API Key，避免与个人用途或其他业务混用，降低定位成本。</li>
         </ul>
-      </n-card>
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NCard } from 'naive-ui'
 import OpsConfigField from '../../components/OpsConfigField.vue'
-import AppButton from '../../components/AppButton.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
   cloneOpenSourceConfig,
@@ -356,101 +391,313 @@ function onHeaderAction(event) {
 </script>
 
 <style scoped>
-.model-settings-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.page-hero {
+.model-v9-shell {
+  --model-primary: #2563eb;
+  --model-primary-dark: #1d4ed8;
+  --model-accent: #14b8a6;
+  --model-warning: #f59e0b;
+  --model-text: #111827;
+  --model-muted: #64748b;
+  --model-line: #e5e7eb;
+  --model-panel: #ffffff;
+  --model-soft: #f8fafc;
+  --model-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
-  padding: 22px;
-  border-radius: 24px;
-  border: 1px solid rgba(231, 237, 247, 0.95);
-  background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 32%),
-    radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 35%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92));
-  box-shadow: 0 18px 42px rgba(94, 50, 31, 0.08);
+  color: var(--model-text);
 }
 
-.page-pill {
+.model-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.model-hero-copy,
+.model-status-panel,
+.model-summary-card,
+.model-v9-card {
+  border: 1px solid var(--model-line);
+  border-radius: 8px;
+  background: var(--model-panel);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 42px rgba(15, 23, 42, 0.06);
+}
+
+.model-hero-copy {
+  position: relative;
+  overflow: hidden;
+  min-height: 236px;
+  padding: 28px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.94)),
+    radial-gradient(circle at 84% 24%, rgba(37, 99, 235, 0.15), transparent 30%),
+    radial-gradient(circle at 72% 90%, rgba(20, 184, 166, 0.13), transparent 24%);
+}
+
+.model-hero-copy::before {
+  content: '';
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  width: 236px;
+  height: 132px;
+  border: 1px solid rgba(37, 99, 235, 0.13);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.13) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.62;
+  transform: rotate(-3deg);
+}
+
+.model-kicker {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
+  height: 28px;
   padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--model-primary-dark);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.page-hero-copy h1 {
-  margin: 10px 0 0;
-  font-size: 28px;
-  color: #13213d;
+.model-hero-copy h1 {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 10px;
+  color: var(--model-text);
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.page-hero-copy p {
-  margin: 10px 0 0;
-  max-width: 760px;
+.model-hero-copy p {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0;
+  color: var(--model-muted);
+  font-size: 14px;
   line-height: 1.8;
-  color: #60738e;
 }
 
-.page-actions {
+.model-hero-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 22px;
 }
 
-.hero-badges {
+.model-save-btn,
+.model-reload-btn {
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 140ms var(--model-ease),
+    box-shadow 160ms var(--model-ease),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.model-save-btn {
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--model-primary), var(--model-accent));
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.18);
+}
+
+.model-reload-btn {
+  border: 1px solid #bfdbfe;
+  background: #ffffff;
+  color: var(--model-primary-dark);
+}
+
+.model-save-btn:disabled,
+.model-reload-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.model-status-panel {
   display: grid;
-  gap: 12px;
+  align-content: space-between;
+  gap: 14px;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%),
+    radial-gradient(circle at 100% 0%, rgba(20, 184, 166, 0.14), transparent 30%);
 }
 
-.status-card {
-  padding: 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(231, 237, 247, 0.95);
+.model-status-panel.orange {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fffbeb 100%),
+    radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.16), transparent 30%);
 }
 
-.status-card span {
-  display: block;
+.model-status-panel span,
+.model-card-head span {
+  color: var(--model-muted);
   font-size: 12px;
-  font-weight: 700;
-  color: #6B6B6B;
+  font-weight: 850;
 }
 
-.status-card strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 20px;
-  color: #13213d;
+.model-status-panel strong {
+  color: var(--model-warning);
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.status-card small {
-  display: block;
-  margin-top: 6px;
+.model-status-panel.green strong {
+  color: #0f766e;
+}
+
+.model-status-panel p {
+  margin: 0;
+  color: var(--model-muted);
+  font-size: 13px;
   line-height: 1.65;
-  color: #667892;
 }
 
-.status-card.green {
-  background: linear-gradient(180deg, rgba(236, 253, 243, 0.98), rgba(255, 255, 255, 0.96));
+.model-status-meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
 }
 
-.status-card.orange {
-  background: linear-gradient(180deg, rgba(255, 248, 237, 0.98), rgba(255, 255, 255, 0.96));
+.model-status-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--model-primary), var(--model-accent));
+  transition: width 220ms var(--model-ease);
 }
 
-.page-grid {
+.model-status-panel.orange .model-status-meter i {
+  background: linear-gradient(90deg, var(--model-warning), var(--model-accent));
+}
+
+.model-summary-grid {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.model-summary-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  transition:
+    transform 180ms var(--model-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--model-ease);
+}
+
+.model-summary-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--model-primary);
+  background: #eff6ff;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.model-summary-icon.green {
+  color: #0f766e;
+  background: #f0fdfa;
+}
+
+.model-summary-icon.amber {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.model-summary-card strong,
+.model-card-head h2,
+.overview-card strong,
+.guide-card strong {
+  color: var(--model-text);
+  font-weight: 850;
+}
+
+.model-summary-card p,
+.model-card-head p,
+.overview-card p,
+.guide-card p {
+  margin: 6px 0 0;
+  color: var(--model-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.model-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
+  align-items: start;
+}
+
+.model-v9-card {
+  padding: 18px;
+  transition:
+    transform 180ms var(--model-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--model-ease);
+}
+
+.model-guide-panel {
+  position: sticky;
+  top: 12px;
+}
+
+.model-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.model-card-head.compact {
+  display: grid;
+  gap: 8px;
+}
+
+.model-card-head h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.model-card-head p {
+  max-width: 420px;
+  margin-top: 0;
 }
 
 .config-overview {
@@ -462,35 +709,31 @@ function onHeaderAction(event) {
 
 .overview-card {
   padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(225, 233, 245, 0.98);
-  background: linear-gradient(135deg, #FFFFFF, #f5f9ff);
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%),
+    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.1), transparent 28%);
 }
 
 .overview-card span {
   display: inline-flex;
-  min-height: 22px;
   align-items: center;
+  min-height: 24px;
   padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.08);
-  color: #d45e2c;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--model-primary-dark);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .overview-card strong {
   display: block;
   margin-top: 12px;
-  color: #13213d;
   font-size: 15px;
-}
-
-.overview-card p {
-  margin: 8px 0 0;
-  color: #6e7e98;
-  line-height: 1.7;
-  font-size: 13px;
+  line-height: 1.45;
 }
 
 .field-grid {
@@ -502,244 +745,220 @@ function onHeaderAction(event) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* 下拉选择框：在通用输入样式基础上增加右侧箭头，原生外观更统一 */
+.model-v9-shell :deep(.ops-config-field) {
+  border-color: var(--model-line);
+  border-radius: 8px;
+  background: var(--model-soft);
+  box-shadow: none;
+  transition:
+    transform 180ms var(--model-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--model-ease);
+}
+
+.model-v9-shell :deep(.ops-config-field:hover) {
+  border-color: #bfdbfe;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.08);
+}
+
+.model-v9-shell :deep(.ops-config-field-label) {
+  color: var(--model-text);
+  letter-spacing: 0;
+}
+
+.model-v9-shell :deep(.ops-config-field-badge) {
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--model-primary-dark);
+}
+
+.model-v9-shell :deep(.ops-config-field-required) {
+  border-radius: 8px;
+}
+
+.model-v9-shell :deep(.ops-config-field-hint),
+.model-v9-shell :deep(.ops-config-field-meta) {
+  color: var(--model-muted);
+}
+
+.model-v9-shell :deep(.config-input),
+.model-v9-shell :deep(.config-textarea),
+.model-v9-shell :deep(.secret-input) {
+  border-color: #dbe3ee;
+  border-radius: 8px;
+  color: var(--model-text);
+  background: #ffffff;
+}
+
+.model-v9-shell :deep(.config-input:hover),
+.model-v9-shell :deep(.config-textarea:hover),
+.model-v9-shell :deep(.secret-input:hover) {
+  border-color: #bfdbfe;
+}
+
+.model-v9-shell :deep(.config-input:focus),
+.model-v9-shell :deep(.config-input:focus-visible),
+.model-v9-shell :deep(.config-textarea:focus),
+.model-v9-shell :deep(.config-textarea:focus-visible),
+.model-v9-shell :deep(.secret-input:focus-within) {
+  border-color: var(--model-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.model-v9-shell :deep(.secret-input-control) {
+  color: var(--model-text);
+}
+
+.model-v9-shell :deep(.secret-input-toggle) {
+  border-left-color: var(--model-line);
+  background: #f8fbff;
+  color: var(--model-primary-dark);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
 :deep(.config-select) {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   padding-right: 38px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a879e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
   background-repeat: no-repeat;
   background-position: right 14px center;
-  background-color: #fff;
   cursor: pointer;
 }
 
-/* “其他 / 自定义”时展开的自定义输入框，与下拉框形成层级关系 */
 .custom-provider-input {
   margin-top: 10px;
 }
 
 .guide-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
 
 .guide-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
   gap: 12px;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(225, 233, 245, 0.98);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+  padding: 14px;
+  border: 1px solid var(--model-line);
+  border-radius: 8px;
+  background: var(--model-soft);
 }
 
 .guide-icon {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: #edf4ff;
-  color: #0f766e;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--model-primary-dark);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .guide-card strong {
   display: block;
-  color: #13213d;
   font-size: 14px;
 }
 
-.guide-card p {
-  margin: 6px 0 0;
-  color: #6d7c96;
-  line-height: 1.7;
-  font-size: 12.5px;
-}
-
 .hint-list {
+  display: grid;
+  gap: 8px;
   margin: 0;
-  padding-left: 18px;
-  color: #667892;
-  line-height: 1.8;
+  padding: 0;
+  list-style: none;
+  color: var(--model-muted);
+  font-size: 12px;
+  line-height: 1.75;
 }
 
-.hint-list li + li {
-  margin-top: 4px;
+.hint-list li {
+  position: relative;
+  padding-left: 16px;
 }
 
-@media (max-width: 1180px) {
-  .page-hero,
-  .config-overview,
-  .guide-grid {
+.hint-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--model-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .model-summary-card:hover,
+  .model-v9-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 24px 54px rgba(37, 99, 235, 0.11);
+  }
+
+  .model-save-btn:hover:not(:disabled),
+  .model-reload-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.model-save-btn:active,
+.model-reload-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 1220px) {
+  .model-hero,
+  .model-workspace {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .model-guide-panel {
+    position: static;
   }
 }
 
 @media (max-width: 920px) {
-  .field-grid.two {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .model-settings-page {
-    gap: 12px;
-  }
-
-  .page-hero {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 14px;
-    border-radius: 16px;
-  }
-
-  .page-hero-copy h1 {
-    font-size: 20px;
-  }
-
-  .page-hero-copy p {
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .page-actions {
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .hero-badges {
-    gap: 10px;
-  }
-
-  .status-card {
-    padding: 12px;
-    border-radius: 14px;
-  }
-
-  .status-card strong {
-    font-size: 16px;
-  }
-
-  .status-card small {
-    font-size: 12px;
-  }
-
-  .page-grid {
-    gap: 12px;
-  }
-
-  .config-overview {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .overview-card {
-    padding: 12px;
-    border-radius: 14px;
-  }
-
-  .overview-card strong {
-    margin-top: 8px;
-    font-size: 14px;
-  }
-
-  .overview-card p {
-    margin-top: 6px;
-    font-size: 12.5px;
-    line-height: 1.6;
-  }
-
-  .field-grid {
-    gap: 12px;
-  }
-
+  .model-summary-grid,
+  .config-overview,
   .field-grid.two {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .guide-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
+  .model-hero-copy {
+    min-height: 0;
+    padding: 22px;
   }
 
-  .page-hero > *,
-  .config-overview > *,
-  .guide-grid > *,
-  .field-grid.two > * {
-    min-width: 0;
+  .model-hero-copy::before {
+    display: none;
   }
 
-  .guide-card {
-    padding: 12px;
-    border-radius: 14px;
-    gap: 10px;
+  .model-hero-copy h1 {
+    font-size: 28px;
   }
 
-  .guide-card strong {
-    font-size: 13.5px;
-  }
-
-  .guide-card p {
-    font-size: 12px;
-    line-height: 1.6;
-  }
-
-  .guide-icon {
-    width: 26px;
-    height: 26px;
-    font-size: 12px;
-  }
-
-  .hint-list {
-    padding-left: 16px;
-    font-size: 13px;
-    line-height: 1.7;
+  .model-card-head {
+    flex-direction: column;
   }
 }
 
-.page-hero,
-.settings-v7-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
+@media (max-width: 620px) {
+  .model-hero-actions,
+  .model-save-btn,
+  .model-reload-btn {
+    width: 100%;
+  }
 
-.page-hero {
-  background: #fff;
-}
-
-.page-pill {
-  border-radius: 6px;
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.page-hero-copy h1 {
-  color: #111827;
-  letter-spacing: 0;
-}
-
-.settings-v7-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.settings-v7-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
-}
-
-.settings-v7-desc {
-  max-width: 380px;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.5;
+  .model-status-panel strong {
+    font-size: 28px;
+  }
 }
 </style>
