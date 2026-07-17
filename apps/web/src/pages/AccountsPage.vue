@@ -1,5 +1,5 @@
 <template>
-  <div class="accounts-page" v-bind="$attrs">
+  <div class="accounts-page accounts-v11-shell" v-bind="$attrs">
     <main class="accounts-main">
       <section class="accounts-command-center">
         <div class="accounts-command-main">
@@ -21,11 +21,11 @@
             <strong>{{ selected ? '已选账号' : '全局操作' }}</strong>
           </div>
           <div class="accounts-command-buttons">
-            <n-button type="primary" @click="openModal('scan')">扫码加账号</n-button>
-            <n-button @click="openModal('manual')">手动添加</n-button>
-            <n-button tertiary :loading="loading" @click="loadAccounts">刷新账号</n-button>
+            <n-button type="primary" :title="accountActionHint" @click="openModal('scan')">扫码加账号</n-button>
+            <n-button :title="accountActionHint" @click="openModal('manual')">手动添加</n-button>
+            <n-button tertiary :title="accountActionHint" :loading="loading" @click="loadAccounts">刷新账号</n-button>
           </div>
-          <p>扫码登录、手动添加、删除、资料刷新与实时连接均由平台服务统一处理。</p>
+          <p class="accounts-action-hint">{{ accountActionHint }}</p>
         </div>
       </section>
 
@@ -304,9 +304,18 @@
 
   <Teleport to="body">
     <div v-if="modal" class="modal-mask" @click.self="closeModal">
-      <section v-if="modal==='scan'" class="xy-modal scan-modal">
-        <button class="modal-close" @click="closeModal"><Icon name="close" /></button>
-        <h2>{{ qr.mode === 'rescan' ? '重新扫码更新账号' : '扫码添加闲鱼账号' }}</h2>
+      <section v-if="modal==='scan'" class="xy-modal scan-modal account-scan-modal">
+        <button class="modal-close" aria-label="关闭扫码登录" @click="closeModal"><Icon name="close" /></button>
+        <header class="scan-modal-head">
+          <span>闲鱼账号接入</span>
+          <h2>{{ qr.mode === 'rescan' ? '重新扫码更新账号' : '扫码添加闲鱼账号' }}</h2>
+          <p>{{ qrFlowHint }}</p>
+        </header>
+        <div class="scan-status-strip" :class="`is-${qrStatusTone}`" role="status" aria-live="polite">
+          <i></i>
+          <span>{{ qrStatusText(qr.status) }}</span>
+          <b>{{ qr.polling ? '正在监听 APP 确认' : (qrReady ? '等待操作' : '等待二维码') }}</b>
+        </div>
         <div class="scan-steps">
           <div class="scan-step" :class="{ active: qrReady }"><b>1</b><span>{{ qrReady ? '二维码已生成' : '等待生成二维码' }}</span></div>
           <i></i><div class="scan-step" :class="{active: ['scanned', 'confirmed'].includes(qr.status)}"><b>2</b><span>扫码确认</span></div>
@@ -314,7 +323,7 @@
         </div>
         <div class="scan-main">
           <div>
-            <div class="qr-box">
+            <div class="qr-box" :class="[`is-${qrStatusTone}`, { 'is-polling': qr.polling }]">
               <img v-if="qr.qrUrl" :src="qr.qrUrl" alt="闲鱼登录二维码">
               <div v-else class="qr-unavailable" role="status">
                 <Icon :name="qrGenerationFailed ? 'warning' : 'refresh'" />
@@ -322,7 +331,7 @@
               </div>
               <span v-if="qr.loading" class="qr-loading"></span>
             </div>
-            <p class="qr-tip">{{ qr.message || '正在自动生成二维码，请稍候...' }}</p>
+            <p class="qr-tip" :class="`is-${qrStatusTone}`">{{ qr.message || '正在自动生成二维码，请稍候...' }}</p>
           </div>
           <div class="scan-guide">
             <h4>{{ qr.mode === 'rescan' ? '重新扫码流程' : '添加流程' }}</h4>
@@ -334,6 +343,8 @@
               <div v-if="qr.accountId"><span>目标账号：</span><b>{{ selected?.nickname || selected?.displayName || selected?.externalUid || qr.accountId }}</b></div>
               <div><span>会话 ID：</span><b>{{ qr.sessionId || '-' }}</b></div>
               <div><span>当前状态：</span><b>{{ qrStatusText(qr.status) }}</b><button class="inline-link" @click="startQrLogin"><Icon name="refresh" /> 生成/刷新二维码</button></div>
+              <div><span>监听次数：</span><b>{{ qr.checkCount || 0 }}</b></div>
+              <div><span>上次检测：</span><b>{{ qr.lastCheckedAt || '-' }}</b></div>
             </div>
           </div>
         </div>
@@ -552,7 +563,7 @@
         <p class="modal-subtitle">以当前选中的账号为基准，将自动评价、消息等待等配置快速应用到当前列表中的账号。</p>
         <div class="modal-hint"><Icon name="help" /> 当前将对 {{ accounts.length }} 个账号执行批量操作；如只想作用于部分账号，请先通过搜索缩小列表范围。</div>
         <div v-if="unifiedConfigError" class="input-error">{{ unifiedConfigError }}</div>
-        <div v-if="unifiedConfigSuccess" class="global-notice success" style="margin-top:12px">{{ unifiedConfigSuccess }}</div>
+        <div v-if="unifiedConfigSuccess" class="global-notice success unified-config-success">{{ unifiedConfigSuccess }}</div>
         <div class="batch-auth-grid">
           <button type="button" class="batch-auth-card" :disabled="unifiedConfigBusy" @click="applyCurrentAutoRateToVisibleAccounts">
             <strong>同步自动评价</strong>
@@ -567,7 +578,7 @@
             <span>批量检查当前列表账号的登录状态、登录凭证和会话有效性。</span>
           </button>
         </div>
-        <div v-if="unifiedConfigBusy" class="modal-hint" style="margin-top:14px"><Icon name="help" /> 正在执行：{{ unifiedConfigTaskText }}</div>
+        <div v-if="unifiedConfigBusy" class="modal-hint unified-config-progress"><Icon name="help" /> 正在执行：{{ unifiedConfigTaskText }}</div>
         <div class="manual-actions">
           <AppButton @click="closeModal">关闭</AppButton>
         </div>
@@ -701,13 +712,50 @@ const wsMap = reactive({})
 const wsBusyMap = reactive({})
 const selectedWs = computed(() => wsMap[selected.value?.id] || {})
 const accountsRefreshing = computed(() => loading.value && dataAvailable.value === true)
+const accountActionHint = computed(() => {
+  if (loading.value) return dataAvailable.value === true
+    ? '账号列表正在后台刷新，当前数据仍可查看。'
+    : '账号列表正在首次加载，请稍候。'
+  if (dataAvailable.value === false) return '账号列表加载失败，请先刷新账号。'
+  if (selected.value) return `当前选中：${accountTitle(selected.value)}`
+  return '可扫码接入闲鱼账号、手动添加凭证，或刷新账号与连接状态。'
+})
 const accountsRequestGuard = createLatestRequestGuard()
 const WS_START_PHASES = new Set(['starting', 'refresh_token', 'connecting', 'registering', 'syncing', 'accepted', 'pending', 'recovering'])
 const selectedWsPending = computed(() => isWsPending(selected.value?.id))
 let qrTimer = null
-const qr = reactive({ loading:false, sessionId:'', qrUrl:'', status:'', message:'', mode:'create', accountId:null })
+const qr = reactive({
+  loading: false,
+  polling: false,
+  sessionId: '',
+  qrUrl: '',
+  status: '',
+  message: '',
+  mode: 'create',
+  accountId: null,
+  checkCount: 0,
+  lastCheckedAt: ''
+})
 const qrReady = computed(() => Boolean(qr.sessionId && qr.qrUrl))
 const qrGenerationFailed = computed(() => qr.status === 'error')
+const qrStatusTone = computed(() => {
+  const status = normalizeQrStatus(qr.status)
+  if (status === 'confirmed') return 'success'
+  if (status === 'scanned') return 'active'
+  if (['expired', 'failed', 'cancelled', 'error', 'verification_required'].includes(status)) return 'danger'
+  if (qr.loading || qr.polling || status === 'new') return 'pending'
+  return 'idle'
+})
+const qrFlowHint = computed(() => {
+  const status = normalizeQrStatus(qr.status)
+  if (qr.loading) return '正在向服务端申请真实扫码二维码。'
+  if (status === 'scanned') return '已检测到扫码，请在闲鱼 App 内点击确认登录。'
+  if (status === 'confirmed') return 'App 已确认，系统正在同步账号登录凭证。'
+  if (['expired', 'failed', 'cancelled', 'error'].includes(status)) return '本次扫码会话不可继续，请刷新二维码后重试。'
+  if (status === 'verification_required') return '闲鱼要求额外安全验证，请先在 App 完成验证。'
+  if (qr.polling) return '网页正在监听扫码状态；如果 App 已确认但长时间无变化，请刷新二维码重新拉起会话。'
+  return qrReady.value ? '二维码已生成，等待闲鱼 App 扫码。' : '打开弹窗后会自动生成二维码。'
+})
 const qrSuccessMsg = ref('')
 const cookieEdit = reactive({ accountId: null, cookie: '' })
 const cookieEditError = ref('')
@@ -1022,12 +1070,15 @@ const accountDiagnostics = computed(() => {
 
 function resetQrState() {
   qr.loading = false
+  qr.polling = false
   qr.sessionId = ''
   qr.qrUrl = ''
   qr.status = ''
   qr.message = ''
   qr.mode = 'create'
   qr.accountId = null
+  qr.checkCount = 0
+  qr.lastCheckedAt = ''
 }
 
 function normalizeQrStatus(status) {
@@ -1664,10 +1715,13 @@ async function submitCookieEdit() {
 
 async function startQrLogin() {
   qr.loading = true
+  qr.polling = false
   qr.message = ''
   qr.sessionId = ''
   qr.qrUrl = ''
   qr.status = ''
+  qr.checkCount = 0
+  qr.lastCheckedAt = ''
   stopQrPolling()
   try {
     const res = qr.accountId
@@ -1692,12 +1746,21 @@ async function startQrLogin() {
 
 function startQrPolling() {
   stopQrPolling()
+  qr.polling = true
   checkQrStatus()
   qrTimer = setInterval(checkQrStatus, 2000)
 }
-function stopQrPolling() { if (qrTimer) { clearInterval(qrTimer); qrTimer = null } }
+function stopQrPolling() {
+  if (qrTimer) {
+    clearInterval(qrTimer)
+    qrTimer = null
+  }
+  qr.polling = false
+}
 async function checkQrStatus() {
   if (!qr.sessionId) return
+  qr.checkCount += 1
+  qr.lastCheckedAt = new Date().toLocaleTimeString('zh-CN', { hour12: false })
   try {
     const res = qr.accountId
       ? await getQrLoginStatus(qr.sessionId, { accountId: qr.accountId })
@@ -1839,6 +1902,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .accounts-page {
+  --accounts-text: #101828;
+  --accounts-muted: #64748b;
+  --accounts-line: #e5eaf0;
+  --accounts-primary: #1d4ed8;
+  --accounts-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
@@ -1863,7 +1931,7 @@ onBeforeUnmount(() => {
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe8e4;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(246, 248, 252, .98) 48%, rgba(255, 250, 245, .94)),
     #fff;
@@ -1940,7 +2008,7 @@ onBeforeUnmount(() => {
   align-content: center;
   padding: 14px;
   border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -1968,9 +2036,10 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.accounts-command-panel p {
+.accounts-action-hint {
   margin: 0;
-  color: #6b7280;
+  min-height: 18px;
+  color: var(--accounts-muted);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -1981,7 +2050,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding: 12px 14px;
   border: 1px solid #dbeafe;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #eff6ff;
   color: #1e3a8a;
   font-size: 13px;
@@ -2013,7 +2082,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 8px;
   border: 1px solid #e5eaf0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
   overflow: hidden;
@@ -2031,7 +2100,7 @@ onBeforeUnmount(() => {
 .accounts-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2083,7 +2152,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   padding: 16px;
   border: 1px solid #e5eaf0;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
@@ -2124,7 +2193,7 @@ onBeforeUnmount(() => {
   margin-bottom: 14px;
   padding: 12px;
   border: 1px solid #edf1f5;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8fafc;
 }
 
@@ -2176,7 +2245,7 @@ onBeforeUnmount(() => {
   .accounts-command-center,
   .accounts-workspace {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .accounts-command-main h2 {
@@ -2207,6 +2276,52 @@ onBeforeUnmount(() => {
   .accounts-filter {
     width: 100%;
   }
+
+  .account-scan-modal {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 92vh;
+    border-radius: 8px 8px 0 0;
+    overflow-y: auto;
+  }
+
+  .scan-modal-head {
+    padding: 16px 54px 12px 16px;
+  }
+
+  .scan-status-strip {
+    margin: 12px 16px 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .scan-status-strip b {
+    margin-left: 18px;
+  }
+
+  .account-scan-modal .scan-steps,
+  .account-scan-modal .scan-main,
+  .account-scan-modal .notice-box {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .account-scan-modal .scan-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-scan-modal .qr-box {
+    width: min(260px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+
+  .account-scan-modal .modal-actions {
+    padding: 14px 16px 16px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .account-selector { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -2221,7 +2336,7 @@ onBeforeUnmount(() => {
   margin-top: 12px;
   padding: 12px;
   border: 1px solid #dbe8fb;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #FAFAFA;
 }
 
@@ -2289,6 +2404,315 @@ onBeforeUnmount(() => {
   background: #f8fafc;
   text-align: center;
   font-size: 12px;
+}
+
+.modal-mask {
+  --accounts-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.account-scan-modal {
+  width: min(920px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid #e5eaf0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
+  overflow: hidden;
+  animation: accountScanModalIn 220ms var(--accounts-ease);
+}
+
+.account-scan-modal .modal-close {
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  transition: background-color 150ms var(--accounts-ease), transform 150ms var(--accounts-ease);
+}
+
+.account-scan-modal .modal-close:active {
+  transform: scale(.96);
+}
+
+.scan-modal-head {
+  padding: 20px 64px 16px 24px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.scan-modal-head span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.scan-modal-head h2 {
+  margin: 4px 0 0;
+  color: #101828;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.scan-modal-head p {
+  margin: 8px 0 0;
+  color: #526079;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.scan-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 24px 0;
+  padding: 10px 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.scan-status-strip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.scan-status-strip span {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.scan-status-strip b {
+  margin-left: auto;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.scan-status-strip.is-success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.scan-status-strip.is-danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b42318;
+}
+
+.scan-status-strip.is-active {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.account-scan-modal .scan-steps {
+  margin: 16px 24px 0;
+}
+
+.account-scan-modal .scan-main {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  margin: 16px 24px 0;
+}
+
+.account-scan-modal .qr-box {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.account-scan-modal .qr-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 14px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.account-scan-modal .qr-box.is-polling {
+  border-color: rgba(29, 78, 216, .34);
+}
+
+.account-scan-modal .qr-box.is-polling::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(29, 78, 216, .28);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.account-scan-modal .qr-loading {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(29, 78, 216, .18);
+  border-top-color: #1d4ed8;
+  border-radius: 999px;
+  animation: accountQrSpin 800ms linear infinite;
+}
+
+.account-scan-modal .qr-tip {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.account-scan-modal .qr-tip.is-danger {
+  color: #b42318;
+}
+
+.account-scan-modal .qr-tip.is-success {
+  color: #15803d;
+}
+
+.account-scan-modal .scan-guide {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e5eaf0;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.account-scan-modal .scan-guide h4,
+.account-scan-modal .session-box h4 {
+  margin: 0 0 10px;
+  color: #101828;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.account-scan-modal .scan-guide p {
+  margin: 7px 0;
+  color: #526079;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.account-scan-modal .session-box {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.account-scan-modal .session-box div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.account-scan-modal .session-box b {
+  min-width: 0;
+  color: #101828;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-scan-modal .inline-link {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 150ms var(--accounts-ease), transform 150ms var(--accounts-ease);
+}
+
+.account-scan-modal .inline-link:active {
+  transform: scale(.97);
+}
+
+.account-scan-modal .notice-box {
+  margin: 16px 24px 0;
+  padding: 12px 14px;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.account-scan-modal .notice-box b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.account-scan-modal .notice-box p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.account-scan-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 24px 20px;
+}
+
+.accounts-v11-shell .link,
+.accounts-v11-shell .text-action {
+  transition:
+    color 150ms var(--accounts-ease),
+    opacity 150ms var(--accounts-ease),
+    transform 150ms var(--accounts-ease);
+}
+
+.accounts-v11-shell .link:active:not(:disabled),
+.accounts-v11-shell .text-action:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.accounts-v11-shell .link:disabled,
+.accounts-v11-shell .text-action:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+@keyframes accountScanModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes accountQrSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-scan-modal,
+  .account-scan-modal .qr-loading {
+    animation: none;
+  }
 }
 
 .grid.wide-right {
@@ -2638,15 +3062,26 @@ onBeforeUnmount(() => {
   margin-top: 14px;
 }
 
+.unified-config-success {
+  margin-top: 12px;
+}
+
+.unified-config-progress {
+  margin-top: 14px;
+}
+
 .batch-auth-card {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid #f1e2db;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   text-align: left;
   cursor: pointer;
-  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  transition:
+    border-color 150ms var(--accounts-ease),
+    box-shadow 150ms var(--accounts-ease),
+    transform 150ms var(--accounts-ease);
 }
 
 .batch-auth-card:hover:not(:disabled) {
@@ -2688,7 +3123,7 @@ onBeforeUnmount(() => {
   z-index: 250;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 12px 32px rgba(94, 50, 31, .14);
   padding: 6px;
   display: flex;
@@ -2991,7 +3426,7 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.diagnosis-card{border:1px solid #E8E8E8;border-radius:18px;padding:16px;background:#FFFFFF;margin:14px 0}
+.diagnosis-card{border:1px solid #E8E8E8;border-radius:8px;padding:16px;background:#FFFFFF;margin:14px 0}
 .diagnosis-card h4{margin:0 0 12px;color:#16213e}
 .diagnosis-item{padding:10px 0;border-bottom:1px solid #F0F0F0}
 .diagnosis-item:last-child{border-bottom:0}
@@ -3152,7 +3587,7 @@ onBeforeUnmount(() => {
   /* 诊断卡内边距收敛 */
   .diagnosis-card {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
     margin: 10px 0;
   }
 
@@ -3201,7 +3636,7 @@ onBeforeUnmount(() => {
     bottom: 12px;
     margin: 0;
     min-width: 0;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   /* 宽表格横向滚动 */
