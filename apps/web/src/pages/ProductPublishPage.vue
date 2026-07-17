@@ -1,25 +1,6 @@
 <template>
-  <div class="publish-v4 publish-v8-shell">
-    <n-card class="publish-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">发布工作台</n-tag>
-        <h2>发布商品工作台</h2>
-        <p>按账号、基础信息、分类、位置、价格与发货能力逐步确认，提交前右侧实时汇总发布状态。</p>
-        <div class="publish-v4-steps">
-          <span>基础信息</span>
-          <span>分类位置</span>
-          <span>价格发货</span>
-          <span>发布检查</span>
-        </div>
-      </div>
-      <n-space :size="8" align="center" wrap>
-        <AppButton @click="handleCancel">取消</AppButton>
-        <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
-      </n-space>
-    </n-card>
-
-  <div class="publish-layout publish-v4-body">
-    <div>
+  <div class="publish-console">
+    <div class="publish-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="warning" class="global-notice warning">{{ warning }}</div>
       <div v-if="success" class="global-notice success">{{ success }}</div>
@@ -28,78 +9,128 @@
         <span>本次操作固定使用下列数据和原安全凭证；页面表单的后续改动不会进入该恢复请求。</span>
         <pre>{{ persistedIntentSummary }}</pre>
       </div>
+    </div>
 
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>宝贝基础信息</template>
-        <div class="form-grid">
-          <div class="form-row">
-            <label>闲鱼账号</label>
-            <select v-model="form.accountId" :disabled="accountsAvailable !== true">
-              <option value="">请选择账号</option>
-              <option v-for="a in accounts" :key="a.id" :value="a.id">{{ accountName(a) }}</option>
-            </select>
-            <span v-if="accountsAvailable === false" class="field-error">账号列表暂不可用，当前禁止发布。</span>
-          </div>
-          <div class="form-row">
-            <label>宝贝标题</label>
-            <input v-model="form.title" maxlength="30" placeholder="请填写宝贝标题，建议包含品牌、规格、成色等关键信息">
-            <span class="char-count">{{ form.title.length }}/30</span>
-          </div>
-          <div class="form-row">
-            <label>宝贝描述</label>
-            <textarea v-model="form.description" rows="4" placeholder="请详细描述宝贝的成色、功能、使用感受等信息..."></textarea>
-            <div class="chips">
-              <button type="button" class="chip" :disabled="aiDescLoading" @click="aiDesc">{{ aiDescLoading ? 'AI 生成中...' : 'AI 生成描述' }}</button>
-              <button type="button" class="chip" @click="insertPhrase">插入常用语</button>
-            </div>
-            <p v-if="!aiCategoryStatus.configured" class="ai-unconfigured-tip">
-              {{ aiCategoryStatus.message || '未配置通用模型，AI 生成功能当前不可用。' }}
-            </p>
-          </div>
+    <section class="publish-command-center">
+      <div class="publish-command-main">
+        <div class="publish-command-kicker">
+          <span>发布作业</span>
+          <b>{{ accountsAvailable === true ? '账号可用' : '账号待确认' }}</b>
         </div>
-
-        <!-- 图片上传区域 -->
-        <div style="margin-top:18px">
-          <b>宝贝图片（{{ form.imageUrls.length }}/10 张，拖拽可调整顺序）</b>
-          <div class="image-strip" style="margin-top:12px">
-            <div
-              v-for="(img, idx) in form.imageUrls"
-              :key="idx"
-              class="img-card"
-              draggable="true"
-              @dragstart="onDragStart(idx, $event)"
-              @dragover.prevent="onDragOver(idx, $event)"
-              @drop="onDrop(idx, $event)"
-            >
-              <img :src="img" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px">
-              <button type="button" class="img-remove" :disabled="uploadingImages" :aria-label="`移除第 ${idx + 1} 张图片`" @click="removeImage(idx)">×</button>
-            </div>
-            <button
-              v-if="form.imageUrls.length < 10"
-              type="button"
-              class="img-card add-card"
-              :disabled="uploadingImages"
-              @click="triggerUpload"
-            >
-              <span style="font-size:28px;color:#999">{{ uploadingImages ? '…' : '＋' }}</span>
-              <span style="font-size:12px;color:#999;margin-top:4px">{{ uploadingImages ? '上传中，请稍候' : '上传图片' }}</span>
-            </button>
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              multiple
-              :disabled="uploadingImages"
-              style="display:none"
-              @change="onFileSelect"
-            >
-          </div>
+        <h2>商品发布作业台</h2>
+        <p>先确认账号、图片、分类、位置和履约口径，再提交到闲鱼；右侧会同步显示发布摘要和必填项核验。</p>
+        <div class="publish-command-steps">
+          <span>资料</span>
+          <span>图片</span>
+          <span>分类</span>
+          <span>位置</span>
+          <span>价格</span>
+          <span>核验</span>
         </div>
-      </n-card>
+      </div>
+      <div class="publish-command-panel">
+        <div class="publish-command-panel-head">
+          <span>发布状态</span>
+          <strong>{{ checks.filter(item => item.ok).length }}/{{ checks.length }} 项通过</strong>
+        </div>
+        <div class="publish-command-actions">
+          <AppButton @click="handleCancel">取消</AppButton>
+          <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
+        </div>
+      </div>
+    </section>
 
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>商品分类</template>
-        <div class="category-selector">
+    <section class="publish-workbench">
+      <main class="publish-main">
+        <section class="publish-panel publish-basic-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>资料录入</span>
+              <h3>宝贝基础信息</h3>
+            </div>
+            <b>{{ form.title.length }}/30</b>
+          </header>
+          <div class="publish-form-grid">
+            <div class="publish-form-row">
+              <label>闲鱼账号</label>
+              <select v-model="form.accountId" :disabled="accountsAvailable !== true">
+                <option value="">请选择账号</option>
+                <option v-for="a in accounts" :key="a.id" :value="a.id">{{ accountName(a) }}</option>
+              </select>
+              <span v-if="accountsAvailable === false" class="field-error">账号列表暂不可用，当前禁止发布。</span>
+            </div>
+            <div class="publish-form-row">
+              <label>宝贝标题</label>
+              <input v-model="form.title" maxlength="30" placeholder="请填写宝贝标题，建议包含品牌、规格、成色等关键信息">
+              <span class="char-count">{{ form.title.length }}/30</span>
+            </div>
+            <div class="publish-form-row publish-form-row-wide">
+              <label>宝贝描述</label>
+              <textarea v-model="form.description" rows="4" placeholder="请详细描述宝贝的成色、功能、使用感受等信息..."></textarea>
+              <div class="chips">
+                <button type="button" class="chip" :disabled="aiDescLoading" @click="aiDesc">{{ aiDescLoading ? 'AI 生成中...' : 'AI 生成描述' }}</button>
+                <button type="button" class="chip" @click="insertPhrase">插入常用语</button>
+              </div>
+              <p v-if="!aiCategoryStatus.configured" class="ai-unconfigured-tip">
+                {{ aiCategoryStatus.message || '未配置通用模型，AI 生成功能当前不可用。' }}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="publish-panel publish-media-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>素材</span>
+              <h3>宝贝图片</h3>
+            </div>
+            <b>{{ form.imageUrls.length }}/10 张</b>
+          </header>
+          <p class="publish-panel-desc">拖拽图片可调整顺序，第一张会作为封面参与自动分类。</p>
+          <div class="image-strip">
+          <div
+            v-for="(img, idx) in form.imageUrls"
+            :key="idx"
+            class="img-card"
+            draggable="true"
+            @dragstart="onDragStart(idx, $event)"
+            @dragover.prevent="onDragOver(idx, $event)"
+            @drop="onDrop(idx, $event)"
+          >
+            <img :src="img" alt="">
+            <button type="button" class="img-remove" :disabled="uploadingImages" :aria-label="`移除第 ${idx + 1} 张图片`" @click="removeImage(idx)">×</button>
+          </div>
+          <button
+            v-if="form.imageUrls.length < 10"
+            type="button"
+            class="img-card add-card"
+            :disabled="uploadingImages"
+            @click="triggerUpload"
+          >
+            <span class="img-add-mark">{{ uploadingImages ? '…' : '＋' }}</span>
+            <span class="img-add-text">{{ uploadingImages ? '上传中，请稍候' : '上传图片' }}</span>
+          </button>
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            multiple
+            :disabled="uploadingImages"
+            class="publish-file-input"
+            @change="onFileSelect"
+          >
+          </div>
+        </section>
+
+        <section class="publish-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>分类</span>
+              <h3>商品分类</h3>
+            </div>
+            <b>{{ selectedCategoryName || '未选择' }}</b>
+          </header>
+          <div class="category-selector">
           <div class="auto-category-hint">
             <span class="hint-icon">i</span>
             <span>上传封面图之后自动获取分类</span>
@@ -196,16 +227,22 @@
 </div>
             </div>
           </div>
-          <p class="subtle" style="margin-top:8px">
+          <p class="selected-category-line">
             已选分类：{{ selectedCategoryPath || '请选择分类' }}
             <span v-if="aiCategoryMessage" class="ai-category-tip">{{ aiCategoryMessage }}</span>
           </p>
         </div>
-      </n-card>
+        </section>
 
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>商品位置</template>
-        <div class="location-search">
+        <section class="publish-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>位置</span>
+              <h3>商品位置</h3>
+            </div>
+            <b>{{ selectedPoi?.name || '未选择' }}</b>
+          </header>
+          <div class="location-search">
           <div class="location-input-wrap">
             <input
               v-model="locationKeyword"
@@ -244,93 +281,130 @@
             </div>
           </div>
         </div>
-      </n-card>
+        </section>
 
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>商品价格与规格</template>
-        <div class="form-grid">
-          <div class="form-row">
-            <label>售价（元）</label>
-            <input v-model="form.price" type="number" step="0.01" min="0" placeholder="0.00">
+        <section class="publish-commerce-grid">
+          <div class="publish-panel">
+            <header class="publish-panel-head">
+              <div>
+                <span>交易</span>
+                <h3>价格与规格</h3>
+              </div>
+              <b>单规格</b>
+            </header>
+            <div class="publish-form-grid compact">
+              <div class="publish-form-row">
+                <label>售价（元）</label>
+                <input v-model="form.price" type="number" step="0.01" min="0" placeholder="0.00">
+              </div>
+              <div class="publish-form-row">
+                <label>库存</label>
+                <input v-model="form.stock" type="number" placeholder="1">
+              </div>
+            </div>
+            <div class="publish-option-line unavailable-option" title="当前发布接口尚未支持规格组合的完整提交与回读核验">
+              <span>多规格 <em>当前不可用，仅支持单规格发布</em></span>
+              <ToggleSwitch :on="false" />
+            </div>
           </div>
-          <div class="form-row">
-            <label>库存</label>
-            <input v-model="form.stock" type="number" placeholder="1">
-          </div>
-        </div>
-        <div class="option-line unavailable-option" style="margin-top:12px" title="当前发布接口尚未支持规格组合的完整提交与回读核验">
-          <span>多规格 <em>当前不可用，仅支持单规格发布</em></span>
-          <ToggleSwitch :on="false" />
-        </div>
-      </n-card>
 
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>发货设置</template>
-        <div class="shipping-grid">
-          <div class="shipping-item">
-            <span>包邮</span>
-            <ToggleSwitch :on="true" />
+          <div class="publish-panel">
+            <header class="publish-panel-head">
+              <div>
+                <span>履约</span>
+                <h3>发货设置</h3>
+              </div>
+              <b>包邮</b>
+            </header>
+            <div class="shipping-grid">
+              <div class="shipping-item">
+                <span>包邮</span>
+                <ToggleSwitch :on="true" />
+              </div>
+              <div class="shipping-item unavailable-option" title="固定运费尚未完成平台发布与回读核验">
+                <span>一口价 / 运费（当前不可用）</span>
+                <ToggleSwitch :on="false" />
+              </div>
+              <div class="shipping-item unavailable-option" title="无需邮寄模式尚未完成平台发布与回读核验">
+                <span>无需邮寄（当前不可用）</span>
+                <ToggleSwitch :on="false" />
+              </div>
+              <div class="shipping-item">
+                <span>支持自提</span>
+                <ToggleSwitch :on="form.supportSelfPick" @click="form.supportSelfPick = !form.supportSelfPick" />
+              </div>
+            </div>
           </div>
-          <div class="shipping-item unavailable-option" title="固定运费尚未完成平台发布与回读核验">
-            <span>一口价 / 运费（当前不可用）</span>
-            <ToggleSwitch :on="false" />
-          </div>
-          <div class="shipping-item unavailable-option" title="无需邮寄模式尚未完成平台发布与回读核验">
-            <span>无需邮寄（当前不可用）</span>
-            <ToggleSwitch :on="false" />
-          </div>
-          <div class="shipping-item">
-            <span>支持自提</span>
-            <ToggleSwitch :on="form.supportSelfPick" @click="form.supportSelfPick = !form.supportSelfPick" />
-          </div>
-        </div>
-      </n-card>
-      <div style="height:90px"></div>
-    </div>
+        </section>
+      </main>
 
-    <div class="publish-v4-side">
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>商品预览</template>
-        <div class="product-cell">
-          <div class="product-thumb" style="width:130px;height:98px">
-            <img v-if="form.imageUrls.length > 0" :src="form.imageUrls[0]" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px">
-            <div v-else style="width:100%;height:100%;background:#f0f0f0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:12px">暂无图片</div>
+      <aside class="publish-side">
+        <section class="publish-panel publish-preview-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>预览</span>
+              <h3>商品卡片</h3>
+            </div>
+            <b>¥{{ displayPrice }}</b>
+          </header>
+          <div class="publish-preview-card">
+            <div class="publish-preview-thumb">
+              <img v-if="form.imageUrls.length > 0" :src="form.imageUrls[0]" alt="">
+              <span v-else>暂无图片</span>
+            </div>
+            <div>
+              <h4>{{ form.title || '商品标题' }}</h4>
+              <strong>¥{{ displayPrice }}</strong>
+              <p>{{ selectedPoi?.name || runtime.defaultAddress || '未选择位置' }}</p>
+            </div>
           </div>
-          <div>
-            <h3 style="margin:0 0 8px">{{ form.title || '商品标题' }}</h3>
-            <b style="color:#ef4444;font-size:22px">¥{{ displayPrice }}</b>
-          </div>
-        </div>
-      </n-card>
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>发布摘要</template>
-        <div class="option-line"><span>闲鱼账号</span><b>{{ selectedAccount || '未选择' }}</b></div>
-        <div class="option-line"><span>商品分类</span><b>{{ selectedCategoryPath || '未选择' }}</b></div>
-        <div class="option-line"><span>商品位置</span><b>{{ selectedPoi?.name || '未选择' }}</b></div>
-        <div class="option-line"><span>规格能力</span><b>单规格</b></div>
-        <div class="option-line"><span>总库存</span><b>{{ totalStock }}件</b></div>
-        <div class="option-line"><span>运费模式</span><b>包邮</b></div>
-      </n-card>
-      <n-card class="publish-v4-card" :bordered="false">
-        <template #header>发布检查</template>
-        <div v-for="i in checks" :key="i.text" class="option-line">
-          <span><i :class="['dot', i.ok ? '' : 'orange']"></i>{{ i.text }}</span>
-          <b :style="{color:i.ok?'var(--green)':'#f59e0b'}">{{ i.ok ? '通过' : '待完善' }}</b>
-        </div>
-      </n-card>
-    </div>
+        </section>
 
-    <div class="bottom-actions">
+        <section class="publish-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>摘要</span>
+              <h3>发布摘要</h3>
+            </div>
+            <b>{{ totalStock }} 件</b>
+          </header>
+          <div class="publish-summary-list">
+            <div><span>闲鱼账号</span><b>{{ selectedAccount || '未选择' }}</b></div>
+            <div><span>商品分类</span><b>{{ selectedCategoryPath || '未选择' }}</b></div>
+            <div><span>商品位置</span><b>{{ selectedPoi?.name || '未选择' }}</b></div>
+            <div><span>规格能力</span><b>单规格</b></div>
+            <div><span>总库存</span><b>{{ totalStock }}件</b></div>
+            <div><span>运费模式</span><b>包邮</b></div>
+          </div>
+        </section>
+
+        <section class="publish-panel">
+          <header class="publish-panel-head">
+            <div>
+              <span>核验</span>
+              <h3>发布检查</h3>
+            </div>
+            <b>{{ checks.filter(item => item.ok).length }}/{{ checks.length }}</b>
+          </header>
+          <div class="publish-check-list">
+            <div v-for="i in checks" :key="i.text" class="publish-check-row" :class="{ ok: i.ok }">
+              <span><i></i>{{ i.text }}</span>
+              <b>{{ i.ok ? '通过' : '待完善' }}</b>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <div class="publish-bottom-actions">
       <AppButton @click="handleCancel">取消</AppButton>
       <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
     </div>
-  </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { NCard, NSpace, NTag } from 'naive-ui'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { getAccounts } from '../api/accounts.js'
@@ -1381,88 +1455,357 @@ onMounted(load)
 </script>
 
 <style scoped>
-.publish-v4 {
+.publish-console {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.publish-notices {
+  display: grid;
+  gap: 10px;
+}
+
+.publish-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, .08), rgba(37, 99, 235, .06) 44%, rgba(245, 158, 11, .08)),
+    #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
+}
+
+.publish-command-main {
+  min-width: 0;
+}
+
+.publish-command-kicker,
+.publish-command-panel-head,
+.publish-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.publish-command-kicker {
+  justify-content: flex-start;
+}
+
+.publish-command-kicker span,
+.publish-command-panel-head span,
+.publish-panel-head span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.publish-command-kicker b,
+.publish-command-panel-head strong,
+.publish-panel-head b {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.publish-command-main h2 {
+  margin: 12px 0 6px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.publish-command-main p {
+  max-width: 780px;
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.publish-command-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.publish-command-steps span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 11px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .82);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.publish-command-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.publish-command-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.publish-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.publish-main {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
-.publish-v4-hero,
-.publish-v4-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+.publish-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
 }
 
-.publish-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
+.publish-panel-head {
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  margin-bottom: 14px;
 }
 
-.publish-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
+.publish-panel-head h3 {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 760;
   line-height: 1.25;
 }
 
-.publish-v4-hero p {
-  margin: 0;
+.publish-panel-desc {
+  margin: -4px 0 14px;
   color: #64748b;
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
-.publish-v4-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+.publish-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.publish-v4-steps span {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border: 1px solid #dbeafe;
-  border-radius: 6px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 650;
+.publish-form-grid.compact {
+  gap: 12px;
 }
 
-.publish-v4-body {
-  align-items: start;
-  gap: 16px;
+.publish-form-row {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
 }
 
-.publish-v4-card {
-  margin-top: 16px;
+.publish-form-row-wide {
+  grid-column: 1 / -1;
 }
 
-.publish-v4-card:first-child {
+.publish-form-row label {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.publish-form-row input,
+.publish-form-row textarea,
+.publish-form-row select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.publish-form-row input,
+.publish-form-row select {
+  height: 38px;
+  padding: 0 12px;
+}
+
+.publish-form-row textarea {
+  resize: vertical;
+  padding: 10px 12px;
+  line-height: 1.6;
+}
+
+.publish-form-row input:focus,
+.publish-form-row textarea:focus,
+.publish-form-row select:focus {
+  border-color: #0f766e;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, .12);
+}
+
+.publish-media-panel .image-strip {
   margin-top: 0;
 }
 
-.publish-v4-card :deep(.n-card__content) {
-  padding: 16px;
+.publish-commerce-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.publish-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
-}
-
-.publish-v4-side {
+.publish-side {
   position: sticky;
   top: 16px;
+  display: grid;
+  gap: 16px;
   min-width: 0;
+}
+
+.publish-preview-card {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.publish-preview-thumb {
+  width: 126px;
+  height: 96px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.publish-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.publish-preview-thumb span {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.publish-preview-card h4 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.publish-preview-card strong {
+  color: #dc2626;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.publish-preview-card p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.publish-summary-list,
+.publish-check-list {
+  display: grid;
+  gap: 9px;
+}
+
+.publish-summary-list div,
+.publish-check-row,
+.publish-option-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.publish-summary-list span,
+.publish-check-row span,
+.publish-option-line span {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.publish-summary-list b,
+.publish-check-row b,
+.publish-option-line b {
+  color: #0f172a;
+  font-size: 12px;
+  text-align: right;
+  word-break: break-word;
+}
+
+.publish-check-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.publish-check-row i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f59e0b;
+}
+
+.publish-check-row.ok i {
+  background: #16a34a;
+}
+
+.publish-check-row.ok b {
+  color: #047857;
+}
+
+.publish-check-row:not(.ok) b {
+  color: #b45309;
+}
+
+.publish-bottom-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 0 0;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0), #f8fafc 36%);
 }
 
 .unavailable-option {
@@ -1514,6 +1857,22 @@ onMounted(load)
 .img-card.add-card:disabled { cursor: wait; opacity: .72; }
 .img-card.add-card:focus-visible,
 .img-remove:focus-visible { outline: 3px solid rgba(24, 160, 88,.35); outline-offset: 2px; }
+.img-card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.img-add-mark {
+  color: #94a3b8;
+  font-size: 28px;
+  line-height: 1;
+}
+.img-add-text {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+}
 .img-remove {
   position: absolute;
   top: 4px;
@@ -1540,6 +1899,9 @@ onMounted(load)
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+.publish-file-input {
+  display: none;
 }
 /* ---- 分类级联选择器 ---- */
 .category-selector {
@@ -1823,54 +2185,8 @@ onMounted(load)
   opacity: 0.8;
 }
 
-.publish-v8-shell .publish-v4-hero,
-.publish-v8-shell .publish-v4-card,
-.publish-v8-shell .publish-v4-side :deep(.n-card),
-.publish-v8-shell .category-search-results,
-.publish-v8-shell .cascader-levels,
-.publish-v8-shell .auto-category-hint,
-.publish-v8-shell .auto-category-candidates,
-.publish-v8-shell .poi-dropdown,
-.publish-v8-shell .poi-badge,
-.publish-v8-shell .img-card,
-.publish-v8-shell .shipping-item {
-  border: 1px solid #dfe6f2;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: none;
-}
-
-.publish-v8-shell .publish-v4-hero :deep(.n-card__content),
-.publish-v8-shell .publish-v4-card :deep(.n-card__content),
-.publish-v8-shell .publish-v4-card :deep(.n-card-header) {
-  border-radius: 6px;
-}
-
-.publish-v8-shell .publish-v4-hero h2,
-.publish-v8-shell .publish-v4-card :deep(.n-card-header__main) {
-  color: #101828;
-  letter-spacing: 0;
-}
-
-.publish-v8-shell .publish-v4-steps span,
-.publish-v8-shell .chip,
-.publish-v8-shell .recent-categories button,
-.publish-v8-shell .category-actions button,
-.publish-v8-shell .category-link,
-.publish-v8-shell .candidate-btn,
-.publish-v8-shell .category-search,
-.publish-v8-shell .category-clear,
-.publish-v8-shell .category-ai-btn,
-.publish-v8-shell .location-input,
-.publish-v8-shell .auto-category-msg,
-.publish-v8-shell .poi-item,
-.publish-v8-shell .img-remove {
-  border-radius: 6px;
-  box-shadow: none;
-}
-
-.publish-v8-shell .cascader-item.active,
-.publish-v8-shell .candidate-btn.active {
+.cascader-item.active,
+.candidate-btn.active {
   background: #2563eb;
   border-color: #2563eb;
   color: #fff;
@@ -1878,21 +2194,29 @@ onMounted(load)
 
 /* === 移动端适配 (max-width: 900px) === */
 @media (max-width: 900px) {
-  .publish-v4 {
+  .publish-console {
     gap: 12px;
   }
 
-  .publish-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
-    padding: 14px;
+  .publish-command-center,
+  .publish-workbench,
+  .publish-form-grid,
+  .publish-commerce-grid,
+  .publish-command-actions,
+  .publish-preview-card {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .publish-v4-side {
+  .publish-command-center {
+    padding: 16px;
+  }
+
+  .publish-side {
     position: static;
   }
 
-  .publish-v4-card :deep(.n-card__content) {
-    padding: 12px;
+  .publish-panel {
+    padding: 14px;
   }
 
   /* 图片上传卡片：移动端缩小尺寸，更多列数 */
@@ -2009,11 +2333,6 @@ onMounted(load)
   /* 字符计数 */
   .char-count {
     font-size: 11px;
-  }
-  /* 预览卡片图片缩小 */
-  .product-thumb {
-    width: 90px !important;
-    height: 68px !important;
   }
 }
 </style>
