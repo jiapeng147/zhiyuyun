@@ -309,7 +309,7 @@
         <h2>{{ qr.mode === 'rescan' ? '重新扫码更新账号' : '扫码添加闲鱼账号' }}</h2>
         <div class="scan-steps">
           <div class="scan-step" :class="{ active: qrReady }"><b>1</b><span>{{ qrReady ? '二维码已生成' : '等待生成二维码' }}</span></div>
-          <i></i><div class="scan-step" :class="{active: qr.status==='scanned'}"><b>2</b><span>扫码确认</span></div>
+          <i></i><div class="scan-step" :class="{active: ['scanned', 'confirmed'].includes(qr.status)}"><b>2</b><span>扫码确认</span></div>
           <i></i><div class="scan-step" :class="{active: qr.status==='confirmed'}"><b>3</b><span>{{ qr.mode === 'rescan' ? '更新账号凭证' : '自动添加账号' }}</span></div>
         </div>
         <div class="scan-main">
@@ -333,7 +333,7 @@
               <h4>会话信息</h4>
               <div v-if="qr.accountId"><span>目标账号：</span><b>{{ selected?.nickname || selected?.displayName || selected?.externalUid || qr.accountId }}</b></div>
               <div><span>会话 ID：</span><b>{{ qr.sessionId || '-' }}</b></div>
-              <div><span>当前状态：</span><b>{{ qr.status || '-' }}</b><button class="inline-link" @click="startQrLogin"><Icon name="refresh" /> 生成/刷新二维码</button></div>
+              <div><span>当前状态：</span><b>{{ qrStatusText(qr.status) }}</b><button class="inline-link" @click="startQrLogin"><Icon name="refresh" /> 生成/刷新二维码</button></div>
             </div>
           </div>
         </div>
@@ -1030,6 +1030,54 @@ function resetQrState() {
   qr.accountId = null
 }
 
+function normalizeQrStatus(status) {
+  const value = String(status || '').trim().toLowerCase()
+  return ({
+    scaned: 'scanned',
+    scanning: 'scanned',
+    scanned: 'scanned',
+    confirmed: 'confirmed',
+    success: 'confirmed',
+    new: 'new',
+    pending: 'new',
+    waiting: 'new',
+    expired: 'expired',
+    cancel: 'cancelled',
+    canceled: 'cancelled',
+    cancelled: 'cancelled',
+    failed: 'failed',
+    error: 'error',
+    verification: 'verification_required',
+    verification_required: 'verification_required'
+  })[value] || value
+}
+
+function qrStatusText(status) {
+  return ({
+    new: '等待扫码',
+    scanned: '已扫码，待确认',
+    confirmed: '已确认',
+    expired: '已过期',
+    cancelled: '已取消',
+    failed: '失败',
+    error: '异常',
+    verification_required: '需要安全验证'
+  })[normalizeQrStatus(status)] || (status || '-')
+}
+
+function qrStatusMessage(status, fallback = '') {
+  return fallback || ({
+    new: '请使用闲鱼 App 扫码登录。',
+    scanned: '已扫码，请在闲鱼 App 点击确认登录。',
+    confirmed: '扫码已确认，正在同步账号登录凭证。',
+    expired: '二维码已过期，请刷新二维码后重新扫码。',
+    cancelled: '本次扫码登录已取消，请刷新二维码后重试。',
+    failed: '扫码登录失败，请刷新二维码后重试。',
+    error: '扫码登录状态异常，请刷新二维码后重试。',
+    verification_required: '闲鱼要求完成额外安全验证，请在 App 完成验证后重新扫码。'
+  })[normalizeQrStatus(status)] || '正在确认扫码登录状态...'
+}
+
 function openModal(type){
   modal.value = type
   if(type === 'manual') {
@@ -1629,8 +1677,8 @@ async function startQrLogin() {
     qr.sessionId = data.sessionId || data.id || ''
     qr.qrUrl = data.qrCodeBase64 || data.qrImage || data.qrUrl || data.qrcodeUrl || data.qrCodeUrl || data.url || ''
     if (!qr.sessionId || !qr.qrUrl) throw new Error('二维码服务响应不完整，请稍后重试')
-    qr.status = data.status || 'pending'
-    qr.message = data.message || '请使用闲鱼 App 扫码'
+    qr.status = normalizeQrStatus(data.status || 'new')
+    qr.message = qrStatusMessage(qr.status, data.message)
     startQrPolling()
   } catch (e) {
     qr.sessionId = ''
@@ -1644,6 +1692,7 @@ async function startQrLogin() {
 
 function startQrPolling() {
   stopQrPolling()
+  checkQrStatus()
   qrTimer = setInterval(checkQrStatus, 2000)
 }
 function stopQrPolling() { if (qrTimer) { clearInterval(qrTimer); qrTimer = null } }
@@ -1654,9 +1703,10 @@ async function checkQrStatus() {
       ? await getQrLoginStatus(qr.sessionId, { accountId: qr.accountId })
       : await getQrLoginStatus(qr.sessionId)
     const data = res.data || {}
-    const prevStatus = qr.status
-    qr.status = data.status || qr.status
-    qr.message = data.message || qr.message
+    const prevStatus = normalizeQrStatus(qr.status)
+    const nextStatus = normalizeQrStatus(data.status || qr.status)
+    qr.status = nextStatus || qr.status
+    qr.message = data.message || (nextStatus !== prevStatus ? qrStatusMessage(qr.status) : (qr.message || qrStatusMessage(qr.status)))
 
     if (qr.status === 'confirmed') {
       if (data.accountId) {
@@ -1699,6 +1749,10 @@ async function checkQrStatus() {
           : (data.message || '扫码已确认，等待系统完成账号同步...')
       }
     }
+    if (qr.status === 'verification_required') {
+      stopQrPolling()
+      qr.message = qrStatusMessage(qr.status, data.message)
+    }
     if (qr.status === 'error') {
       stopQrPolling()
       qr.message = data.message || '账号保存失败，请重试'
@@ -1706,7 +1760,10 @@ async function checkQrStatus() {
         if (import.meta.env.DEV) console.warn('扫码保存返回失败状态')
       }
     }
-    if (['expired','failed'].includes(qr.status)) stopQrPolling()
+    if (['expired', 'failed', 'cancelled'].includes(qr.status)) {
+      stopQrPolling()
+      qr.message = qrStatusMessage(qr.status, data.message)
+    }
   } catch (e) {
     qr.message = e.message || '查询扫码状态失败'
   }

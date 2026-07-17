@@ -274,7 +274,7 @@ def _poll_status(session: requests.Session, login_form: dict, timeout: int = SES
             return {"status": "confirmed", "cookies": cookies}
         elif status == "EXPIRED":
             return {"status": "expired"}
-        elif status == "SCANED":
+        elif status in {"SCANED", "SCANNED"}:
             logger.info("已扫码，等待确认...")
         elif status != "NEW":
             return {"status": "cancelled"}
@@ -284,25 +284,63 @@ def _poll_status(session: requests.Session, login_form: dict, timeout: int = SES
     return {"status": "expired"}
 
 
+def _qr_status_result(status: str, message: str, raw_status: str, **extra) -> dict:
+    result = {"status": status, "message": message, "rawStatus": raw_status}
+    result.update(extra)
+    return result
+
+
 def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
     """单次轮询，非阻塞。"""
     try:
         resp = session.post(QR_QUERY, headers=H_API, data=login_form, timeout=20)
         data = _json_or_raise(resp, "轮询二维码状态").get("content", {}).get("data") or {}
-        status = str(data["qrCodeStatus"] or "").upper()
+        status = str(data.get("qrCodeStatus") or "").upper()
 
         if status == "CONFIRMED":
             if data.get("iframeRedirect"):
-                return {"status": "verification_required", "iframe_redirect_url": data.get("iframeRedirectUrl")}
+                return _qr_status_result(
+                    "verification_required",
+                    "扫码已确认，但闲鱼要求完成额外安全验证。请在 App 或验证页面完成后重新扫码。",
+                    status,
+                    iframe_redirect_url=data.get("iframeRedirectUrl"),
+                )
             cookies = {k: v for k, v in session.cookies.items()}
-            return {"status": "confirmed", "cookies": cookies}
+            return _qr_status_result(
+                "confirmed",
+                "扫码已确认，正在同步账号登录凭证。",
+                status,
+                cookies=cookies,
+            )
         if status == "NEW":
-            return {"status": "new"}
-        if status == "SCANED":
-            return {"status": "scaned"}
+            return _qr_status_result(
+                "new",
+                "请使用闲鱼 App 扫码登录。",
+                status,
+            )
+        if status in {"SCANED", "SCANNED"}:
+            return _qr_status_result(
+                "scanned",
+                "已扫码，请在闲鱼 App 点击确认登录。",
+                status,
+            )
         if status == "EXPIRED":
-            return {"status": "expired"}
-        return {"status": "cancelled"}
+            return _qr_status_result(
+                "expired",
+                "二维码已过期，请刷新二维码后重新扫码。",
+                status,
+            )
+        if status in {"CANCELLED", "CANCELED", "CANCEL"}:
+            return _qr_status_result(
+                "cancelled",
+                "本次扫码登录已取消，请刷新二维码后重试。",
+                status,
+            )
+        return _qr_status_result(
+            "failed",
+            f"扫码登录状态异常：{status or '未知'}，请刷新二维码后重试。",
+            status,
+        )
     except Exception as exc:
         logger.error(
             "二维码状态轮询失败 errorType=%s",
@@ -422,7 +460,7 @@ def get_session_status(session_id: str) -> dict:
     """
     获取会话状态（单次轮询）。
     确认登录成功后不再返回原始 Cookie，仅返回安全的摘要信息。
-    返回: {"status": "new"|"scaned"|"confirmed"|"expired"|"cancelled"|"verification_required", ...}
+    返回: {"status": "new"|"scanned"|"confirmed"|"expired"|"cancelled"|"verification_required", ...}
     """
     _cleanup_expired()
 
@@ -464,10 +502,18 @@ def get_session_status(session_id: str) -> dict:
                 replay.update(persistence_result)
             return replay
 
+        previous_status = str(sdata.get("status") or "").casefold()
         polled = _poll_status_once(sdata["session"], sdata["login_form"])
         result = dict(polled)
         status = str(result.get("status") or "error").casefold()
         result["status"] = status
+        if status != previous_status:
+            logger.info(
+                "闲鱼扫码登录状态变化 sessionHash=%s status=%s rawStatus=%s",
+                hashlib.sha256(session_id.encode("utf-8")).hexdigest()[:12],
+                status,
+                result.get("rawStatus") or "",
+            )
 
         if status == "confirmed":
             cookies = result.pop("cookies", None) or {}
