@@ -1,45 +1,61 @@
 <template>
-  <div class="card-warehouse-v4">
-    <div class="card-warehouse-v4-notices">
+  <div class="card-warehouse-page">
+    <div class="card-warehouse-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="groupsWarning" class="global-notice warning" role="status">{{ groupsWarning }}</div>
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <n-card class="card-warehouse-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">卡密库存</n-tag>
-        <h2>卡密库存台</h2>
+    <section class="warehouse-command-center">
+      <div class="warehouse-command-main">
+        <div class="warehouse-command-kicker">
+          <span>卡密库存</span>
+          <b>{{ selected?.groupName || '未选择分组' }}</b>
+        </div>
+        <h2>卡密库存控制台</h2>
         <p>集中管理卡密分组、库存明细、使用记录、导入和导出，自动发货会从这里领取库存。</p>
+        <div class="warehouse-command-meta">
+          <span>{{ groupsLoading ? '库存刷新中' : `当前 ${groupsMetric(groups.length)} 个分组` }}</span>
+          <span>可用 {{ groupsMetric(stockStats.remain) }}</span>
+          <span>低库存 {{ groupsMetric(lowStockCount) }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <n-button size="small" :loading="groupsLoading" @click="load">刷新库存</n-button>
-        <n-button size="small" type="primary" @click="openCreateDialog">新建卡密组</n-button>
-      </n-space>
-    </n-card>
-
-    <section class="card-warehouse-v4-stats">
-      <n-card
-        v-for="item in warehouseStatCards"
-        :key="item.key"
-        class="card-warehouse-v4-stat"
-        :class="item.tone"
-        :bordered="false"
-      >
-        <span class="card-warehouse-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
+      <div class="warehouse-command-panel">
+        <div class="warehouse-command-panel-head">
+          <span>库存动作</span>
+          <strong>{{ selected ? '分组已选' : '全局操作' }}</strong>
+        </div>
+        <div class="warehouse-command-buttons">
+          <n-button :loading="groupsLoading" @click="load">刷新库存</n-button>
+          <n-button type="primary" @click="openCreateDialog">新建卡密组</n-button>
+        </div>
+      </div>
     </section>
 
-    <div class="card-warehouse-v4-grid">
-      <div class="card-warehouse-v4-left">
-      <n-card class="card-warehouse-v4-table-card" :bordered="false">
-        <template #header>卡密分组</template>
-        <template #header-extra>
-          <n-tag size="small" :bordered="false">共 {{ groupsAvailable === true ? groups.length : '—' }} 组</n-tag>
-        </template>
-        <div class="card-warehouse-v4-toolbar">
+    <section class="warehouse-metric-rail">
+      <article
+        v-for="item in warehouseStatCards"
+        :key="item.key"
+        class="warehouse-metric-card"
+        :class="item.tone"
+      >
+        <span class="warehouse-metric-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </article>
+    </section>
+
+    <div class="card-warehouse-workspace">
+      <div class="card-warehouse-left">
+      <section class="warehouse-panel warehouse-group-panel">
+        <header class="warehouse-panel-head">
+          <div>
+            <span>分组管理</span>
+            <h3>卡密分组</h3>
+          </div>
+          <b>共 {{ groupsAvailable === true ? groups.length : '—' }} 组</b>
+        </header>
+        <div class="warehouse-toolbar">
           <n-input v-model:value="query.keyword" clearable placeholder="搜索卡密组名称" @keyup.enter="load" />
           <n-button :loading="groupsLoading" @click="load">搜索</n-button>
           <n-button type="primary" @click="openCreateDialog">新建卡密组</n-button>
@@ -76,8 +92,14 @@
             </EmptyState>
           </template>
         </BaseTable>
-      </n-card>
-      <n-card title="导入卡密" class="card-warehouse-v4-import-card" :bordered="false">
+      </section>
+      <section class="warehouse-panel warehouse-import-panel">
+        <header class="warehouse-panel-head">
+          <div>
+            <span>库存入库</span>
+            <h3>导入卡密</h3>
+          </div>
+        </header>
         <div class="form-grid">
           <div class="form-row">
             <label>目标分组</label>
@@ -118,12 +140,17 @@
             </span>
           </div>
         </div>
-      </n-card>
+      </section>
     </div>
     <!-- Right -->
-    <div class="card-warehouse-v4-right">
-      <n-card class="card-warehouse-v4-detail-card" :bordered="false">
-        <template #header>{{ selected ? selected.groupName : '卡密详情' }}</template>
+    <div class="card-warehouse-right">
+      <section class="warehouse-panel warehouse-detail-panel">
+        <header class="warehouse-panel-head">
+          <div>
+            <span>库存明细</span>
+            <h3>{{ selected ? selected.groupName : '卡密详情' }}</h3>
+          </div>
+        </header>
         <EmptyState v-if="!selected" icon="👈" title="请选择卡密分组" description="从左侧列表选择一个卡密组，查看卡密明细、使用记录和导入历史。" style="padding:40px 0" />
         <template v-else>
           <div class="tab-bar">
@@ -245,7 +272,7 @@
             </div>
           </div>
         </template>
-      </n-card>
+      </section>
     </div>
     </div>
     <!-- Edit / Create Dialog -->
@@ -310,7 +337,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NCard, NInput, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NStatistic } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -938,135 +965,277 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.card-warehouse-v4 {
+.card-warehouse-page {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
+  color: #111827;
 }
 
-.card-warehouse-v4-notices {
+.card-warehouse-page * {
+  box-sizing: border-box;
+}
+
+.card-warehouse-notices {
   display: grid;
   gap: 8px;
 }
 
-.card-warehouse-v4-hero,
-.card-warehouse-v4-table-card,
-.card-warehouse-v4-import-card,
-.card-warehouse-v4-detail-card,
-.card-warehouse-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.card-warehouse-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.warehouse-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dbe4ef;
+  border-left: 5px solid #0f766e;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, .08), rgba(37, 99, 235, .04) 44%, rgba(255, 255, 255, .96)),
+    #fff;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .08);
 }
 
-.card-warehouse-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
+.warehouse-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
 }
 
-.card-warehouse-v4-hero p {
+.warehouse-command-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.warehouse-command-kicker span,
+.warehouse-command-kicker b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, .1);
+}
+
+.warehouse-command-kicker b {
+  max-width: min(420px, 100%);
+  overflow: hidden;
+  color: #1f2937;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, .82);
+}
+
+.warehouse-command-main h2 {
   margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.65;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 750;
+  line-height: 1.22;
 }
 
-.card-warehouse-v4-stats {
+.warehouse-command-main p {
+  max-width: 720px;
+  margin: 0;
+  color: #526079;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.warehouse-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.warehouse-command-meta span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, .26);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .78);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.warehouse-command-panel {
+  align-self: stretch;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .9);
+}
+
+.warehouse-command-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.warehouse-command-panel-head strong {
+  color: #0f766e;
+  font-size: 13px;
+}
+
+.warehouse-command-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.warehouse-command-buttons :deep(.n-button) {
+  min-width: 0;
+}
+
+.warehouse-metric-rail {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
-.card-warehouse-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+.warehouse-metric-card {
+  min-width: 0;
+  min-height: 136px;
   display: grid;
+  grid-template-rows: auto 1fr auto;
   gap: 8px;
+  padding: 14px;
+  border: 1px solid #e4ebf5;
+  border-top: 3px solid #64748b;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
 }
 
-.card-warehouse-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.warehouse-metric-icon {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
+  color: #fff;
+  background: #64748b;
+  font-size: 12px;
+  font-weight: 750;
 }
 
-.card-warehouse-v4-stat.tone-blue .card-warehouse-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.card-warehouse-v4-stat.tone-cyan .card-warehouse-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.card-warehouse-v4-stat.tone-green .card-warehouse-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.card-warehouse-v4-stat.tone-gray .card-warehouse-v4-stat-icon { background: #f1f5f9; color: #475569; }
-.card-warehouse-v4-stat.tone-orange .card-warehouse-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-.card-warehouse-v4-stat.tone-red .card-warehouse-v4-stat-icon { background: #fef2f2; color: #dc2626; }
+.warehouse-metric-card.tone-blue { border-top-color: #2563eb; }
+.warehouse-metric-card.tone-blue .warehouse-metric-icon { background: #2563eb; }
+.warehouse-metric-card.tone-cyan { border-top-color: #0891b2; }
+.warehouse-metric-card.tone-cyan .warehouse-metric-icon { background: #0891b2; }
+.warehouse-metric-card.tone-green { border-top-color: #059669; }
+.warehouse-metric-card.tone-green .warehouse-metric-icon { background: #059669; }
+.warehouse-metric-card.tone-gray { border-top-color: #64748b; }
+.warehouse-metric-card.tone-gray .warehouse-metric-icon { background: #64748b; }
+.warehouse-metric-card.tone-orange { border-top-color: #ea580c; }
+.warehouse-metric-card.tone-orange .warehouse-metric-icon { background: #ea580c; }
+.warehouse-metric-card.tone-red { border-top-color: #dc2626; }
+.warehouse-metric-card.tone-red .warehouse-metric-icon { background: #dc2626; }
 
-.card-warehouse-v4-stat :deep(.n-statistic .n-statistic-label) {
+.warehouse-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.card-warehouse-v4-stat :deep(.n-statistic .n-statistic-value) {
+.warehouse-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 760;
 }
 
-.card-warehouse-v4-stat small {
+.warehouse-metric-card small {
   color: #64748b;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.card-warehouse-v4-grid {
+.card-warehouse-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(390px, 0.42fr);
+  grid-template-columns: minmax(0, 1.08fr) minmax(380px, .62fr);
   gap: 16px;
   align-items: start;
 }
 
-.card-warehouse-v4-left,
-.card-warehouse-v4-right {
+.card-warehouse-left,
+.card-warehouse-right {
   min-width: 0;
   display: grid;
   gap: 16px;
 }
 
-.card-warehouse-v4-detail-card {
-  position: sticky;
-  top: 118px;
-}
-
-.card-warehouse-v4-table-card :deep(.n-card__content),
-.card-warehouse-v4-import-card :deep(.n-card__content),
-.card-warehouse-v4-detail-card :deep(.n-card__content) {
+.warehouse-panel {
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
 }
 
-.card-warehouse-v4-table-card :deep(.n-card-header),
-.card-warehouse-v4-import-card :deep(.n-card-header),
-.card-warehouse-v4-detail-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.warehouse-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef2f7;
 }
 
-.card-warehouse-v4-toolbar {
+.warehouse-panel-head span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.warehouse-panel-head h3 {
+  margin: 4px 0 0;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 730;
+  line-height: 1.35;
+}
+
+.warehouse-panel-head b {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+}
+
+.warehouse-toolbar {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) auto auto;
   gap: 10px;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.warehouse-detail-panel {
+  position: sticky;
+  top: 118px;
 }
 
 .success { background: #ecfdf3; color: #067647; border-color: #abefc6; }
@@ -1286,34 +1455,49 @@ onBeforeUnmount(() => {
 
 .subtle { color: #98a2b3; font-size: 13px; }
 
-/* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
-  .card-warehouse-v4 {
+  .card-warehouse-page {
     gap: 12px;
   }
 
-  .card-warehouse-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
-    padding: 14px;
-  }
-
-  .card-warehouse-v4-stats,
-  .card-warehouse-v4-grid,
-  .card-warehouse-v4-toolbar {
+  .warehouse-command-center,
+  .card-warehouse-workspace,
+  .warehouse-toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .card-warehouse-v4-detail-card {
-    position: static;
+  .warehouse-command-center,
+  .warehouse-panel {
+    padding: 14px;
   }
 
-  .card-warehouse-v4-table-card :deep(.n-card__content),
-  .card-warehouse-v4-import-card :deep(.n-card__content),
-  .card-warehouse-v4-detail-card :deep(.n-card__content) {
+  .warehouse-command-main h2 {
+    font-size: 22px;
+  }
+
+  .warehouse-command-buttons {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .warehouse-metric-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .warehouse-metric-card {
+    min-height: 126px;
     padding: 12px;
   }
 
-  /* 导入方式 tabs 内边距收窄 */
+  .warehouse-detail-panel {
+    position: static;
+  }
+
+  .warehouse-panel-head {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
   .import-tabs {
     gap: 4px;
     padding: 3px;
@@ -1323,20 +1507,17 @@ onBeforeUnmount(() => {
     font-size: 13px;
   }
 
-  /* 文件拖拽区收窄 */
   .file-drop-zone {
     padding: 16px 12px;
     font-size: 13px;
   }
 
-  /* 导入结果换行 */
   .import-result {
     flex-wrap: wrap;
     gap: 8px;
     font-size: 13px;
   }
 
-  /* 详情 tab 栏：保持横向但缩小 */
   .tab-bar {
     gap: 4px;
     padding: 3px;
@@ -1356,7 +1537,6 @@ onBeforeUnmount(() => {
     max-width: 160px;
   }
 
-  /* 库存统计：3列 → 2列 */
   .stock-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -1375,7 +1555,6 @@ onBeforeUnmount(() => {
     font-size: 18px;
   }
 
-  /* 分页收窄 */
   .pagination {
     gap: 6px;
     padding: 10px 0 4px;
@@ -1390,7 +1569,6 @@ onBeforeUnmount(() => {
     font-size: 15px;
   }
 
-  /* 编辑/新建分组模态框：全宽底部弹出 */
   .modal-overlay {
     align-items: flex-end;
   }
