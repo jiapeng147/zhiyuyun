@@ -1,7 +1,7 @@
 <template>
   <div class="m-data">
     <div class="m-page-header m-mobile-hero">
-      <span class="m-mobile-kicker">Mobile Metrics</span>
+      <span class="m-mobile-kicker">移动数据</span>
       <h1>数据面板</h1>
       <p class="m-page-sub">按所选时间范围查看后端实际统计</p>
     </div>

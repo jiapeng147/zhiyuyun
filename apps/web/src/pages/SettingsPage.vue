@@ -3,7 +3,7 @@
     <n-card class="settings-v4-hero" :bordered="false">
       <div class="settings-v4-hero-main">
         <div class="settings-v4-copy">
-          <n-tag size="small" type="success" :bordered="false">System Settings</n-tag>
+          <n-tag size="small" type="success" :bordered="false">系统设置</n-tag>
           <h2>{{ activeTitle }}</h2>
           <p>{{ activeSubtitle }}</p>
         </div>

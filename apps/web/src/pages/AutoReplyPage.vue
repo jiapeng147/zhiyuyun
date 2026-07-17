@@ -12,7 +12,7 @@
     <n-card class="auto-reply-hero auto-reply-v4-hero" :bordered="false">
       <div class="auto-reply-hero-head">
         <div class="auto-reply-hero-copy">
-          <span class="auto-reply-hero-pill">Auto Reply Console</span>
+          <span class="auto-reply-hero-pill">自动回复控制台</span>
           <h1>自动回复</h1>
           <p>
             把账号范围、商品范围和 AI 客服摘要收拢到一个主工作台里，让“哪里已配置”和“配置如何继承”在同一

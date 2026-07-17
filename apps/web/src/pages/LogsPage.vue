@@ -2,7 +2,7 @@
   <div class="logs-v4">
     <n-card class="logs-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="warning" :bordered="false">Audit Trail</n-tag>
+        <n-tag size="small" type="warning" :bordered="false">审计日志</n-tag>
         <h2>操作日志审计</h2>
         <p>按操作类型、关键词与结果状态追踪关键写操作，结果未知的记录会被单独标记，便于人工核对。</p>
       </div>

@@ -13,7 +13,7 @@
 
     <section class="fbk-hero">
       <div class="fbk-hero-copy">
-        <span class="fbk-hero-pill">Feedback Center</span>
+        <span class="fbk-hero-pill">反馈中心</span>
         <h2>反馈建议</h2>
         <p>集中记录 Bug、功能建议与流程改进想法，反馈将进入支持队列由维护团队处理。</p>
 
@@ -257,7 +257,7 @@
       <form class="fbk-modal fbk-submit-modal" @submit.prevent="handleSubmit">
         <div class="fbk-modal-head">
           <div>
-            <span class="fbk-modal-pill">New Feedback</span>
+            <span class="fbk-modal-pill">新建反馈</span>
             <h3>提交新反馈</h3>
           </div>
           <button type="button" class="fbk-close" aria-label="关闭" @click="closeSubmitModal">×</button>

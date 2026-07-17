@@ -12,7 +12,7 @@
     >
       <div>
         <strong>通知测试发送安全状态</strong>
-        <span v-if="testAttempt.attemptId">Attempt #{{ testAttempt.attemptId }}</span>
+        <span v-if="testAttempt.attemptId">尝试编号 #{{ testAttempt.attemptId }}</span>
       </div>
       <p>{{ testAttempt.message }}</p>
       <p v-if="testAttempt.status === 'unknown'" class="notification-resolution-warning">
@@ -21,9 +21,9 @@
       </p>
       <dl>
         <div><dt>渠道</dt><dd>{{ testAttempt.channelKey || '-' }}</dd></div>
-        <div><dt>状态</dt><dd>{{ testAttempt.status || 'unknown' }}</dd></div>
-        <div><dt>retrySafe</dt><dd>{{ String(testAttempt.retrySafe) }}</dd></div>
-        <div><dt>logPersisted</dt><dd>{{ String(testAttempt.logPersisted) }}</dd></div>
+        <div><dt>状态</dt><dd>{{ notificationAttemptStatusLabel(testAttempt.status) }}</dd></div>
+        <div><dt>可安全重试</dt><dd>{{ testAttempt.retrySafe ? '是' : '否' }}</dd></div>
+        <div><dt>日志已留存</dt><dd>{{ testAttempt.logPersisted ? '是' : '否' }}</dd></div>
       </dl>
       <button
         type="button"
@@ -46,7 +46,7 @@
 
     <section class="notify-hero">
       <div class="notify-hero-copy">
-        <span class="notify-hero-pill">Notification Control Center</span>
+        <span class="notify-hero-pill">通知控制中心</span>
         <h1>通知设置</h1>
         <p>
           统一管理通知渠道、事件触发规则、投递健康与应用内提醒。左侧选择渠道，中央信息完成配置，
@@ -215,7 +215,7 @@
               <h4>SMTP 配置</h4>
               <div class="notify-form-grid two">
                 <label class="notify-field">
-                  <span>SMTP Host</span>
+                  <span>SMTP 服务器</span>
                   <input v-model="selectedChannel.smtpHost" type="text" placeholder="smtp.example.com" />
                 </label>
                 <label class="notify-field">
@@ -250,11 +250,11 @@
               <h4>飞书自建应用凭证</h4>
               <div class="notify-form-grid two">
                 <label class="notify-field">
-                  <span>App ID</span>
+                  <span>应用 ID</span>
                   <input v-model="selectedChannel.appId" type="text" placeholder="cli_xxxxxxxxxxxxxxx" />
                 </label>
                 <label class="notify-field">
-                  <span>App Secret</span>
+                  <span>应用密钥</span>
                   <input
                     v-model="selectedChannel.secret"
                     type="password"
@@ -263,7 +263,7 @@
                   />
                 </label>
                 <label class="notify-field">
-                  <span>Verification Token</span>
+                  <span>校验 Token</span>
                   <input
                     v-model="selectedChannel.verificationToken"
                     type="password"
@@ -300,16 +300,16 @@
                 </p>
                 <ol>
                   <li>前往 <a href="https://open.feishu.cn/" target="_blank">飞书开放平台</a> 注册账号并创建团队（免费，无需企业认证）</li>
-                  <li>创建自建应用 → 获取 App ID 和 App Secret</li>
+                  <li>创建自建应用 → 获取应用 ID 和应用密钥</li>
                   <li>启用「机器人」能力</li>
                   <li>配置「事件订阅」→ 请求地址填：<code>POST {{ windowLocationOrigin }}/api/feishu/webhook</code></li>
                   <li>订阅事件：<code>im.message.receive_v1</code>（接收用户消息）</li>
-                  <li>复制 Verification Token（如启用加密还需 Encrypt Key）填入上方表单</li>
+                  <li>复制校验 Token（如启用加密还需 Encrypt Key）填入上方表单</li>
                   <li>在飞书中与机器人发起对话，获取你的 open_id 填入「接收者 ID」</li>
                   <li>权限管理勾选：发送消息、上传图片、读取用户信息</li>
                 </ol>
                 <p style="margin-top: 8px; color: #ff9800;">
-                  <strong>提示：</strong>账号 Session 过期时，系统会通过此渠道主动推送通知。飞书对话不提供二维码自动登录；请前往 Web 管理端的账号管理页，选择账号后使用“重新扫码”安全登录。
+                  <strong>提示：</strong>账号 Session 过期时，系统会通过此渠道主动推送通知。飞书对话不提供二维码自动登录；请前往管理端的账号管理页，选择账号后使用“重新扫码”安全登录。
                 </p>
               </div>
             </section>
@@ -318,7 +318,7 @@
               <h4>接入凭证</h4>
               <div class="notify-form-grid two">
                 <label class="notify-field notify-field-full">
-                  <span>PushPlus Token</span>
+                  <span>PushPlus 令牌</span>
                   <input v-model="selectedChannel.receiver" type="text" placeholder="请输入 PushPlus Token" />
                 </label>
                 <label class="notify-field">
@@ -481,7 +481,7 @@
                     <Icon name="notifyMagic" />
                   </span>
                   <div>
-                    <small>STEP GUIDE</small>
+                    <small>操作步骤</small>
                     <h4>按步骤完成配置</h4>
                   </div>
                 </div>
@@ -508,7 +508,7 @@
                     <Icon name="notifySectionBasic" />
                   </span>
                   <div>
-                    <small>FIELD GUIDE</small>
+                    <small>字段说明</small>
                     <h4>页面字段怎么填</h4>
                   </div>
                 </div>
@@ -533,7 +533,7 @@
                     <Icon name="notifyStatus" />
                   </span>
                   <div>
-                    <small>CHECK LIST</small>
+                    <small>检查清单</small>
                     <h4>保存前检查</h4>
                   </div>
                 </div>
@@ -552,7 +552,7 @@
                     <Icon name="notifyAlert" />
                   </span>
                   <div>
-                    <small>BEST PRACTICE</small>
+                    <small>最佳实践</small>
                     <h4>推荐操作顺序</h4>
                   </div>
                 </div>
@@ -1325,7 +1325,7 @@ function createChannelSeed(meta, overrides = {}) {
     secretConfigured: false,
     timeoutSeconds: 10,
     retryCount: 3,
-    template: '【{title}】\n{{content}}\n\n事件：{event}\n账号：{account}\n时间：{time}\n\n来自 Zhiyuyun 通知中心',
+    template: '【{title}】\n{{content}}\n\n事件：{event}\n账号：{account}\n时间：{time}\n\n来自智鱼云通知中心',
     failurePolicy: 'retry',
     dedupeWindow: 10,
     smtpHost: '',
@@ -1493,6 +1493,17 @@ function channelStatusText(channel) {
   return isChannelConfigured(channel) ? '已启用' : '待完成配置'
 }
 
+function notificationAttemptStatusLabel(status) {
+  const value = String(status || '').toLowerCase()
+  if (value === 'confirmed') return '已确认'
+  if (value === 'blocked') return '已阻止'
+  if (value === 'unknown') return '结果未知'
+  if (value === 'failed') return '发送失败'
+  if (value === 'success') return '发送成功'
+  if (value === 'pending') return '处理中'
+  return value || '结果未知'
+}
+
 function renderConnectionTarget(channel) {
   if (!channel) return '通知中心'
   if (channel.type === 'email') return channel.smtpHost || 'SMTP'
@@ -1519,7 +1530,7 @@ function maskValue(value, start = 4, end = 4) {
 function normalizeChannelTemplate(value) {
   const text = String(value || '').trim()
   if (!text) {
-    return '【{{title}}】 {{content}}\n事件：{{event}} 账号：{{account}} 时间：{{time}}\n来自 Zhiyuyun 通知中心'
+    return '【{{title}}】 {{content}}\n事件：{{event}} 账号：{{account}} 时间：{{time}}\n来自智鱼云通知中心'
   }
   return text
 }

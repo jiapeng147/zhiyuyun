@@ -5,7 +5,7 @@
     title-accent="开启多账号"
     title-tail="商用运营"
     description="邮箱验证码注册，注册即赠免费版套餐。"
-    legal-description="该页面用于说明 Zhiyuyun 注册、身份验证与账号安全相关规则。"
+    legal-description="该页面用于说明智鱼云注册、身份验证与账号安全相关规则。"
     @navigate="emit('navigate', $event)"
   >
     <div v-if="errorMsg" class="form-error" role="alert" aria-live="assertive">{{ errorMsg }}</div>
@@ -106,7 +106,7 @@ const canSubmit = computed(() => Boolean(
 ))
 
 function openDoc(title) {
-  openLegalDoc(title, '该页面用于说明 Zhiyuyun 注册、身份验证与账号安全相关规则。')
+  openLegalDoc(title, '该页面用于说明智鱼云注册、身份验证与账号安全相关规则。')
 }
 
 function startCountdown() {

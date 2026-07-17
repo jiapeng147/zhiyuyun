@@ -10,7 +10,7 @@
         <n-icon><SearchOutline /></n-icon>
       </template>
       <template #suffix>
-        <kbd>Ctrl K</kbd>
+        <span>搜索</span>
       </template>
     </n-input>
 

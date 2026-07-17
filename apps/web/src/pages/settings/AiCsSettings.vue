@@ -119,7 +119,7 @@
               <label>回复语言</label>
               <select v-model="form.language" class="aics-input">
                 <option value="zh-CN">简体中文</option>
-                <option value="en">English</option>
+                <option value="en">英文</option>
               </select>
             </div>
 

@@ -2,7 +2,7 @@
   <div class="source-v4">
     <n-card class="source-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Source Library</n-tag>
+        <n-tag size="small" type="success" :bordered="false">货源库</n-tag>
         <h2>货源库运营台</h2>
         <p>统一管理自动发货素材、绑定商品与 AI 推荐结果，配置关系加载失败时不会开放写操作。</p>
       </div>

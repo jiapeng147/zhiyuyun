@@ -2,7 +2,7 @@
   <div class="rag-settings-page">
     <section class="page-hero">
       <div class="page-hero-copy">
-        <span class="page-pill">Knowledge Base Workspace</span>
+        <span class="page-pill">知识库工作台</span>
         <h1>RAG 知识库</h1>
         <p>
           知识库管理已经从系统总览中拆分出来。现在可以在一个独立页面里完成知识库创建、

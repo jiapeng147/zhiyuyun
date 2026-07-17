@@ -105,7 +105,7 @@
     </main>
 
     <footer class="auth-v3-footer">
-      <span>© {{ resolvedCopyrightYear }} Zhiyuyun</span>
+      <span>© {{ resolvedCopyrightYear }} 智鱼云</span>
       <button type="button" @click="openDoc('隐私政策')">隐私政策</button>
       <button type="button" @click="openDoc('用户协议')">用户协议</button>
     </footer>

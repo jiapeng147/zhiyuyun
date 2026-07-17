@@ -7,7 +7,7 @@
           <span></span>
         </div>
         <div class="m-brand-text">
-          <div class="m-brand-name">Zhiyuyun</div>
+          <div class="m-brand-name">智鱼云</div>
           <div class="m-brand-sub">智鱼云</div>
         </div>
       </button>

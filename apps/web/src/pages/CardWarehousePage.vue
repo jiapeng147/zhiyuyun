@@ -8,7 +8,7 @@
 
     <n-card class="card-warehouse-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Card Inventory</n-tag>
+        <n-tag size="small" type="success" :bordered="false">卡密库存</n-tag>
         <h2>卡密库存台</h2>
         <p>集中管理卡密分组、库存明细、使用记录、导入和导出，自动发货会从这里领取库存。</p>
       </div>

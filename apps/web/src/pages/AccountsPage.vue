@@ -3,7 +3,7 @@
     <main class="accounts-v4-main">
       <n-card class="accounts-v4-hero" :bordered="false">
         <div class="accounts-v4-hero-copy">
-          <n-tag size="small" type="success" :bordered="false">Account Operations</n-tag>
+          <n-tag size="small" type="success" :bordered="false">账号运营</n-tag>
           <h2>闲鱼账号工作台</h2>
           <p>
             统一处理账号列表、扫码登录、Cookie 维护、资料刷新、WebSocket 状态与账号级策略。

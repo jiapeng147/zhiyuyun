@@ -2,7 +2,7 @@
   <div class="connections-v4">
     <n-card class="connections-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Connection Center</n-tag>
+        <n-tag size="small" type="success" :bordered="false">连接中心</n-tag>
         <h2>连接管理工作台</h2>
         <p>集中查看闲鱼账号 Cookie、WebSocket、心跳与启动状态，异常账号可直接进入详情处理。</p>
       </div>

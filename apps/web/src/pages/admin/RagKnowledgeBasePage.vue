@@ -76,12 +76,12 @@
                 <input v-model="kbModal.form.embeddingModel" class="input" placeholder="如 text-embedding-3-small" />
               </div>
               <div class="form-row">
-                <label>Embedding Base URL</label>
+                <label>向量模型 Base URL</label>
                 <input v-model="kbModal.form.embeddingBaseUrl" class="input" placeholder="https://api.openai.com/v1" />
                 <small>仅支持可解析的公网 HTTPS；切换主机时需重新输入下方 API Key。</small>
               </div>
               <div class="form-row form-row-full">
-                <label>Embedding API Key</label>
+                <label>向量模型 API Key</label>
                 <SecretInput
                   v-model="kbModal.form.embeddingApiKey"
                   :placeholder="kbModal.form.embeddingApiKeyConfigured ? '已保存，直接输入新值可覆盖' : 'sk-...'"

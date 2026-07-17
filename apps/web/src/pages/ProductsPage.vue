@@ -71,7 +71,7 @@
 
       <n-card class="products-v4-hero" :bordered="false">
         <div class="products-v4-hero-copy">
-          <n-tag size="small" type="success" :bordered="false">Product Operations</n-tag>
+          <n-tag size="small" type="success" :bordered="false">商品运营</n-tag>
           <h2>商品运营台</h2>
           <p>按账号同步闲鱼商品，集中处理上下架、自动发货、自动回复、批量删除和商品擦亮。</p>
         </div>

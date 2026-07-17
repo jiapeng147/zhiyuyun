@@ -5,7 +5,7 @@
     title-accent="收进一个"
     title-tail="工作台"
     description="统一管理账号、商品、消息、订单与自动化任务，进入后台后继续处理你的运营流程。"
-    legal-description="该页面用于说明 Zhiyuyun 登录、身份验证与账号安全相关规则。"
+    legal-description="该页面用于说明智鱼云登录、身份验证与账号安全相关规则。"
     @navigate="emit('navigate', $event)"
   >
     <div v-if="errorMsg" class="form-error" role="alert" aria-live="assertive">{{ errorMsg }}</div>
@@ -96,7 +96,7 @@ const canSubmit = computed(() => Boolean(
 ))
 
 function openDoc(title) {
-  openLegalDoc(title, '该页面用于说明 Zhiyuyun 登录、身份验证与账号安全相关规则。')
+  openLegalDoc(title, '该页面用于说明智鱼云登录、身份验证与账号安全相关规则。')
 }
 
 async function handleLogin() {

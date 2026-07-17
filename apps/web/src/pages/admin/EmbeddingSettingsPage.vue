@@ -5,7 +5,7 @@
 
     <section class="page-hero">
       <div class="page-hero-copy">
-        <span class="page-pill">Embedding Model</span>
+        <span class="page-pill">向量模型</span>
         <h1>向量模型配置</h1>
         <p>向量模型（Embedding）独立维护，用于 RAG 知识库的文档向量化与语义召回。聊天与文本生成请前往“模型配置”页签。</p>
 

@@ -4,7 +4,7 @@
 
     <n-card class="user-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">User Operations</n-tag>
+        <n-tag size="small" type="success" :bordered="false">用户运营</n-tag>
         <h2>用户管理</h2>
         <p>集中处理平台概览、套餐、手动建用户、自助注册、SMTP 与账号状态。</p>
       </div>
@@ -432,7 +432,7 @@
         </label>
         <label class="field">
           <span>发件人名称</span>
-          <input v-model.trim="email.fromName" class="input" placeholder="Lumen Ops" />
+          <input v-model.trim="email.fromName" class="input" placeholder="智鱼云运营" />
         </label>
       </div>
       <div class="form-actions">
@@ -1278,7 +1278,7 @@ async function markOrderPaid(order) {
   if (!window.confirm(`确认订单 ${order.orderNo} 已支付并立即开通套餐？`)) return
   billingBusy.value = true
   try {
-    await adminMarkBillingOrderPaid(order.id, { note: 'manual-confirm' })
+    await adminMarkBillingOrderPaid(order.id, { note: '人工确认' })
     flash(`订单 ${order.orderNo} 已确认生效`)
     await loadAll()
   } catch (e) {
@@ -1293,7 +1293,7 @@ async function closeAdminOrder(order) {
   if (!window.confirm(`确认关闭订单 ${order.orderNo}？`)) return
   billingBusy.value = true
   try {
-    await adminCloseBillingOrder(order.id, { reason: 'admin_close' })
+    await adminCloseBillingOrder(order.id, { reason: '人工关闭' })
     flash(`订单 ${order.orderNo} 已关闭`)
     await loadAll()
   } catch (e) {
@@ -1306,7 +1306,7 @@ async function closeAdminOrder(order) {
 async function refundOrder(order) {
   if (!order || billingBusy.value) return
   const amountYuan = (Number(order.amountCents || 0) / 100).toFixed(2)
-  const reason = window.prompt(`请输入订单 ${order.orderNo} 的退款原因`, order.refundReason || 'admin_refund')
+  const reason = window.prompt(`请输入订单 ${order.orderNo} 的退款原因`, order.refundReason || '人工退款')
   if (reason === null) return
   const amountRaw = window.prompt('请输入退款金额（元）', amountYuan)
   if (amountRaw === null) return
@@ -1315,7 +1315,7 @@ async function refundOrder(order) {
   billingBusy.value = true
   try {
     await adminRefundBillingOrder(order.id, {
-      reason: reason || 'admin_refund',
+      reason: reason || '人工退款',
       refundAmountCents,
     })
     flash(`订单 ${order.orderNo} 已退款`)
@@ -1361,7 +1361,7 @@ async function openSubscription(user) {
   billingBusy.value = true
   rowBusy.value = user.id
   try {
-    await adminActivateSubscription(user.id, { planCode: planCode.trim(), durationDays, note: 'manual-open' })
+    await adminActivateSubscription(user.id, { planCode: planCode.trim(), durationDays, note: '人工开通' })
     flash(`已为 ${user.username} 开通 ${planCode.trim()}`)
     await loadAll()
   } catch (e) {

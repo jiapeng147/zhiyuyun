@@ -7,7 +7,7 @@
 
     <n-card class="scheduled-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Task Scheduler</n-tag>
+        <n-tag size="small" type="success" :bordered="false">定时任务</n-tag>
         <h2>定时任务编排</h2>
         <p>统一配置商品同步、订单同步和手动触发执行，旧任务类型会被明确标记为不可用。</p>
       </div>

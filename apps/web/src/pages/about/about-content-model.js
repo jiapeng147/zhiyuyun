@@ -109,7 +109,7 @@ export function createDefaultAboutContent() {
         label: '交流群',
         title: '微信群二维码',
         desc: '用于当前部署自行维护的版本通知、使用答疑、投放交流与功能建议收集。',
-        placeholderText: 'GROUP',
+        placeholderText: '社群',
         hint: '配置后可扫码',
         tone: 'blue',
         actionType: 'toast',

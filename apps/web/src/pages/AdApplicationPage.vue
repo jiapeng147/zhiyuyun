@@ -258,18 +258,18 @@
           >
             <div class="payment-attempt-head">
               <strong>{{ paymentAttemptStatusText }}</strong>
-              <span v-if="paymentAttempt.attemptId">Attempt #{{ paymentAttempt.attemptId }}</span>
-              <span v-else>{{ paymentAttempt.operation === 'close' ? '关闭操作核对' : 'Attempt ID 暂不可用' }}</span>
+              <span v-if="paymentAttempt.attemptId">尝试编号 #{{ paymentAttempt.attemptId }}</span>
+              <span v-else>{{ paymentAttempt.operation === 'close' ? '关闭操作核对' : '尝试编号暂不可用' }}</span>
             </div>
             <p>{{ paymentAttempt.message }}</p>
             <dl class="payment-attempt-meta">
               <div>
-                <dt>retrySafe</dt>
-                <dd>{{ paymentAttempt.retrySafe ? 'true' : 'false' }}</dd>
+                <dt>可安全重试</dt>
+                <dd>{{ paymentAttempt.retrySafe ? '是' : '否' }}</dd>
               </div>
               <div>
-                <dt>replaySafe</dt>
-                <dd>{{ paymentAttempt.replaySafe ? 'true' : 'false' }}</dd>
+                <dt>可安全恢复</dt>
+                <dd>{{ paymentAttempt.replaySafe ? '是' : '否' }}</dd>
               </div>
               <div v-if="paymentAttempt.orderNo">
                 <dt>订单号</dt>

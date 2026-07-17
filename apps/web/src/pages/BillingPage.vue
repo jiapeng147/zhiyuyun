@@ -4,7 +4,7 @@
 
     <n-card class="billing-hero" :bordered="false">
       <div>
-        <span class="eyebrow">Subscription</span>
+        <span class="eyebrow">套餐订阅</span>
         <h2>套餐账单</h2>
         <p>查看当前版本、账号配额、AI 调用额度与订阅订单。</p>
       </div>

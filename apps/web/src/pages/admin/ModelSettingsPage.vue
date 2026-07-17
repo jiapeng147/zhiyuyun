@@ -5,7 +5,7 @@
 
     <section class="page-hero">
       <div class="page-hero-copy">
-        <span class="page-pill">General Model</span>
+        <span class="page-pill">通用模型</span>
         <h1>模型配置</h1>
         <p>通用模型用于接待回复、文本生成、商品改写等场景。向量模型（Embedding）已拆分到独立页签维护，避免混填。</p>
 

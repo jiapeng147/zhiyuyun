@@ -8,7 +8,7 @@
 
     <n-card class="delivery-records-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Fulfillment Audit</n-tag>
+        <n-tag size="small" type="success" :bordered="false">发货审计</n-tag>
         <h2>发货记录审计</h2>
         <p>集中查看真实发货执行结果、失败原因、卡密/文本方式和订单闭环状态。</p>
       </div>

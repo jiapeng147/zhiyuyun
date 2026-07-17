@@ -2,7 +2,7 @@
   <div class="publish-v4 publish-v8-shell">
     <n-card class="publish-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Publish Console</n-tag>
+        <n-tag size="small" type="success" :bordered="false">发布工作台</n-tag>
         <h2>发布商品工作台</h2>
         <p>按账号、基础信息、分类、位置、价格与发货能力逐步确认，提交前右侧实时汇总发布状态。</p>
         <div class="publish-v4-steps">

@@ -2,7 +2,7 @@
   <div class="data-v4">
     <n-card class="data-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Operations Metrics</n-tag>
+        <n-tag size="small" type="success" :bordered="false">运营数据</n-tag>
         <h2>数据面板</h2>
         <p>集中查看订单、发货、AI 回复和实时事件，失败区域不会用全零数据伪装正常结果。</p>
       </div>

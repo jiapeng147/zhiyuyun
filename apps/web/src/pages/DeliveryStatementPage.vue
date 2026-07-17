@@ -2,7 +2,7 @@
   <div class="statement-v4">
     <n-card class="statement-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Delivery Notice</n-tag>
+        <n-tag size="small" type="success" :bordered="false">发货声明</n-tag>
         <h1>发货声明</h1>
         <p>配置发货声明文案与生效范围，买家确认声明后进入正式发货流程</p>
       </div>

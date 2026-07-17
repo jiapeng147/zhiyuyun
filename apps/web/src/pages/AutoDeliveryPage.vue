@@ -5,7 +5,7 @@
 
     <n-card class="auto-delivery-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Delivery Automation</n-tag>
+        <n-tag size="small" type="success" :bordered="false">自动发货</n-tag>
         <h2>自动发货工作台</h2>
         <p>按商品配置付款后、确认收货后和好评后的发货策略，支持文本、卡密和货源库引用。</p>
       </div>
