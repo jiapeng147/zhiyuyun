@@ -1,5 +1,5 @@
 <template>
-  <div class="source-page">
+  <div class="source-page source-v9-shell">
     <section class="source-command-center">
       <div class="source-command-main">
         <div class="source-command-kicker">
@@ -19,9 +19,10 @@
           <span>货源动作</span>
           <strong>{{ mutationBusy ? '任务处理中' : '可操作' }}</strong>
         </div>
+        <p class="source-action-hint">{{ sourceActionHint }}</p>
         <div class="source-command-buttons">
-          <AppButton :disabled="sourcesLoading || Boolean(mutationBusy)" @click="loadSources">{{ sourcesLoading ? '刷新中...' : '刷新货源' }}</AppButton>
-          <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
+          <AppButton :title="sourceActionHint" :disabled="sourcesLoading || Boolean(mutationBusy)" @click="loadSources">{{ sourcesLoading ? '刷新中...' : '刷新货源' }}</AppButton>
+          <AppButton type="primary" :title="sourceActionHint" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
         </div>
       </div>
     </section>
@@ -50,7 +51,7 @@
           <textarea v-model="form.remark" rows="3" maxlength="500" placeholder="可选备注"></textarea>
         </div>
       </div>
-      <div class="toolbar" style="justify-content:flex-start">
+      <div class="toolbar source-editor-actions">
         <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="saveSource">{{ mutationBusy === 'save' ? '保存中…' : '保存' }}</AppButton>
         <AppButton :disabled="mutationBusy === 'save'" @click="cancelEdit">取消</AppButton>
       </div>
@@ -151,9 +152,8 @@
         <div class="source-toolbar">
           <input
             v-model="configuredKeyword"
-            class="input"
             placeholder="搜索已配置商品"
-            style="max-width:260px"
+            class="source-search-input input"
             :disabled="detailLoading || Boolean(mutationBusy)"
             @keyup.enter="searchConfiguredGoods"
           />
@@ -204,16 +204,15 @@
         <div class="source-toolbar">
           <input
             v-model="goodsKeyword"
-            class="input"
             placeholder="搜索商品标题 / 分类"
-            style="max-width:260px"
+            class="source-search-input input"
             :disabled="detailLoading || Boolean(mutationBusy) || goodsView === 'recommend'"
             @keyup.enter="searchCandidateGoods"
           />
           <AppButton :disabled="detailLoading || Boolean(mutationBusy) || goodsView === 'recommend'" @click="searchCandidateGoods">搜索</AppButton>
-          <AppButton :type="goodsView === 'all' ? 'primary' : 'default'" @click="showAllGoods">全部商品</AppButton>
+          <AppButton :type="goodsView === 'all' ? 'primary' : 'default'" :disabled="detailLoading || Boolean(mutationBusy)" @click="showAllGoods">全部商品</AppButton>
           <AppButton type="primary" :disabled="detailLoading || analysisLoading || Boolean(mutationBusy)" @click="analyzeSource(selected)">AI 推荐商品</AppButton>
-          <select v-model="applyTiming" class="input" style="max-width:200px">
+          <select v-model="applyTiming" class="source-timing-select input" :disabled="detailLoading || Boolean(mutationBusy)">
             <option value="payDelivery">付款后发货</option>
             <option value="confirmDelivery">确认收货后赠送</option>
             <option value="reviewDelivery">好评后赠送</option>
@@ -223,7 +222,7 @@
         <div v-if="!aiStatus.configured" class="ai-status-tip">
           {{ aiStatusMessage('未配置通用模型，当前仅展示规则匹配候选；完成模型配置后可使用 AI 推荐商品。') }}
         </div>
-        <div class="subtle" style="margin-bottom:12px">
+        <div class="subtle source-context-hint">
           {{ goodsView === 'recommend' ? recommendedHint : '可先查看全部商品，再使用 AI 自动筛选高匹配商品。' }}
         </div>
         <div
@@ -417,6 +416,15 @@ const sourceStatCards = computed(() => [
   { key: 'ai', title: 'AI推荐', value: aiStatus.value?.configured ? '已配置' : '未配置', change: '模型状态', symbol: 'AI', tone: aiStatus.value?.configured ? 'tone-green' : 'tone-orange' }
 ])
 
+const sourceActionHint = computed(() => {
+  if (mutationBusy.value) return '上一项任务处理中，请等待完成后再操作。'
+  if (sourcesLoading.value) return '货源库正在刷新，完成后可继续操作。'
+  if (sourcesAvailable.value === false) return '货源库加载失败，请先点击刷新货源或重试。'
+  if (sourcesAvailable.value !== true) return '货源库尚未完成加载，请稍候。'
+  if (selected.value) return `当前选中：${selected.value.title || selected.value.id}`
+  return '可新增货源，或选择一条货源查看绑定商品。'
+})
+
 const normalizedConfiguredGoods = computed(() => decorateGoodsRows(configuredGoods.value, false))
 const normalizedAllGoods = computed(() => decorateGoodsRows(allGoods.value, false))
 const normalizedRecommendedGoods = computed(() => decorateGoodsRows(recommendedGoods.value, true))
@@ -554,14 +562,30 @@ function applyFocusedGoodsContext(sourceRows = []) {
 
 async function applyGoodsIds(goodsIds, successMessage, expectedSourceId = selected.value?.id) {
   const sourceId = expectedSourceId
-  if (
-    !sourceId
-    || sourcesAvailable.value !== true
-    || String(selected.value?.id) !== String(sourceId)
-    || !goodsIds.length
-    || detailAvailable.value !== true
-    || mutationBusy.value
-  ) return false
+  if (!sourceId) {
+    error.value = '请先选择一条货源。'
+    return false
+  }
+  if (sourcesAvailable.value !== true) {
+    error.value = '货源库未加载成功，请先刷新货源。'
+    return false
+  }
+  if (String(selected.value?.id) !== String(sourceId)) {
+    error.value = '当前货源已变化，请重新选择后再配置。'
+    return false
+  }
+  if (!goodsIds.length) {
+    error.value = '请先勾选要配置的商品。'
+    return false
+  }
+  if (detailAvailable.value !== true) {
+    error.value = '货源详情未加载成功，请刷新商品列表后再配置。'
+    return false
+  }
+  if (mutationBusy.value) {
+    error.value = '上一项任务还在处理中，请稍后再配置。'
+    return false
+  }
   const detailSequenceAtStart = detailRequestSequence
   mutationBusy.value = 'apply'
   try {
@@ -911,13 +935,26 @@ async function requestRecommendation(sourceId, { replaceSelection = false } = {}
 }
 
 async function analyzeSource(row) {
-  if (
-    !row
-    || sourcesAvailable.value !== true
-    || detailLoading.value
-    || analysisLoading.value
-    || mutationBusy.value
-  ) return false
+  if (!row) {
+    error.value = '请先选择一条货源。'
+    return false
+  }
+  if (sourcesAvailable.value !== true) {
+    error.value = '货源库未加载成功，请先刷新货源。'
+    return false
+  }
+  if (detailLoading.value) {
+    error.value = '货源详情正在加载，请稍后再使用 AI 推荐。'
+    return false
+  }
+  if (analysisLoading.value) {
+    error.value = 'AI 推荐正在分析中，请等待本次分析完成。'
+    return false
+  }
+  if (mutationBusy.value) {
+    error.value = '上一项任务还在处理中，请稍后再使用 AI 推荐。'
+    return false
+  }
   error.value = ''
   success.value = ''
   const sourceId = row.id
@@ -935,7 +972,14 @@ async function analyzeSource(row) {
 }
 
 async function applySelectedGoods() {
-  if (!selected.value || selectedGoodsIds.value.length === 0) return
+  if (!selected.value) {
+    error.value = '请先选择一条货源。'
+    return
+  }
+  if (selectedGoodsIds.value.length === 0) {
+    error.value = '请先勾选要批量配置的商品。'
+    return
+  }
   try {
     await applyGoodsIds(
       [...selectedGoodsIds.value],
@@ -947,7 +991,14 @@ async function applySelectedGoods() {
 }
 
 async function applyOne(row) {
-  if (!selected.value) return
+  if (!selected.value) {
+    error.value = '请先选择一条货源。'
+    return
+  }
+  if (!row?.id) {
+    error.value = '当前商品信息不完整，请刷新商品列表后重试。'
+    return
+  }
   try {
     await applyGoodsIds([row.id], '已配置到商品')
   } catch (e) {
@@ -979,7 +1030,14 @@ async function removeConfiguredGoods(row) {
 
 async function refreshSelectedGoods() {
   error.value = ''
-  if (!selected.value?.id || mutationBusy.value) return
+  if (!selected.value?.id) {
+    error.value = '请先选择一条货源，再刷新绑定商品。'
+    return
+  }
+  if (mutationBusy.value) {
+    error.value = '上一项任务还在处理中，请稍后再刷新。'
+    return
+  }
   try {
     await Promise.all([loadSelectedGoods(selected.value.id), loadSources()])
   } catch (e) {
@@ -988,19 +1046,32 @@ async function refreshSelectedGoods() {
 }
 
 async function searchConfiguredGoods() {
-  if (!selected.value?.id || detailLoading.value || mutationBusy.value) return
+  if (!selected.value?.id) {
+    error.value = '请先选择一条货源，再搜索已配置商品。'
+    return
+  }
+  if (detailLoading.value || mutationBusy.value) {
+    error.value = '商品列表正在处理，请稍后再搜索。'
+    return
+  }
   configuredAppliedKeyword.value = configuredKeyword.value.trim()
   configuredGoodsPage.current = 1
   await loadSelectedGoods(selected.value.id, selected.value, { clearRecommendation: false })
 }
 
 async function searchCandidateGoods() {
-  if (
-    !selected.value?.id
-    || detailLoading.value
-    || mutationBusy.value
-    || goodsView.value === 'recommend'
-  ) return
+  if (!selected.value?.id) {
+    error.value = '请先选择一条货源，再搜索候选商品。'
+    return
+  }
+  if (detailLoading.value || mutationBusy.value) {
+    error.value = '商品列表正在处理，请稍后再搜索。'
+    return
+  }
+  if (goodsView.value === 'recommend') {
+    error.value = '当前正在查看 AI 推荐结果，请先切回全部商品再搜索。'
+    return
+  }
   candidateAppliedKeyword.value = goodsKeyword.value.trim()
   candidateGoodsPage.current = 1
   selectedGoodsIds.value = []
@@ -1025,6 +1096,10 @@ async function goRecommendedGoodsPage(page) {
 }
 
 function showAllGoods() {
+  if (detailLoading.value || mutationBusy.value) {
+    error.value = '商品列表正在处理，请稍后再切换。'
+    return
+  }
   goodsView.value = 'all'
 }
 
@@ -1050,7 +1125,7 @@ function onHeaderAction(event) {
   if (event.detail === 'source-new') openCreate()
   if (event.detail === 'source-refresh' && !mutationBusy.value) {
     loadSources()
-    refreshSelectedGoods()
+    if (selected.value?.id) refreshSelectedGoods()
   }
 }
 
@@ -1068,6 +1143,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .source-page {
+  --source-text: #101828;
+  --source-muted: #64748b;
+  --source-line: #e5eaf0;
+  --source-primary: #1d4ed8;
+  --source-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
   gap: 16px;
   min-width: 0;
@@ -1079,7 +1159,7 @@ onBeforeUnmount(() => {
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe8e4;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(246, 248, 252, .98) 48%, rgba(255, 250, 245, .94)),
     #fff;
@@ -1156,7 +1236,7 @@ onBeforeUnmount(() => {
   align-content: center;
   padding: 14px;
   border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -1172,6 +1252,14 @@ onBeforeUnmount(() => {
 .source-command-panel-head strong {
   color: #101828;
   font-size: 13px;
+}
+
+.source-action-hint {
+  min-height: 18px;
+  margin: 0;
+  color: var(--source-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .source-command-buttons {
@@ -1193,7 +1281,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 8px;
   border: 1px solid #e5eaf0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
   overflow: hidden;
@@ -1211,7 +1299,7 @@ onBeforeUnmount(() => {
 .source-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1246,7 +1334,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   padding: 16px;
   border: 1px solid #e5eaf0;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
@@ -1288,6 +1376,10 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.source-editor-actions {
+  justify-content: start;
+}
+
 .source-toolbar {
   display: flex;
   align-items: center;
@@ -1298,6 +1390,34 @@ onBeforeUnmount(() => {
 
 .source-toolbar .input {
   max-width: 320px;
+}
+
+.source-search-input {
+  max-width: 260px;
+}
+
+.source-timing-select {
+  max-width: 200px;
+}
+
+.source-context-hint {
+  margin-bottom: 12px;
+}
+
+.source-v9-shell .link {
+  transition:
+    color 150ms var(--source-ease),
+    opacity 150ms var(--source-ease),
+    transform 150ms var(--source-ease);
+}
+
+.source-v9-shell .link:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.source-v9-shell .link:disabled {
+  cursor: not-allowed;
+  opacity: .45;
 }
 
 .content-preview {
@@ -1321,7 +1441,7 @@ onBeforeUnmount(() => {
 .goods-thumb {
   width: 48px;
   height: 48px;
-  border-radius: 10px;
+  border-radius: 8px;
   object-fit: cover;
   background: #eef2ff;
   flex-shrink: 0;
@@ -1373,7 +1493,7 @@ onBeforeUnmount(() => {
 .summary-item {
   padding: 14px 16px;
   border: 1px solid #e7ecf3;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8fafc;
 }
 
@@ -1398,11 +1518,24 @@ onBeforeUnmount(() => {
   margin: 0 0 10px;
   padding: 10px 12px;
   border: 1px solid #fde68a;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fffbeb;
   color: #b45309;
   font-size: 12px;
   line-height: 1.6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .source-panel,
+  .source-metric-card {
+    transition: border-color 180ms var(--source-ease), box-shadow 180ms var(--source-ease);
+  }
+
+  .source-panel:hover,
+  .source-metric-card:hover {
+    border-color: rgba(29, 78, 216, .22);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+  }
 }
 
 /* ───── 移动端适配 ───── */
@@ -1414,7 +1547,7 @@ onBeforeUnmount(() => {
   .source-command-center,
   .source-panel {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .source-command-main h2 {
