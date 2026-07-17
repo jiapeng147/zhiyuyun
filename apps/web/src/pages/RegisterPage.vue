@@ -4,7 +4,7 @@
     title-lead="开通智鱼云"
     title-accent="开启多账号"
     title-tail="商用运营"
-    description="邮箱验证码开通账户，开通即赠免费版套餐。"
+    description="邮箱验证码开通账户，开通即赠基础体验套餐。"
     legal-description="该页面用于说明智鱼云注册、身份验证与账号安全相关规则。"
     @navigate="emit('navigate', $event)"
   >

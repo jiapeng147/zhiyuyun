@@ -517,7 +517,7 @@ textarea {
   flex-wrap: wrap !important;
 }
 
-/* Naive primitives and active controls */
+/* Platform primitives and active controls */
 .zy-shell-card,
 .table-wrap,
 .xy-modal,

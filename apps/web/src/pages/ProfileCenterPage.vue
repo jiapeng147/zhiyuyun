@@ -356,7 +356,7 @@ let noticeTimer = null
 
 const stats = computed(() => overview.stats || {})
 const planName = computed(() => '商业运营版')
-const planBadge = computed(() => '商业版')
+const planBadge = computed(() => '运营套餐')
 const menuActiveKey = computed(() => {
   if (activeTab.value === 'password') return 'security'
   return activeTab.value

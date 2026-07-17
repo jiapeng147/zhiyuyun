@@ -42,7 +42,7 @@
         </div>
 
         <div class="field-grid two">
-          <AdminConfigField
+          <OpsConfigField
             label="模型供应商"
             hint="标记你当前使用的是哪家的向量服务，方便区分 OpenAI、阿里、火山等不同接入。"
             meta="参考填写：openai / dashscope / volcengine。不同供应商的模型名与接口地址可能不一致。"
@@ -50,9 +50,9 @@
             required
           >
             <input v-model="form.embeddingModel.provider" class="config-input" placeholder="openai / dashscope / volcengine" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="模型名称"
             hint="填写实际用于生成向量的模型名，知识库索引和检索阶段都会直接调用它。"
             meta="参考填写：text-embedding-3-small、text-embedding-v3、doubao-embedding。"
@@ -60,9 +60,9 @@
             required
           >
             <input v-model="form.embeddingModel.modelName" class="config-input" placeholder="text-embedding-3-small" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="接口地址"
             hint="仅支持可解析的公网 HTTPS API 根地址；系统会拒绝明文 HTTP、本机、内网、重定向与代理环境。"
             meta="大多数兼容接口以 /v1 结尾。切换到不同主机时必须同时重新输入 API Key，避免已保存密钥外泄。"
@@ -70,9 +70,9 @@
             required
           >
             <input v-model="form.embeddingModel.baseUrl" class="config-input" placeholder="https://api.openai.com/v1" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="API Key"
             hint="保存后不会回显完整 Key；索引构建与检索时会直接使用这项鉴权。"
             meta="修改接口主机时必须重新输入 Key；若导入时报 401/403，请检查 Key 是否过期以及是否属于当前供应商。"
@@ -84,7 +84,7 @@
               :placeholder="config.embeddingModel.apiKeyConfigured ? '已保存，直接输入新值可覆盖' : 'sk-...'"
               autocomplete="off"
             />
-          </AdminConfigField>
+          </OpsConfigField>
         </div>
       </n-card>
 
@@ -130,7 +130,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
 import { NCard } from 'naive-ui'
-import AdminConfigField from '../../components/AdminConfigField.vue'
+import OpsConfigField from '../../components/OpsConfigField.vue'
 import AppButton from '../../components/AppButton.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {

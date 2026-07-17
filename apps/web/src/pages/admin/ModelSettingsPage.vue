@@ -42,7 +42,7 @@
         </div>
 
         <div class="field-grid two">
-          <AdminConfigField
+          <OpsConfigField
             label="模型供应商"
             hint="用于标记你当前接入的是哪家服务，方便后续维护与切换。"
             meta="直接从下拉列表中选择供应商即可，无需手动输入。若列表中没有你使用的供应商，可选择“其他 / 自定义”。"
@@ -60,9 +60,9 @@
               class="config-input custom-provider-input"
               placeholder="输入自定义供应商标识，如 azure"
             />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="模型名称"
             hint="系统默认会按这个名称发起调用，建议填写对外使用的标准模型名。"
             meta="参考填写：gpt-4o-mini。若你使用代理网关，这里通常填写网关要求的模型字段。"
@@ -70,9 +70,9 @@
             required
           >
             <input v-model="form.generalModel.modelName" class="config-input" :placeholder="config.generalModel.modelName || 'gpt-4o-mini'" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="接口地址"
             hint="仅支持可解析的公网 HTTPS OpenAI 兼容根地址；系统会拒绝明文 HTTP、本机、内网、重定向与代理环境。"
             meta="大多数服务以 /v1 结尾。切换到不同主机时必须同时重新输入 API Key，避免把已保存密钥发送到新地址。"
@@ -80,18 +80,18 @@
             required
           >
             <input v-model="form.generalModel.baseUrl" class="config-input" :placeholder="config.generalModel.baseUrl || 'https://api.openai.com/v1'" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="自定义 Endpoint"
             hint="中转站/网关与官方 OpenAI 路径不一致时使用。填写后系统会直接使用你提供的完整兼容地址。"
             meta="请填写中转站提供的 HTTPS 完整兼容路径，且域名必须是公网可解析地址。留空则按上方接口地址自动拼接标准路径。"
             badge="中转站适配"
           >
             <input v-model="form.generalModel.endpoint" class="config-input" :placeholder="config.generalModel.endpoint || '留空走默认；完整地址以中转站说明为准'" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="API 模式"
             hint="切换对话协议。Chat Completions 是大多数 OpenAI 兼容中转的常见模式；Responses 适合明确标注支持 Responses 的服务。"
             meta="如不确定，请优先选择 Chat Completions；只有服务商明确要求 Responses 模式时再切换。"
@@ -101,9 +101,9 @@
               <option value="chat_completions">Chat Completions（/v1/chat/completions）</option>
               <option value="responses">Responses（/v1/responses）</option>
             </select>
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="API Key"
             hint="用于实际鉴权。保存后不会回显完整内容，只显示已保存状态。"
             meta="Key 轮换时直接覆盖即可；修改接口主机时也必须重新输入。若报 401/403，请检查 Key 与地址是否匹配。"
@@ -115,18 +115,18 @@
               :placeholder="config.generalModel.apiKeyConfigured ? '已保存，直接输入新值可覆盖' : 'sk-...'"
               autocomplete="off"
             />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="请求超时（秒）"
             hint="控制调用等待时长，过短会导致长回复或网络抖动时更容易失败。"
             meta="建议从 15 秒起步；如果模型回复较长或服务在海外，可适当提高到 30~60 秒。"
             badge="稳定性"
           >
             <input v-model.number="form.generalModel.requestTimeout" class="config-input" type="number" min="1" max="300" :placeholder="config.generalModel.requestTimeout ? String(config.generalModel.requestTimeout) : '15'" />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="润色关键词"
             hint="命中这些词时，系统更倾向走润色、改写或优化描述的处理逻辑。"
             meta="支持逗号、顿号或换行分隔，适合填写“润色、改写、优化标题、增强卖点”等策略词。"
@@ -139,9 +139,9 @@
               rows="3"
               :placeholder="config.generalModel.polishKeywords || '使用逗号、顿号或换行分隔'"
             />
-          </AdminConfigField>
+          </OpsConfigField>
 
-          <AdminConfigField
+          <OpsConfigField
             label="禁止润色关键词"
             hint="命中这些词时跳过润色，避免把需要原样输出的内容误改写。"
             meta="适合放退款、投诉、售后等敏感语境，确保客服回复或记录类文本保持原意。"
@@ -154,7 +154,7 @@
               rows="3"
               :placeholder="config.generalModel.polishForbiddenKeywords || '使用逗号、顿号或换行分隔'"
             />
-          </AdminConfigField>
+          </OpsConfigField>
         </div>
       </n-card>
 
@@ -199,7 +199,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { NCard } from 'naive-ui'
-import AdminConfigField from '../../components/AdminConfigField.vue'
+import OpsConfigField from '../../components/OpsConfigField.vue'
 import AppButton from '../../components/AppButton.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {

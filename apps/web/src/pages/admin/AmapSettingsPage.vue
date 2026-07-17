@@ -42,7 +42,7 @@
         </div>
 
         <div class="field-grid">
-          <AdminConfigField
+          <OpsConfigField
             label="AMap API Key"
             hint="直接粘贴高德控制台生成的 Key，保存后系统会自动切换到新的地图授权。"
             meta="不会在页面回显完整 Key；如需轮换，直接覆盖保存即可，无需重启服务。"
@@ -54,7 +54,7 @@
               :placeholder="config.amapApiKeyConfigured ? '已保存，直接输入新值可覆盖' : '请输入高德地图 API Key'"
               autocomplete="off"
             />
-          </AdminConfigField>
+          </OpsConfigField>
         </div>
 
         <div class="quick-links">
@@ -116,7 +116,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
 import { NCard } from 'naive-ui'
-import AdminConfigField from '../../components/AdminConfigField.vue'
+import OpsConfigField from '../../components/OpsConfigField.vue'
 import AppButton from '../../components/AppButton.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
