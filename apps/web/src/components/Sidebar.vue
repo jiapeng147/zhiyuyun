@@ -8,7 +8,7 @@
       <span class="naive-admin-logo-mark">ZY</span>
       <span v-if="!collapsed" class="naive-admin-logo-text">
         <strong>智鱼云</strong>
-        <small>Naive Admin</small>
+        <small>运营工作台</small>
       </span>
     </button>
 

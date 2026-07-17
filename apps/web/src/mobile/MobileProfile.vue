@@ -154,7 +154,7 @@ const overviewError = ref('')
 
 const displayName = computed(() => overview.value.nickname || overview.value.username || props.user?.username || getCachedUsername() || '管理员')
 
-const planName = computed(() => '开源自托管版')
+const planName = computed(() => '商业运营版')
 
 const stats = computed(() => overview.value.stats || {})
 

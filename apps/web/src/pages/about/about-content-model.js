@@ -50,27 +50,27 @@ export function createDefaultAboutContent() {
   const releaseDate = buildDateText()
   return {
     heroTitle: '智鱼云',
-    heroBadgeText: '付费广告商业桥',
-    heroDescription: '开源单管理员版本提供本地核心能力；只有付费广告申请、支付与展示会连接商业版后端。',
-    serviceStatusText: '本地核心能力；付费广告桥按需配置',
+    heroBadgeText: '商业运营服务',
+    heroDescription: '智鱼云提供账号运营、自动化、广告投放与反馈协作能力，帮助团队集中管理闲鱼业务流程。',
+    serviceStatusText: '核心运营能力在线；广告服务按配置启用',
     logs: [
       {
         v: `v${APP_VERSION}`,
         t: releaseDate,
         tone: 'major',
-        d: '当前版本已完成固定账号密码登录、系统配置整合与付费广告商业桥边界；未配置的广告能力会明确显示为不可用。',
+        d: '当前版本已完成账号登录、系统配置整合与广告投放服务接入；未配置的广告能力会明确显示为不可用。',
         sections: [
-          { t: '登录与账号', d: '保留固定管理员账号密码登录模式，扫码登录仅用于闲鱼店铺授权，避免误连到外部旧环境。' },
+          { t: '登录与账号', d: '使用账号密码登录模式，扫码登录仅用于闲鱼店铺授权，避免误连到外部旧环境。' },
           { t: '系统配置', d: '通用模型、向量模型、RAG 知识库与高德地图配置已统一收敛到系统配置页。' },
-          { t: '广告商业桥', d: '开源版只通过服务端桥接接口处理付费广告申请、支付与展示，不暴露商业版数据库，也不让前端持有 bridge token。' },
+          { t: '广告投放', d: '广告套餐、申请、支付与展示均通过服务端统一处理，浏览器不会暴露敏感令牌。' },
         ],
-        tags: ['固定账号登录', '系统配置整合', '付费广告桥', '广告合作'],
+        tags: ['账号登录', '系统配置整合', '广告投放', '客户反馈'],
       },
     ],
     supports: [
       {
         label: '反馈建议',
-        desc: '提交内容仅保存在当前部署；是否有维护人员处理取决于部署方。',
+        desc: '提交内容进入反馈队列，便于维护团队统一跟进处理。',
         icon: 'aboutSupportFeedback',
         tone: 'violet',
         actionType: 'route',
@@ -79,7 +79,7 @@ export function createDefaultAboutContent() {
       },
       {
         label: '广告合作',
-        desc: '仅在真实付费广告桥接通后查看套餐、提交申请并支付；未配置时入口会明确禁用操作。',
+        desc: '查看广告套餐、提交投放申请并完成支付；未配置时入口会明确禁用操作。',
         icon: 'aboutSupportWeb',
         tone: 'blue',
         actionType: 'route',
@@ -131,7 +131,7 @@ export function createDefaultAboutContent() {
     links: [
       { label: '用户协议', icon: 'aboutShield', actionText: '查看', actionType: 'legal', actionValue: 'terms' },
       { label: '隐私政策', icon: 'aboutEye', actionText: '查看', actionType: 'legal', actionValue: 'privacy' },
-      { label: '版本说明', icon: 'refresh', actionText: '查看', actionType: 'toast', actionValue: `当前版本 v${APP_VERSION} 已包含固定账号登录、系统配置整合与付费广告商业桥。` },
+      { label: '版本说明', icon: 'refresh', actionText: '查看', actionType: 'toast', actionValue: `当前版本 v${APP_VERSION} 已包含账号登录、系统配置整合与广告投放服务。` },
       { label: '导出诊断日志', icon: 'download', actionText: '导出', actionType: 'download', actionValue: 'diagnostics' },
     ],
     legalDocs: {

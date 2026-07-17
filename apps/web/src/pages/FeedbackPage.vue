@@ -2,10 +2,10 @@
   <div class="feedback-page">
     <div v-if="notice.text" :class="['global-notice', notice.type]">{{ notice.text }}</div>
     <div v-if="feedbackStorageMode === 'bridge'" class="global-notice info">
-      反馈将同步发送到商业版后端，由维护团队统一查看和处理。
+      反馈将进入支持队列，由维护团队统一查看和处理。
     </div>
     <div v-else-if="feedbackStorageMode === 'local'" class="global-notice warn">
-      当前未配置商业版桥接，反馈仅保存在本地数据库，不会发送到商业版后端；请由部署管理员在本页查看和处理。
+      当前反馈将保存在本系统内，请由平台管理员在本页查看和处理。
     </div>
     <div v-else-if="feedbackStorageMode === 'unknown'" class="global-notice warn">
       当前无法读取反馈记录，但反馈仍只会保存在本地部署，不会转交任何外部服务。
@@ -15,7 +15,7 @@
       <div class="fbk-hero-copy">
         <span class="fbk-hero-pill">Feedback Center</span>
         <h2>反馈建议</h2>
-        <p>集中记录 Bug、功能建议与流程改进想法，反馈将同步至商业版后端由维护团队处理。</p>
+        <p>集中记录 Bug、功能建议与流程改进想法，反馈将进入支持队列由维护团队处理。</p>
 
         <div class="fbk-hero-actions">
           <button type="button" class="fbk-btn-primary" @click="openSubmitModal">
@@ -51,7 +51,7 @@
           >
             <small>待处理</small>
             <strong>{{ statsMetric(stats.open) }}</strong>
-            <span>等待部署管理员处理</span>
+            <span>等待平台管理员处理</span>
           </button>
           <button
             type="button"
@@ -505,14 +505,14 @@ const activeStatusLabel = computed(() => {
   return statusFilterOptions.find((item) => item.value === filter.status)?.label || '全部'
 })
 const storageModeTitle = computed(() => {
-  if (feedbackStorageMode.value === 'bridge') return '当前为商业版桥接模式'
+  if (feedbackStorageMode.value === 'bridge') return '当前为团队协作模式'
   if (feedbackStorageMode.value === 'unknown') return '存储模式未知'
   return '当前为本地记录模式'
 })
 const storageModeDescription = computed(() => {
-  if (feedbackStorageMode.value === 'bridge') return '反馈将同步发送到商业版后端，由维护团队统一查看和处理。'
+  if (feedbackStorageMode.value === 'bridge') return '反馈将进入支持队列，由维护团队统一查看和处理。'
   if (feedbackStorageMode.value === 'unknown') return '当前无法确认反馈存储模式，请稍后重试。'
-  return '本地记录需要部署管理员主动查看和处理，不会发送到商业版后端。'
+  return '当前记录由平台管理员在本系统内查看和处理。'
 })
 
 function statsMetric(value) {

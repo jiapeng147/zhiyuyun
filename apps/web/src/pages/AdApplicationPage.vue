@@ -23,15 +23,15 @@
     <section class="ads-hero">
       <div class="ads-hero-copy">
         <span class="ads-hero-badge">首页广告合作</span>
-        <h2>广告申请与支付以真实商业服务为准</h2>
+        <h2>广告申请与支付以真实服务为准</h2>
         <p>
-          仅在商业桥已配置并返回真实套餐与支付渠道后，才可提交申请或创建支付订单。
-          开源端不会生成占位套餐，也不会在商业服务不可用时把申请保存在本地。
+          仅在广告服务已配置并返回真实套餐与支付渠道后，才可提交申请或创建支付订单。
+          系统不会生成临时套餐，也不会在服务不可用时把申请保存在本地。
         </p>
         <div class="ads-hero-points">
           <span>套餐与价格来自商业服务</span>
           <span>支付状态以商业服务回执为准</span>
-          <span>审核与上架时效不由开源端承诺</span>
+          <span>审核与上架时效以服务端结果为准</span>
         </div>
       </div>
       <div class="ads-hero-side">
@@ -50,14 +50,14 @@
       <div class="ads-main">
         <n-card class="ads-section ads-v4-card" :bordered="false">
           <template #header>广告档位</template>
-          <template #header-extra><span class="ads-section-desc">仅展示商业服务实时返回的套餐、价格与状态。</span></template>
+          <template #header-extra><span class="ads-section-desc">仅展示广告服务实时返回的套餐、价格与状态。</span></template>
           <div v-if="loading.plans" class="ads-state">正在加载广告档位...</div>
           <EmptyState
             v-else-if="!plans.length"
             variant="dev"
             icon="📦"
-            :title="commercialState.available === false ? '广告商业服务未配置' : '暂未返回可用广告档位'"
-            :description="commercialState.available === false ? '当前不展示占位套餐，提交与支付操作已禁用。' : '请由管理员检查商业服务中的套餐配置。'"
+            :title="commercialState.available === false ? '广告服务未配置' : '暂未返回可用广告档位'"
+            :description="commercialState.available === false ? '当前不展示临时套餐，提交与支付操作已禁用。' : '请由平台管理员检查广告服务中的套餐配置。'"
           />
           <div v-else class="plan-grid">
             <article
@@ -74,7 +74,7 @@
                 <span v-if="plan.recommended" class="plan-tag">推荐</span>
               </div>
               <strong class="plan-price">{{ formatPlanPrice(plan) }}</strong>
-              <p class="plan-desc">{{ plan.description || '请在商业版后台补充套餐说明。' }}</p>
+              <p class="plan-desc">{{ plan.description || '请在管理端补充套餐说明。' }}</p>
               <ul class="plan-benefits">
                 <li v-for="benefit in plan.benefits || []" :key="benefit">{{ benefit }}</li>
               </ul>
@@ -151,7 +151,7 @@
             <div v-if="isCarouselMode" class="upload-block">
               <div class="upload-head">
                 <span>轮播图素材</span>
-                <small>建议 1600 × 600，提交后商业版后台可继续调整。</small>
+                <small>建议 1600 × 600，提交后可在管理端继续调整。</small>
               </div>
               <div class="upload-grid">
                 <button
@@ -172,7 +172,7 @@
                   </template>
                 </button>
                 <div class="upload-meta">
-                  <p>素材仅用于提交给已配置的商业服务；是否审核或展示以商业后台状态为准。</p>
+                  <p>素材仅用于提交给已配置的广告服务；是否审核或展示以服务端状态为准。</p>
                   <button
                     v-if="form.creativeImageUrl"
                     type="button"
@@ -209,7 +209,7 @@
             <div class="payment-method-box">
               <div class="payment-method-head">
                 <span>支付方式</span>
-                <small v-if="loading.methods">正在加载商业版支付配置...</small>
+                <small v-if="loading.methods">正在加载支付配置...</small>
                 <small v-else-if="paymentState.available === false">{{ paymentState.message }}</small>
                 <small v-else-if="!paymentMethods.length">当前还没有可用支付方式</small>
               </div>
@@ -450,8 +450,8 @@
         <n-card class="ads-section ads-v4-card" :bordered="false">
           <template #header>投放说明</template>
           <ol class="ads-steps">
-            <li>部署管理员需先配置商业桥，并由商业服务提供真实套餐与支付方式。</li>
-            <li>商业服务未配置时，开源端不会提交、保存申请或创建支付订单。</li>
+            <li>平台管理员需先配置广告服务，并由服务端提供真实套餐与支付方式。</li>
+            <li>广告服务未配置时，系统不会提交、保存申请或创建支付订单。</li>
             <li>支付、审核、排期与上下架均以商业服务返回的状态为准。</li>
             <li>历史本地申请记录只读保留，不代表已进入任何审核或投放流程。</li>
           </ol>
@@ -568,7 +568,7 @@ const paymentAttemptBlocksNewIntent = computed(() => (
 const paymentAttemptStatusText = computed(() => ({
   unknown: '支付结果未知，已锁定新意图',
   in_progress: '原支付意图仍在执行',
-  failed: '商业桥明确未执行',
+  failed: '服务端明确未执行',
   conflict: '检测到不同支付意图',
 }[paymentAttempt.status] || '支付操作需要核对'))
 
@@ -1042,7 +1042,7 @@ async function loadPaymentMethods() {
     return true
   } catch (error) {
     if (error?.data?.reason === 'commercial_bridge_payment_idempotency_required') {
-      markPaymentUnavailable(error?.message || '商业桥未证明支持支付订单幂等键，支付已禁用。')
+      markPaymentUnavailable(error?.message || '服务端未证明支持支付订单幂等键，支付已禁用。')
       return true
     }
     markCommercialUnavailable(error, '加载真实支付方式失败')

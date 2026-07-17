@@ -5,10 +5,10 @@
 
     <section class="page-hero system-hero">
       <div class="page-hero-copy">
-        <span class="page-pill">System Overview</span>
+        <span class="page-pill">系统总览</span>
         <h1>系统配置</h1>
         <p>
-          这里是开源版系统的总览页面与站点基础配置入口。高德地图 API Key、通用模型配置、向量模型配置与 RAG 知识库已经拆分为独立导航项，
+          这里是系统总览页面与站点基础配置入口。高德地图 API Key、通用模型配置、向量模型配置与 RAG 知识库已经拆分为独立导航项，
           可在左侧切换至对应页面单独维护。
         </p>
 
@@ -73,21 +73,21 @@
       <n-card class="system-v7-card" :bordered="false">
         <template #header>
           <div class="system-card-head">
-            <h3>商业版桥接状态</h3>
-            <p>开源版通过商业版后端拉取轮播图、文字广告与广告套餐，并提交广告投放申请。桥接令牌、URL 等敏感信息仅在服务端配置，浏览器不可见。</p>
+            <h3>广告服务连接状态</h3>
+            <p>系统通过服务端拉取轮播图、文字广告与广告套餐，并提交广告投放申请。服务令牌、URL 等敏感信息仅在服务端配置，浏览器不可见。</p>
           </div>
         </template>
         <div v-if="!runtimeStatusAvailable" class="bridge-notice">
-          运行状态暂不可用，无法确认商业版桥接状态。点击上方「重新加载」可重试。
+          运行状态暂不可用，无法确认广告服务连接状态。点击上方「重新加载」可重试。
         </div>
         <div v-else class="bridge-grid">
           <div class="bridge-row">
-            <span class="bridge-label">桥接模式</span>
+            <span class="bridge-label">服务模式</span>
             <span
               class="bridge-value"
               :class="{ ok: runtimeStatus.commercialBridgeMode === 'commercial', warn: runtimeStatus.commercialBridgeMode !== 'commercial' }"
             >
-              {{ runtimeStatus.commercialBridgeMode === 'commercial' ? '已对接商业版' : '本地兜底（未对接）' }}
+              {{ runtimeStatus.commercialBridgeMode === 'commercial' ? '已连接广告服务' : '本地模式（未连接）' }}
             </span>
           </div>
           <div class="bridge-row">
@@ -100,7 +100,7 @@
             </span>
           </div>
           <div class="bridge-row">
-            <span class="bridge-label">桥接连通性</span>
+            <span class="bridge-label">服务连通性</span>
             <span
               class="bridge-value"
               :class="{ ok: runtimeStatus.commercialBridgeConnected, warn: !runtimeStatus.commercialBridgeConnected }"
@@ -131,21 +131,21 @@
             <span class="bridge-value">{{ runtimeStatus.commercialBridgeSiteCode || '—' }}</span>
           </div>
           <div class="bridge-row">
-            <span class="bridge-label">商业版前台</span>
+            <span class="bridge-label">用户端地址</span>
             <span class="bridge-value mono">{{ runtimeStatus.commercialFrontendUrl || '—' }}</span>
           </div>
           <div class="bridge-row">
-            <span class="bridge-label">商业版后台</span>
+            <span class="bridge-label">管理端地址</span>
             <span class="bridge-value mono">{{ runtimeStatus.commercialAdminUrl || '—' }}</span>
           </div>
           <div v-if="runtimeStatus.commercialBridgeMessage" class="bridge-row">
-            <span class="bridge-label">桥接消息</span>
+            <span class="bridge-label">服务消息</span>
             <span class="bridge-value">{{ runtimeStatus.commercialBridgeMessage }}</span>
           </div>
         </div>
 
         <div v-if="runtimeStatusAvailable" class="bridge-capabilities">
-          <h4 class="capabilities-title">能力开关（fail-closed，默认全部关闭）</h4>
+          <h4 class="capabilities-title">能力开关</h4>
           <div class="capability-grid">
             <div class="capability-item">
               <span class="capability-name">写入幂等</span>
@@ -179,10 +179,10 @@
             </div>
           </div>
           <p v-if="!allBridgeCapabilitiesEnabled" class="bridge-hint">
-            三个能力开关必须全部开启后，开源版才能完整使用广告展示与投放功能。开关由商业版后端通过契约测试后启用，开源版部署方无法直接修改。
+            三个能力开关必须全部开启后，系统才能完整使用广告展示与投放功能。开关由服务端通过检测后启用，前端页面无法直接修改。
           </p>
           <p v-else class="bridge-hint ok">
-            全部能力已就绪，开源版可正常展示商业版广告并接受用户投放申请。
+            全部能力已就绪，系统可正常展示广告并接受用户投放申请。
           </p>
         </div>
       </n-card>

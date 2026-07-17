@@ -2,7 +2,7 @@
   <div class="m-auto">
     <div class="m-page-header">
       <h1>自动化中心</h1>
-      <p class="m-page-sub">开源版保留自动发货、自动回复、定时任务和发货记录。</p>
+      <p class="m-page-sub">移动端聚合自动发货、自动回复、定时任务和发货记录。</p>
     </div>
 
     <div class="m-summary-card">

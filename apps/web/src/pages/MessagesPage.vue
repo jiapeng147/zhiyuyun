@@ -2,7 +2,7 @@
   <div class="xya-msg-page">
     <n-card class="messages-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="success" :bordered="false">Live Service Desk</n-tag>
+        <n-tag size="small" type="success" :bordered="false">实时接待</n-tag>
         <h2>在线消息工作台</h2>
         <p>聚合买家咨询、AI 接待状态、快捷回复模板和商品上下文，围绕当前账号处理实时会话。</p>
       </div>

@@ -76,7 +76,7 @@
 
               <div class="welcome-text">
                 <h2>欢迎回来，{{ overview.nickname || overview.username || '用户' }} <span class="wave">👋</span></h2>
-                <p>管理账户资料、安全设置和当前部署能力，保障账户安全，提升使用效率。</p>
+                <p>管理账户资料、安全设置和平台运营能力，保障账户安全，提升使用效率。</p>
 
                 <div class="welcome-tags">
                   <span class="chip plan-chip">{{ planName }}</span>
@@ -127,7 +127,7 @@
                   <span class="panel-head-mark gold" aria-hidden="true">
                     <img class="panel-head-icon" src="/xya/profile-center/icons/shield.png" alt="" />
                   </span>
-                  <h3>开源部署能力</h3>
+                  <h3>平台运营能力</h3>
                 </div>
               </div>
 
@@ -192,7 +192,7 @@
           <div class="panel-head">
             <div>
               <h3>账号安全</h3>
-              <p>当前开源版仅保留固定管理员账号和密码登录，安全设置聚焦密码管理。</p>
+              <p>当前账户使用密码登录，安全设置聚焦密码管理与会话保护。</p>
             </div>
             <button type="button" class="app-btn" @click="loadOverview">刷新</button>
           </div>
@@ -355,7 +355,7 @@ const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPasswor
 let noticeTimer = null
 
 const stats = computed(() => overview.stats || {})
-const planName = computed(() => '开源自托管版')
+const planName = computed(() => '商业运营版')
 const planBadge = computed(() => 'SELF-HOSTED')
 const menuActiveKey = computed(() => {
   if (activeTab.value === 'password') return 'security'
