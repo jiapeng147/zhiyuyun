@@ -424,7 +424,7 @@
         </label>
         <label class="field">
           <span>发件邮箱账号</span>
-          <input v-model.trim="email.smtpUser" class="input" placeholder="you@example.com" />
+          <input v-model.trim="email.smtpUser" class="input" placeholder="service@company.com" />
         </label>
         <label class="field">
           <span>授权码 / 密码</span>

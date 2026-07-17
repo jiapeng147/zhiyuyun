@@ -7,7 +7,7 @@
       <div class="page-hero-copy">
         <span class="page-pill">地图配置</span>
         <h1>高德地图</h1>
-        <p>高德地图 API Key 已从系统总览中拆出，单独维护更适合做授权轮换、接口联调与问题排查。</p>
+        <p>高德地图 API Key 已从系统总览中拆出，单独维护更适合做授权轮换、服务校验与异常处理。</p>
 
         <div class="page-actions">
           <AppButton type="primary" :loading="saving" :disabled="!configAvailable" @click="save">保存配置</AppButton>
@@ -67,15 +67,15 @@
             <span>创建 Key 时请选择「Web 服务」</span>
           </div>
           <div class="quick-link">
-            <strong>调试接口</strong>
-            <span>/api/amap/inputtips</span>
+            <strong>服务校验</strong>
+            <span>发布页地址搜索</span>
           </div>
         </div>
       </n-card>
 
       <n-card class="settings-v7-card" :bordered="false">
         <template #header>使用说明</template>
-        <template #header-extra><span class="settings-v7-desc">如果你是第一次配置地图服务，先看下面的 3 条速览，再按步骤完成申请与自检。</span></template>
+        <template #header-extra><span class="settings-v7-desc">如果你是第一次配置地图服务，先看下面的 3 条速览，再按步骤完成申请与校验。</span></template>
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">1</div>
@@ -95,7 +95,7 @@
             <div class="guide-icon">3</div>
             <div>
               <strong>保存后立即验证</strong>
-              <p>保存配置并重新加载后，检查状态是否切换为已配置，再去商品发布页测试联想搜索。</p>
+              <p>保存配置并重新加载后，检查状态是否切换为已配置，再去商品发布页验证联想搜索。</p>
             </div>
           </article>
         </div>
@@ -104,8 +104,8 @@
           <li><strong>申请高德开放平台账号</strong>：访问 <code>https://lbs.amap.com</code>，注册并完成实名认证（个人或企业均可）。</li>
           <li><strong>创建应用</strong>：进入“控制台 → 应用管理 → 我的应用 → 创建新应用”，应用名可填 <code>智鱼云</code>，类型选“Web端（JS API）”。</li>
           <li><strong>获取 Key</strong>：在应用下“添加 Key”，服务平台必须选 <strong>Web 服务</strong>（用于服务端调用 POI 接口）。复制生成的 Key 粘贴到上方输入框。</li>
-          <li><strong>计费说明</strong>：高德地图对个人开发者每日免费提供 5000 次 POI 调用，普通商品发布场景通常远低于配额。</li>
-          <li><strong>调试方法</strong>：保存后点击“重新加载”，确认“地图状态”变为“已配置”。若发布商品页仍无法搜索地址，可检查 <code>/api/amap/inputtips</code> 的响应与报错。</li>
+          <li><strong>计费说明</strong>：高德开放平台会按账号类型和套餐规则提供调用额度，普通商品发布场景通常消耗较低。</li>
+          <li><strong>校验方法</strong>：保存后点击“重新加载”，确认“地图状态”变为“已配置”。若发布商品页仍无法搜索地址，请核对 Key 类型、额度与域名限制。</li>
           <li><strong>接入位置</strong>：发布商品页的地址搜索会读取这里的配置；当前版本没有“常用地址历史”功能。</li>
         </ol>
       </n-card>

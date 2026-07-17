@@ -53,7 +53,7 @@
           </label>
 
           <label class="field">
-            <span>站点 Logo URL（logoUrl）</span>
+            <span>站点 Logo 地址</span>
             <input v-model="form.logoUrl" class="input" placeholder="例如：/static/logo.png" />
           </label>
 
@@ -135,11 +135,11 @@
         <ul class="hint-list">
           <li><strong>站点名称</strong>：显示在浏览器标题栏和登录页，建议保持简短（建议 ≤ 16 个字符）。</li>
           <li><strong>ICP 备案号</strong>：中国大陆服务器必须填写，否则前端底部不显示备案信息。海外服务器可留空。</li>
-          <li><strong>站点 Logo URL</strong>：可填写相对路径（如 <code>/static/logo.png</code>）或绝对 URL（如 <code>https://cdn.example.com/logo.png</code>）。</li>
+          <li><strong>站点 Logo 地址</strong>：可填写站内资源路径或公开可访问的图片地址。</li>
           <li><strong>爬虫服务地址</strong>：该地址会接收账号授权信息，只能由平台服务通过 <code>CRAWLER_BASE_URL</code> 配置并在重启后生效，浏览器页面不可修改。</li>
           <li><strong>高德地图 Key</strong>：用于发布商品页的地址搜索，请到"高德地图"页签配置。</li>
           <li><strong>通用模型 / 向量模型</strong>：分别到"模型配置"和"向量模型"页签配置。</li>
-          <li><strong>RAG 知识库</strong>：到"RAG 知识库"页签管理文档与检索测试。</li>
+          <li><strong>RAG 知识库</strong>：到"RAG 知识库"页签管理文档与检索验证。</li>
         </ul>
       </n-card>
 
@@ -154,7 +154,7 @@
           <strong>{{ knowledgeBaseSummary.available ? knowledgeBaseSummary.total : '—' }}</strong>
           <span>当前知识库数量</span>
           <p v-if="!knowledgeBaseSummary.available" class="global-notice error">知识库概览暂不可用，当前无法确认数量。</p>
-          <p>如需查看文档、切片与检索测试，请前往左侧“RAG 知识库”页签继续操作。</p>
+          <p>如需查看文档、切片与检索验证，请前往左侧“RAG 知识库”页签继续操作。</p>
         </div>
       </n-card>
     </div>
@@ -209,7 +209,7 @@ const summary = computed(() => {
     redisStatus: runtimeStatusAvailable.value ? (runtimeStatus.redisConnected ? '已连接' : '不可用') : '状态未知',
     redisMode: runtimeStatusAvailable.value
       ? (runtimeStatus.redisConnected ? '共享 Redis 正常' : '认证与限流暂不可用')
-      : '运行探测暂不可用'
+      : '运行状态暂不可用'
   }
 })
 

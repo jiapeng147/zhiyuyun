@@ -48,7 +48,7 @@
         <template #op="{ row }">
           <button class="link" @click="openKbDetail(row)">进入</button>
           <button class="link" @click="openEditKb(row)">编辑</button>
-          <button class="link" @click="openSearchKb(row)">检索测试</button>
+          <button class="link" @click="openSearchKb(row)">检索验证</button>
           <button class="link danger-text" @click="removeKb(row)">删除</button>
         </template>
         <template #empty>
@@ -72,11 +72,11 @@
                 <textarea v-model="kbModal.form.description" class="input" rows="3" placeholder="可选"></textarea>
               </div>
               <div class="form-row">
-                <label>Embedding 模型</label>
+                <label>向量模型</label>
                 <input v-model="kbModal.form.embeddingModel" class="input" placeholder="如 text-embedding-3-small" />
               </div>
               <div class="form-row">
-                <label>向量模型 Base URL</label>
+                <label>向量模型接口地址</label>
                 <input v-model="kbModal.form.embeddingBaseUrl" class="input" placeholder="https://api.openai.com/v1" />
                 <small>仅支持可解析的公网 HTTPS；切换主机时需重新输入下方 API Key。</small>
               </div>
@@ -186,7 +186,7 @@
       <div v-if="searchModal.visible" class="modal-mask" @click.self="searchModal.visible = false">
         <section class="xy-modal" style="width:680px">
           <button class="modal-close" @click="searchModal.visible = false"><Icon name="close" /></button>
-          <h2>检索测试 - {{ searchModal.kbName }}</h2>
+          <h2>检索验证 - {{ searchModal.kbName }}</h2>
           <div class="search-box">
             <input v-model="searchModal.query" class="input" placeholder="输入查询文本" @keyup.enter="runSearch" />
             <AppButton type="primary" :loading="searchModal.loading" @click="runSearch">检索</AppButton>

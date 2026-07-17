@@ -36,7 +36,7 @@
           </article>
           <article class="overview-card">
             <span>配置顺序</span>
-            <strong>供应商 → 模型名 → Base URL → API Key</strong>
+            <strong>供应商 → 模型名 → 接口地址 → API Key</strong>
             <p>先保证最基础的可调用链路，再去验证知识库索引、检索和召回质量是否符合预期。</p>
           </article>
         </div>
@@ -45,7 +45,7 @@
           <AdminConfigField
             label="模型供应商"
             hint="标记你当前使用的是哪家的向量服务，方便区分 OpenAI、阿里、火山等不同接入。"
-            meta="常见示例：openai / dashscope / volcengine。不同供应商的模型名与 Base URL 可能不一致。"
+            meta="参考填写：openai / dashscope / volcengine。不同供应商的模型名与接口地址可能不一致。"
             badge="第一步"
             required
           >
@@ -55,7 +55,7 @@
           <AdminConfigField
             label="模型名称"
             hint="填写实际用于生成向量的模型名，知识库索引和检索阶段都会直接调用它。"
-            meta="常见示例：text-embedding-3-small、text-embedding-v3、doubao-embedding。"
+            meta="参考填写：text-embedding-3-small、text-embedding-v3、doubao-embedding。"
             badge="核心参数"
             required
           >
@@ -110,7 +110,7 @@
             <div class="guide-icon">K</div>
             <div>
               <strong>索引失败先查 Key 与地址</strong>
-              <p>导入知识库时报错时，最常见原因是 Key 不匹配、Base URL 错填，或模型名不被当前服务支持。</p>
+              <p>导入知识库时报错时，最常见原因是 Key 不匹配、接口地址错填，或模型名不被当前服务支持。</p>
             </div>
           </article>
         </div>
@@ -119,7 +119,7 @@
           <li>向量模型仅用于生成文本向量，不能替代通用对话模型；聊天、改写和文案生成请到“模型配置”页签。</li>
           <li>常见供应商包括 OpenAI（text-embedding-3-small/large）、阿里 DashScope（text-embedding-v2/v3）以及火山引擎的 embedding 服务。</li>
           <li>如果这里没有正确配置，RAG 检索往往只能退化为低质量的关键词匹配，召回效果会明显下降。</li>
-          <li>Base URL 通常以 <code>/v1</code> 结尾，必须使用公网 HTTPS；当前默认安全策略不允许直接连接本机或内网模型服务。</li>
+          <li>接口地址通常以 <code>/v1</code> 结尾，必须使用公网 HTTPS；当前默认安全策略不允许直接连接本机或内网模型服务。</li>
           <li>API Key 不会完整回显；需要更换时直接覆盖，切换接口主机时也必须重新输入并保存。</li>
         </ul>
       </n-card>

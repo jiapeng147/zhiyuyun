@@ -44,7 +44,7 @@
         <div class="field-grid two">
           <AdminConfigField
             label="模型供应商"
-            hint="用于标记你当前接入的是哪家服务，方便后续联调与排查。"
+            hint="用于标记你当前接入的是哪家服务，方便后续维护与切换。"
             meta="直接从下拉列表中选择供应商即可，无需手动输入。若列表中没有你使用的供应商，可选择“其他 / 自定义”。"
             badge="第一步"
             required
@@ -58,14 +58,14 @@
               v-if="isCustomProvider"
               v-model="customProvider"
               class="config-input custom-provider-input"
-              placeholder="输入自定义供应商标识，例如：azure"
+              placeholder="输入自定义供应商标识，如 azure"
             />
           </AdminConfigField>
 
           <AdminConfigField
             label="模型名称"
             hint="系统默认会按这个名称发起调用，建议填写对外使用的标准模型名。"
-            meta="示例：gpt-4o-mini。若你使用代理网关，这里通常填写网关要求的模型字段。"
+            meta="参考填写：gpt-4o-mini。若你使用代理网关，这里通常填写网关要求的模型字段。"
             badge="核心参数"
             required
           >
@@ -84,17 +84,17 @@
 
           <AdminConfigField
             label="自定义 Endpoint"
-            hint="中转站/网关与官方 OpenAI 路径不一致时使用。填写后将绕过默认的 baseUrl + /chat/completions 拼接逻辑，直接 POST 到你填的完整 URL。"
-            meta="可填 https://example.com/v1/chat/completions 或中转站提供的兼容路径。仅支持 HTTPS，且域名必须是公网可解析地址。留空 = 走上方接口地址的标准 OpenAI 拼接。"
+            hint="中转站/网关与官方 OpenAI 路径不一致时使用。填写后系统会直接使用你提供的完整兼容地址。"
+            meta="请填写中转站提供的 HTTPS 完整兼容路径，且域名必须是公网可解析地址。留空则按上方接口地址自动拼接标准路径。"
             badge="中转站适配"
           >
-            <input v-model="form.generalModel.endpoint" class="config-input" :placeholder="config.generalModel.endpoint || '留空走默认；例如 https://ai.jiapeng.vip/openai/v1/chat/completions'" />
+            <input v-model="form.generalModel.endpoint" class="config-input" :placeholder="config.generalModel.endpoint || '留空走默认；完整地址以中转站说明为准'" />
           </AdminConfigField>
 
           <AdminConfigField
             label="API 模式"
-            hint="切换对话协议。Chat Completions 是大多数 OpenAI 兼容中转的标准接口；Responses 是新版 OpenAI Responses API（中转站明确标注 'Responses 模式' 时选这个）。"
-            meta="选 Responses 后会自动 POST 到 /v1/responses 并按 Responses 协议解析 output_text。"
+            hint="切换对话协议。Chat Completions 是大多数 OpenAI 兼容中转的常见模式；Responses 适合明确标注支持 Responses 的服务。"
+            meta="如不确定，请优先选择 Chat Completions；只有服务商明确要求 Responses 模式时再切换。"
             badge="协议"
           >
             <select v-model="form.generalModel.apiMode" class="config-input config-select">
@@ -160,7 +160,7 @@
 
       <n-card class="settings-v7-card" :bordered="false">
         <template #header>配置建议</template>
-        <template #header-extra><span class="settings-v7-desc">下面这些说明可以帮助你更快判断“应该填什么”，也能减少联调时的来回试错。</span></template>
+        <template #header-extra><span class="settings-v7-desc">下面这些说明可以帮助你更快判断“应该填什么”，也能减少配置时的来回试错。</span></template>
         <div class="guide-grid">
           <article class="guide-card">
             <div class="guide-icon">A</div>
