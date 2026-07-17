@@ -38,7 +38,7 @@
         <template #header>
           <div class="system-card-head">
             <h3>站点基础配置</h3>
-            <p>站点名称、ICP 备案、Logo 与爬虫服务地址，会用于前端展示与后端服务调用。</p>
+            <p>站点名称、ICP 备案、Logo 与爬虫服务地址，会用于页面展示与平台服务调用。</p>
           </div>
         </template>
         <div class="field-grid two">
@@ -64,7 +64,7 @@
               class="input"
               readonly
               aria-readonly="true"
-              title="由服务端 CRAWLER_BASE_URL 配置并在重启后生效"
+              title="由 CRAWLER_BASE_URL 配置并在重启后生效"
             />
           </label>
         </div>
@@ -74,7 +74,7 @@
         <template #header>
           <div class="system-card-head">
             <h3>广告服务运营状态</h3>
-            <p>广告轮播、文字广告、套餐与投放申请由平台服务统一处理。敏感凭证仅在服务端保存，页面只展示业务可用性。</p>
+            <p>广告轮播、文字广告、套餐与投放申请由平台服务统一处理。敏感凭证仅在平台服务保存，页面只展示业务可用性。</p>
           </div>
         </template>
         <div v-if="!runtimeStatusAvailable" class="service-notice">
@@ -117,7 +117,7 @@
             </div>
           </div>
           <p v-if="!allAdCapabilitiesEnabled" class="service-hint">
-            业务保护全部就绪后，系统才会开放完整的广告展示、投放申请与支付能力。相关开关由服务端完成检测后启用。
+            业务保护全部就绪后，系统才会开放完整的广告展示、投放申请与支付能力。相关开关由平台服务完成检测后启用。
           </p>
           <p v-else class="service-hint ok">
             全部能力已就绪，系统可正常展示广告并接受用户投放申请。
@@ -271,7 +271,7 @@ const adServiceCards = computed(() => [
     key: 'access',
     title: '服务接入',
     value: runtimeStatus.commercialBridgeConnected ? '已接入' : (runtimeStatus.commercialBridgeConfigured ? '待恢复' : '未接入'),
-    desc: runtimeStatus.commercialBridgeConnected ? '服务端可正常获取广告业务数据' : '广告套餐、申请和支付保持关闭',
+    desc: runtimeStatus.commercialBridgeConnected ? '平台服务可正常获取广告业务数据' : '广告套餐、申请和支付保持关闭',
     tone: runtimeStatus.commercialBridgeConnected ? 'is-ok' : 'is-warn',
   },
   {

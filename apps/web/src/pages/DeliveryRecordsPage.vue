@@ -313,7 +313,7 @@ async function exportCsv() {
   clearNotice()
   exportLoading.value = true
   const EXPORT_MAX_LIMIT = 2000   // 单次导出最大条数，防止浏览器内存压力
-  const EXPORT_PAGE_SIZE = 100    // 分页拉取每页大小（后端 PageUtils 限制 max=100）
+  const EXPORT_PAGE_SIZE = 100    // 分页拉取每页大小（PageUtils 限制 max=100）
   const totalCount = total.value || 0
   if (totalCount > EXPORT_MAX_LIMIT) {
     error.value = `当前共 ${totalCount} 条记录，超过单次导出上限 ${EXPORT_MAX_LIMIT} 条，请添加筛选条件缩小范围后再导出`

@@ -148,7 +148,7 @@ const detail = ref(null)
 const dataAvailable = ref(null)
 const filters = reactive({ operationType: '', keyword: '' })
 
-// 操作类型枚举映射（后端原始值 -> 中文标签）
+// 操作类型枚举映射（原始值 -> 中文标签）
 const OPERATION_TYPE_MAP = {
   LOGIN: '登录',
   LOGOUT: '退出登录',

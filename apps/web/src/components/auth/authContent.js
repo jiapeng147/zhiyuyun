@@ -55,7 +55,7 @@ export const securityVisualLayers = [
 
 export const loginFeatures = [
   { title: '账号集中管理', desc: '查看账号与连接状态', icon: authIcons.robot },
-  { title: '运营数据概览', desc: '展示后端实际业务数据', icon: authIcons.chart },
+  { title: '运营数据概览', desc: '展示平台实际业务数据', icon: authIcons.chart },
   { title: '自动化能力', desc: '以实际启用模块为准', icon: authIcons.layers },
 ]
 

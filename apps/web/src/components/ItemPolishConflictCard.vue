@@ -3,13 +3,13 @@
     <div class="conflict-head">
       <div>
         <strong>检测到既有擦亮任务</strong>
-        <p>当前请求范围与服务端正在保留的任务范围冲突。</p>
+        <p>当前请求范围与系统保留的任务范围冲突。</p>
       </div>
       <span :class="['conflict-status', `status-${view.status}`]">{{ view.statusLabel }}</span>
     </div>
 
     <dl class="conflict-facts">
-      <div><dt>任务 ID</dt><dd><code>{{ view.taskId || '未返回' }}</code></dd></div>
+      <div><dt>任务编号</dt><dd><code>{{ view.taskId || '未返回' }}</code></dd></div>
       <div><dt>进度</dt><dd>{{ view.progressText }}</dd></div>
       <div><dt>结果摘要</dt><dd>{{ view.message }}</dd></div>
     </dl>

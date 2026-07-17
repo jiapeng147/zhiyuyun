@@ -32,7 +32,7 @@
           <article class="overview-card">
             <span>推荐顺序</span>
             <strong>申请 Key → 选择 Web 服务 → 保存后立即验证</strong>
-            <p>先拿到服务端可用的 Web 服务 Key，再回到此页粘贴保存，避免拿错前端专用类型。</p>
+            <p>先拿到平台服务可用的 Web 服务 Key，再回到此页粘贴保存，避免拿错页面专用类型。</p>
           </article>
           <article class="overview-card">
             <span>影响范围</span>
@@ -88,7 +88,7 @@
             <div class="guide-icon">2</div>
             <div>
               <strong>确认服务平台</strong>
-              <p>创建 Key 时请选择 Web 服务，否则服务端 POI 接口会直接鉴权失败。</p>
+              <p>创建 Key 时请选择 Web 服务，否则 POI 地址搜索会直接鉴权失败。</p>
             </div>
           </article>
           <article class="guide-card">
@@ -103,7 +103,7 @@
         <ol class="hint-list ordered">
           <li><strong>申请高德开放平台账号</strong>：访问 <code>https://lbs.amap.com</code>，注册并完成实名认证（个人或企业均可）。</li>
           <li><strong>创建应用</strong>：进入“控制台 → 应用管理 → 我的应用 → 创建新应用”，应用名可填 <code>智鱼云</code>，类型选“Web端（JS API）”。</li>
-          <li><strong>获取 Key</strong>：在应用下“添加 Key”，服务平台必须选 <strong>Web 服务</strong>（用于服务端调用 POI 接口）。复制生成的 Key 粘贴到上方输入框。</li>
+          <li><strong>获取 Key</strong>：在应用下“添加 Key”，服务平台必须选 <strong>Web 服务</strong>（用于平台服务调用 POI 能力）。复制生成的 Key 粘贴到上方输入框。</li>
           <li><strong>计费说明</strong>：高德开放平台会按账号类型和套餐规则提供调用额度，普通商品发布场景通常消耗较低。</li>
           <li><strong>校验方法</strong>：保存后点击“重新加载”，确认“地图状态”变为“已配置”。若发布商品页仍无法搜索地址，请核对 Key 类型、额度与域名限制。</li>
           <li><strong>接入位置</strong>：发布商品页的地址搜索会读取这里的配置；当前版本没有“常用地址历史”功能。</li>

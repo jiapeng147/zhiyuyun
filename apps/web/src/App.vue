@@ -5,7 +5,7 @@
   <div v-if="booting" class="boot-screen">
     <div class="boot-card">
       <img src="/xya/brand/zhiyuyun-mark.svg?v=20260716-ui4" class="boot-brand-icon" alt="智鱼云" />
-      <b>正在连接后端服务...</b>
+      <b>正在连接平台服务...</b>
       <span>{{ bootMessage }}</span>
     </div>
   </div>
@@ -633,7 +633,7 @@ async function boot() {
   } catch (e) {
     recordClientError(e, { source: 'app_boot' })
     active.value = 'login'
-    showNotice(e.message || '后端服务连接失败，请确认服务已启动。', 'error')
+    showNotice(e.message || '平台服务连接失败，请确认服务已启动。', 'error')
   } finally {
     booting.value = false
   }

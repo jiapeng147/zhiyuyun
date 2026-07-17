@@ -86,7 +86,7 @@
         <div v-if="ordersRefreshing" class="refresh-status" role="status" aria-live="polite">
           正在刷新订单列表，现有数据仍可查看。
         </div>
-        <EmptyState v-if="ordersLoading && ordersAvailable !== true" icon="⏳" title="订单加载中" description="正在读取后端订单记录。" />
+        <EmptyState v-if="ordersLoading && ordersAvailable !== true" icon="⏳" title="订单加载中" description="正在读取平台订单记录。" />
         <EmptyState v-else-if="ordersAvailable === false" icon="⚠️" title="订单列表暂不可用" description="当前无法确认是否存在订单，不会把查询失败显示为空列表。">
           <template #actions><AppButton @click="loadOrders">重新加载</AppButton></template>
         </EmptyState>
@@ -364,7 +364,7 @@ const orderStatCards = computed(() => [
     key: 'total',
     title: '订单总量',
     value: total.value,
-    change: `${selectedAccountName.value} · 后端分页总数`,
+    change: `${selectedAccountName.value} · 平台分页总数`,
     symbol: '总',
     tone: 'tone-blue'
   },

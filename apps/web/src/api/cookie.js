@@ -10,11 +10,11 @@ import request from '../utils/request.js'
 
 /**
  * 更新账号 Cookie（手动输入）
- * 对应后端 POST /api/xianyu/accounts/{id}/cookie
+ * 对应 POST /api/xianyu/accounts/{id}/cookie
  *
  * @param {number} accountId - 闲鱼账号 ID
  * @param {string} cookieText - 原始 Cookie 字符串
- * @param {object} [extracted] - 前端预提取的字段（可选，后端也会重新提取）
+ * @param {object} [extracted] - 页面预提取的字段（可选，平台服务也会重新提取）
  * @param {string} [extracted.unb] - 提取的 unb
  * @param {string} [extracted.mH5Tk] - 提取的 _m_h5_tk
  * @returns {Promise}
@@ -33,7 +33,7 @@ export function updateCookie(accountId, cookieText, extracted) {
 
 /**
  * 手动触发 Cookie 刷新（调用 hasLogin 保活）
- * 对应后端 POST /api/websocket/refreshCookie
+ * 对应 POST /api/websocket/refreshCookie
  *
  * @param {number} accountId - 闲鱼账号 ID
  * @returns {Promise}
@@ -48,7 +48,7 @@ export function refreshCookie(accountId) {
 
 /**
  * 检查账号登录状态
- * 对应后端 POST /api/websocket/checkLogin
+ * 对应 POST /api/websocket/checkLogin
  *
  * @param {number} accountId - 闲鱼账号 ID
  * @returns {Promise}

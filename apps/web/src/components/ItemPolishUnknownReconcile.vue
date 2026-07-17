@@ -54,8 +54,8 @@ async function confirmOutcome(result, outcome) {
   const confirmed = await confirmAction({
     title: polished ? '确认该商品今天已擦亮？' : '确认该商品今天未擦亮？',
     description: polished
-      ? `请确认你已在闲鱼 App 核对${target}。系统只记录人工核对结论，不会再次调用闲鱼、不会外呼，也不会生成新幂等键或处理其他商品。`
-      : `请确认你已在闲鱼 App 核对${target}。为防迟到请求重复操作，本日不再自动重试，次日可新建任务；系统只记录人工核对结论，不会再次调用闲鱼或复用旧幂等键。`,
+      ? `请确认你已在闲鱼 App 核对${target}。系统只记录人工核对结论，不会再次向闲鱼提交操作，也不会处理其他商品。`
+      : `请确认你已在闲鱼 App 核对${target}。为防迟到请求重复操作，本日不再自动重试，次日可新建任务；系统只记录人工核对结论，不会再次向闲鱼提交操作或复用旧安全凭证。`,
     confirmText: polished ? '确认记录为已擦亮' : '确认未擦亮并锁定本日重试',
   })
   if (!confirmed) return

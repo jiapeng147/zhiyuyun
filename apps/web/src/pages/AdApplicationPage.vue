@@ -17,7 +17,7 @@
     </div>
     <div v-if="notice.text" :class="['global-notice', notice.type]">{{ notice.text }}</div>
     <div v-if="applicationIntent.pending" class="global-notice warn" role="status">
-      上次广告申请结果尚未确认。当前页面已锁定原申请内容；再次提交只会复用同一持久化幂等键，禁止创建新意图。
+      上次广告申请结果尚未确认。当前页面已锁定原申请内容；再次提交只会复用同一安全凭证，禁止创建新任务。
     </div>
 
     <section class="ads-hero">
@@ -31,7 +31,7 @@
         <div class="ads-hero-points">
           <span>套餐与价格来自商业服务</span>
           <span>支付状态以商业服务回执为准</span>
-          <span>审核与上架时效以服务端结果为准</span>
+          <span>审核与上架时效以商业服务结果为准</span>
         </div>
       </div>
       <div class="ads-hero-side">
@@ -172,7 +172,7 @@
                   </template>
                 </button>
                 <div class="upload-meta">
-                  <p>素材仅用于提交给已配置的广告服务；是否审核或展示以服务端状态为准。</p>
+                  <p>素材仅用于提交给已配置的广告服务；是否审核或展示以商业服务状态为准。</p>
                   <button
                     v-if="form.creativeImageUrl"
                     type="button"
@@ -240,7 +240,7 @@
                 class="ads-btn ads-btn-primary"
                 :disabled="loading.submit || commercialState.available !== true || paymentState.available !== true || !paymentMethods.length || paymentAttemptBlocksNewIntent"
               >
-                {{ loading.submit ? '正在提交...' : (applicationIntent.pending ? '复用原申请意图重试' : '提交至商业服务') }}
+                {{ loading.submit ? '正在提交...' : (applicationIntent.pending ? '复用原申请任务重试' : '提交至商业服务') }}
               </button>
             </div>
           </form>
@@ -278,8 +278,8 @@
             </dl>
             <ul>
               <li>请勿更换支付方式，也不要清除本网站存储数据。</li>
-              <li v-if="paymentAttempt.replaySafe">恢复时只复用当前保存的同一支付意图键，不会生成新键。</li>
-              <li v-else>当前浏览器没有可安全恢复的原始键，请回到原标签页或先在商业服务人工核对。</li>
+              <li v-if="paymentAttempt.replaySafe">恢复时只复用当前保存的同一支付安全凭证，不会生成新凭证。</li>
+              <li v-else>当前浏览器没有可安全恢复的原始凭证，请回到原标签页或先在商业服务人工核对。</li>
             </ul>
             <div class="payment-attempt-actions">
               <button
@@ -289,7 +289,7 @@
                 :disabled="currentPayment.opening"
                 @click="recoverPaymentAttempt"
               >
-                {{ currentPayment.opening ? '恢复中...' : '复用原支付意图检查 / 恢复' }}
+                {{ currentPayment.opening ? '恢复中...' : '恢复原支付任务' }}
               </button>
               <button
                 v-if="paymentAttempt.orderNo"
@@ -450,7 +450,7 @@
         <n-card class="ads-section ads-v4-card" :bordered="false">
           <template #header>投放说明</template>
           <ol class="ads-steps">
-            <li>平台负责人需先配置广告服务，并由服务端提供真实套餐与支付方式。</li>
+            <li>平台负责人需先配置广告服务，并由商业服务提供真实套餐与支付方式。</li>
             <li>广告服务未配置时，系统不会提交、保存申请或创建支付订单。</li>
             <li>支付、审核、排期与上下架均以商业服务返回的状态为准。</li>
             <li>历史系统申请记录只读保留，不代表已进入任何审核或投放流程。</li>
@@ -566,10 +566,10 @@ const paymentAttemptBlocksNewIntent = computed(() => (
   )
 ))
 const paymentAttemptStatusText = computed(() => ({
-  unknown: '支付结果未知，已锁定新意图',
-  in_progress: '原支付意图仍在执行',
-  failed: '服务端明确未执行',
-  conflict: '检测到不同支付意图',
+  unknown: '支付结果未知，已锁定新任务',
+  in_progress: '原支付任务仍在执行',
+  failed: '商业服务明确未执行',
+  conflict: '检测到不同支付任务',
 }[paymentAttempt.status] || '支付操作需要核对'))
 
 function unwrapData(payload) {
@@ -693,12 +693,12 @@ function paymentIntentKey(applicationId, paymentMethod) {
     const randomPart = window.crypto?.randomUUID?.()
       || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
     const key = `ad-payment:${applicationId}:${randomPart}`
-    if (!PAYMENT_IDEMPOTENCY_PATTERN.test(key)) throw new Error('支付意图键生成失败')
+    if (!PAYMENT_IDEMPOTENCY_PATTERN.test(key)) throw new Error('支付安全凭证生成失败')
     window.localStorage.setItem(storageKey, key)
-    if (window.localStorage.getItem(storageKey) !== key) throw new Error('支付意图键校验失败')
+    if (window.localStorage.getItem(storageKey) !== key) throw new Error('支付安全凭证校验失败')
     return key
   } catch {
-    markPaymentUnavailable('浏览器无法安全保存支付意图，支付已禁用；请恢复站点存储权限后重试。')
+    markPaymentUnavailable('浏览器无法安全保存支付任务，支付已禁用；请恢复站点存储权限后重试。')
     return ''
   }
 }
@@ -741,8 +741,8 @@ function rememberPaymentAttempt(error, status) {
   const orderNo = String(error?.data?.orderNo || '').trim()
   const isClose = operation === 'close'
   const defaultMessage = isClose
-    ? '关闭订单结果未知，请先查询商业服务核对；重复关闭只会复用同一稳定幂等键。'
-    : '支付订单创建结果需要核对；系统已锁定不同支付意图。'
+    ? '关闭订单结果未知，请先查询商业服务核对；重复关闭只会复用同一稳定安全凭证。'
+    : '支付订单创建结果需要核对；系统已锁定不同支付任务。'
   Object.assign(paymentAttempt, {
     visible: true,
     status,
@@ -766,8 +766,8 @@ function handlePaymentAttemptFailure(error, operationHint = 'create') {
     normalizedError = {
       ...error,
       message: isClose
-        ? '关闭请求传输中断，结果未知；请先查询核对，重复关闭只会复用同一稳定幂等键。'
-        : '支付订单请求传输中断，结果未知；请勿更换方式或清除数据，并复用原支付意图恢复。',
+        ? '关闭请求传输中断，结果未知；请先查询核对，重复关闭只会复用同一稳定安全凭证。'
+        : '支付订单请求传输中断，结果未知；请勿更换方式或清除数据，并恢复原支付任务。',
       data: {
         ...(error?.data || {}),
         status: 'unknown',
@@ -798,13 +798,13 @@ function handlePaymentAttemptFailure(error, operationHint = 'create') {
   }
   if (attemptStatus === 'conflict') {
     rememberPaymentAttempt(error, attemptStatus)
-    showNotice(error?.message || '同一广告申请已有支付意图，请核对原订单后继续。', 'error')
+    showNotice(error?.message || '同一广告申请已有支付任务，请核对原订单后继续。', 'error')
     return true
   }
   if (attemptStatus === 'closed' || attemptStatus === 'expired') {
     clearPaymentIntent(currentPayment.application?.id, currentPayment.paymentMethod)
     clearPaymentAttempt()
-    showNotice('原支付订单已明确关闭或过期，已释放旧意图；可再次创建新订单。', 'info')
+    showNotice('原支付订单已明确关闭或过期，已释放旧任务；可再次创建新订单。', 'info')
     return true
   }
   return false
@@ -883,7 +883,7 @@ function paymentMethodDesc(method) {
 
 function resetForm() {
   if (applicationIntent.pending) {
-    showNotice('原广告申请结果尚未确认，禁止清空或更换申请意图。', 'warn')
+    showNotice('原广告申请结果尚未确认，禁止清空或更换申请任务。', 'warn')
     return
   }
   Object.assign(form, createDefaultAdApplicationForm())
@@ -922,7 +922,7 @@ function persistApplicationIntent(payload) {
         window.localStorage.removeItem(APPLICATION_INTENT_STORAGE_KEY)
       } else {
         if (JSON.stringify(existing.payload) !== normalized) {
-          showNotice('已有结果未确认的广告申请；禁止更换内容或生成新幂等键。', 'error')
+          showNotice('已有结果未确认的广告申请；禁止更换内容或生成新的安全凭证。', 'error')
           return ''
         }
         applicationIntent.pending = true
@@ -934,19 +934,19 @@ function persistApplicationIntent(payload) {
     const randomPart = window.crypto?.randomUUID?.()
       || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
     const key = `ad-application:${randomPart}`
-    if (!PAYMENT_IDEMPOTENCY_PATTERN.test(key)) throw new Error('申请意图键生成失败')
+    if (!PAYMENT_IDEMPOTENCY_PATTERN.test(key)) throw new Error('申请安全凭证生成失败')
     const record = { key, payload, status: 'pending' }
     window.localStorage.setItem(APPLICATION_INTENT_STORAGE_KEY, JSON.stringify(record))
     const confirmed = JSON.parse(window.localStorage.getItem(APPLICATION_INTENT_STORAGE_KEY) || 'null')
     if (confirmed?.key !== key || JSON.stringify(confirmed?.payload) !== normalized) {
-      throw new Error('申请意图键校验失败')
+      throw new Error('申请安全凭证校验失败')
     }
     applicationIntent.pending = true
     applicationIntent.key = key
     applicationIntent.payload = payload
     return key
   } catch {
-    showNotice('浏览器无法安全保存广告申请意图，提交已禁用；请恢复站点存储权限后重试。', 'error')
+    showNotice('浏览器无法安全保存广告申请任务，提交已禁用；请恢复站点存储权限后重试。', 'error')
     return ''
   }
 }
@@ -1042,7 +1042,7 @@ async function loadPaymentMethods() {
     return true
   } catch (error) {
     if (error?.data?.reason === 'commercial_bridge_payment_idempotency_required') {
-      markPaymentUnavailable(error?.message || '服务端未证明支持支付订单幂等键，支付已禁用。')
+      markPaymentUnavailable(error?.message || '商业服务未确认支付安全能力，支付已禁用。')
       return true
     }
     markCommercialUnavailable(error, '加载真实支付方式失败')
@@ -1130,7 +1130,7 @@ async function openPaymentForApplication(application, paymentMethod) {
     const sameIntent = normalizedApplicationId === paymentAttempt.applicationId
       && normalizedPaymentMethod === paymentAttempt.paymentMethod
     if (!sameIntent || !paymentAttempt.replaySafe) {
-      showNotice('当前支付意图仍待核对，已禁止更换申请或支付方式；请使用安全面板恢复或人工核对。', 'error')
+      showNotice('当前支付任务仍待核对，已禁止更换申请或支付方式；请使用安全面板恢复或人工核对。', 'error')
       return
     }
   }
@@ -1148,14 +1148,14 @@ async function openPaymentForApplication(application, paymentMethod) {
     const incoming = normalizePaymentOrder(response)
     const orderNo = String(incoming.orderNo || '').trim()
     if (!orderNo) {
-      currentPayment.pollError = '商业服务未返回可核对的订单号，已保留支付意图并停止轮询。'
+      currentPayment.pollError = '商业服务未返回可核对的订单号，已保留支付任务并停止轮询。'
       return
     }
     currentPayment.orderNo = orderNo
     const orderGuard = { ...ownerGuard, orderNo }
     const accepted = reduceAdPaymentOrder(null, incoming, orderGuard)
     if (!accepted) {
-      currentPayment.pollError = '商业服务返回的支付订单与当前申请不一致，已保留支付意图并停止轮询。'
+      currentPayment.pollError = '商业服务返回的支付订单与当前申请不一致，已保留支付任务并停止轮询。'
       return
     }
     clearPaymentAttempt()
@@ -1328,7 +1328,7 @@ async function handleSubmit() {
   if (isTextMode.value && !form.title.trim()) return showNotice('请先填写广告标题', 'warn')
   if (isCarouselMode.value && !form.creativeImageUrl.trim()) return showNotice('请先上传轮播图', 'warn')
   if (paymentState.available !== true || !paymentMethods.value.length) return showNotice('支付安全能力不可用，申请与支付写入已禁用', 'warn')
-  if (paymentAttemptBlocksNewIntent.value) return showNotice('已有支付意图待核对，当前禁止提交新的广告支付意图', 'warn')
+  if (paymentAttemptBlocksNewIntent.value) return showNotice('已有支付任务待核对，当前禁止提交新的广告支付任务', 'warn')
   if (loading.submit || currentPayment.opening) return
 
   const payload = applicationIntentPayload()
@@ -1360,7 +1360,7 @@ async function handleSubmit() {
       clearApplicationIntent()
       handleCommercialFailure(error, '广告申请写入能力不可用')
     } else {
-      showNotice(error?.message || '广告申请结果未确认；只能复用原申请意图重试。', 'error')
+      showNotice(error?.message || '广告申请结果未确认；只能复用原申请任务重试。', 'error')
     }
   } finally {
     loading.submit = false

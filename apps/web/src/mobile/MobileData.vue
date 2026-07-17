@@ -3,7 +3,7 @@
     <div class="m-page-header m-mobile-hero">
       <span class="m-mobile-kicker">移动数据</span>
       <h1>数据面板</h1>
-      <p class="m-page-sub">按所选时间范围查看后端实际统计</p>
+      <p class="m-page-sub">按所选时间范围查看平台实际统计</p>
     </div>
 
     <div class="m-date-tabs">

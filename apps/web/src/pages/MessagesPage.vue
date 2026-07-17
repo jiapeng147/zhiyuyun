@@ -1201,7 +1201,7 @@ async function loadMoreConversations() {
     visibleConversationCount.value += DEFAULT_VISIBLE_CONVERSATIONS
     return
   }
-  // 本地已全部展示，但后端还有更多会话 → 触发真分页加载下一页
+  // 本地已全部展示，但平台还有更多会话 → 触发真分页加载下一页
   if (!conversationHasMore.value || loadingMoreConversations.value) return
   const requestedAccountId = Number(query.xianyuAccountId || 0)
   if (!requestedAccountId) return

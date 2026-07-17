@@ -145,7 +145,7 @@ export function useItemPolish({ storage: explicitStorage } = {}) {
     const task = tasks[key]
     if (!itemPolishCanAutoPoll(task) || !task.taskId) return
     if (task.status === 'pending' && (pendingPolls.get(key) || 0) >= MAX_PENDING_POLLS) {
-      pollMessages[key] = '执行器尚未接管任务；可点击“继续安全任务”，系统会复用原幂等键且不会重复已开始的平台调用。'
+      pollMessages[key] = '执行器尚未接管任务；可点击“继续安全任务”，系统会复用原安全凭证且不会重复已开始的平台操作。'
       return
     }
     timers.set(key, setTimeout(() => void pollOnce(key, guard), POLL_INTERVAL_MS))
@@ -244,7 +244,7 @@ export function useItemPolish({ storage: explicitStorage } = {}) {
           status: 'pending',
           recovery: 'resume_task',
           retrySafe: true,
-          message: '提交结果未确认；系统保留原幂等键，请使用“继续安全任务”恢复，不会生成新意图。',
+          message: '提交结果未确认；系统保留原安全凭证，请使用“继续安全任务”恢复，不会生成新任务。',
         }, guard)
       } else if (error?.data?.status) {
         setTask(key, { ...(tasks[key] || {}), ...error.data }, guard)
@@ -327,7 +327,7 @@ export function useItemPolish({ storage: explicitStorage } = {}) {
         } catch {
           if (disposed) return
           if (!scopeGuardIsActive(guard)) continue
-          pollMessages[key] = '暂时无法读取已保存的擦亮任务，原幂等键和上次进度已保留。'
+          pollMessages[key] = '暂时无法读取已保存的擦亮任务，原安全凭证和上次进度已保留。'
         }
       }
     } catch { /* ignore invalid session state */ }

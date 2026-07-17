@@ -1,7 +1,7 @@
 /**
  * Cookie 解析与处理工具模块
  *
- * 参考后端 AccountIdentityGuard 设计思路，在前端对用户输入的 Cookie 进行：
+ * 参考 AccountIdentityGuard 设计思路，在页面侧对用户输入的 Cookie 进行：
  * 1. 解析：将 Cookie 字符串解析为 key=value 映射表
  * 2. 提取关键字段：unb（身份标识）、_m_h5_tk（API 签名 Token）等
  * 3. 格式校验：检查 Cookie 基本格式是否合法
@@ -56,7 +56,7 @@ export function parseCookie(cookieText) {
 
 /**
  * 从 Cookie 字符串中提取指定字段的值
- * 参考后端 extractValue 方法
+ * 参考 extractValue 方法
  *
  * @param {string} cookieText - 原始 Cookie 字符串
  * @param {string} key - 要提取的字段名
@@ -221,7 +221,7 @@ export function maskKeyFields(keyFields) {
 
 /**
  * 校验 Cookie 身份是否与当前账号一致（防串号）
- * 参考后端 AccountIdentityGuard.canUseUnb
+ * 参考 AccountIdentityGuard.canUseUnb
  *
  * @param {string|null} cookieUnb - Cookie 中提取的 unb
  * @param {object|null} account - 当前账号对象（需包含 unb 字段）

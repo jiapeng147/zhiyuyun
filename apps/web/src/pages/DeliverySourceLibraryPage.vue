@@ -673,7 +673,7 @@ async function removeSource(row) {
   try {
     if (!await confirmAction({
       title: '确认删除该货源？',
-      description: '仅未被商品使用的货源可以删除；正在使用的货源会被服务端拒绝，以避免留下孤儿配置。',
+      description: '仅未被商品使用的货源可以删除；正在使用的货源会被系统拒绝，以避免留下孤儿配置。',
       dangerous: true,
       confirmText: '删除'
     })) return

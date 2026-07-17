@@ -26,7 +26,7 @@ function getHeader(headers, name) {
 function requestIdOf(config, response) {
   // 必须优先使用客户端请求头 X-Request-Id：它在请求开始(request-start)时用于登记
   // 全局忙碌集合，结束(request-end)时也必须返回同一个值才能正确注销。
-  // 后端会在响应头返回另一个服务端生成的 x-request-id，若优先用它会导致
+  // 平台服务会在响应头返回另一个 x-request-id，若优先用它会导致
   // start/end 的 ID 不一致，pending 集合永不清空，全局出现“正在同步数据...”卡死。
   return getHeader(config?.headers, 'X-Request-Id')
     || response?.headers?.['x-request-id']

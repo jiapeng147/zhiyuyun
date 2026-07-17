@@ -858,16 +858,16 @@ async function executePolishScope({ accountId, goodsIds = [], label = '在售商
   const confirmation = isNextBusinessDayTask
     ? {
         title: '新建次日擦亮任务？',
-        description: `${itemPolishRetryGuidance(currentTask)} 本次提交会创建新的任务和幂等键，绝不会复用昨日终态。`,
+        description: `${itemPolishRetryGuidance(currentTask)} 本次提交会创建新的任务和安全凭证，绝不会复用昨日终态。`,
         confirmText: '新建任务并擦亮',
       }
     : {
         title: isVerificationResume ? '确认已完成闲鱼安全验证？' : (isResume ? '继续安全擦亮任务？' : `确认擦亮${label}？`),
         description: isVerificationResume
-          ? '仅当你已在闲鱼 App 完成安全验证时继续。系统会复用原任务、原商品范围和原幂等键，不创建新意图。'
+          ? '仅当你已在闲鱼 App 完成安全验证时继续。系统会复用原任务和原商品范围，不创建新任务。'
           : isResume
-          ? '将复用原任务、原商品范围和原幂等键，只恢复明确可安全执行的项目；未知结果不会重试。'
-          : '服务端会先持久化逐项意图，再调用真实闲鱼擦亮接口。超时或连接中断会标记为结果未知并停止自动重试。',
+          ? '将复用原任务和原商品范围，只恢复明确可安全执行的项目；未知结果不会重试。'
+          : '系统会先记录逐项操作，再提交真实闲鱼擦亮请求。超时或连接中断会标记为结果未知并停止自动重试。',
         confirmText: isVerificationResume ? '我已完成验证，继续原任务' : (isResume ? '继续原任务' : '开始擦亮'),
       }
   try {
@@ -889,7 +889,7 @@ async function executePolishScope({ accountId, goodsIds = [], label = '在售商
     showNotice(
       resultUnknown || error?.timeout || error?.code === 'NETWORK_ERROR' ? 'warn' : 'error',
       resultUnknown
-        ? '擦亮请求是否已签发尚未确认，当前意图已锁定。请先在闲鱼 App 核对并刷新任务状态，系统不会重复提交。'
+        ? '擦亮请求是否已提交尚未确认，当前任务已锁定。请先在闲鱼 App 核对并刷新任务状态，系统不会重复提交。'
         : error?.polishConflict?.message || preserved?.message || error?.message || '擦亮任务提交失败，请检查账号与商品状态。',
     )
     return preserved
@@ -908,7 +908,7 @@ async function polishCurrentAccount() {
 async function polishProduct(row) {
   const target = productPolishScope(row)
   if (!target.accountId || !target.goodsIds.length) {
-    showNotice('warn', '缺少有效账号或商品记录标识，无法建立安全擦亮意图。')
+    showNotice('warn', '缺少有效账号或商品记录标识，无法建立安全擦亮任务。')
     return
   }
   selectProduct(row)
@@ -1129,7 +1129,7 @@ function offShelfFailure(error) {
     retrySafe,
     type: retrySafe ? 'error' : 'warn',
     message: retrySafe
-      ? (error?.message || '平台明确未执行下架；排除问题后可使用原意图安全重试。')
+      ? (error?.message || '平台明确未执行下架；核对问题后可使用原任务安全重试。')
       : '无法确认平台是否执行，请先在闲鱼 App 核对；当前禁止重试。',
   }
 }
@@ -1293,7 +1293,7 @@ async function offShelf(item) {
   if (!ensureListAvailable('下架商品')) return
   if(!item?.externalGoodsId) return showNotice('warn', '草稿商品尚未发布到闲鱼，不能执行远端下架')
   const goodsKey = String(item.id || '')
-  if (!goodsKey) return showNotice('warn', '缺少商品记录标识，无法建立安全下架意图')
+  if (!goodsKey) return showNotice('warn', '缺少商品记录标识，无法建立安全下架任务')
   const persisted = offShelfAttemptOf(item)
   if (isOffShelfLocked(item)) {
     return showNotice('warn', persisted?.message || '下架结果尚未确认，请先在闲鱼 App 核对；当前禁止重复操作。')
@@ -1329,8 +1329,8 @@ async function offShelf(item) {
   const confirmed = await confirmAction({
     title: onlyRepairLocal ? '确认仅修复系统下架状态？' : '确认下架该商品？',
     description: onlyRepairLocal
-      ? '闲鱼平台已确认下架。本次只补全系统商品状态，不会再次调用平台下架接口。'
-      : '服务端会先持久化下架意图再访问闲鱼。若请求超时或中断，将锁定为结果未知并要求先到闲鱼 App 核对。',
+      ? '闲鱼平台已确认下架。本次只补全系统商品状态，不会再次向平台提交下架。'
+      : '系统会先记录下架任务再访问闲鱼。若请求超时或中断，将锁定为结果未知并要求先到闲鱼 App 核对。',
   })
   if (!confirmed) {
     if (isNewIntent) clearExternalOperationIntent(offShelfIntents, goodsKey)
@@ -1386,7 +1386,7 @@ async function publishDraft(row) {
     return showNotice('error', '上次发布结果未知。请先同步商品或到闲鱼 App 核对；为避免重复发布，当前禁止重试。')
   }
   if (intent?.status === 'in_progress') {
-    return showNotice('warn', '同一发布意图仍在执行，请勿重复提交。请稍后同步商品核对结果。')
+    return showNotice('warn', '同一发布任务仍在执行，请勿重复提交。请稍后同步商品核对结果。')
   }
 
   if (!intent) {
@@ -1424,7 +1424,7 @@ async function publishDraft(row) {
   if (!await confirmAction({
     title: onlyRepairLocal ? '确认仅修复系统商品状态？' : `确认发布「${row.name}」？`,
     description: onlyRepairLocal
-      ? '闲鱼平台已确认发布。本次只补全系统商品记录，不会再次调用发布接口。'
+      ? '闲鱼平台已确认发布。本次只补全系统商品记录，不会再次向平台提交发布。'
       : '发布前请确认标题、描述、图片、价格和位置真实有效。',
   })) {
     if (isNewIntent) clearExternalOperationIntent(publishDraftIntents, intentKey)
@@ -1453,16 +1453,16 @@ async function publishDraft(row) {
     } else if (state === 'unknown') {
       showNotice('error', '发布结果未知。请先同步商品或到闲鱼 App 核对；当前禁止重试。')
     } else if (state === 'in_progress') {
-      showNotice('warn', '同一发布意图正在执行，请勿重复提交。')
+      showNotice('warn', '同一发布任务正在执行，请勿重复提交。')
     } else {
-      showNotice('error', e.message || '发布失败；平台明确失败时可安全重试原意图')
+      showNotice('error', e.message || '发布失败；平台明确失败时可安全重试原任务')
     }
   }
   })
 }
 
 /**
- * 统一删除商品：草稿商品由系统接口处理；已发布商品由服务端持久化
+ * 统一删除商品：草稿商品由系统处理；已发布商品由平台任务处理
  * 状态机一次性负责平台删除与系统记录删除，页面不拼接不可逆步骤。
  */
 async function deleteProduct(row) {
@@ -1476,8 +1476,8 @@ async function deleteProduct(row) {
   const confirmDesc = isLocalDraft
     ? '该商品为草稿商品，删除后将从系统记录中移除。'
     : remoteDeleteState === 'remote_confirmed'
-      ? '平台删除已经确认，本次只会安全重试系统记录删除收尾，不会再次调用闲鱼删除。'
-      : '服务端会依次确认平台删除与系统记录删除。若平台结果未知，记录会保留并要求先到闲鱼 App 核对；该操作不可逆！'
+      ? '平台删除已经确认，本次只会安全完成系统记录删除收尾，不会再次向闲鱼提交删除。'
+      : '系统会依次确认平台删除与系统记录删除。若平台结果未知，记录会保留并要求先到闲鱼 App 核对；该操作不可逆！'
   const confirmOptions = isLocalDraft
     ? { title: '确认删除该商品？', description: confirmDesc }
     : { title: '确认删除该商品？', description: confirmDesc, dangerous: true, confirmText: '删除' }
@@ -1542,7 +1542,7 @@ async function batchDeleteProducts() {
   const publishedCount = selectedRows.length - draftCount
 
   const desc = publishedCount > 0
-    ? `选中 ${selectedRows.length} 件商品（已发布到闲鱼 ${publishedCount} 件，草稿商品 ${draftCount} 件）。已发布商品由服务端逐件确认平台删除与系统记录删除；结果未知时不会自动重试。该操作不可逆！`
+    ? `选中 ${selectedRows.length} 件商品（已发布到闲鱼 ${publishedCount} 件，草稿商品 ${draftCount} 件）。已发布商品由系统逐件确认平台删除与系统记录删除；结果未知时不会自动重试。该操作不可逆！`
     : `选中 ${selectedRows.length} 件草稿商品，删除后将从系统记录中移除。`
   const confirmOptions = publishedCount > 0
     ? { title: '确认批量删除选中商品？', description: desc, dangerous: true, confirmText: '删除' }
@@ -1625,13 +1625,13 @@ async function editPrice(row) {
     return showNotice('error', '上次改价结果未知。请先同步商品或到闲鱼 App 核对；为避免重复改价，当前禁止重试。')
   }
   if (intent?.status === 'in_progress') {
-    return showNotice('warn', '同一改价意图仍在执行，请勿重复提交。请稍后同步商品核对结果。')
+    return showNotice('warn', '同一改价任务仍在执行，请勿重复提交。请稍后同步商品核对结果。')
   }
 
   if (intent?.status === 'remote_confirmed') {
     const repair = await confirmAction({
       title: '确认仅修复系统价格？',
-      description: `闲鱼平台已确认价格 ${intent.payload.price}。本次只补全系统商品状态，不会再次调用平台改价接口。`,
+      description: `闲鱼平台已确认价格 ${intent.payload.price}。本次只补全系统商品状态，不会再次向平台提交改价。`,
     })
     if (!repair) return
   } else {
@@ -1677,9 +1677,9 @@ async function editPrice(row) {
       } else if (state === 'unknown') {
         showNotice('error', '改价结果未知。请先同步商品或到闲鱼 App 核对；当前禁止重试。')
       } else if (state === 'in_progress') {
-        showNotice('warn', '同一改价意图正在执行，请勿重复提交。')
+        showNotice('warn', '同一改价任务正在执行，请勿重复提交。')
       } else {
-        showNotice('error', e.message || '改价失败；平台明确失败时可安全重试原意图')
+        showNotice('error', e.message || '改价失败；平台明确失败时可安全重试原任务')
       }
     }
   })
@@ -1793,8 +1793,8 @@ async function syncProducts(isAuto = false){
       query.pageNum = 1
       // 同步完成后，仅展示有效商品，排除已删除(status=3)的旧数据
       await loadItems({ excludeStatus: 3 })
-      // 前端二次过滤：确保已删除(status=3)的商品不展示（兼容后端未更新excludeStatus的情况）
-      // 注意：不覆盖 totalCount，loadItems 已从后端获取正确的总数
+      // 二次过滤：确保已删除(status=3)的商品不展示（兼容 excludeStatus 未更新的情况）
+      // 注意：不覆盖 totalCount，loadItems 已获取正确的总数
       items.value = items.value.filter(item => Number(item.status ?? 1) !== 3)
       await loadSyncTasks()
       loadGoodsStats()
@@ -1804,7 +1804,7 @@ async function syncProducts(isAuto = false){
 }
 
 /**
- * 顺序同步所有账号：账号1完成后再同步账号2，避免并发调用闲鱼API触发风控。
+ * 顺序同步所有账号：账号1完成后再同步账号2，避免并发触发闲鱼风控。
  * 汇总各账号结果，单账号失败不影响后续账号。
  */
 async function syncAllAccounts() {
@@ -1887,7 +1887,7 @@ async function syncAllAccounts() {
     if (!syncPollCanceled) {
       query.pageNum = 1
       await loadItems({ excludeStatus: 3 })
-      // 注意：不覆盖 totalCount，loadItems 已从后端获取正确的总数
+      // 注意：不覆盖 totalCount，loadItems 已获取正确的总数
       items.value = items.value.filter(item => Number(item.status ?? 1) !== 3)
       await loadSyncTasks()
       loadGoodsStats()

@@ -10,7 +10,7 @@ let connectionGeneration = 0
 const apiBaseUrl = import.meta.env.VITE_API_BASE || '/api'
 const MAX_RECONNECT_DELAY = 10000      // 最大重连间隔 10s
 const KEEPALIVE_INTERVAL = 25000       // 每 25s 检查一次连接活性
-const STALE_THRESHOLD = 90000          // 90s 无消息才认为断连（容忍服务端注释心跳）
+const STALE_THRESHOLD = 90000          // 90s 无消息才认为断连（容忍平台心跳）
 const MAX_RECONNECT_ATTEMPTS = 20      // 最大重连次数，超过后停止重连避免无限堆积错误
 
 function resolveSseBaseUrl() {

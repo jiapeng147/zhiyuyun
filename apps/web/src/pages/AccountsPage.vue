@@ -17,7 +17,7 @@
       </n-card>
 
       <n-alert class="accounts-v4-alert" type="info" :bordered="false">
-        账号列表、手动添加、删除、资料刷新、实时连接状态与扫码登录均由平台服务端处理。
+        账号列表、手动添加、删除、资料刷新、实时连接状态与扫码登录均由平台服务统一处理。
         扫码前请确认这是你信任的平台服务；若服务不可用，页面会显示明确的不可用状态与重试入口。
       </n-alert>
 
@@ -264,7 +264,7 @@
           :aria-busy="isPolishActionLoading(selected)"
           @click="handleItemPolish(selected)"
         >
-          {{ selectedPolishTask.status === 'needs_verification' ? '我已完成验证，继续原任务' : (['partial', 'failed'].includes(selectedPolishTask.status) ? '复用原任务处理明确未擦亮项' : '继续安全任务（复用原幂等键）') }}
+          {{ selectedPolishTask.status === 'needs_verification' ? '我已完成验证，继续原任务' : (['partial', 'failed'].includes(selectedPolishTask.status) ? '复用原任务处理明确未擦亮项' : '继续安全任务') }}
         </button>
         <small v-else-if="selectedPolishTask.status === 'unknown'" class="polish-recovery warn">
           请先在闲鱼 App 核对这些商品；系统不会自动重试未知结果。
@@ -366,7 +366,7 @@
         </div>
 
         <div v-if="manualError" class="input-error">{{ manualError }}</div>
-        <div class="modal-hint"><Icon name="help" /> 提交后由服务端解析并保存账号信息</div>
+        <div class="modal-hint"><Icon name="help" /> 提交后由系统解析并保存账号信息</div>
         <div class="usage-box">
           <h4><Icon name="map" /> 使用说明</h4>
           <div><span><Icon name="shield" /></span>提交前会先校验登录 Cookie 格式</div>
@@ -477,7 +477,7 @@
             v-model="autoRateForm.textContent"
             class="cookie-area"
             :disabled="!autoRateLoaded"
-            placeholder="当外部接口不可用时，可回退到这段文本。"
+            placeholder="当外部服务不可用时，可回退到这段文本。"
           ></textarea>
         </template>
         <div v-if="autoRateError" class="input-error">{{ autoRateError }}</div>
@@ -914,16 +914,16 @@ async function handleItemPolish(account) {
   const confirmation = isNextBusinessDayTask
     ? {
         title: '新建次日擦亮任务？',
-        description: `${itemPolishRetryGuidance(currentTask)} 本次提交会创建新的任务和幂等键，绝不会复用昨日终态。`,
+        description: `${itemPolishRetryGuidance(currentTask)} 本次提交会创建新的任务和安全凭证，绝不会复用昨日终态。`,
         confirmText: '新建任务并擦亮',
       }
     : {
         title: isVerificationResume ? '确认已完成闲鱼安全验证？' : (isResume ? '继续安全擦亮任务？' : '确认一键擦亮在售商品？'),
         description: isVerificationResume
-          ? '仅当你已在闲鱼 App 完成安全验证时继续。系统会复用原任务、原范围和原幂等键，不会创建新意图。'
+          ? '仅当你已在闲鱼 App 完成安全验证时继续。系统会复用原任务和原范围，不会创建新任务。'
           : isResume
-          ? '将复用原任务、原商品范围和原幂等键，只恢复明确可安全执行的项目；未知结果不会重试。'
-          : '服务端会先持久化任务和逐项意图，再调用闲鱼真实擦亮接口。请求超时或中断将标记为结果未知并停止自动重试。',
+          ? '将复用原任务和原商品范围，只恢复明确可安全执行的项目；未知结果不会重试。'
+          : '系统会先记录任务和逐项操作，再提交闲鱼真实擦亮请求。请求超时或中断将标记为结果未知并停止自动重试。',
         confirmText: isVerificationResume ? '我已完成验证，继续原任务' : (isResume ? '继续原任务' : '开始擦亮'),
       }
   try {
@@ -946,7 +946,7 @@ async function handleItemPolish(account) {
     setPolishNotice(
       resultUnknown || requestError?.timeout || requestError?.code === 'NETWORK_ERROR' ? 'warn' : 'error',
       resultUnknown
-        ? '擦亮请求是否已签发尚未确认，当前意图已锁定。请先在闲鱼 App 核对并刷新任务状态，系统不会重复提交。'
+        ? '擦亮请求是否已提交尚未确认，当前任务已锁定。请先在闲鱼 App 核对并刷新任务状态，系统不会重复提交。'
         : requestError?.polishConflict?.message || preserved?.message || requestError?.message || '擦亮任务提交失败，请检查账号状态后重试。',
     )
   }
@@ -1482,7 +1482,7 @@ async function toggleWs(account) {
         qrSuccessMsg.value = data.message || '连接请求返回未连接状态，请刷新后确认'
       }
       if (data.optimistic) {
-        // 乐观确认：后端 12 秒内未检测到验证失败，8 秒后刷新实际状态
+        // 乐观确认：系统 12 秒内未检测到验证失败，8 秒后刷新实际状态
         setTimeout(() => loadWsStatus(account.id), 8000)
       } else {
         // 已确认连接/恢复中：短暂等待后刷新状态
@@ -1490,7 +1490,7 @@ async function toggleWs(account) {
         await loadWsStatus(account.id)
       }
       // 连接成功后刷新账号列表，同步 Cookie 状态
-      // （后端自动登录校验已将 cookie_status 更新为 1，但前端 accounts 列表仍为旧值）
+      // （自动登录校验已将 cookie_status 更新为 1，但 accounts 列表仍为旧值）
       loadAccounts()
     }
   } catch (e) {
@@ -1578,7 +1578,7 @@ async function submitCookieEdit() {
   }
   cookieEditSubmitting.value = true
   try {
-    // 提取关键字段一并传给后端
+    // 提取关键字段一并提交
     const keyFields = extractKeyFields(cookieEdit.cookie)
     await updateAccountCookie(cookieEdit.accountId, cookieEdit.cookie.trim(), {
       unb: keyFields.unb,
@@ -1676,8 +1676,8 @@ async function checkQrStatus() {
         setTimeout(() => { if (qrSuccessMsg.value) qrSuccessMsg.value = '' }, 6000)
       } else if (prevStatus !== 'confirmed' || data.credentialsAvailable) {
         qr.message = data.credentialsAvailable
-          ? '扫码已确认，服务端正在安全同步账号信息...'
-          : (data.message || '扫码已确认，等待服务端完成账号同步...')
+          ? '扫码已确认，系统正在安全同步账号信息...'
+          : (data.message || '扫码已确认，等待系统完成账号同步...')
       }
     }
     if (qr.status === 'error') {
@@ -1719,7 +1719,7 @@ async function handleSseEvent(e) {
     }
     setTimeout(() => { qrSuccessMsg.value = '' }, 4000)
   } else if (event.type === 'cookie_status_changed') {
-    // 从服务端重新拉取账号列表，确保 cookie 状态与后端一致
+    // 重新拉取账号列表，确保 cookie 状态一致
     const targetId = event.accountId
     const newStatus = event.cookieStatus
     // 先更新本地缓存，避免列表闪现旧状态
@@ -1741,7 +1741,7 @@ async function handleSseEvent(e) {
       qrSuccessMsg.value = `账号 ${targetId} 登录凭证已失效（可能遇到滑块验证），请更换登录 Cookie 或重新扫码登录`
       setTimeout(() => { if (qrSuccessMsg.value && qrSuccessMsg.value.includes('登录凭证已失效')) qrSuccessMsg.value = '' }, 8000)
     }
-    // 从服务端重新拉取，确保数据同步
+    // 重新拉取，确保数据同步
     loadAccounts()
   }
 }

@@ -151,7 +151,7 @@ const selectedStatusSummary = computed(() => {
   if (selected.value.authState === false) return '登录凭证不可用，请重新登录'
   if (selected.value.authState == null) return '登录状态尚未验证'
   if (selected.value.connected == null) return '连接状态暂不可用，请先刷新状态'
-  if (selected.value.operationPending) return '启动命令已提交，正在等待服务端确认连接'
+  if (selected.value.operationPending) return '启动命令已提交，正在等待平台确认连接'
   if (selected.value.lastError) return `连接异常：${selected.value.lastError}`
   if (selected.value.connected) return '实时连接与消息通道正常'
   return '登录凭证可用，实时连接当前未启动'
@@ -297,7 +297,7 @@ async function toggle(row){
     }
 
     if (startData.optimistic) {
-      // 乐观确认：后端 12 秒内未检测到验证失败，8 秒后刷新实际状态
+      // 乐观确认：系统 12 秒内未检测到验证失败，8 秒后刷新实际状态
       setTimeout(() => {
         refresh(row, { silent: true, skipRefreshState: true }).catch(() => {})
       }, 8000)
@@ -329,7 +329,7 @@ async function stop(row){
   try {
     log(`${row.name} 正在断开连接...`)
     await stopWebSocket(row.id)
-    // 等待短暂时间确保后端处理完成
+    // 等待短暂时间确保系统处理完成
     await new Promise(r => setTimeout(r, 500))
     await refresh(row, { silent: true })
     syncSelected(row.id)

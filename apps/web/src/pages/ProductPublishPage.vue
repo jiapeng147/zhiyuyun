@@ -24,8 +24,8 @@
       <div v-if="warning" class="global-notice warning">{{ warning }}</div>
       <div v-if="success" class="global-notice success">{{ success }}</div>
       <div v-if="publishIntent.payload" class="global-notice warning publish-intent-notice" role="status">
-        <b>当前是恢复中的已持久化发布意图</b>
-        <span>本次操作固定使用下列数据和原幂等键；页面表单的后续改动不会进入该恢复请求。</span>
+        <b>当前是恢复中的发布任务</b>
+        <span>本次操作固定使用下列数据和原安全凭证；页面表单的后续改动不会进入该恢复请求。</span>
         <pre>{{ persistedIntentSummary }}</pre>
       </div>
 
@@ -375,7 +375,7 @@ const publishSubmitLabel = computed(() => {
   if (publishOutcome.value?.status === 'unknown') return '结果未知，禁止重试'
   if (publishOutcome.value?.status === 'in_progress') return '发布执行中'
   if (unsafePublishFailure.value) return '失败不可安全重试'
-  if (publishOutcome.value?.status === 'failed' && publishOutcome.value?.retrySafe) return '使用原意图重试'
+  if (publishOutcome.value?.status === 'failed' && publishOutcome.value?.retrySafe) return '使用原任务重试'
   return '立即发布'
 })
 const fileInput = ref(null)
@@ -1118,8 +1118,8 @@ async function loadCategories() {
     // 优先从静态 JSON 文件加载（零网络延迟）
     const module = await import('../assets/data/categories.json')
     categories.value = module.default?.cation || module.cation || []
-    // 静默从后端拉取最新分类树（含自动分类新增的分类）
-    // 自动分类服务在后台已将新分类写入后端 categories.json
+    // 静默拉取最新分类树（含自动分类新增的分类）
+    // 自动分类服务已将新分类写入 categories.json
     refreshCategoriesInBackground()
   } catch (e) {
     error.value = e?.message || '商品分类加载失败'
@@ -1254,18 +1254,18 @@ function restorePublishIntent() {
       const hasUnsupportedShipping = saved.payload.shippingMode && saved.payload.shippingMode !== 'free'
       if (hasUnsupportedSku || hasUnsupportedShipping || saved.payload.freeShipping === false) {
         clearPublishIntent()
-        warning.value = '检测到旧版多规格或非包邮发布意图。当前无法安全恢复，请按单规格、包邮重新确认后提交。'
+        warning.value = '检测到旧版多规格或非包邮发布任务。当前无法安全恢复，请按单规格、包邮重新确认后提交。'
         return
       }
       publishIntent.idempotencyKey = String(saved.idempotencyKey)
       publishIntent.payload = saved.payload
       publishOutcome.value = saved.outcome || { status: 'failed', retrySafe: true, retryScope: 'resume' }
       if (publishOutcome.value.status === 'unknown') {
-        warning.value = '检测到结果未知的发布意图。请先同步商品或到闲鱼 App 核对，当前禁止重试。'
+        warning.value = '检测到结果未知的发布任务。请先同步商品或到闲鱼 App 核对，当前禁止重试。'
       } else if (publishOutcome.value.status === 'remote_confirmed') {
         warning.value = '闲鱼平台已确认发布；继续操作只会修复系统商品状态。'
       } else {
-        warning.value = '检测到未完成的发布意图。继续操作只会恢复该意图；服务端会阻止重复发布。'
+        warning.value = '检测到未完成的发布任务。继续操作只会恢复该任务；系统会阻止重复发布。'
       }
     }
   } catch { /* Ignore invalid session state. */ }
@@ -1288,7 +1288,7 @@ async function submit() {
   const ok = await confirmAction({
     title: onlyRepairLocal ? '确认仅修复系统商品状态？' : '确认立即发布到闲鱼？',
     description: onlyRepairLocal
-      ? `平台已经确认发布。本次仅补全系统商品库，不会再次调用闲鱼发布接口。\n\n${confirmationSummary}`
+      ? `平台已经确认发布。本次仅补全系统商品库，不会再次向闲鱼提交发布。\n\n${confirmationSummary}`
       : `${confirmationSummary}\n发布成功后会同步保存到系统商品库。`,
     dangerous: true
   })
@@ -1366,9 +1366,9 @@ async function submit() {
     } else if (state === 'unknown') {
       error.value = '发布结果未知。请先同步商品或到闲鱼 App 核对；为避免重复发布，当前禁止重试。'
     } else if (state === 'in_progress') {
-      warning.value = '同一发布意图正在执行，请勿重复提交。'
+      warning.value = '同一发布任务正在执行，请勿重复提交。'
     } else if (state === 'failed' && publishOutcome.value.retrySafe !== true) {
-      error.value = `${e.message || '发布失败'}。服务端未授权安全重试，当前意图已锁定。`
+      error.value = `${e.message || '发布失败'}。系统未确认可安全重试，当前任务已锁定。`
     } else {
       error.value = e.message || '发布失败'
     }

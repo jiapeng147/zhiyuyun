@@ -93,7 +93,7 @@ const dataStatCards = computed(() => [
   { key: 'failed', title: '发货失败', value: metricValue(stats.value.deliveryFailCount), change: '失败发货记录', symbol: '败', tone: 'tone-orange' },
   { key: 'pending', title: '待发货', value: metricValue(stats.value.pendingDeliveryCount), change: '待处理发货记录', symbol: '待', tone: 'tone-cyan' },
   { key: 'reply', title: 'AI回复', value: metricValue(stats.value.aiReplyCount), change: '自动回复记录', symbol: 'AI', tone: 'tone-purple' },
-  { key: 'state', title: '数据状态', value: loading.value ? '加载中' : (dataAvailable.value ? (stats.value.hasData ? '有数据' : '暂无数据') : '不可用'), change: '后端统计结果', symbol: '态', tone: dataAvailable.value ? 'tone-green' : 'tone-orange' }
+  { key: 'state', title: '数据状态', value: loading.value ? '加载中' : (dataAvailable.value ? (stats.value.hasData ? '有数据' : '暂无数据') : '不可用'), change: '平台统计结果', symbol: '态', tone: dataAvailable.value ? 'tone-green' : 'tone-orange' }
 ])
 const trendCols=[{key:'date',title:'日期'},{key:'success',title:'发货成功'},{key:'fail',title:'发货失败'},{key:'reply',title:'AI回复'}]
 const trendRows = computed(() => (trend.value.dates || []).map((d,i)=>({date:d, success:trend.value.deliverySuccess?.[i] || 0, fail:trend.value.deliveryFail?.[i] || 0, reply:trend.value.aiReplies?.[i] || 0})))

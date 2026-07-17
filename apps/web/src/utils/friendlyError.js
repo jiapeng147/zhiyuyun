@@ -1,5 +1,5 @@
 /**
- * 将后端返回的技术性错误信息转换为用户友好的中文提示。
+ * 将平台服务返回的技术性错误信息转换为用户友好的中文提示。
  *
  * 用法：
  *   import { friendlyError } from '../utils/friendlyError.js'

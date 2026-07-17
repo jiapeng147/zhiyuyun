@@ -172,7 +172,7 @@ export function buildManualDeliveryOutcome(data = {}) {
       message: String(data?.message || '手动发货失败，请核对原因后再处理。'),
       retryScope: data?.retryScope || null,
       retryAllowed,
-      submitLabel: retryAllowed ? '使用原幂等键重试' : '失败，禁止重试'
+      submitLabel: retryAllowed ? '使用原任务重试' : '失败，禁止重试'
     }
   }
 

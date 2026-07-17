@@ -171,7 +171,7 @@ export function itemPolishUnknownResults(task) {
 export function createItemPolishReconcilePayload(task, goodsId, outcome) {
   const taskId = String(task?.taskId || '').trim()
   const normalizedGoodsId = Number(goodsId)
-  if (!taskId) throw new Error('unknown task is missing taskId')
+  if (!taskId) throw new Error('未知任务缺少任务编号')
   if (!RECONCILE_OUTCOMES.has(String(outcome))) throw new Error('unsupported reconcile outcome')
   if (!itemPolishUnknownResults(task).some(result => Number(result.goodsId) === normalizedGoodsId)) {
     throw new Error('selected goods result is not unknown')
@@ -194,12 +194,12 @@ function retryAfterBusinessTimeText(value) {
 export function itemPolishRetryGuidance(task, now = Date.now()) {
   if (task?.recovery !== NEXT_BUSINESS_DAY_RECOVERY) return ''
   if (itemPolishCanStartNextBusinessDay(task, now)) {
-    return '安全等待期已结束，可新建次日擦亮任务。系统会使用新的幂等键，不会复用旧任务。'
+    return '安全等待期已结束，可新建次日擦亮任务。系统会使用新的安全凭证，不会复用旧任务。'
   }
   const retryAfterText = retryAfterBusinessTimeText(task?.retryAfter)
   const availability = retryAfterText
     ? `最早可操作时间：${retryAfterText}（北京时间）。`
-    : '服务端尚未提供有效的最早可操作时间，请刷新任务状态。'
+    : '系统尚未提供有效的最早可操作时间，请刷新任务状态。'
   return `为防迟到请求重复操作，本日不再自动重试，次日可新建任务。${availability}`
 }
 
@@ -234,7 +234,7 @@ export function classifyItemPolishExistingTask(intent, value) {
     existingTask,
     message: sameIntent
       ? existingTask.message
-      : `该账号存在另一个商品范围的擦亮任务（${existingTask.taskId || '任务号未知'}）：${existingTask.message}`,
+      : `该账号已有另一个商品范围的擦亮任务（${existingTask.taskId || '编号未知'}）：${existingTask.message}`,
   }
 }
 
@@ -255,17 +255,17 @@ export function itemPolishConflictCardState(conflict, now = Date.now()) {
   }[task.status] || '状态待确认')
   const retryGuidance = itemPolishRetryGuidance(task, now)
   const nextStep = retryGuidance
-    ? `${retryGuidance} 请回到既有任务的原任务范围操作；本冲突卡片只提供状态刷新。`
+    ? `${retryGuidance} 请回到既有任务的原商品范围操作；当前面板只提供状态刷新。`
     : ({
     pending: '既有任务正在等待执行；请稍后刷新状态，不要重复提交或改变任务范围。',
     running: '既有任务仍在执行；请等待后刷新状态，不要重复提交或改变任务范围。',
     completed: '既有任务已完成；请核对结果摘要，无需重复提交。',
-    partial: '既有任务部分完成；请在原任务范围核对逐项结果，未知项不得重试，本卡片不提供整批恢复。',
+    partial: '既有任务部分完成；请在原商品范围核对逐项结果，未知项不得重试，当前面板不提供整批恢复。',
     failed: task.retrySafe
-      ? '任务已明确失败且标记可安全处理；请回到既有任务的原任务范围决定是否继续，本卡片不会盲目恢复。'
-      : '任务失败但未确认可安全重试；请先在原任务范围核对，本卡片不会盲目恢复。',
-    needs_verification: '请先在闲鱼 App 完成闲鱼验证，再回到既有任务原范围继续原任务；本卡片不会创建新意图。',
-    unknown: '任务结果未知；必须先在闲鱼 App 按 taskId 核对，当前继续禁止重试或重新提交。',
+      ? '任务已明确失败且标记可安全处理；请回到既有任务的原商品范围决定是否继续，当前面板不会盲目恢复。'
+      : '任务失败但未确认可安全重试；请先在原商品范围核对，当前面板不会盲目恢复。',
+    needs_verification: '请先在闲鱼 App 完成闲鱼验证，再回到既有任务原商品范围继续；当前面板不会创建新任务。',
+    unknown: '任务结果未知；必须先在闲鱼 App 按任务编号核对，当前继续禁止重试或重新提交。',
   }[task.status] || '状态尚未确认；只可刷新既有任务状态，不要提交新的擦亮请求。')
   return {
     taskId: task.taskId,
@@ -282,7 +282,7 @@ export function itemPolishConflictCardState(conflict, now = Date.now()) {
     results: task.results.slice(0, 8),
     canRefresh: Boolean(task.taskId),
     allowRetry: false,
-    safetyNotice: '此卡片只读取既有任务状态，不会改变账号或商品范围，不会生成新幂等键，也不会重新提交擦亮。',
+    safetyNotice: '当前面板只读取既有任务状态，不会改变账号或商品范围，不会生成新的安全凭证，也不会重新提交擦亮。',
     nextStep,
   }
 }
@@ -293,7 +293,7 @@ export async function refreshItemPolishConflictState(conflict, readProgress) {
     return {
       conflict,
       refreshed: false,
-      error: '既有任务缺少可读取的 taskId，已保留当前冲突信息。',
+      error: '既有任务缺少可读取的任务编号，已保留当前冲突信息。',
     }
   }
   try {
@@ -304,7 +304,7 @@ export async function refreshItemPolishConflictState(conflict, readProgress) {
       conflict: {
         ...conflict,
         existingTask,
-        message: `该账号存在另一个商品范围的擦亮任务（${existingTask.taskId}）：${existingTask.message}`,
+        message: `该账号已有另一个商品范围的擦亮任务（${existingTask.taskId}）：${existingTask.message}`,
       },
       refreshed: true,
       error: '',
