@@ -1,30 +1,43 @@
 <template>
   <div class="xya-msg-page">
-    <n-card class="messages-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">实时接待</n-tag>
-        <h2>在线消息工作台</h2>
+    <section class="messages-command-center">
+      <div class="messages-command-main">
+        <div class="messages-command-kicker">
+          <span>实时接待</span>
+          <b>{{ accountLabel || '未选择账号' }}</b>
+        </div>
+        <h2>客服接待控制台</h2>
         <p>聚合买家咨询、AI 接待状态、快捷回复模板和商品上下文，围绕当前账号处理实时会话。</p>
+        <div class="messages-command-meta">
+          <span>{{ loading || conversationRefreshing ? '会话刷新中' : `当前 ${displayList.length} 条会话` }}</span>
+          <span>未回复 {{ unrepliedCount }}</span>
+          <span>{{ realtimeMode.label }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <n-button size="small" :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
-        <n-button size="small" @click="startCurrentConnection">启动连接</n-button>
-        <n-button size="small" type="primary" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
-      </n-space>
-    </n-card>
+      <div class="messages-command-panel">
+        <div class="messages-command-panel-head">
+          <span>接待动作</span>
+          <strong>{{ query.xianyuAccountId ? '账号范围' : '等待选择账号' }}</strong>
+        </div>
+        <div class="messages-command-buttons">
+          <n-button :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
+          <n-button @click="startCurrentConnection">启动连接</n-button>
+          <n-button type="primary" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
+        </div>
+      </div>
+    </section>
 
-    <section class="messages-v4-stats">
-      <n-card
+    <section class="messages-metric-rail">
+      <article
         v-for="item in messageStatCards"
         :key="item.key"
-        class="messages-v4-stat"
+        class="messages-metric-card"
         :class="item.tone"
-        :bordered="false"
       >
-        <span class="messages-v4-stat-icon">{{ item.symbol }}</span>
+        <span class="messages-metric-icon">{{ item.symbol }}</span>
         <n-statistic :label="item.title" :value="item.value" />
         <small>{{ item.change }}</small>
-      </n-card>
+      </article>
     </section>
 
     <div class="xya-msg-layout">
@@ -426,7 +439,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { NButton, NCard, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NStatistic } from 'naive-ui'
 import { openExternalUrl } from '../utils/externalUrl.js'
 import { getAccounts } from '../api/accounts.js'
 import { onlineConversations, messageContext, updateConversationStatus, markConversationRead } from '../api/messages.js'
@@ -2939,78 +2952,174 @@ watch(() => selected.value?.xyGoodsId, () => {
   min-width: 0;
 }
 
-.messages-v4-hero,
-.messages-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.messages-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.messages-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfe6f1;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(239, 253, 246, .95) 48%, rgba(255, 250, 245, .94)),
+    #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
 }
 
-.messages-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
+.messages-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.messages-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.messages-command-kicker span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .1);
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.messages-command-kicker b {
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messages-command-main h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.25;
 }
 
-.messages-v4-hero p {
+.messages-command-main p {
   margin: 0;
-  color: #64748b;
+  max-width: 720px;
+  color: #526079;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.messages-v4-stats {
+.messages-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.messages-command-meta span {
+  padding: 6px 10px;
+  border: 1px solid rgba(37, 99, 235, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.messages-command-panel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.messages-command-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.messages-command-panel-head strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.messages-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.messages-command-buttons :deep(.n-button) {
+  min-width: 0;
+}
+
+.messages-metric-rail {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
-.messages-v4-stat :deep(.n-card__content) {
+.messages-metric-card {
+  position: relative;
+  min-width: 0;
   padding: 16px;
   display: grid;
   gap: 8px;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+  overflow: hidden;
 }
 
-.messages-v4-stat-icon {
+.messages-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 0 14px;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #dbeafe;
+}
+
+.messages-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.messages-v4-stat.tone-blue .messages-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.messages-v4-stat.tone-orange .messages-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-.messages-v4-stat.tone-green .messages-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.messages-v4-stat.tone-cyan .messages-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.messages-v4-stat.tone-gray .messages-v4-stat-icon { background: #f1f5f9; color: #475569; }
+.messages-metric-card.tone-blue .messages-metric-icon { background: #eff6ff; color: #2563eb; }
+.messages-metric-card.tone-orange .messages-metric-icon { background: #fff7ed; color: #ea580c; }
+.messages-metric-card.tone-green .messages-metric-icon { background: #ecfdf5; color: #059669; }
+.messages-metric-card.tone-cyan .messages-metric-icon { background: #ecfeff; color: #0891b2; }
+.messages-metric-card.tone-gray .messages-metric-icon { background: #f1f5f9; color: #475569; }
 
-.messages-v4-stat :deep(.n-statistic .n-statistic-label) {
+.messages-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.messages-v4-stat :deep(.n-statistic .n-statistic-value) {
+.messages-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
   font-weight: 700;
 }
 
-.messages-v4-stat small {
+.messages-metric-card small {
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
@@ -3021,8 +3130,13 @@ watch(() => selected.value?.xyGoodsId, () => {
   min-height: 560px;
   display: grid;
   grid-template-columns: 334px minmax(0, 1fr) 288px;
-  gap: 16px;
+  gap: 14px;
   align-items: stretch;
+  padding: 12px;
+  border: 1px solid #e5eaf0;
+  border-radius: 16px;
+  background: #f8fafc;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
 
 .xya-msg-sidebar,
@@ -3896,8 +4010,12 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 @media (max-width: 1440px) {
-  .messages-v4-stats {
+  .messages-metric-rail {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .messages-command-center {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .xya-msg-layout {
@@ -4132,12 +4250,17 @@ watch(() => selected.value?.xyGoodsId, () => {
     gap: 12px;
   }
 
-  .messages-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .messages-command-center {
     padding: 14px;
+    border-radius: 12px;
   }
 
-  .messages-v4-stats {
+  .messages-command-main h2 {
+    font-size: 24px;
+  }
+
+  .messages-command-buttons,
+  .messages-metric-rail {
     grid-template-columns: minmax(0, 1fr);
   }
 
