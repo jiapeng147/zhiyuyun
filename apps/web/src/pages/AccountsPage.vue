@@ -165,7 +165,7 @@
     </div>
 
     <section class="drawer-section diagnosis-card">
-      <h4>连接诊断</h4>
+      <h4>授权与连接</h4>
       <div v-for="item in accountDiagnostics" :key="item.title" class="diagnosis-item" :class="item.level">
         <span><i></i>{{ item.title }}</span>
         <b>{{ item.text }}</b>
@@ -371,7 +371,7 @@
           <h4><Icon name="map" /> 使用说明</h4>
           <div><span><Icon name="shield" /></span>提交前会先校验登录 Cookie 格式</div>
           <div><span><Icon name="shield" /></span>添加成功后自动刷新账号列表</div>
-          <div><span><Icon name="shield" /></span>请勿把登录凭证暴露给不可信页面或日志</div>
+          <div><span><Icon name="shield" /></span>请勿把登录凭证发送到非授权渠道或第三方页面</div>
         </div>
         <div class="manual-actions"><AppButton @click="closeModal">取消</AppButton><AppButton type="primary" :disabled="manualCookieParsed && !manualCookieParsed.validation.valid" @click="submitManual">{{ submitting ? '添加中...' : '添加' }}</AppButton></div>
       </section>
@@ -384,7 +384,7 @@
           <span v-if="selected?.unb" class="current-unb-tag">UNB: {{ maskValue(selected.unb) }}</span>
         </div>
         <label class="field-label required">登录 Cookie <span>必填</span></label>
-        <textarea v-model="cookieEdit.cookie" class="cookie-area" placeholder="请输入闲鱼账号 Cookie 字符串（从浏览器 F12 开发者工具中复制）"></textarea>
+        <textarea v-model="cookieEdit.cookie" class="cookie-area" placeholder="粘贴由可信浏览器会话导出的闲鱼账号 Cookie 字符串"></textarea>
 
         <!-- Cookie 解析预览 -->
         <div v-if="cookieEditParsed" class="cookie-parse-preview">
@@ -430,12 +430,12 @@
         </div>
 
         <div v-if="cookieEditError" class="input-error">{{ cookieEditError }}</div>
-        <div class="modal-hint"><Icon name="help" /> 提交后自动提取 unb、_m_h5_tk 等关键字段并重置登录凭证状态。保存后建议重新启动实时连接。</div>
+        <div class="modal-hint"><Icon name="help" /> 提交后自动识别关键身份字段并重置登录凭证状态。保存后建议重新启动实时连接。</div>
         <div class="usage-box">
           <h4><Icon name="map" /> 使用说明</h4>
           <div><span><Icon name="shield" /></span>遇到"被挤爆"滑块验证时需要更换登录 Cookie</div>
-          <div><span><Icon name="shield" /></span>登录 Cookie 从浏览器 F12 → Application → Cookies 中复制</div>
-          <div><span><Icon name="shield" /></span>请勿把登录凭证暴露给不可信页面或日志</div>
+          <div><span><Icon name="shield" /></span>请仅从本人可控的闲鱼登录环境复制 Cookie，确认账号一致后再保存</div>
+          <div><span><Icon name="shield" /></span>请勿把登录凭证发送到非授权渠道或第三方页面</div>
         </div>
         <div class="manual-actions"><AppButton @click="closeModal">取消</AppButton><AppButton type="primary" :disabled="cookieEditSubmitting || (cookieEditParsed && !cookieEditParsed.validation.valid)" @click="submitCookieEdit">{{ cookieEditSubmitting ? '保存中...' : '保存' }}</AppButton></div>
       </section>
@@ -984,19 +984,19 @@ const accountDiagnostics = computed(() => {
       title: '登录凭证状态',
       level: authState === true ? 'ok' : (authState === false ? 'danger' : 'warn'),
       text: accountCookieLabel(a),
-      tip: authState === true ? '认证探测已确认可用。' : accountLoginHint(a)
+      tip: authState === true ? '系统已确认登录凭证可用。' : accountLoginHint(a)
     },
     {
-      title: '账号验证',
+      title: '安全验证',
       level: !accountStateKnown || verify ? 'warn' : 'ok',
       text: !accountStateKnown ? '状态未知' : (verify ? accountStatus(a.status) : '无需处理'),
-      tip: !accountStateKnown ? '账号状态尚未加载，请刷新后再执行敏感操作。' : (verify ? '请先在闲鱼完成手机/人机验证，再回到系统刷新。' : '账号记录未标记为待验证。')
+      tip: !accountStateKnown ? '账号状态尚未加载，请刷新后再执行敏感操作。' : (verify ? '请先在闲鱼完成手机/人机验证，再回到系统刷新。' : '当前账号无需额外验证。')
     },
     {
-      title: '消息连接',
+      title: '消息通道',
       level: ws.connected === true ? 'ok' : 'warn',
       text: ws.connected === true ? '实时连接在线' : (ws.connected === false ? (isWsPending(a.id) ? '启动中' : '未连接') : '状态未知'),
-      tip: ws.connected === true ? '状态探测已确认连接在线。' : (ws.connected === false ? '自动回复前请启动并等待连接确认。' : '连接探测失败，当前不会按离线处理。')
+      tip: ws.connected === true ? '系统已确认消息通道在线。' : (ws.connected === false ? '自动回复前请启动并等待连接确认。' : '暂未确认连接状态，当前不会按离线处理。')
     }
   ]
 })
@@ -1317,7 +1317,7 @@ const accountStatCards = computed(() => [
   { key: 'total', title: '账号总数', value: accountMetric(stats.value.total), change: '全部记录', icon: 'users', tone: 'tone-blue' },
   { key: 'normal', title: '正常账号', value: accountMetric(stats.value.normal), change: '当前页', icon: 'account', tone: 'tone-green' },
   { key: 'verify', title: '需验证', value: accountMetric(stats.value.verify), change: '当前页', icon: 'shield', tone: 'tone-orange' },
-  { key: 'wsOnline', title: '实时在线', value: accountMetric(stats.value.wsOnline), change: '当前页已探测', icon: 'link', tone: 'tone-purple' },
+  { key: 'wsOnline', title: '实时在线', value: accountMetric(stats.value.wsOnline), change: '当前页已确认', icon: 'link', tone: 'tone-purple' },
   { key: 'cookieWarn', title: '登录凭证异常', value: accountMetric(stats.value.cookieWarn), change: '当前页已确认', icon: 'opportunity', tone: 'tone-orange' },
 ])
 
@@ -1410,7 +1410,7 @@ async function loadWsStatus(accountId, options = {}) {
       connected: null,
       statusUnavailable: true,
       status: '状态未知',
-      refreshError: e.message || '连接状态探测失败'
+      refreshError: e.message || '连接状态暂不可用'
     }
     throw e
   }
