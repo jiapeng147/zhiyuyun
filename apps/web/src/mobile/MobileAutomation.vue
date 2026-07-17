@@ -2,7 +2,7 @@
   <div class="m-auto">
     <div class="m-page-header">
       <h1>自动化中心</h1>
-      <p class="m-page-sub">移动端聚合自动发货、自动回复、定时任务和发货记录。</p>
+      <p class="m-page-sub">移动工作台聚合自动发货、自动回复、定时任务和发货记录。</p>
     </div>
 
     <div class="m-summary-card">
@@ -11,7 +11,7 @@
       </div>
       <div class="m-summary-copy">
         <strong>自动化能力按当前配置运行</strong>
-        <span>移动端聚合已接入的运营功能，复杂规则与密钥配置建议切到桌面版处理。</span>
+        <span>移动工作台聚合已接入的运营功能，复杂规则与密钥配置建议切到桌面工作台处理。</span>
       </div>
     </div>
 
@@ -103,8 +103,8 @@
         <MIcon name="warning" :size="24" />
       </div>
       <div class="m-pc-notice-content">
-        <div class="m-pc-notice-title">桌面版提供完整配置体验</div>
-        <div class="m-pc-notice-desc">规则配置、模型管理、知识库和系统设置建议在桌面端完成，移动端更适合巡检和查看状态。</div>
+        <div class="m-pc-notice-title">桌面工作台提供完整配置体验</div>
+        <div class="m-pc-notice-desc">规则配置、模型管理、知识库和系统设置建议在桌面工作台完成，移动工作台更适合巡检和查看状态。</div>
       </div>
     </div>
 

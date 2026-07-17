@@ -78,7 +78,7 @@
           </div>
           <div class="m-menu-info">
             <div class="m-menu-title">系统设置</div>
-            <div class="m-menu-desc">AI客服、商品操作与关于</div>
+            <div class="m-menu-desc">AI客服、商品操作与平台信息</div>
           </div>
           <MIcon name="chevronRight" :size="16" class="m-menu-arrow" />
         </div>

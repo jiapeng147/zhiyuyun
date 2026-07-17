@@ -35,7 +35,7 @@
               <Icon name="aboutVersion" />
             </div>
             <div class="metric-info">
-              <span class="metric-label">平台版本</span>
+              <span class="metric-label">服务标识</span>
               <b class="metric-value">v{{ APP_VERSION }}</b>
             </div>
           </div>

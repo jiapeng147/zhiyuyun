@@ -427,7 +427,7 @@ async function loadConversations({ background = false } = {}) {
     conversationAvailable.value = true
     const partialWarnings = []
     if (failedCount > 0) partialWarnings.push(`${failedCount} 个账号的会话暂不可用；已加载账号仍可查看。`)
-    if (truncatedCount > 0) partialWarnings.push(`${truncatedCount} 个账号的会话超过移动端安全展示上限；当前仅展示每个账号最近 ${MOBILE_CONVERSATION_LIMIT} 条，请使用桌面版继续查看。`)
+    if (truncatedCount > 0) partialWarnings.push(`${truncatedCount} 个账号的会话超过移动工作台安全展示上限；当前仅展示每个账号最近 ${MOBILE_CONVERSATION_LIMIT} 条，请使用桌面工作台继续查看。`)
     conversationError.value = partialWarnings.join(' ')
     if (activeChat.value) {
       const nextActive = findPreservedConversation(conversations.value, activeChat.value)

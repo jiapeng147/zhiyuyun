@@ -347,7 +347,7 @@
             </div>
 
             <p class="payment-tip">
-              扫码后可刷新查询商业服务的订单状态；审核与投放状态以商业后台回执为准。
+              扫码后可刷新查询商业服务的订单状态；审核与投放状态以商业服务回执为准。
             </p>
             <p v-if="currentPayment.pollError" class="payment-poll-error" role="status" aria-live="polite">
               {{ currentPayment.pollError }}
@@ -417,7 +417,7 @@
                   </div>
                   <p>
                     {{ item.statusMessage || (commercialState.available === false
-                      ? '历史只读记录；无法确认是否已进入商业后台。'
+                      ? '历史只读记录；无法确认是否已进入商业服务流程。'
                       : '商业服务暂未返回状态说明。') }}
                   </p>
                   <small>{{ item.contactValue || item.contact || '-' }}</small>
@@ -1161,7 +1161,7 @@ async function openPaymentForApplication(application, paymentMethod) {
     clearPaymentAttempt()
     currentPayment.order = accepted
     if (accepted.paid) {
-      showNotice('商业服务已确认订单支付状态；审核状态以商业后台回执为准', 'success')
+      showNotice('商业服务已确认订单支付状态；审核状态以商业服务回执为准', 'success')
       await loadApplications()
     } else {
       startPaymentPolling(orderNo, orderGuard)
@@ -1232,7 +1232,7 @@ async function refreshCurrentOrder(orderNo = currentPayment.order?.orderNo, opti
     } catch (error) {
       if (!isPaymentGuardCurrent(guard)) return false
       if (options.silent) {
-        currentPayment.pollError = '支付状态暂时无法刷新，已保留上次成功状态；系统会继续后台重试。'
+        currentPayment.pollError = '支付状态暂时无法刷新，已保留上次成功状态；系统会继续自动重试。'
       } else {
         handleCommercialFailure(error, '刷新支付状态失败')
       }

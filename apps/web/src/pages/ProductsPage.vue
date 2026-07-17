@@ -1766,7 +1766,7 @@ async function syncProducts(isAuto = false){
     const syncId = res.data?.syncId || res.data?.sync_id
     if (syncId) {
       syncTask.value = { id: syncId, status: 'running', progress: 0 }
-      if (!isAuto) showNotice('info', '商品同步已启动，可继续使用页面；正在后台获取商品数据...')
+      if (!isAuto) showNotice('info', '商品同步已启动，可继续使用页面；正在自动获取商品数据...')
       await pollSyncProgress(syncId, isAuto)
       await loadSyncTasks()
     } else {

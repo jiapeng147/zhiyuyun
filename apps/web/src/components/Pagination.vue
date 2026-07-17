@@ -9,7 +9,7 @@
       :show-size-picker="sizes.length > 0"
       :display-order="['pages', 'size-picker']"
       @update:page="go"
-      @update:page-size="onNaiveSizeChange"
+      @update:page-size="onPageSizeChange"
     >
       <template #prefix>共 {{ totalNum }} 条</template>
     </n-pagination>
@@ -41,7 +41,7 @@ function go(p) {
   emit('page-change', p)
 }
 
-function onNaiveSizeChange(size) {
+function onPageSizeChange(size) {
   emit('size-change', Number(size))
 }
 </script>

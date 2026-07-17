@@ -130,7 +130,7 @@
             <button type="button" class="xya-msg-more-btn" :disabled="loadingMoreConversations" @click="loadMoreConversations">{{ loadingMoreConversations ? '加载中...' : '查看更多' }}</button>
           </div>
         </div>
-        <div class="xya-msg-footer-note">{{ backgroundRefreshing ? '正在后台同步 · ' : '' }}共 {{ displayList.length }} 条会话</div>
+        <div class="xya-msg-footer-note">{{ backgroundRefreshing ? '正在自动同步 · ' : '' }}共 {{ displayList.length }} 条会话</div>
       </aside>
 
       <section class="xya-msg-chat-panel">
@@ -1227,7 +1227,7 @@ async function loadMoreConversations() {
     conversationCursor.value = nextCursor
     conversationHasMore.value = hasMore
     visibleConversationCount.value += DEFAULT_VISIBLE_CONVERSATIONS
-    // 后台分批查询缺头像会话的头像
+    // 分批查询缺头像会话的头像
     fetchMissingAvatars(requestedAccountId, newItems).catch(() => {})
   } catch (e) {
     if (import.meta.env.DEV) console.error('[MSG] loadMoreConversations failed')
@@ -1978,7 +1978,7 @@ async function loadConversations(preserveSelected = true, { background = preserv
       nextItems: nextConversations
     })
     if (snapshot.preserve) {
-      conversationRefreshNotice.value = '后台同步暂未返回有效会话，已保留当前列表并将在下一轮自动重试'
+      conversationRefreshNotice.value = '自动同步暂未返回有效会话，已保留当前列表并将在下一轮自动重试'
       return
     }
     conversationsAvailable.value = true
@@ -2028,12 +2028,12 @@ async function loadConversations(preserveSelected = true, { background = preserv
       }
     } else if (!selected.value || !preserveSelected) {
       // 仅在无选中会话或主动 reload 时，才选择第一条会话
-      // 不阻塞：让会话列表立即展示，聊天上下文后台异步加载
+      // 不阻塞：让会话列表立即展示，聊天上下文异步加载
       selectChat(conversations.value[0]).catch(() => {})
       return
     }
     // preserveSelected=true 且未找到匹配时，保持当前选中态不变
-    // 后台分批查询缺头像会话的头像
+    // 分批查询缺头像会话的头像
     fetchMissingAvatars(requestedAccountId, nextConversations, MESSAGE_BACKGROUND_REQUEST_CONFIG).catch(() => {})
   } catch (e) {
     if (!shouldApplyConversationLoadResult({
@@ -2052,7 +2052,7 @@ async function loadConversations(preserveSelected = true, { background = preserv
       failed: true
     })
     if (snapshot.preserve) {
-      conversationRefreshNotice.value = '会话后台同步暂时失败，当前内容已保留，系统将自动重试'
+      conversationRefreshNotice.value = '会话自动同步暂时失败，当前内容已保留，系统将自动重试'
       return
     }
     conversationsAvailable.value = false
@@ -2344,7 +2344,7 @@ async function loadContext(scrollBottom = true, { background = false } = {}) {
       nextItems: nextMessages
     })
     if (snapshot.preserve) {
-      contextRefreshNotice.value = '后台同步暂未返回有效聊天记录，已保留当前消息并将在下一轮自动重试'
+      contextRefreshNotice.value = '自动同步暂未返回有效聊天记录，已保留当前消息并将在下一轮自动重试'
       return
     }
     hasMoreContext.value = nextHasMoreContext
@@ -2362,7 +2362,7 @@ async function loadContext(scrollBottom = true, { background = false } = {}) {
       failed: true
     })
     if (snapshot.preserve) {
-      contextRefreshNotice.value = '聊天记录后台同步暂时失败，当前消息已保留，系统将自动重试'
+      contextRefreshNotice.value = '聊天记录自动同步暂时失败，当前消息已保留，系统将自动重试'
       return
     }
     error.value = '上下文加载失败: ' + (e.message || '网络错误')
@@ -2841,7 +2841,7 @@ onMounted(async () => {
     } else {
       if (query.xianyuAccountId) {
         startPolling()
-        // 从后台切回时立即刷新一次
+        // 从浏览器恢复可见时立即刷新一次
         loadConversations(true, { background: true }).catch(() => {})
       }
     }

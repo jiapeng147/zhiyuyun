@@ -218,7 +218,7 @@
             <div v-if="manualForm.visible" class="manual-delivery-section">
               <div class="section-title">手动发货（立即执行）</div>
               <p class="manual-delivery-warning">
-                确认后将立即向真实买家发送消息，并确认闲鱼平台发货。这不是定时或后台任务。
+                确认后将立即向真实买家发送消息，并确认闲鱼平台发货。这不是定时任务或延后任务。
               </p>
               <div
                 v-if="manualOutcome"

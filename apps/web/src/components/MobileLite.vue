@@ -1,7 +1,7 @@
 <template>
   <div class="mobile-shell mobile-v7-shell">
     <header v-if="!subPage" class="m-topbar">
-      <button type="button" class="m-brand" aria-label="返回移动端首页" @click="activeTab = 'home'">
+      <button type="button" class="m-brand" aria-label="返回移动工作台首页" @click="activeTab = 'home'">
         <div class="m-brand-mark">
           <img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-mobile" alt="" />
         </div>

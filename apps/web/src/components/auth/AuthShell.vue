@@ -95,7 +95,7 @@
           </span>
           <div>
             <span class="auth-panel-kicker">{{ pageKey === 'register' ? '创建商业账户' : '安全登录' }}</span>
-            <h2>{{ pageKey === 'register' ? '创建账号' : '登录后台' }}</h2>
+            <h2>{{ pageKey === 'register' ? '创建账号' : '登录工作台' }}</h2>
             <p>{{ pageKey === 'register' ? '使用邮箱验证码开通账户' : '进入你的运营工作台' }}</p>
           </div>
         </div>
