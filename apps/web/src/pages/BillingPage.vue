@@ -2,20 +2,54 @@
   <div class="billing-page">
     <div v-if="notice" :class="['billing-notice', noticeType]" role="status">{{ notice }}</div>
 
-    <n-card class="billing-hero" :bordered="false">
-      <div>
-        <span class="eyebrow">套餐订阅</span>
-        <h2>套餐账单</h2>
-        <p>查看当前套餐、账号配额、AI 调用额度与订阅订单。</p>
+    <section class="billing-command-center">
+      <div class="billing-command-main">
+        <div class="billing-command-kicker">
+          <span>套餐订阅</span>
+          <b>{{ state?.plan?.expired ? '套餐已过期' : '服务生效中' }}</b>
+        </div>
+        <h2>订阅与账单控制台</h2>
+        <p>查看当前套餐、账号配额、AI 调用额度、订阅订单和付款凭证状态。</p>
+        <div class="billing-command-meta">
+          <span>当前套餐 {{ state?.plan?.name || '—' }}</span>
+          <span>周期 {{ durationDays }} 天</span>
+          <span>{{ pendingOrders.length }} 个待确认订单</span>
+        </div>
       </div>
-      <button class="billing-btn" type="button" :disabled="loading" @click="loadAll">
-        {{ loading ? '刷新中...' : '刷新' }}
-      </button>
-    </n-card>
+      <div class="billing-command-panel">
+        <div class="billing-command-panel-head">
+          <span>账单动作</span>
+          <strong>{{ loading ? '刷新中' : '可操作' }}</strong>
+        </div>
+        <button class="billing-btn primary" type="button" :disabled="loading" @click="loadAll">
+          {{ loading ? '刷新中...' : '刷新账单' }}
+        </button>
+        <div class="billing-command-stats">
+          <div>
+            <span>订单流水</span>
+            <strong>{{ orders.length }}</strong>
+          </div>
+          <div>
+            <span>待确认</span>
+            <strong>{{ pendingOrders.length }}</strong>
+          </div>
+          <div>
+            <span>账号用量</span>
+            <strong>{{ usage.accounts.used }} / {{ displayLimit(usage.accounts.limit) }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <div class="billing-grid">
-      <n-card class="billing-card plan-summary" :bordered="false">
-        <template #header>当前套餐</template>
+    <section class="billing-overview-grid">
+      <article class="billing-panel plan-summary-panel">
+        <header class="billing-panel-head">
+          <div>
+            <span>当前套餐</span>
+            <h3>套餐状态</h3>
+          </div>
+          <b>{{ state?.plan?.code || 'free' }}</b>
+        </header>
         <div class="plan-name">{{ state?.plan?.name || '—' }}</div>
         <div class="plan-code">{{ state?.plan?.code || 'free' }}</div>
         <div class="summary-row">
@@ -35,32 +69,49 @@
             {{ feature.label }}
           </span>
         </div>
-      </n-card>
+      </article>
 
-      <n-card class="billing-card" :bordered="false">
-        <template #header>账号配额</template>
+      <article class="billing-panel quota-panel">
+        <header class="billing-panel-head">
+          <div>
+            <span>账号配额</span>
+            <h3>账号绑定</h3>
+          </div>
+          <b>剩余 {{ displayRemaining(usage.accounts.remaining, usage.accounts.limit) }}</b>
+        </header>
         <div class="quota-main">
           <strong>{{ usage.accounts.used }}</strong>
           <span>/ {{ displayLimit(usage.accounts.limit) }}</span>
         </div>
         <div class="quota-bar"><i :style="{ width: percent(usage.accounts.used, usage.accounts.limit) + '%' }"></i></div>
         <p>剩余 {{ displayRemaining(usage.accounts.remaining, usage.accounts.limit) }} 个闲鱼账号可绑定。</p>
-      </n-card>
+      </article>
 
-      <n-card class="billing-card" :bordered="false">
-        <template #header>AI 今日额度</template>
+      <article class="billing-panel quota-panel">
+        <header class="billing-panel-head">
+          <div>
+            <span>AI 今日额度</span>
+            <h3>模型调用</h3>
+          </div>
+          <b>{{ displayLimit(usage.aiCallsToday.limit) }}</b>
+        </header>
         <div class="quota-main">
           <strong>{{ usage.aiCallsToday.used }}</strong>
           <span>/ {{ displayLimit(usage.aiCallsToday.limit) }}</span>
         </div>
         <div class="quota-bar ai"><i :style="{ width: percent(usage.aiCallsToday.used, usage.aiCallsToday.limit) + '%' }"></i></div>
         <p>AI 客服验证、RAG 对话、货源推荐等会计入调用次数。</p>
-      </n-card>
-    </div>
+      </article>
+    </section>
 
-    <n-card class="billing-card audit-card" :bordered="false">
-      <template #header>用量与配额事件</template>
-      <template #header-extra><span class="muted">最近 20 条记录</span></template>
+    <section class="billing-panel audit-panel-shell">
+      <header class="billing-panel-head">
+        <div>
+          <span>用量审计</span>
+          <h3>用量与配额事件</h3>
+        </div>
+        <b>最近 20 条记录</b>
+      </header>
       <div class="audit-grid">
         <section class="audit-panel">
           <div class="audit-title">
@@ -123,11 +174,14 @@
           </div>
         </section>
       </div>
-    </n-card>
+    </section>
 
-    <n-card class="billing-card" :bordered="false">
-      <template #header>可选套餐</template>
-      <template #header-extra>
+    <section class="billing-panel plan-catalog-panel">
+      <header class="billing-panel-head catalog-head">
+        <div>
+          <span>订阅升级</span>
+          <h3>可选套餐</h3>
+        </div>
         <div class="order-options">
           <label class="duration-picker">
             <span>周期</span>
@@ -143,13 +197,16 @@
             <input v-model.trim="couponCode" type="text" placeholder="可选" @input="clearCouponPreview" />
           </label>
         </div>
-      </template>
+      </header>
       <div class="plan-catalog">
-        <div v-for="plan in plans" :key="plan.code" class="plan-item">
+        <div v-for="plan in plans" :key="plan.code" :class="['plan-item', { active: currentPlanCode === plan.code }]">
           <div class="plan-item-head">
-            <div>
+            <div class="plan-title-stack">
               <strong>{{ plan.name }}</strong>
-              <code>{{ plan.code }}</code>
+              <span>
+                <code>{{ plan.code }}</code>
+                <i v-if="currentPlanCode === plan.code" class="plan-current-tag">当前</i>
+              </span>
             </div>
             <div class="price">
               <template v-if="previewFor(plan)">
@@ -201,13 +258,16 @@
           </div>
         </div>
       </div>
-    </n-card>
+    </section>
 
-    <n-card v-if="paymentConfig.enabled || pendingOrders.length" class="billing-card" :bordered="false">
-      <template #header>支付说明</template>
-      <template #header-extra>
-        <span class="muted">付费订单需平台确认后生效</span>
-      </template>
+    <section v-if="paymentConfig.enabled || pendingOrders.length" class="billing-panel payment-panel">
+      <header class="billing-panel-head">
+        <div>
+          <span>支付说明</span>
+          <h3>付款与确认</h3>
+        </div>
+        <b>付费订单需平台确认后生效</b>
+      </header>
       <div class="payment-layout">
         <div class="payment-copy">
           <p>{{ paymentConfig.instructions || '请联系平台确认付款方式。付款完成后，平台会确认订单并开通套餐。' }}</p>
@@ -235,10 +295,16 @@
           </figure>
         </div>
       </div>
-    </n-card>
+    </section>
 
-    <n-card class="billing-card" :bordered="false">
-      <template #header>订单记录</template>
+    <section class="billing-panel order-panel">
+      <header class="billing-panel-head">
+        <div>
+          <span>订单流水</span>
+          <h3>订单记录</h3>
+        </div>
+        <b>{{ orders.length }} 条</b>
+      </header>
       <div class="table-wrap">
         <table class="billing-table">
           <thead>
@@ -298,7 +364,7 @@
           </tbody>
         </table>
       </div>
-    </n-card>
+    </section>
 
     <div v-if="paymentProofTarget" class="billing-modal-mask" @click.self="closePaymentProof">
       <div class="billing-modal-card">
@@ -352,7 +418,6 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { NCard } from 'naive-ui'
 import { friendlyError } from '../utils/friendlyError.js'
 import {
   closeBillingOrder,
@@ -630,17 +695,24 @@ onMounted(loadAll)
 
 <style scoped>
 .billing-page {
+  --billing-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --billing-ink: #0f172a;
+  --billing-muted: #64748b;
+  --billing-line: #dfe7f1;
+  --billing-surface: #ffffff;
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
+  color: var(--billing-ink);
 }
 
 .billing-notice {
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 11px 13px;
+  border-radius: 8px;
   border: 1px solid #bbf7d0;
   background: #f0fdf4;
   color: #166534;
+  box-shadow: 0 8px 20px rgba(22, 101, 52, .06);
 }
 
 .billing-notice.error {
@@ -649,43 +721,226 @@ onMounted(loadAll)
   color: #b91c1c;
 }
 
-.billing-hero,
-.billing-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+.billing-command-center {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, .08), rgba(37, 99, 235, .06) 44%, rgba(245, 158, 11, .08)),
+    #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
 }
 
-.billing-hero :deep(.n-card__content) {
+.billing-command-center::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #0f766e, #2563eb, #f59e0b);
+}
+
+.billing-command-main {
+  position: relative;
+  min-width: 0;
+}
+
+.billing-command-kicker,
+.billing-command-meta,
+.billing-command-panel-head,
+.billing-panel-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 18px;
+  gap: 12px;
 }
 
-.eyebrow {
+.billing-command-kicker {
+  justify-content: flex-start;
+}
+
+.billing-command-kicker span,
+.billing-command-panel-head span,
+.billing-panel-head span {
   color: #0f766e;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 750;
 }
 
-.billing-hero h2 {
-  margin: 8px 0 6px;
-  color: #111827;
-  font-size: 22px;
+.billing-command-kicker b,
+.billing-command-panel-head strong,
+.billing-panel-head b {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.billing-command-main h2 {
+  margin: 12px 0 8px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 780;
   line-height: 1.25;
 }
 
-.billing-hero p,
-.billing-card p,
+.billing-command-main p,
+.billing-panel p,
 .muted {
   margin: 0;
   color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.billing-command-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.billing-command-meta span,
+.billing-command-panel {
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.billing-command-meta span {
+  padding: 7px 10px;
+  color: #334155;
+  font-size: 12px;
+}
+
+.billing-command-panel {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72);
+}
+
+.billing-command-panel > .billing-btn {
+  width: 100%;
+}
+
+.billing-command-stats {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.billing-command-stats div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: rgba(248, 250, 252, .86);
+}
+
+.billing-command-stats span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.billing-command-stats strong {
+  color: #0f172a;
   font-size: 13px;
-  line-height: 1.6;
+  font-weight: 760;
+}
+
+.billing-overview-grid {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(2, minmax(0, .9fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.billing-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+}
+
+.plan-summary-panel {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(15, 23, 42, .92);
+  background:
+    linear-gradient(160deg, rgba(20, 184, 166, .18), rgba(37, 99, 235, .06) 38%, transparent 62%),
+    #101827;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, .18);
+}
+
+.plan-summary-panel .billing-panel-head span,
+.plan-summary-panel .billing-panel-head h3,
+.plan-summary-panel .billing-panel-head b,
+.plan-summary-panel .plan-name,
+.plan-summary-panel .summary-row strong {
+  color: #f8fafc;
+}
+
+.plan-summary-panel .plan-code {
+  color: #67e8f9;
+}
+
+.plan-summary-panel .summary-row {
+  border-top-color: rgba(148, 163, 184, .24);
+  color: #cbd5e1;
+}
+
+.plan-summary-panel .current-features span {
+  background: rgba(20, 184, 166, .15);
+  color: #99f6e4;
+}
+
+.plan-summary-panel .current-features span.off {
+  background: rgba(148, 163, 184, .14);
+  color: #94a3b8;
+}
+
+.quota-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+}
+
+.quota-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: #0f766e;
+}
+
+.billing-overview-grid .quota-panel:nth-child(3)::before {
+  background: #2563eb;
+}
+
+.billing-panel-head {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.billing-panel-head h3 {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.catalog-head {
+  align-items: center;
 }
 
 .duration-picker {
@@ -724,20 +979,6 @@ onMounted(loadAll)
 .coupon-picker input {
   width: 138px;
   text-transform: uppercase;
-}
-
-.billing-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.billing-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.billing-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
 }
 
 .plan-name {
@@ -829,23 +1070,62 @@ onMounted(loadAll)
 
 .plan-catalog {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
 }
 
 .plan-item {
+  position: relative;
   display: grid;
   gap: 12px;
   padding: 14px;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fbfdff;
+  transition:
+    transform 160ms var(--billing-ease),
+    border-color 160ms var(--billing-ease),
+    box-shadow 160ms var(--billing-ease),
+    background 160ms var(--billing-ease);
+}
+
+.plan-item:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, .08);
+}
+
+.plan-item.active {
+  border-color: #0f766e;
+  background: linear-gradient(180deg, #f0fdfa, #ffffff);
+}
+
+.plan-item.active::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  border-radius: 8px 8px 0 0;
+  background: #0f766e;
 }
 
 .plan-item-head {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+}
+
+.plan-title-stack {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-title-stack span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .plan-item strong {
@@ -861,6 +1141,19 @@ onMounted(loadAll)
   background: #eef2f7;
   color: #334155;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.plan-current-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 760;
 }
 
 .price {
@@ -983,6 +1276,7 @@ onMounted(loadAll)
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: #fff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, .08);
 }
 
 .audit-grid {
@@ -1025,12 +1319,33 @@ onMounted(loadAll)
   background: #fff;
   color: #111827;
   cursor: pointer;
+  font-weight: 650;
+  transition:
+    transform 140ms var(--billing-ease),
+    border-color 140ms var(--billing-ease),
+    background 140ms var(--billing-ease),
+    box-shadow 140ms var(--billing-ease);
+}
+
+.billing-btn:not(:disabled):hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+}
+
+.billing-btn:not(:disabled):active {
+  transform: scale(.97);
 }
 
 .billing-btn.primary {
   border-color: #2563eb;
   background: #2563eb;
   color: #fff;
+}
+
+.billing-btn.primary:not(:disabled):hover {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
 }
 
 .billing-btn.small {
@@ -1052,6 +1367,8 @@ onMounted(loadAll)
 
 .table-wrap {
   overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }
 
 .billing-table {
@@ -1069,8 +1386,17 @@ onMounted(loadAll)
 }
 
 .billing-table th {
+  background: #f8fafc;
   color: #64748b;
   font-weight: 650;
+}
+
+.billing-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.billing-table tbody tr:hover td {
+  background: #f8fafc;
 }
 
 .billing-table.compact {
@@ -1162,13 +1488,15 @@ onMounted(loadAll)
   justify-content: center;
   padding: 20px;
   background: rgba(15, 23, 42, .36);
+  backdrop-filter: blur(5px);
 }
 
 .billing-modal-card {
   width: min(680px, 94vw);
   max-height: 90vh;
   overflow: auto;
-  border-radius: 6px;
+  border: 1px solid rgba(226, 232, 240, .9);
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 18px 50px rgba(15, 23, 42, .22);
   padding: 18px;
@@ -1193,12 +1521,24 @@ onMounted(loadAll)
 }
 
 .billing-modal-head button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   border: 0;
-  background: transparent;
+  background: #f8fafc;
   color: #64748b;
   cursor: pointer;
   font-size: 24px;
   line-height: 1;
+  transition: transform 140ms var(--billing-ease), background 140ms var(--billing-ease);
+}
+
+.billing-modal-head button:hover {
+  background: #eef2f7;
+}
+
+.billing-modal-head button:active {
+  transform: scale(.94);
 }
 
 .proof-form {
@@ -1230,6 +1570,14 @@ onMounted(loadAll)
   padding: 8px 9px;
 }
 
+.proof-form input:focus,
+.proof-form textarea:focus,
+.duration-picker select:focus,
+.coupon-picker input:focus {
+  outline: 2px solid rgba(37, 99, 235, .18);
+  border-color: #2563eb;
+}
+
 .proof-actions {
   display: flex;
   justify-content: flex-end;
@@ -1237,13 +1585,22 @@ onMounted(loadAll)
 }
 
 @media (max-width: 980px) {
-  .billing-grid {
+  .billing-command-center,
+  .billing-overview-grid {
     grid-template-columns: 1fr;
   }
 
-  .billing-hero :deep(.n-card__content) {
+  .billing-command-center {
+    padding: 18px;
+  }
+
+  .catalog-head {
+    align-items: flex-start;
     flex-direction: column;
-    padding: 14px;
+  }
+
+  .order-options {
+    justify-content: flex-start;
   }
 
   .payment-layout {
@@ -1260,6 +1617,53 @@ onMounted(loadAll)
 
   .proof-form {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .billing-command-main h2 {
+    font-size: 22px;
+  }
+
+  .billing-command-kicker,
+  .billing-command-panel-head,
+  .billing-panel-head,
+  .plan-item-head,
+  .payment-line,
+  .order-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .billing-panel,
+  .billing-command-center {
+    padding: 14px;
+  }
+
+  .duration-picker,
+  .coupon-picker,
+  .duration-picker select,
+  .coupon-picker input,
+  .plan-actions .billing-btn,
+  .proof-actions .billing-btn {
+    width: 100%;
+  }
+
+  .payment-line span {
+    width: auto;
+  }
+
+  .payment-qr-list figure,
+  .payment-qr-list img {
+    width: 96px;
+  }
+
+  .payment-qr-list img {
+    height: 96px;
+  }
+
+  .proof-actions {
+    flex-direction: column-reverse;
   }
 }
 </style>
