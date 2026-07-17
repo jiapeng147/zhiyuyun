@@ -1,103 +1,141 @@
 <template>
-  <div class="logs-v4">
-    <n-card class="logs-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="warning" :bordered="false">操作记录</n-tag>
-        <h2>关键操作记录</h2>
-        <p>按操作类型、关键词与结果状态追踪关键写操作，结果未知的记录会被单独标记，便于人工核对。</p>
+  <div class="logs-console">
+    <div class="logs-notices">
+      <div v-if="error" class="global-notice error">{{ error }}</div>
+      <div v-if="success" class="global-notice success">{{ success }}</div>
+    </div>
+
+    <section class="logs-command-center">
+      <div class="logs-command-main">
+        <div class="logs-command-kicker">
+          <span>操作记录</span>
+          <b>{{ dataAvailable === true ? '记录已同步' : '记录待确认' }}</b>
+        </div>
+        <h2>审计日志工作台</h2>
+        <p>按操作类型、关键词和结果状态追踪关键写操作；结果未知的记录会被标记出来，便于人工核对。</p>
+        <div class="logs-command-meta">
+          <span>{{ loading ? '正在查询' : '查询就绪' }}</span>
+          <span>第 {{ current }} 页</span>
+          <span>{{ detail ? `已选记录 ${detail.id || '-'}` : '未选择详情' }}</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新记录' }}</AppButton>
-        <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
-      </n-space>
-    </n-card>
-
-    <div v-if="error" class="global-notice error">{{ error }}</div>
-    <div v-if="success" class="global-notice success">{{ success }}</div>
-
-    <section class="logs-v4-stats">
-      <n-card v-for="item in logStatCards" :key="item.key" class="logs-v4-stat" :class="item.tone" :bordered="false">
-        <span class="logs-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
-    </section>
-
-    <div class="logs-v4-grid">
-      <div>
-      <n-card class="logs-v4-card" :bordered="false">
-        <template #header>操作记录</template>
-        <div class="toolbar">
-          <select v-model="filters.operationType" class="input" @change="search">
-            <option value="">全部类型</option>
-            <option v-for="t in typeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
-          </select>
-          <input v-model="filters.keyword" class="input" placeholder="关键词搜索" @keyup.enter="search">
-          <AppButton type="primary" :disabled="loading" @click="search">{{ loading ? '查询中...' : '查询' }}</AppButton>
+      <div class="logs-command-panel">
+        <div class="logs-command-panel-head">
+          <span>审计动作</span>
+          <strong>{{ exporting ? '导出中' : '可操作' }}</strong>
+        </div>
+        <div class="logs-command-actions">
+          <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新记录' }}</AppButton>
           <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
         </div>
-        <EmptyState v-if="dataAvailable === false" icon="⚠️" title="操作记录暂不可用" description="当前无法确认是否存在操作记录，不会把失败显示为空列表。">
-          <template #actions><AppButton @click="load">重新加载</AppButton></template>
-        </EmptyState>
-        <BaseTable v-else :columns="cols" :rows="rows">
-          <template #operationType="{row}"><span :title="row.operationType">{{ operationTypeLabel(row.operationType) }}</span></template>
-          <template #status="{row}"><Badge :type="auditStatusType(row)">{{ row.status || '已记录' }}</Badge></template>
-          <template #createdTime="{row}">{{ formatDateTime(row.createdTime) }}</template>
-          <template #op="{row}"><button class="link" @click="showDetail(row)">查看</button></template>
-          <template #empty><EmptyState icon="📋" title="暂无操作记录" description="系统操作记录将在此显示。" /></template>
-        </BaseTable>
-        <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="size" @page-change="goPage" />
-      </n-card>
-    </div>
-    <div class="right-drawer logs-v4-detail">
-      <template v-if="detail">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <h3>记录详情</h3>
-          <button class="modal-close" @click="detail=null"><Icon name="close" /></button>
+      </div>
+    </section>
+
+    <section class="logs-metric-rail">
+      <article
+        v-for="item in logStatCards"
+        :key="item.key"
+        class="logs-metric-card"
+        :class="item.tone"
+      >
+        <span class="logs-metric-icon">{{ item.symbol }}</span>
+        <div>
+          <p>{{ item.title }}</p>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.change }}</small>
         </div>
-        <p>记录 ID <b>{{ detail.id || '-' }}</b></p>
-        <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:10px">
-          <div class="metric-tile"><span>操作类型</span><b :title="detail.operationType">{{ operationTypeLabel(detail.operationType) }}</b></div>
-          <div class="metric-tile"><span>目标类型</span><b>{{ detail.targetType || '-' }}</b></div>
-          <div class="metric-tile"><span>记录状态</span><Badge :type="auditStatusType(detail)">{{ detail.status || '已记录' }}</Badge></div>
-          <div class="metric-tile"><span>操作人</span><b>{{ detail.operator || '-' }}</b></div>
-        </div>
-        <div class="option-line"><span>操作时间</span><b>{{ formatDateTime(detail.createdTime) }}</b></div>
-        <div class="option-line"><span>目标ID</span><b>{{ detail.targetId || '-' }}</b></div>
-        <p v-if="detail.description" class="subtle">描述：{{ detail.description }}</p>
-        <div v-if="detail.requiresReconciliation" class="global-notice warn" role="status">
-          该写操作没有可验证的最终结果。请按请求编号核对业务数据与外部平台，确认前不要重复执行。
-        </div>
-        <div v-if="detail.requestParams" class="json-section">
-          <div class="json-section-head">
-            <button type="button" class="json-toggle" @click="toggleJsonSection('request')">
-              <span class="json-toggle-icon">{{ expandedJson.request ? '▾' : '▸' }}</span>
-              请求参数
-            </button>
-            <button type="button" class="json-copy" :disabled="copiedJson === 'request'" @click="copyJson(detail.requestParams, 'request')">{{ copiedJson === 'request' ? '已复制' : '复制' }}</button>
+      </article>
+    </section>
+
+    <section class="logs-workbench">
+      <main class="logs-main">
+        <section class="logs-panel logs-table-panel">
+          <header class="logs-panel-head">
+            <div>
+              <span>记录列表</span>
+              <h3>操作流水</h3>
+            </div>
+            <b>{{ dataAvailable === true ? `共 ${total} 条` : '列表不可用' }}</b>
+          </header>
+          <div class="logs-filter-bar">
+            <select v-model="filters.operationType" class="input" @change="search">
+              <option value="">全部类型</option>
+              <option v-for="t in typeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+            <input v-model="filters.keyword" class="input" placeholder="关键词搜索" @keyup.enter="search">
+            <AppButton type="primary" :disabled="loading" @click="search">{{ loading ? '查询中...' : '查询' }}</AppButton>
+            <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
           </div>
-          <pre v-show="expandedJson.request" class="trace-json">{{ formatJson(detail.requestParams) }}</pre>
-        </div>
-        <div v-if="detail.responseResult" class="json-section">
-          <div class="json-section-head">
-            <button type="button" class="json-toggle" @click="toggleJsonSection('response')">
-              <span class="json-toggle-icon">{{ expandedJson.response ? '▾' : '▸' }}</span>
-              响应结果
-            </button>
-            <button type="button" class="json-copy" :disabled="copiedJson === 'response'" @click="copyJson(detail.responseResult, 'response')">{{ copiedJson === 'response' ? '已复制' : '复制' }}</button>
+          <EmptyState v-if="dataAvailable === false" icon="!" title="操作记录暂不可用" description="当前无法确认是否存在操作记录，不会把失败显示为空列表。">
+            <template #actions><AppButton @click="load">重新加载</AppButton></template>
+          </EmptyState>
+          <BaseTable v-else :columns="cols" :rows="rows">
+            <template #operationType="{row}"><span :title="row.operationType">{{ operationTypeLabel(row.operationType) }}</span></template>
+            <template #status="{row}"><Badge :type="auditStatusType(row)">{{ row.status || '已记录' }}</Badge></template>
+            <template #createdTime="{row}">{{ formatDateTime(row.createdTime) }}</template>
+            <template #op="{row}"><button class="link" @click="showDetail(row)">查看</button></template>
+            <template #empty><EmptyState icon="≡" title="暂无操作记录" description="系统操作记录将在此显示。" /></template>
+          </BaseTable>
+          <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="size" @page-change="goPage" />
+        </section>
+      </main>
+
+      <aside class="logs-detail-panel">
+        <header class="logs-panel-head detail-head">
+          <div>
+            <span>记录详情</span>
+            <h3>审计明细</h3>
           </div>
-          <pre v-show="expandedJson.response" class="trace-json">{{ formatJson(detail.responseResult) }}</pre>
-        </div>
-      </template>
-      <EmptyState v-else icon="📋" title="选择记录查看详情" description="点击左侧列表中的「查看」按钮，这里会展示记录详情。" />
-    </div>
-  </div>
+          <button v-if="detail" class="modal-close" type="button" @click="detail=null"><Icon name="close" /></button>
+        </header>
+        <template v-if="detail">
+          <section class="logs-detail-identity">
+            <span>记录 ID</span>
+            <b>{{ detail.id || '-' }}</b>
+          </section>
+          <div class="logs-detail-metrics">
+            <div><span>操作类型</span><b :title="detail.operationType">{{ operationTypeLabel(detail.operationType) }}</b></div>
+            <div><span>目标类型</span><b>{{ detail.targetType || '-' }}</b></div>
+            <div><span>记录状态</span><Badge :type="auditStatusType(detail)">{{ detail.status || '已记录' }}</Badge></div>
+            <div><span>操作人</span><b>{{ detail.operator || '-' }}</b></div>
+          </div>
+          <div class="logs-info-list">
+            <div><span>操作时间</span><b>{{ formatDateTime(detail.createdTime) }}</b></div>
+            <div><span>目标ID</span><b>{{ detail.targetId || '-' }}</b></div>
+          </div>
+          <p v-if="detail.description" class="logs-description">描述：{{ detail.description }}</p>
+          <div v-if="detail.requiresReconciliation" class="global-notice warning" role="status">
+            该写操作没有可验证的最终结果。请按请求编号核对业务数据与外部平台，确认前不要重复执行。
+          </div>
+          <div v-if="detail.requestParams" class="json-section">
+            <div class="json-section-head">
+              <button type="button" class="json-toggle" @click="toggleJsonSection('request')">
+                <span class="json-toggle-icon">{{ expandedJson.request ? '▾' : '▸' }}</span>
+                请求参数
+              </button>
+              <button type="button" class="json-copy" :disabled="copiedJson === 'request'" @click="copyJson(detail.requestParams, 'request')">{{ copiedJson === 'request' ? '已复制' : '复制' }}</button>
+            </div>
+            <pre v-show="expandedJson.request" class="trace-json">{{ formatJson(detail.requestParams) }}</pre>
+          </div>
+          <div v-if="detail.responseResult" class="json-section">
+            <div class="json-section-head">
+              <button type="button" class="json-toggle" @click="toggleJsonSection('response')">
+                <span class="json-toggle-icon">{{ expandedJson.response ? '▾' : '▸' }}</span>
+                响应结果
+              </button>
+              <button type="button" class="json-copy" :disabled="copiedJson === 'response'" @click="copyJson(detail.responseResult, 'response')">{{ copiedJson === 'response' ? '已复制' : '复制' }}</button>
+            </div>
+            <pre v-show="expandedJson.response" class="trace-json">{{ formatJson(detail.responseResult) }}</pre>
+          </div>
+        </template>
+        <EmptyState v-else icon="≡" title="选择记录查看详情" description="点击左侧列表中的「查看」按钮，这里会展示记录详情。" />
+      </aside>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NCard, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -326,196 +364,388 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.logs-v4 {
+.logs-console {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
 }
 
-.logs-v4-hero,
-.logs-v4-card,
-.logs-v4-stat,
-.logs-v4-detail {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+.logs-notices {
+  display: grid;
+  gap: 10px;
 }
 
-.logs-v4-hero :deep(.n-card__content) {
-  padding: 18px;
+.logs-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(71, 85, 105, .08), rgba(37, 99, 235, .06) 45%, rgba(245, 158, 11, .08)),
+    #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
+}
+
+.logs-command-main {
+  min-width: 0;
+}
+
+.logs-command-kicker,
+.logs-command-meta,
+.logs-command-panel-head,
+.logs-panel-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
-.logs-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
+.logs-command-kicker {
+  justify-content: flex-start;
 }
 
-.logs-v4-hero p {
-  margin: 0;
+.logs-command-kicker span,
+.logs-command-panel-head span,
+.logs-panel-head span {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.logs-command-kicker b,
+.logs-command-panel-head strong,
+.logs-panel-head b {
   color: #64748b;
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.logs-v4-stats {
+.logs-command-main h2 {
+  margin: 12px 0 8px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.logs-command-main p {
+  max-width: 760px;
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.logs-command-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.logs-command-meta span,
+.logs-command-panel {
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.logs-command-meta span {
+  padding: 7px 10px;
+  color: #334155;
+  font-size: 12px;
+}
+
+.logs-command-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.logs-command-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.logs-metric-rail {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
-.logs-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+.logs-metric-card {
   display: grid;
-  gap: 8px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
 }
 
-.logs-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.logs-metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.logs-v4-stat.tone-blue .logs-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.logs-v4-stat.tone-green .logs-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.logs-v4-stat.tone-cyan .logs-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.logs-v4-stat.tone-purple .logs-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
-.logs-v4-stat.tone-orange .logs-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-
-.logs-v4-stat :deep(.n-statistic .n-statistic-label) {
+.logs-metric-card p {
+  margin: 0;
   color: #64748b;
   font-size: 12px;
 }
 
-.logs-v4-stat :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
+.logs-metric-card strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f172a;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.logs-v4-stat small {
+.logs-metric-card small {
+  display: block;
+  margin-top: 6px;
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.logs-v4-grid {
+.logs-metric-card.tone-blue .logs-metric-icon { background: #dbeafe; color: #1d4ed8; }
+.logs-metric-card.tone-green .logs-metric-icon { background: #dcfce7; color: #15803d; }
+.logs-metric-card.tone-cyan .logs-metric-icon { background: #ccfbf1; color: #0f766e; }
+.logs-metric-card.tone-purple .logs-metric-icon { background: #ede9fe; color: #6d28d9; }
+.logs-metric-card.tone-orange .logs-metric-icon { background: #ffedd5; color: #c2410c; }
+
+.logs-workbench {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
   align-items: start;
   gap: 16px;
 }
 
-.logs-v4-card :deep(.n-card__content) {
-  padding: 16px;
-}
-
-.logs-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
-}
-
-.logs-v4-detail {
-  position: sticky;
-  top: 16px;
-  padding: 16px;
+.logs-main {
   min-width: 0;
 }
 
-/* === 移动端适配 (max-width: 900px) === */
+.logs-panel,
+.logs-detail-panel {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+}
+
+.logs-panel {
+  padding: 16px;
+}
+
+.logs-table-panel {
+  overflow: hidden;
+}
+
+.logs-panel-head {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.logs-panel-head h3 {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.logs-filter-bar {
+  display: grid;
+  grid-template-columns: 190px minmax(220px, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.logs-filter-bar .input {
+  min-width: 0;
+}
+
+.logs-table-panel :deep(.base-table-wrap) {
+  border-radius: 8px;
+}
+
+.logs-detail-panel {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.detail-head {
+  margin-bottom: 0;
+}
+
+.logs-detail-identity {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.logs-detail-identity span,
+.logs-detail-metrics span,
+.logs-info-list span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.logs-detail-identity b {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.logs-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.logs-detail-metrics div,
+.logs-info-list div {
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.logs-detail-metrics b,
+.logs-info-list b {
+  color: #0f172a;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.logs-info-list {
+  display: grid;
+  gap: 9px;
+}
+
+.logs-description {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.json-section {
+  display: grid;
+  gap: 8px;
+}
+
+.json-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.json-toggle,
+.json-copy {
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.json-toggle {
+  min-height: 32px;
+  padding: 0 10px;
+  font-weight: 750;
+}
+
+.json-copy {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.json-copy:disabled {
+  cursor: default;
+  opacity: .65;
+}
+
+.trace-json {
+  max-height: 320px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.55;
+  overflow: auto;
+}
+
 @media (max-width: 900px) {
-  .logs-v4 {
+  .logs-console {
     gap: 12px;
   }
 
-  .logs-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
-    padding: 14px;
-  }
-
-  .logs-v4-stats,
-  .logs-v4-grid {
+  .logs-command-center,
+  .logs-metric-rail,
+  .logs-workbench,
+  .logs-filter-bar,
+  .logs-command-actions,
+  .logs-detail-metrics {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .logs-v4-card :deep(.n-card__content) {
-    padding: 12px;
+  .logs-command-center {
+    padding: 16px;
   }
 
-  .logs-v4-detail {
+  .logs-detail-panel {
     position: static;
   }
 
-  /* 覆盖根容器内联 grid: minmax(0,1fr) 460px → 单列堆叠 */
-  .grid[style*="460px"] {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 12px !important;
-  }
-  /* 右侧详情抽屉在移动端全宽堆叠到下方 */
-  .right-drawer {
-    width: 100%;
-    max-width: none;
-    margin-top: 12px;
-  }
-  /* 覆盖详情区指标瓦片内联 grid: repeat(2,1fr) → 单列 */
-  .grid[style*="repeat(2,1fr)"] {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 8px !important;
-  }
-  .metric-tile {
-    padding: 8px 10px;
-  }
-  .metric-tile b {
-    font-size: 13px;
-    word-break: break-all;
-    white-space: normal;
-  }
-  .metric-tile span {
-    font-size: 11px;
-  }
-  /* JSON 展示区块横向滚动，避免溢出 */
   .trace-json {
-    display: block;
-    overflow-x: auto;
-    white-space: pre;
-    -webkit-overflow-scrolling: touch;
     font-size: 11px;
     padding: 8px;
   }
+
   .json-section-head {
     flex-wrap: wrap;
     gap: 6px;
   }
-  /* 宽表格横向滚动 */
-  :deep(.base-table) {
+
+  .logs-table-panel :deep(.base-table) {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
-  }
-  /* 详情标题与关闭按钮行 */
-  .right-drawer > div:first-of-type {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  /* 网格子元素强制 min-width:0，防止内容撑爆列 */
-  .stat-grid > *,
-  .stat-row > *,
-  .form-grid > *,
-  .two-col > *,
-  .three-col > * {
-    min-width: 0;
   }
 }
 </style>
