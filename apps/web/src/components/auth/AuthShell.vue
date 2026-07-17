@@ -4,14 +4,13 @@
       <button type="button" class="auth-v3-brand" @click="emit('navigate', 'data')">
         <span><img src="/xya/brand/zhiyuyun-mark.svg?v=20260717-auth" alt="" /></span>
         <strong>智鱼云</strong>
-        <em>Admin</em>
       </button>
       <button type="button" class="auth-v3-ghost" @click="openDoc('用户协议')">服务条款</button>
     </header>
 
     <main class="auth-v3-main auth-v4-main">
       <section class="auth-v3-showcase" aria-label="产品概览">
-        <div class="auth-v3-eyebrow">Zhiyuyun Admin</div>
+        <div class="auth-v3-eyebrow">商业运营工作台</div>
         <h1>
           {{ titleLead }}
           <span v-if="titleAccent">{{ titleAccent }}</span>
@@ -34,7 +33,7 @@
                 <b>运营工作台</b>
                 <small>消息、商品、订单集中处理</small>
               </div>
-              <span>Live</span>
+              <span>在线</span>
             </div>
 
             <div class="auth-preview-stats">
@@ -91,7 +90,7 @@
         <div class="auth-v3-panel-head">
           <span class="auth-v3-brand-dot">ZY</span>
           <div>
-            <span class="auth-panel-kicker">{{ pageKey === 'register' ? 'Create Account' : 'Secure Login' }}</span>
+            <span class="auth-panel-kicker">{{ pageKey === 'register' ? '创建商业账户' : '安全登录' }}</span>
             <h2>{{ pageKey === 'register' ? '创建账号' : '登录后台' }}</h2>
             <p>{{ pageKey === 'register' ? '使用邮箱验证码开通账户' : '进入你的运营工作台' }}</p>
           </div>
@@ -224,20 +223,6 @@ function openDoc(title) {
   letter-spacing: 0;
 }
 
-.auth-v8-shell .auth-v3-brand em {
-  height: 22px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid #dfe6f2;
-  border-radius: 999px;
-  color: #667085;
-  background: #f8fafc;
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 700;
-}
-
 .auth-v8-shell .auth-v3-ghost,
 .auth-v8-shell .auth-v3-footer button {
   min-height: 32px;
@@ -253,12 +238,12 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-main {
-  width: min(1220px, calc(100vw - 48px)) !important;
-  margin: 30px auto !important;
+  width: min(1160px, calc(100vw - 48px)) !important;
+  margin: 22px auto !important;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) 420px !important;
   gap: 22px !important;
-  align-items: stretch !important;
+  align-items: start !important;
 }
 
 .auth-v8-shell .auth-v3-showcase,
@@ -272,17 +257,17 @@ function openDoc(title) {
 
 .auth-v8-shell .auth-v3-showcase {
   position: relative;
-  min-height: 590px !important;
-  padding: 42px !important;
+  min-height: 0 !important;
+  padding: 34px !important;
   display: grid !important;
   align-content: start !important;
-  gap: 22px !important;
+  gap: 16px !important;
   overflow: hidden;
 }
 
 .auth-v8-shell .auth-v3-eyebrow {
   width: fit-content;
-  padding: 6px 11px;
+  padding: 5px 10px;
   color: #2563eb !important;
   background: #eef4ff;
   border: 1px solid #dbe7ff;
@@ -294,11 +279,11 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-showcase h1 {
-  max-width: 600px;
+  max-width: 560px;
   margin: 0 !important;
   color: #101828 !important;
-  font-size: clamp(38px, 4.2vw, 58px) !important;
-  line-height: 1.08 !important;
+  font-size: clamp(34px, 3.8vw, 50px) !important;
+  line-height: 1.06 !important;
   font-weight: 800 !important;
   letter-spacing: 0 !important;
 }
@@ -309,18 +294,18 @@ function openDoc(title) {
 
 .auth-v8-shell .auth-v3-showcase p {
   max-width: 560px;
-  margin: -8px 0 0;
+  margin: -4px 0 0;
   color: #667085;
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.65;
 }
 
 .auth-v8-shell .auth-dashboard-preview {
   position: relative;
   margin-top: 4px;
-  min-height: 292px;
+  min-height: 242px;
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 60px minmax(0, 1fr);
   border: 1px solid #d9e3f1;
   border-radius: 14px;
   background: #0f172a;
@@ -330,7 +315,7 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-preview-sidebar {
-  padding: 16px 12px;
+  padding: 14px 10px;
   display: grid;
   align-content: start;
   justify-items: center;
@@ -365,10 +350,10 @@ function openDoc(title) {
 
 .auth-v8-shell .auth-preview-main {
   min-width: 0;
-  padding: 18px;
+  padding: 14px;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 14px;
+  gap: 10px;
   background:
     linear-gradient(135deg, rgba(96, 165, 250, .16), transparent 42%),
     linear-gradient(315deg, rgba(20, 184, 166, .12), transparent 38%),
@@ -386,8 +371,8 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-preview-toolbar {
-  min-height: 54px;
-  padding: 11px 13px;
+  min-height: 48px;
+  padding: 9px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -423,7 +408,7 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-preview-stats {
-  padding: 12px;
+  padding: 10px 12px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
@@ -444,12 +429,12 @@ function openDoc(title) {
   display: block;
   margin-top: 5px;
   color: #fff;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .auth-v8-shell .auth-preview-content {
-  padding: 14px;
+  padding: 12px;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
   gap: 14px;
@@ -457,7 +442,7 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-preview-chart {
-  min-height: 112px;
+  min-height: 82px;
   display: flex;
   align-items: end;
   gap: 8px;
@@ -477,7 +462,7 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-preview-list div {
-  min-height: 30px;
+  min-height: 26px;
   padding: 0 9px;
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr) 34px;
@@ -531,18 +516,18 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-preview-message {
-  left: 92px;
-  bottom: 18px;
-  width: 178px;
-  padding: 12px;
+  left: 76px;
+  bottom: 14px;
+  width: 166px;
+  padding: 10px;
   background: rgba(37, 99, 235, .78);
 }
 
 .auth-v8-shell .auth-preview-health {
-  right: 18px;
-  top: 92px;
-  width: 132px;
-  padding: 12px;
+  right: 14px;
+  top: 76px;
+  width: 122px;
+  padding: 10px;
   background: rgba(15, 23, 42, .78);
 }
 
@@ -553,8 +538,8 @@ function openDoc(title) {
 }
 
 .auth-v8-shell .auth-v3-feature-row > div {
-  min-height: 86px;
-  padding: 14px !important;
+  min-height: 70px;
+  padding: 12px !important;
   display: grid;
   align-content: start;
   gap: 6px;
@@ -579,7 +564,7 @@ function openDoc(title) {
   padding: 30px !important;
   display: grid;
   align-content: start;
-  align-self: center;
+  align-self: start;
   min-height: 0 !important;
 }
 
@@ -763,9 +748,6 @@ function openDoc(title) {
     margin: 0 auto;
   }
 
-  .auth-v8-shell .auth-v3-brand em {
-    display: none;
-  }
 }
 
 @media (max-width: 520px) {
