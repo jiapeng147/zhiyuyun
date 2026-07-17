@@ -854,11 +854,11 @@ def default_about_content() -> dict[str, Any]:
                     "actionValue": "当前版本已包含账号登录、系统配置整合与广告服务。",
                 },
                 {
-                    "label": "导出诊断日志",
+                    "label": "导出服务信息",
                     "icon": "download",
                     "actionText": "导出",
                     "actionType": "download",
-                    "actionValue": "diagnostics",
+                    "actionValue": "service-info",
                 },
             ],
             "legalDocs": {

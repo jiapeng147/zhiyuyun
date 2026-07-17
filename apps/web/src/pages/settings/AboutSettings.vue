@@ -21,7 +21,7 @@
               <div class="hero-meta">
                 <span class="hero-meta-item"><i class="dot dot-green"></i>{{ aboutContent.serviceStatusText }}</span>
                 <span class="hero-meta-divider"></span>
-                <span class="hero-meta-item">构建于 Vue 3 + Vite</span>
+                <span class="hero-meta-item">企业运营工作台</span>
                 <span class="hero-meta-divider"></span>
                 <span class="hero-meta-item">{{ releaseLabel }}</span>
               </div>
@@ -96,8 +96,8 @@
           <n-card v-if="sponsorCard" class="about-panel" :bordered="false" style="margin-top: 16px">
             <template #header>
               <div class="about-panel-head">
-                <h3>赞助支持</h3>
-                <p>支持项目持续维护与迭代</p>
+                <h3>商务支持</h3>
+                <p>合作入口与服务支持</p>
               </div>
             </template>
             <div class="sponsor-block">
@@ -107,8 +107,8 @@
                 :class="{ placeholder: !sponsorCard.imageUrl }"
                 @click="sponsorCard.action && sponsorCard.action()"
               >
-                <img v-if="sponsorCard.imageUrl" :src="sponsorCard.imageUrl" :alt="sponsorCard.title || '赞助二维码'" />
-                <span v-else class="sponsor-banner-text">{{ sponsorCard.placeholderText || '待后台配置赞助二维码' }}</span>
+                <img v-if="sponsorCard.imageUrl" :src="sponsorCard.imageUrl" :alt="sponsorCard.title || '合作二维码'" />
+                <span v-else class="sponsor-banner-text">{{ sponsorCard.placeholderText || '待配置合作二维码' }}</span>
               </div>
             </div>
           </n-card>
@@ -137,8 +137,8 @@
             <n-card class="about-panel" :bordered="false" style="margin-top: 16px">
               <template #header>
                 <div class="about-panel-head">
-                  <h3>交流群与支持</h3>
-                  <p>扫码进入交流群、查看联系方式或支持项目持续更新</p>
+                  <h3>客户社群与合作</h3>
+                  <p>查看交流群、服务通知与商务合作入口</p>
                 </div>
               </template>
               <div class="community-grid">
@@ -177,7 +177,7 @@
               <template #header>
                 <div class="about-panel-head">
                   <h3>相关链接</h3>
-                  <p>协议、隐私与系统工具</p>
+                  <p>协议、隐私与服务信息</p>
                 </div>
               </template>
               <div class="link-list">
@@ -251,7 +251,7 @@ const sponsorHeadline = computed(() => {
   if (!sponsorCard.value) return ''
   const desc = (sponsorCard.value.desc || '').trim()
   if (desc) return desc
-  return '如果大梦正在做的事情帮助到了你，并且你也愿意的话，非常希望您能赞助我的工作'
+  return '商务合作入口尚未配置，请由平台运营方补充可用联系方式。'
 })
 
 const links = computed(() => {
@@ -384,7 +384,7 @@ function handleAction(action = {}) {
       openLegalDoc(action.actionValue, action.label || '相关协议')
       return
     case 'download':
-      exportDiagnostics()
+      exportServiceInfo()
       return
     case 'toast':
       toast(action.actionValue || `当前已是最新版本 v${APP_VERSION}`)
@@ -403,7 +403,7 @@ function openLegalDoc(type, title) {
   showLegalNotice(title)
 }
 
-function exportDiagnostics() {
+function exportServiceInfo() {
   const payload = {
     version: APP_VERSION,
     buildDate: APP_BUILD_DATE,
@@ -415,12 +415,12 @@ function exportDiagnostics() {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `xya-diagnostics-${Date.now()}.json`
+  link.download = `xya-service-info-${Date.now()}.json`
   document.body.appendChild(link)
   link.click()
   link.remove()
   URL.revokeObjectURL(url)
-  toast('诊断日志已导出')
+  toast('服务信息已导出')
 }
 </script>
 

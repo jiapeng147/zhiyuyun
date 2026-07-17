@@ -132,7 +132,7 @@ export function createDefaultAboutContent() {
       { label: '用户协议', icon: 'aboutShield', actionText: '查看', actionType: 'legal', actionValue: 'terms' },
       { label: '隐私政策', icon: 'aboutEye', actionText: '查看', actionType: 'legal', actionValue: 'privacy' },
       { label: '版本说明', icon: 'refresh', actionText: '查看', actionType: 'toast', actionValue: `当前版本 v${APP_VERSION} 已包含账号登录、系统配置整合与广告投放服务。` },
-      { label: '导出诊断日志', icon: 'download', actionText: '导出', actionType: 'download', actionValue: 'diagnostics' },
+      { label: '导出服务信息', icon: 'download', actionText: '导出', actionType: 'download', actionValue: 'service-info' },
     ],
     legalDocs: {
       termsUrl: '',
