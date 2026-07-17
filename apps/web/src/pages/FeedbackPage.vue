@@ -196,7 +196,7 @@
           <ul class="fbk-side-list">
             <li>标题尽量一句话说清问题核心或需求目标。</li>
             <li>正文里优先写具体场景、复现步骤和期望结果。</li>
-            <li>如果涉及联调，附上时间点、接口或页面位置会更高效。</li>
+            <li>如果涉及外部服务或页面异常，附上时间点、页面位置会更高效。</li>
           </ul>
         </article>
 
@@ -217,7 +217,7 @@
               <b>02</b>
               <div>
                 <strong>处理中</strong>
-                <p>开始排查、设计或联调，并同步进度。</p>
+                <p>开始定位、设计或处理，并同步进度。</p>
               </div>
             </div>
             <div class="fbk-process-item">
@@ -266,8 +266,8 @@
         <div class="fbk-modal-body">
           <div class="fbk-modal-tip">
             <strong>{{ feedbackCreateIntent.pending ? '原反馈结果尚未确认' : '写得越具体，处理越快' }}</strong>
-            <p v-if="feedbackCreateIntent.pending">当前只允许复用同一持久化幂等键和原内容重试，禁止创建新反馈意图。</p>
-            <p v-else>建议说明“发生了什么、怎么复现、你期待的结果是什么”。如果涉及联调，也可以附上联系方式。</p>
+            <p v-if="feedbackCreateIntent.pending">当前只允许复用同一提交任务和原内容重试，禁止创建新的反馈任务。</p>
+            <p v-else>建议说明“发生了什么、怎么复现、你期待的结果是什么”。如果涉及外部服务，也可以附上联系方式。</p>
           </div>
 
           <div class="fbk-field">
@@ -331,7 +331,7 @@
         <div class="fbk-modal-foot">
           <button type="button" class="fbk-btn-ghost" :disabled="loading.submit || feedbackCreateIntent.pending" @click="resetForm">清空</button>
           <button type="submit" class="fbk-btn-primary" :disabled="loading.submit">
-            {{ loading.submit ? '提交中...' : (feedbackCreateIntent.pending ? '复用原反馈意图重试' : '提交反馈') }}
+            {{ loading.submit ? '提交中...' : (feedbackCreateIntent.pending ? '复用原反馈任务重试' : '提交反馈') }}
           </button>
         </div>
       </form>
@@ -415,7 +415,7 @@
               :disabled="loading.append || !appendContent.trim()"
               @click="handleAppend"
             >
-              {{ loading.append ? '发送中...' : (feedbackReplyIntent.pending ? '复用原补充意图重试' : '追加补充') }}
+              {{ loading.append ? '发送中...' : (feedbackReplyIntent.pending ? '复用原补充任务重试' : '追加补充') }}
             </button>
           </div>
         </div>
@@ -626,7 +626,7 @@ function closeSubmitModal() {
 
 function resetForm() {
   if (feedbackCreateIntent.pending) {
-    showNotice('原反馈结果尚未确认，禁止清空或更换反馈意图。', 'warn')
+    showNotice('原反馈结果尚未确认，禁止清空或更换反馈内容。', 'warn')
     return
   }
   form.category = 'bug'
@@ -657,7 +657,7 @@ function restoreFeedbackCreateIntent() {
       payload: record.payload,
     })
   } catch {
-    showNotice('浏览器中的反馈意图记录无法校验，已禁止创建新意图；请联系平台负责人处理站点存储。', 'error', 0)
+    showNotice('浏览器中的反馈提交任务无法校验，已禁止创建新任务；请联系平台负责人处理站点存储。', 'error', 0)
   }
 }
 
@@ -675,7 +675,7 @@ function persistFeedbackCreateIntent(payload) {
         window.localStorage.removeItem(FEEDBACK_CREATE_INTENT_STORAGE_KEY)
       } else {
         if (JSON.stringify(existing.payload) !== serialized) {
-          showNotice('已有结果未确认的反馈；禁止更换内容或生成新幂等键。', 'error', 0)
+          showNotice('已有结果未确认的反馈；禁止更换内容或生成新的安全凭证。', 'error', 0)
           return ''
         }
         Object.assign(feedbackCreateIntent, { pending: true, key: String(existing.key), payload: existing.payload })
@@ -691,7 +691,7 @@ function persistFeedbackCreateIntent(payload) {
     Object.assign(feedbackCreateIntent, { pending: true, key, payload })
     return key
   } catch {
-    showNotice('浏览器无法安全保存反馈意图，提交已禁用；请恢复站点存储权限后重试。', 'error', 0)
+    showNotice('浏览器无法安全保存反馈提交任务，提交已禁用；请恢复站点存储权限后重试。', 'error', 0)
     return ''
   }
 }
@@ -737,7 +737,7 @@ function restoreFeedbackReplyIntent(feedbackId) {
       content: record.content,
     })
   } catch {
-    showNotice('浏览器中的补充意图记录无法校验，已禁止创建新意图。', 'error', 0)
+    showNotice('浏览器中的补充任务无法校验，已禁止创建新任务。', 'error', 0)
   }
 }
 
@@ -755,7 +755,7 @@ function persistFeedbackReplyIntent(feedbackId, content) {
         window.localStorage.removeItem(storageKey)
       } else {
         if (existing.content !== content) {
-          showNotice('已有结果未确认的反馈补充；禁止更换内容或生成新幂等键。', 'error', 0)
+          showNotice('已有结果未确认的反馈补充；禁止更换内容或生成新的安全凭证。', 'error', 0)
           return ''
         }
         Object.assign(feedbackReplyIntent, { pending: true, feedbackId, key: String(existing.key), content })
@@ -771,7 +771,7 @@ function persistFeedbackReplyIntent(feedbackId, content) {
     Object.assign(feedbackReplyIntent, { pending: true, feedbackId, key, content })
     return key
   } catch {
-    showNotice('浏览器无法安全保存反馈补充意图，本次发送已禁用。', 'error', 0)
+    showNotice('浏览器无法安全保存反馈补充任务，本次发送已禁用。', 'error', 0)
     return ''
   }
 }
@@ -843,7 +843,7 @@ async function handleSubmit() {
     await reloadAll()
   } catch (e) {
     if (feedbackWriteDefinitelyNotIssued(e)) clearFeedbackCreateIntent()
-    showNotice(e?.message || '反馈结果未确认；只能复用原反馈意图重试。', 'error', 0)
+    showNotice(e?.message || '反馈结果未确认；只能复用原反馈任务重试。', 'error', 0)
   } finally {
     loading.submit = false
   }

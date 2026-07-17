@@ -2,12 +2,12 @@
   <div class="logs-v4">
     <n-card class="logs-v4-hero" :bordered="false">
       <div>
-        <n-tag size="small" type="warning" :bordered="false">审计日志</n-tag>
-        <h2>操作日志审计</h2>
+        <n-tag size="small" type="warning" :bordered="false">操作记录</n-tag>
+        <h2>关键操作记录</h2>
         <p>按操作类型、关键词与结果状态追踪关键写操作，结果未知的记录会被单独标记，便于人工核对。</p>
       </div>
       <n-space :size="8" align="center" wrap>
-        <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新日志' }}</AppButton>
+        <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新记录' }}</AppButton>
         <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
       </n-space>
     </n-card>
@@ -26,7 +26,7 @@
     <div class="logs-v4-grid">
       <div>
       <n-card class="logs-v4-card" :bordered="false">
-        <template #header>操作日志</template>
+        <template #header>操作记录</template>
         <div class="toolbar">
           <select v-model="filters.operationType" class="input" @change="search">
             <option value="">全部类型</option>
@@ -36,7 +36,7 @@
           <AppButton type="primary" :disabled="loading" @click="search">{{ loading ? '查询中...' : '查询' }}</AppButton>
           <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
         </div>
-        <EmptyState v-if="dataAvailable === false" icon="⚠️" title="操作日志暂不可用" description="当前无法确认是否存在审计记录，不会把失败显示为空列表。">
+        <EmptyState v-if="dataAvailable === false" icon="⚠️" title="操作记录暂不可用" description="当前无法确认是否存在操作记录，不会把失败显示为空列表。">
           <template #actions><AppButton @click="load">重新加载</AppButton></template>
         </EmptyState>
         <BaseTable v-else :columns="cols" :rows="rows">
@@ -44,7 +44,7 @@
           <template #status="{row}"><Badge :type="auditStatusType(row)">{{ row.status || '已记录' }}</Badge></template>
           <template #createdTime="{row}">{{ formatDateTime(row.createdTime) }}</template>
           <template #op="{row}"><button class="link" @click="showDetail(row)">查看</button></template>
-          <template #empty><EmptyState icon="📋" title="暂无操作日志" description="系统操作记录将在此显示。" /></template>
+          <template #empty><EmptyState icon="📋" title="暂无操作记录" description="系统操作记录将在此显示。" /></template>
         </BaseTable>
         <Pagination v-if="dataAvailable === true" :total="total" :current="current" :page-size="size" @page-change="goPage" />
       </n-card>
@@ -52,10 +52,10 @@
     <div class="right-drawer logs-v4-detail">
       <template v-if="detail">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <h3>日志详情</h3>
+          <h3>记录详情</h3>
           <button class="modal-close" @click="detail=null"><Icon name="close" /></button>
         </div>
-        <p>日志 ID <b>{{ detail.id || '-' }}</b></p>
+        <p>记录 ID <b>{{ detail.id || '-' }}</b></p>
         <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:10px">
           <div class="metric-tile"><span>操作类型</span><b :title="detail.operationType">{{ operationTypeLabel(detail.operationType) }}</b></div>
           <div class="metric-tile"><span>目标类型</span><b>{{ detail.targetType || '-' }}</b></div>
@@ -89,7 +89,7 @@
           <pre v-show="expandedJson.response" class="mock-json">{{ formatJson(detail.responseResult) }}</pre>
         </div>
       </template>
-      <EmptyState v-else icon="📋" title="选择日志查看详情" description="点击左侧列表中的「查看」按钮，这里会展示日志详情。" />
+      <EmptyState v-else icon="📋" title="选择记录查看详情" description="点击左侧列表中的「查看」按钮，这里会展示记录详情。" />
     </div>
   </div>
   </div>
@@ -168,7 +168,7 @@ const OPERATION_TYPE_MAP = {
   CARD_DELETE: '卡密删除',
   RULE_SAVE: '保存规则',
   RULE_DELETE: '删除规则',
-  AUDIT_RETENTION: '审计留存清理',
+  AUDIT_RETENTION: '记录留存清理',
   HTTP_MUTATION_STARTED: '写操作（待核对）',
   HTTP_MUTATION_COMPLETED: '写请求（已结束）',
   HTTP_MUTATION_REJECTED: '写请求（已拒绝）',
@@ -187,7 +187,7 @@ const typeOptions = [
   { value: 'WEBSOCKET_STOP', label: '断开连接' },
   { value: 'PUBLISH_PRODUCT', label: '发布商品' },
   { value: 'CARD_IMPORT', label: '卡密导入' },
-  { value: 'AUDIT_RETENTION', label: '审计留存清理' },
+  { value: 'AUDIT_RETENTION', label: '记录留存清理' },
   { value: 'HTTP_MUTATION_STARTED', label: '写操作（待核对）' },
   { value: 'HTTP_MUTATION_RESULT_UNKNOWN', label: '写操作（结果未知）' },
   { value: 'HTTP_MUTATION_REJECTED', label: '写请求（已拒绝）' },
@@ -218,7 +218,7 @@ function formatDateTime(value) {
 }
 
 const cols = [
-  { key: 'id', title: '日志ID' },
+  { key: 'id', title: '记录ID' },
   { key: 'operationType', title: '操作类型' },
   { key: 'targetType', title: '目标类型' },
   { key: 'description', title: '描述' },
@@ -232,7 +232,7 @@ const operationTypeCount = computed(() => new Set(rows.value.map(row => row.oper
 const operatorCount = computed(() => new Set(rows.value.map(row => row.operator).filter(Boolean)).size)
 const reconciliationCount = computed(() => rows.value.filter(row => row.requiresReconciliation).length)
 const logStatCards = computed(() => [
-  { key: 'total', title: '总操作数', value: metricValue(total.value), change: '审计记录', symbol: '总', tone: 'tone-blue' },
+  { key: 'total', title: '总操作数', value: metricValue(total.value), change: '操作记录', symbol: '总', tone: 'tone-blue' },
   { key: 'page', title: '当前页条数', value: metricValue(rows.value.length), change: '本页统计', symbol: '页', tone: 'tone-green' },
   { key: 'types', title: '操作类型', value: metricValue(operationTypeCount.value), change: '本页去重', symbol: '类', tone: 'tone-cyan' },
   { key: 'operators', title: '操作人', value: metricValue(operatorCount.value), change: '本页去重', symbol: '人', tone: 'tone-purple' },
@@ -263,7 +263,7 @@ async function load() {
     total.value = totalOf(res.data, rows.value.length)
     dataAvailable.value = true
   } catch (e) {
-    error.value = e.message || '日志加载失败'
+    error.value = e.message || '记录加载失败'
     rows.value = []
     total.value = 0
     detail.value = null
@@ -301,7 +301,7 @@ async function exportCsv() {
     a.download = `operation-logs-${Date.now()}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    success.value = '日志导出成功'
+    success.value = '记录导出成功'
     setTimeout(() => { success.value = '' }, 3000)
   } catch (e) {
     error.value = e.message || '导出失败，请稍后重试'

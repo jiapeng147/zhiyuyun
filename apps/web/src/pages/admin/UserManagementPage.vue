@@ -6,7 +6,7 @@
       <div>
         <n-tag size="small" type="success" :bordered="false">用户运营</n-tag>
         <h2>用户管理</h2>
-        <p>集中处理平台概览、套餐、手动建用户、自助注册、SMTP 与账号状态。</p>
+        <p>集中处理平台概览、套餐、手动建用户、自助注册、邮件服务与账号状态。</p>
       </div>
       <n-space :size="8" align="center" wrap>
         <button class="btn" type="button" @click="loadAll">刷新数据</button>
@@ -70,7 +70,7 @@
         <table class="table plan-table">
           <thead>
             <tr>
-              <th>代码</th><th>名称</th><th>账号配额</th><th>AI 配额/日</th>
+              <th>套餐标识</th><th>名称</th><th>账号配额</th><th>AI 配额/日</th>
               <th>月价</th><th>权益</th><th>排序</th><th>状态</th><th>操作</th>
             </tr>
           </thead>
@@ -296,7 +296,7 @@
       </div>
 
       <div class="usage-audit-head">
-        <strong>用量审计</strong>
+        <strong>用量记录</strong>
         <span class="muted">每日用量与配额/权益拦截事件，最近各 30 条</span>
       </div>
       <div class="billing-admin-grid usage-audit-grid">
@@ -402,20 +402,20 @@
             当前状态：<strong :class="regEnabled ? 'on' : 'off'">{{ regEnabled ? '已开放注册' : '已关闭注册' }}</strong>
           </div>
           <div class="reg-hint">
-            开放后，任何人可在 <code>/#/register</code> 用邮箱验证码注册。请确保下方 SMTP 已配置。
+            开放后，访客可在注册页使用邮箱验证码注册。请确保下方邮件服务已配置。
           </div>
         </div>
         <ToggleSwitch :on="regEnabled" interactive :disabled="regBusy" @click="toggleRegistration" />
       </div>
     </n-card>
 
-    <!-- 邮箱 SMTP -->
+    <!-- 邮箱服务 -->
     <n-card class="dashboard-section user-v4-card" :bordered="false">
-      <template #header>邮箱 SMTP 配置</template>
+      <template #header>邮箱服务配置</template>
       <template #header-extra><span class="user-v4-desc">用于发送注册/找回密码验证码。密码不回显。</span></template>
       <div class="form-grid">
         <label class="field">
-          <span>SMTP 服务器</span>
+          <span>邮件服务器</span>
           <input v-model.trim="email.smtpHost" class="input" placeholder="如 smtp.qq.com" />
         </label>
         <label class="field">
@@ -528,7 +528,7 @@
         <div class="modal-head">
           <div>
             <h3>{{ profileTarget.username }} 的商业画像</h3>
-            <p class="modal-subtitle">用户权益、经营数据、订阅账单、用量与审计事件。</p>
+            <p class="modal-subtitle">用户权益、经营数据、订阅账单、用量与关键事件。</p>
           </div>
           <button class="modal-close" type="button" aria-label="关闭" @click="closeUserProfile">×</button>
         </div>
@@ -732,7 +732,7 @@
         </div>
         <div class="modal-body">
           <label class="field">
-            <span>代码 * (英文+下划线,创建后修改需谨慎)</span>
+            <span>套餐标识 *（英文+下划线，创建后修改需谨慎）</span>
             <input v-model.trim="editingPlan.code" class="input" placeholder="如 starter / pro / max" />
           </label>
           <label class="field">
@@ -1353,7 +1353,7 @@ async function saveBillingSettings() {
 async function openSubscription(user) {
   if (!user || billingBusy.value) return
   const defaultPlan = user.planCode || plans.value[0]?.code || 'free'
-  const planCode = window.prompt(`请输入要开通的套餐代码：${plans.value.map(p => p.code).join(' / ')}`, defaultPlan)
+  const planCode = window.prompt(`请输入要开通的套餐标识：${plans.value.map(p => p.code).join(' / ')}`, defaultPlan)
   if (!planCode) return
   const daysRaw = window.prompt('请输入开通天数，免费套餐可填 30', '30')
   if (!daysRaw) return

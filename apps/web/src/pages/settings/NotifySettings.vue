@@ -11,19 +11,19 @@
       role="status"
     >
       <div>
-        <strong>通知测试发送安全状态</strong>
-        <span v-if="testAttempt.attemptId">尝试编号 #{{ testAttempt.attemptId }}</span>
+        <strong>通知验证安全状态</strong>
+        <span v-if="testAttempt.attemptId">验证编号 #{{ testAttempt.attemptId }}</span>
       </div>
       <p>{{ testAttempt.message }}</p>
       <p v-if="testAttempt.status === 'unknown'" class="notification-resolution-warning">
-        高风险操作：只有在你已从通知服务方人工核对、确认不会再收到本次测试后，才能关闭未知意图。
-        关闭只解除本渠道测试锁，不会撤回可能已送达的消息，也不会自动发送新测试。
+        高风险操作：只有在你已从通知服务方人工核对、确认不会再收到本次验证消息后，才能关闭未知状态。
+        关闭只解除本渠道验证锁，不会撤回可能已送达的消息，也不会自动发送新的验证消息。
       </p>
       <dl>
         <div><dt>渠道</dt><dd>{{ testAttempt.channelKey || '-' }}</dd></div>
         <div><dt>状态</dt><dd>{{ notificationAttemptStatusLabel(testAttempt.status) }}</dd></div>
         <div><dt>可安全重试</dt><dd>{{ testAttempt.retrySafe ? '是' : '否' }}</dd></div>
-        <div><dt>日志已留存</dt><dd>{{ testAttempt.logPersisted ? '是' : '否' }}</dd></div>
+        <div><dt>记录已留存</dt><dd>{{ testAttempt.logPersisted ? '是' : '否' }}</dd></div>
       </dl>
       <button
         type="button"
@@ -31,7 +31,7 @@
         :disabled="testing || resolving || saving || loading || !testAttempt.replaySafe"
         @click="recoverNotificationTestAttempt"
       >
-        {{ testAttempt.status === 'confirmed' ? '使用原意图补写审计日志' : '使用原意图核对状态' }}
+        {{ testAttempt.status === 'confirmed' ? '使用原验证任务补全操作记录' : '继续核对原验证状态' }}
       </button>
       <button
         v-if="testAttempt.status === 'unknown' && testAttempt.replaySafe && testAttempt.attemptId"
@@ -40,7 +40,7 @@
         :disabled="testing || resolving || saving || loading"
         @click="resolveUnknownNotificationTestAttempt"
       >
-        {{ resolving ? '正在关闭未知意图...' : '已人工核对，关闭未知意图' }}
+        {{ resolving ? '正在关闭未知状态...' : '已人工核对，关闭未知状态' }}
       </button>
     </section>
 
@@ -97,7 +97,7 @@
       v-if="settingsAvailable === false"
       icon="⚠️"
       title="通知配置暂不可用"
-      description="当前无法确认已保存的渠道与规则；为避免用默认空配置覆盖真实设置，编辑、保存和测试均已禁用。"
+      description="当前无法确认已保存的渠道与规则；为避免用默认空配置覆盖真实设置，编辑、保存和验证均已禁用。"
     >
       <template #actions><AppButton :disabled="loading" @click="load(true)">重新加载配置</AppButton></template>
     </EmptyState>
@@ -175,7 +175,7 @@
                 :aria-busy="testing"
                 @click="test"
               >
-                {{ testing ? '测试中...' : '测试连接' }}
+                {{ testing ? '验证中...' : '验证连接' }}
               </button>
             </div>
 
@@ -212,11 +212,11 @@
             </section>
 
             <section v-if="selectedChannel.type === 'email'" class="notify-config-section">
-              <h4>SMTP 配置</h4>
+              <h4>邮件服务配置</h4>
               <div class="notify-form-grid two">
                 <label class="notify-field">
-                  <span>SMTP 服务器</span>
-                  <input v-model="selectedChannel.smtpHost" type="text" placeholder="smtp.example.com" />
+                  <span>邮件服务器</span>
+                  <input v-model="selectedChannel.smtpHost" type="text" placeholder="smtp.company.com" />
                 </label>
                 <label class="notify-field">
                   <span>端口</span>
@@ -224,7 +224,7 @@
                 </label>
                 <label class="notify-field">
                   <span>登录账号</span>
-                  <input v-model="selectedChannel.smtpUser" type="text" placeholder="bot@example.com" />
+                  <input v-model="selectedChannel.smtpUser" type="text" placeholder="service@company.com" />
                 </label>
                 <label class="notify-field">
                   <span>授权码</span>
@@ -237,11 +237,11 @@
                 </label>
                 <label class="notify-field">
                   <span>发件人</span>
-                  <input v-model="selectedChannel.fromEmail" type="text" placeholder="bot@example.com" />
+                  <input v-model="selectedChannel.fromEmail" type="text" placeholder="service@company.com" />
                 </label>
                 <label class="notify-field">
                   <span>收件人</span>
-                  <input v-model="selectedChannel.receiver" type="text" placeholder="ops@example.com" />
+                  <input v-model="selectedChannel.receiver" type="text" placeholder="ops@company.com" />
                 </label>
               </div>
             </section>
@@ -263,16 +263,16 @@
                   />
                 </label>
                 <label class="notify-field">
-                  <span>校验 Token</span>
+                  <span>校验凭证</span>
                   <input
                     v-model="selectedChannel.verificationToken"
                     type="password"
                     autocomplete="new-password"
-                    :placeholder="selectedChannel.verificationTokenConfigured ? '已配置，留空保留' : '事件订阅的 Verification Token'"
+                    :placeholder="selectedChannel.verificationTokenConfigured ? '已配置，留空保留' : '事件订阅校验凭证'"
                   />
                 </label>
                 <label class="notify-field">
-                  <span>Encrypt Key（可选）</span>
+                  <span>加密密钥（可选）</span>
                   <input
                     v-model="selectedChannel.encryptKey"
                     type="password"
@@ -281,7 +281,7 @@
                   />
                 </label>
                 <label class="notify-field">
-                  <span>接收者 ID（receiveId）</span>
+                  <span>接收者 ID</span>
                   <input v-model="selectedChannel.receiveId" type="text" placeholder="接收消息的用户/群 open_id 或 chat_id" />
                 </label>
                 <label class="notify-field">
@@ -302,9 +302,9 @@
                   <li>前往 <a href="https://open.feishu.cn/" target="_blank">飞书开放平台</a> 注册账号并创建团队（免费，无需企业认证）</li>
                   <li>创建自建应用 → 获取应用 ID 和应用密钥</li>
                   <li>启用「机器人」能力</li>
-                  <li>配置「事件订阅」→ 请求地址填：<code>POST {{ windowLocationOrigin }}/api/feishu/webhook</code></li>
+                  <li>配置「事件订阅」→ 请求地址填：<code>{{ windowLocationOrigin }}/api/feishu/webhook</code></li>
                   <li>订阅事件：<code>im.message.receive_v1</code>（接收用户消息）</li>
-                  <li>复制校验 Token（如启用加密还需 Encrypt Key）填入上方表单</li>
+                  <li>复制校验凭证（如启用加密还需加密密钥）填入上方表单</li>
                   <li>在飞书中与机器人发起对话，获取你的 open_id 填入「接收者 ID」</li>
                   <li>权限管理勾选：发送消息、上传图片、读取用户信息</li>
                 </ol>
@@ -318,8 +318,8 @@
               <h4>接入凭证</h4>
               <div class="notify-form-grid two">
                 <label class="notify-field notify-field-full">
-                  <span>PushPlus 令牌</span>
-                  <input v-model="selectedChannel.receiver" type="text" placeholder="请输入 PushPlus 令牌" />
+                  <span>PushPlus 凭证</span>
+                  <input v-model="selectedChannel.receiver" type="text" placeholder="请输入 PushPlus 凭证" />
                 </label>
                 <label class="notify-field">
                   <span>超时时间（秒）</span>
@@ -341,7 +341,7 @@
                     <input
                       v-model="selectedChannel.webhookUrl"
                       type="text"
-                      :placeholder="selectedChannel.webhookUrlConfigured ? `已配置${selectedChannel.webhookUrlHost ? `：${selectedChannel.webhookUrlHost}` : ''}，留空保留` : 'https://notify.example.com/webhook/zhiyuyun'"
+                      :placeholder="selectedChannel.webhookUrlConfigured ? `已配置${selectedChannel.webhookUrlHost ? `：${selectedChannel.webhookUrlHost}` : ''}，留空保留` : 'https://notify.company.com/webhook/zhiyuyun'"
                     />
                     <button
                       v-if="selectedChannel.webhookUrl"
@@ -439,9 +439,9 @@
             </section>
 
             <div class="notify-config-actions">
-              <span v-if="settingsDirty" class="notify-unsaved-hint">有未保存更改；测试只使用已保存配置，请先保存。</span>
+              <span v-if="settingsDirty" class="notify-unsaved-hint">有未保存更改；验证只使用已保存配置，请先保存。</span>
               <AppButton type="primary" :loading="saving" :disabled="testing || loading || settingsAvailable !== true" @click="save">保存当前页面配置</AppButton>
-              <AppButton :loading="testing" :disabled="saving || loading || settingsAvailable !== true || settingsDirty || !isChannelConfigured(selectedChannel)" @click="test">发送测试通知</AppButton>
+              <AppButton :loading="testing" :disabled="saving || loading || settingsAvailable !== true || settingsDirty || !isChannelConfigured(selectedChannel)" @click="test">发送验证通知</AppButton>
             </div>
           </div>
         </section>
@@ -449,7 +449,7 @@
         <section v-if="selectedChannel && selectedChannelTutorial" class="notify-panel notify-tutorial-card">
           <div class="notify-panel-head">
             <div>
-              <h3>{{ selectedChannel.name }} 配置教程</h3>
+              <h3>{{ selectedChannel.name }} 配置指南</h3>
               <p>{{ selectedChannelTutorial.summary }}</p>
             </div>
             <span class="notify-tiny-chip">{{ selectedChannelTutorial.eta }}</span>
@@ -620,7 +620,7 @@
         <section class="notify-panel notify-logs-card">
           <div class="notify-panel-head">
             <div>
-              <h3>最近通知日志</h3>
+              <h3>最近投递记录</h3>
               <p>把发送结果和事件来源压缩成便于快速扫描的列表。</p>
             </div>
           </div>
@@ -629,8 +629,8 @@
             <EmptyState
               v-if="recentLogRows.length === 0"
               icon="📨"
-              title="暂无通知日志"
-              :description="logsLoaded ? '发送测试通知或触发业务事件后，实际投递结果会显示在这里。' : '日志服务当前不可用，请稍后重试。'"
+              title="暂无投递记录"
+              :description="logsLoaded ? '发送验证通知或触发业务事件后，实际投递结果会显示在这里。' : '投递记录服务当前不可用，请稍后重试。'"
             />
             <article
               v-for="log in recentLogRows"
@@ -655,7 +655,7 @@
         <section class="notify-preview-card">
           <div class="notify-preview-head">
             <strong>应用内通知预览</strong>
-            <span class="notify-preview-tag">{{ previewIsExample ? '示例预览' : '实时数据' }}</span>
+            <span class="notify-preview-tag">{{ previewIsExample ? '样式预览' : '实时数据' }}</span>
           </div>
 
           <div class="notify-preview-phone">
@@ -687,7 +687,7 @@
           </div>
 
           <div class="notify-foot-note">
-            <span>{{ previewIsExample ? '当前无实时通知，以下内容仅用于预览样式' : '已展示最近的实际应用内通知' }}</span>
+            <span>{{ previewIsExample ? '当前无实时通知，以下内容用于预览样式' : '已展示最近的实际应用内通知' }}</span>
             <span>支持亮色通知样式</span>
           </div>
         </section>
@@ -779,44 +779,44 @@ const CHANNEL_TUTORIALS = {
   webhook: {
     icon: 'notifyWebhook',
     eyebrow: '推荐给自动化服务与业务中台',
-    summary: '给当前通知渠道补一份一步一步的接入说明，保存前就能知道该填什么、先测什么。',
-    goal: '适合把通知转发给业务接口、工作流服务或任何支持 HTTP 回调的系统。',
+    summary: '给当前通知渠道补一份一步一步的接入说明，保存前就能知道该填什么、先验证什么。',
+    goal: '适合把通知转发给业务服务、工作流系统或任何支持 HTTP 回调的系统。',
     eta: '约 2 分钟完成',
-    preparation: ['准备一个可访问的 https 地址', '接收端支持 POST JSON', '建议先用测试环境验证'],
+    preparation: ['准备一个可访问的 https 地址', '接收端支持接收 JSON', '建议先用预发布环境验证'],
     steps: [
       {
-        title: '先准备接收接口',
-        detail: '在你的服务里创建一个接收通知的 POST 接口，确保收到请求后可以返回 200。',
+        title: '先准备接收服务',
+        detail: '在你的服务里创建一个接收通知的地址，确保收到请求后可以返回成功状态。',
         tip: '如果先只做回显也没关系，先把链路打通最重要。'
       },
       {
         title: '把完整地址填到 Webhook 地址',
-        detail: '直接粘贴完整的 https 链接，不要填 localhost、内网 IP 或需要登录才能访问的地址。',
-        tip: '推荐保留固定路径，例如 /webhook/zhiyuyun，后续排查更方便。'
+        detail: '直接粘贴完整的 https 链接，不要填本地地址、内网 IP 或需要登录才能访问的地址。',
+        tip: '推荐保留固定路径，例如 /webhook/zhiyuyun，后续定位更方便。'
       },
       {
         title: '按稳定性设置超时、重试和失败策略',
-        detail: '接口响应快就保持默认；如果你的回调会串联更多服务，可以适当增加超时和重试次数。',
+        detail: '接收服务响应快就保持默认；如果你的回调会串联更多服务，可以适当增加超时和重试次数。',
         tip: '不确定怎么配时，先用 10 秒超时、3 次重试。'
       },
       {
-        title: '保存后立即发送测试通知',
-        detail: '保存配置后点测试按钮，确认你的服务已经成功收到并处理消息，再上线正式事件。',
-        tip: '测试通过后，再逐步打开更多通知事件。'
+        title: '保存后立即发送验证通知',
+        detail: '保存配置后点验证按钮，确认你的服务已经成功收到并处理消息，再上线正式事件。',
+        tip: '验证通过后，再逐步打开更多通知事件。'
       }
     ],
     fields: [
-      { label: 'Webhook 地址', detail: '必须是公网 HTTPS 地址；localhost、内网 IP、重定向和含账号密码的链接会被拒绝。' },
-      { label: '超时时间', detail: '表示等待接口响应的最长时间；你的接口越慢，这里越要留足余量。' },
-      { label: '重试次数', detail: '接口偶发超时或抖动时会自动补发，接口已做幂等时可以保持默认值。' },
+      { label: 'Webhook 地址', detail: '必须是公网 HTTPS 地址；本地地址、内网 IP、重定向和含账号密码的链接会被拒绝。' },
+      { label: '超时时间', detail: '表示等待接收服务响应的最长时间；你的服务越慢，这里越要留足余量。' },
+      { label: '重试次数', detail: '服务偶发超时或抖动时会自动补发，接收端已做去重时可以保持默认值。' },
       { label: '消息模板', detail: '建议先用简洁文本模板，确认字段都能收到后，再扩展成结构化内容。' }
     ],
     checklist: [
-      '接收接口已经能返回 200，不会因为鉴权或路由缺失直接报错。',
+      '接收服务已经能返回成功状态，不会因为鉴权或路由缺失直接报错。',
       'Webhook 地址是可由服务端访问的公网 HTTPS 地址，不是浏览器页面地址或内网地址。',
-      '测试通知收到了标题、正文和事件信息，消息内容没有出现空字段。'
+      '验证通知收到了标题、正文和事件信息，消息内容没有出现空字段。'
     ],
-    tip: '最稳的顺序是：先填地址，再保存一次，然后发测试通知，最后再去细调模板、去重与失败策略。'
+    tip: '最稳的顺序是：先填地址，再保存一次，然后发验证通知，最后再去细调模板、去重与失败策略。'
   },
   feishu: {
     icon: 'notifyFeishu',
@@ -829,11 +829,11 @@ const CHANNEL_TUTORIALS = {
       {
         title: '在飞书群里添加自定义机器人',
         detail: '进入群设置，创建机器人并复制官方生成的 Webhook 地址。',
-        tip: '建议机器人名称和这里的渠道名称保持一致，后续排查更直观。'
+        tip: '建议机器人名称和这里的渠道名称保持一致，后续定位更直观。'
       },
       {
         title: '如果开了安全设置，同时复制签名密钥',
-        detail: '飞书如果启用了签名校验，需要把 secret 一起带回来，否则测试时会直接失败。',
+        detail: '飞书如果启用了签名校验，需要把签名密钥一起带回来，否则验证时会直接失败。',
         tip: '地址和签名是一对，少一个都可能导致 403。'
       },
       {
@@ -842,13 +842,13 @@ const CHANNEL_TUTORIALS = {
         tip: '消息很多的群建议保留去重窗口，避免短时间刷屏。'
       },
       {
-        title: '保存并发送测试消息到群里',
-        detail: '确认群里实际收到了测试通知，再决定是否开启更多业务事件。',
+        title: '保存并发送验证消息到群里',
+        detail: '确认群里实际收到了验证通知，再决定是否开启更多业务事件。',
         tip: '如果没收到，优先检查机器人是否被群管理员禁用。'
       }
     ],
     fields: [
-      { label: 'Webhook 地址', detail: '使用飞书后台生成的机器人地址，建议整段复制，避免丢失 token 部分。' },
+      { label: 'Webhook 地址', detail: '使用飞书后台生成的机器人地址，建议整段复制，避免丢失凭证参数。' },
       { label: '签名密钥', detail: '只有在机器人开启签名校验时才需要填写；没开可以先留空。' },
       { label: '消息模板', detail: '先用纯文本模板验证链路，稳定后再加入变量和更详细的提示内容。' },
       { label: '重复抑制', detail: '运营群建议开启 10 分钟合并，防止短时间重复触发同类提醒。' }
@@ -856,7 +856,7 @@ const CHANNEL_TUTORIALS = {
     checklist: [
       '机器人已经成功加入目标群，群里没有关键词或管理员限制导致消息被拦截。',
       '如果开启了签名，当前页面填写的 secret 与飞书后台展示的一致。',
-      '测试消息已经在目标群出现，且通知内容能看懂、不刷屏。'
+      '验证消息已经在目标群出现，且通知内容能看懂、不刷屏。'
     ],
     tip: '推荐先只开一类高价值提醒，比如新订单或异常提醒，确认团队接收节奏没问题后再逐步扩充。'
   },
@@ -866,16 +866,16 @@ const CHANNEL_TUTORIALS = {
     summary: '钉钉机器人的关键在于安全设置，地址、加签和关键词通常要成对检查。',
     goal: '适合把订单履约、异常告警和代发提醒同步到钉钉工作群。',
     eta: '约 1 分钟完成',
-    preparation: ['先在钉钉群创建机器人', '确认安全设置方式', '准备 access_token 和 secret'],
+    preparation: ['先在钉钉群创建机器人', '确认安全设置方式', '准备机器人地址和签名密钥'],
     steps: [
       {
         title: '创建钉钉群机器人并复制 Webhook',
-        detail: '在群机器人设置里创建自定义机器人，复制完整地址，确保 access_token 没有缺失。',
+        detail: '在群机器人设置里创建自定义机器人，复制完整地址，确保凭证参数没有缺失。',
         tip: '建议直接用复制按钮，手动复制最容易漏掉参数。'
       },
       {
         title: '根据安全方式补充签名或关键词',
-        detail: '如果机器人启用了加签，把 secret 填到签名密钥；如果用了关键词，模板正文里要包含关键词。',
+        detail: '如果机器人启用了加签，把签名密钥填到页面；如果用了关键词，模板正文里要包含关键词。',
         tip: '关键词校验没通过时，消息通常不会入群。'
       },
       {
@@ -884,23 +884,23 @@ const CHANNEL_TUTORIALS = {
         tip: '建议把事件名、账号名和时间都保留在模板里。'
       },
       {
-        title: '保存后用测试消息校验安全设置',
-        detail: '如果测试失败，优先回到钉钉后台检查安全设置是否与当前页面完全一致。',
+        title: '保存后用验证消息校验安全设置',
+        detail: '如果验证失败，优先回到钉钉后台检查安全设置是否与当前页面完全一致。',
         tip: '大多数接入失败都不是地址错，而是安全校验没对上。'
       }
     ],
     fields: [
-      { label: 'Webhook 地址', detail: '使用机器人后台生成的完整地址，地址里通常已经包含 access_token。' },
+      { label: 'Webhook 地址', detail: '使用机器人后台生成的完整地址，地址里通常已经包含凭证参数。' },
       { label: '签名密钥', detail: '只有开启“加签”时才填写；如果开启的是关键词或 IP 白名单，请同步满足对应规则。' },
       { label: '失败策略', detail: '建议保留“立即重试”，偶发网络抖动时成功率会更高。' },
       { label: '消息模板', detail: '记得让模板包含群里要求的关键词，否则钉钉可能直接拒绝投递。' }
     ],
     checklist: [
       '钉钉群机器人没有被停用，安全设置与当前填写内容完全匹配。',
-      '如果使用关键词校验，测试通知正文里已经包含关键词。',
-      '群里已经收到测试消息，内容没有被裁剪成看不懂的一行。'
+      '如果使用关键词校验，验证通知正文里已经包含关键词。',
+      '群里已经收到验证消息，内容没有被裁剪成看不懂的一行。'
     ],
-    tip: '最省事的排查顺序是：先看机器人后台安全设置，再核对地址和 secret，最后才去改模板内容。'
+    tip: '最省事的定位顺序是：先看机器人后台安全设置，再核对地址和签名密钥，最后才去改模板内容。'
   },
   wechat_work: {
     icon: 'notifyWechat',
@@ -913,7 +913,7 @@ const CHANNEL_TUTORIALS = {
       {
         title: '在企业微信群生成机器人地址',
         detail: '进入群机器人配置页，复制企业微信提供的完整 Webhook 地址。',
-        tip: '建议先找一个测试群验证，确认效果后再切到正式群。'
+        tip: '建议先找一个验证群确认效果，再切到正式群。'
       },
       {
         title: '把地址填进页面并保留默认发送参数',
@@ -926,7 +926,7 @@ const CHANNEL_TUTORIALS = {
         tip: '企业微信群消息通常偏碎片化，短句更有效。'
       },
       {
-        title: '保存后发送测试，再决定是否开启合并策略',
+        title: '保存后发送验证，再决定是否开启合并策略',
         detail: '当群里消息很多时，再开启 10 分钟合并，避免同一类事件短时间刷屏。',
         tip: '先确认送达，再控制频率，效率最高。'
       }
@@ -938,8 +938,8 @@ const CHANNEL_TUTORIALS = {
       { label: '重复抑制', detail: '群消息多时建议开启合并；如果是强提醒类告警，可以暂时关闭。' }
     ],
     checklist: [
-      '机器人已经加入正确的企业微信群，不会把正式通知发到测试群。',
-      '测试消息可以正常显示标题、正文和时间，没有出现空白或乱码。',
+      '机器人已经加入正确的企业微信群，不会把正式通知发到验证群。',
+      '验证消息可以正常显示标题、正文和时间，没有出现空白或乱码。',
       '群消息频率可接受，必要时已开启 10 分钟内合并。'
     ],
     tip: '推荐先把模板收敛成“标题 + 一行说明 + 时间”三段式，团队最容易快速阅读。'
@@ -947,20 +947,20 @@ const CHANNEL_TUTORIALS = {
   pushplus: {
     icon: 'notifySms',
     eyebrow: '适合个人强提醒和高优先级触达',
-    summary: '当前页面里短信通知走的是 PushPlus 方式，最核心的是拿到可用令牌并确认对应账号已激活。',
+    summary: '当前页面里短信通知走的是 PushPlus 方式，最核心的是拿到可用凭证并确认对应账号已激活。',
     goal: '适合高优先级告警、客诉通知或需要第一时间推送到个人设备的消息。',
     eta: '约 1 分钟完成',
-    preparation: ['先登录 PushPlus', '复制个人令牌', '确认接收端已绑定公众号或客户端'],
+    preparation: ['先登录 PushPlus', '复制个人凭证', '确认接收端已绑定公众号或客户端'],
     steps: [
       {
-        title: '先到 PushPlus 控制台复制令牌',
-        detail: '登录后进入个人中心或发送配置页，复制当前账号的令牌，作为这个渠道的唯一凭证。',
-        tip: '如果令牌复制错账号，通知会发到别人的接收端。'
+        title: '先到 PushPlus 控制台复制凭证',
+        detail: '登录后进入个人中心或发送配置页，复制当前账号的凭证，作为这个渠道的唯一授权。',
+        tip: '如果凭证复制错账号，通知会发到别人的接收端。'
       },
       {
-        title: '把令牌填到 PushPlus 令牌字段',
-        detail: '当前页面把令牌放在接收凭证字段里，直接整段粘贴即可，不需要额外加前缀。',
-        tip: '令牌一般较长，粘贴后可先保存一次，避免刷新丢失。'
+        title: '把凭证填到 PushPlus 凭证字段',
+        detail: '直接整段粘贴即可，不需要额外加前缀。',
+        tip: '凭证一般较长，粘贴后可先保存一次，避免刷新丢失。'
       },
       {
         title: '按告警级别设置模板和重试',
@@ -968,23 +968,23 @@ const CHANNEL_TUTORIALS = {
         tip: '如果担心重复打扰，记得配合重复抑制一起使用。'
       },
       {
-        title: '保存并发送测试，确认手机端真的收到',
+        title: '保存并发送验证，确认手机端真的收到',
         detail: '不只看页面成功提示，要去实际接收端确认消息能收到、能打开、能看懂。',
         tip: '这是 PushPlus 最容易被忽略的一步。'
       }
     ],
     fields: [
-      { label: 'PushPlus 令牌', detail: '这是唯一必填项，决定消息最终推送到哪个账号或设备。' },
+      { label: 'PushPlus 凭证', detail: '这是唯一必填项，决定消息最终推送到哪个账号或设备。' },
       { label: '超时时间', detail: '通常保持默认即可，只有在网络较慢或代理转发时才需要调大。' },
       { label: '重试次数', detail: '用于覆盖偶发网络抖动；高优先级消息建议保留默认重试。' },
       { label: '消息模板', detail: '推荐用短句模板，方便在移动端通知栏直接看清重点。' }
     ],
     checklist: [
-      '令牌对应的 PushPlus 账号已经正常激活，并且接收端可用。',
-      '测试通知已经真实出现在手机或接收设备上，而不是只有页面显示成功。',
+      '凭证对应的 PushPlus 账号已经正常激活，并且接收端可用。',
+      '验证通知已经真实出现在手机或接收设备上，而不是只有页面显示成功。',
       '模板足够简短，移动端一屏内就能看到核心信息。'
     ],
-    tip: '先确认令牌和接收端没问题，再去细调模板文案；否则很容易把问题误判成格式问题。'
+    tip: '先确认凭证和接收端没问题，再去细调模板文案；否则很容易把问题误判成格式问题。'
   },
   email: {
     icon: 'notifyEmail',
@@ -1010,20 +1010,20 @@ const CHANNEL_TUTORIALS = {
         tip: '先只填一个收件人最容易验证成功。'
       },
       {
-        title: '保存后发送测试邮件',
+        title: '保存后发送验证邮件',
         detail: '到收件箱、垃圾箱都看一下，确认邮件真的送达，标题和正文也符合预期。',
         tip: '邮箱渠道更适合结构完整、可留档的通知。'
       }
     ],
     fields: [
-      { label: 'SMTP Host', detail: '填写邮箱服务商提供的服务器地址，例如 smtp.example.com。' },
+      { label: 'SMTP Host', detail: '填写邮箱服务商提供的服务器地址，例如 smtp.company.com。' },
       { label: '端口', detail: '常见端口为 465 或 587，按邮箱服务商文档填写，错误端口会导致连接失败。' },
       { label: '登录账号 / 授权码', detail: '登录账号一般是完整邮箱地址；密码推荐使用授权码而不是网页登录密码。' },
-      { label: '发件人 / 收件人', detail: '发件人建议与登录账号一致，收件人先填自己，测试通过后再扩展到正式收件组。' }
+      { label: '发件人 / 收件人', detail: '发件人建议与登录账号一致，收件人先填自己，验证通过后再扩展到正式收件组。' }
     ],
     checklist: [
       '邮箱后台已经开启 SMTP，当前填写的是授权码或应用密码，不是普通登录密码。',
-      '端口与 Host 对应正确，测试邮件在收件箱或垃圾箱中都能找到。',
+      '端口与 Host 对应正确，验证邮件在收件箱或垃圾箱中都能找到。',
       '邮件标题、正文和变量内容完整，适合作为正式通知模板继续使用。'
     ],
     tip: '邮箱配置建议一步一步来：先确认 SMTP 能登录，再确认能送达，最后再优化模板排版和收件范围。'
@@ -1065,14 +1065,14 @@ const EXAMPLE_PREVIEW = [
   {
     id: 'preview-1',
     title: '自动化任务提醒',
-    content: '这是通知样式示例，真实任务执行结果会使用后端返回的内容。',
+    content: '这是通知样式预览，真实任务执行结果会使用系统返回的内容。',
     tone: 'info',
     icon: 'notifyPreview'
   },
   {
     id: 'preview-2',
     title: '库存预警提醒',
-    content: '这是预警样式示例，不代表当前存在真实库存异常。',
+    content: '这是预警样式预览，不代表当前存在真实库存异常。',
     tone: 'warn',
     icon: 'notifyAlert'
   }
@@ -1204,7 +1204,7 @@ const summaryCards = computed(() => [
     value: logsLoaded.value && deliveryLogs.value.length ? `${healthPercent.value.toFixed(1)}%` : '—',
     detail: logsLoaded.value
       ? (deliveryLogs.value.length ? `基于最近 ${deliveryLogs.value.length} 条实际投递记录` : '暂无投递记录，无法计算成功率')
-      : '投递日志暂不可用',
+      : '投递记录暂不可用',
     icon: 'notifyRate',
     tone: 'cyan'
   },
@@ -1213,7 +1213,7 @@ const summaryCards = computed(() => [
     value: visualPendingDisplay.value,
     detail: logsLoaded.value || notificationsLoaded.value
       ? (pendingCount.value ? '基于已加载的失败投递与未读应用内通知' : '已加载来源中无待处理提醒')
-      : '投递日志与应用内通知暂不可用',
+      : '投递记录与应用内通知暂不可用',
     icon: 'notifyAlert',
     tone: 'orange'
   }
@@ -1245,7 +1245,7 @@ const recentLogRows = computed(() => {
     const ok = toBool(log.success, false)
     return {
       id: log.id || `${log.channelKey}-${log.createdTime}`,
-      title: `${log.channelName || renderChannelName(log.channelKey)} · ${log.eventType || '测试通知'}`,
+      title: `${log.channelName || renderChannelName(log.channelKey)} · ${log.eventType || '验证通知'}`,
       detail: `${dateTime(log.createdTime)} · 响应 ${formatCost(log.costMs)}`,
       time: dateTime(log.createdTime),
       meta: log.message || (ok ? '发送成功' : '发送失败'),
@@ -1281,7 +1281,7 @@ const selectedChannelStatus = computed(() => {
   if (!isChannelConfigured(channel)) {
     return {
       title: `${channel.name} 尚未完成连接配置`,
-      description: '填写通道地址、签名密钥或邮件凭证后即可保存并发起测试发送。'
+      description: '填写通道地址、签名密钥或邮件凭证后即可保存并发起验证发送。'
     }
   }
 
@@ -1289,7 +1289,7 @@ const selectedChannelStatus = computed(() => {
   if (!latestLog) {
     return {
       title: `${renderConnectionTarget(channel)} 配置已填写`,
-      description: '尚无该渠道的实际投递记录，请保存后发送测试通知进行验证。'
+      description: '尚无该渠道的实际投递记录，请保存后发送验证通知进行验证。'
     }
   }
   const ok = toBool(latestLog.success, false)
@@ -1301,7 +1301,7 @@ const selectedChannelStatus = computed(() => {
 
 const channelDedupeWindow = computed(() => Number(selectedChannel.value?.dedupeWindow || 0))
 
-// 飞书自建应用事件订阅 URL 提示用：当前页面 origin（自动化服务监听同源 /api/feishu/webhook）
+// 飞书自建应用事件订阅地址提示用：当前页面 origin。
 const windowLocationOrigin = computed(() => {
   if (typeof window !== 'undefined' && window.location) {
     return window.location.origin
@@ -1580,8 +1580,8 @@ function notificationTestStorageKey(channelKey) {
 function notificationTestPayload(channel = selectedChannel.value) {
   return {
     channelKey: String(channel?.key || ''),
-    title: '通知渠道测试',
-    content: `来自 ${channel?.name || '通知中心'} 的连接测试`,
+    title: '通知渠道验证',
+    content: `来自 ${channel?.name || '通知中心'} 的连接验证`,
   }
 }
 
@@ -1609,7 +1609,7 @@ function applyPersistedTestAttempt(record) {
     replaySafe: record?.replaySafe !== false,
     logPersisted: record?.logPersisted === true,
     success: typeof record?.success === 'boolean' ? record.success : null,
-    message: String(record?.message || '该通知测试仍需使用原意图核对。'),
+    message: String(record?.message || '该通知验证仍需使用原验证任务核对。'),
   })
 }
 
@@ -1629,7 +1629,7 @@ function loadNotificationTestIntent(channelKey = selectedKey.value) {
     applyPersistedTestAttempt(record)
     return record
   } catch {
-    error.value = '浏览器无法读取通知测试意图；为避免重复发送，测试功能已禁用。'
+    error.value = '浏览器无法读取通知验证任务；为避免重复发送，验证功能已禁用。'
     return null
   }
 }
@@ -1645,13 +1645,13 @@ function persistNotificationTestIntent(payload) {
       || existing?.title !== payload.title
       || existing?.content !== payload.content
     ) {
-      throw new Error('已有通知测试意图与当前渠道或内容不一致，已禁止生成新幂等键。')
+      throw new Error('已有通知验证任务与当前渠道或内容不一致，已禁止生成新的安全凭证。')
     }
     applyPersistedTestAttempt(existing)
     return existing
   }
   const randomId = window.crypto?.randomUUID?.()
-  if (!randomId) throw new Error('浏览器无法生成安全的通知测试幂等键，测试已禁用。')
+  if (!randomId) throw new Error('浏览器无法生成安全的通知验证凭证，验证已禁用。')
   const record = {
     ...payload,
     idempotencyKey: `notify-test:${randomId}`,
@@ -1661,16 +1661,16 @@ function persistNotificationTestIntent(payload) {
     replaySafe: true,
     logPersisted: false,
     success: null,
-    message: '通知测试意图已保存，等待后端确认是否发送。',
+    message: '通知验证任务已保存，等待系统确认是否发送。',
     createdAt: Date.now(),
   }
   if (!NOTIFICATION_TEST_KEY_PATTERN.test(record.idempotencyKey)) {
-    throw new Error('通知测试幂等键格式校验失败，测试已禁用。')
+    throw new Error('通知验证凭证格式校验失败，验证已禁用。')
   }
   window.localStorage.setItem(storageKey, JSON.stringify(record))
   const readBack = JSON.parse(window.localStorage.getItem(storageKey) || 'null')
   if (readBack?.idempotencyKey !== record.idempotencyKey) {
-    throw new Error('通知测试意图持久化校验失败，测试已禁用。')
+    throw new Error('通知验证任务保存校验失败，验证已禁用。')
   }
   applyPersistedTestAttempt(record)
   return record
@@ -1685,7 +1685,7 @@ function rememberNotificationTestAttempt(intent, data, message) {
     replaySafe: data?.replaySafe !== false,
     logPersisted: data?.logPersisted === true,
     success: typeof data?.success === 'boolean' ? data.success : null,
-    message: String(message || '通知测试结果需要使用原意图核对。'),
+    message: String(message || '通知验证结果需要使用原验证任务核对。'),
     updatedAt: Date.now(),
   }
   window.localStorage.setItem(
@@ -1803,7 +1803,7 @@ async function load(showErrorNotice = false) {
   } else {
     deliveryLogs.value = []
     logsLoaded.value = false
-    failures.push('投递日志加载失败')
+    failures.push('投递记录加载失败')
   }
 
   if (failures.length) error.value = `${[...new Set(failures)].join('；')}，请稍后重试`
@@ -1833,15 +1833,15 @@ async function test() {
   if (testing.value || resolving.value || saving.value || loading.value) return
   clearNotices()
   if (settingsAvailable.value !== true) {
-    error.value = '通知配置状态未知，重新加载成功前禁止发送测试。'
+    error.value = '通知配置状态未知，重新加载成功前禁止发送验证。'
     return
   }
   if (settingsDirty.value) {
-    error.value = '当前有未保存更改。测试只使用已保存配置，请先保存后再发送。'
+    error.value = '当前有未保存更改。验证只使用已保存配置，请先保存后再发送。'
     return
   }
   if (!selectedChannel.value || !isChannelConfigured(selectedChannel.value)) {
-    error.value = '请先完成当前渠道的必要配置再发送测试通知'
+    error.value = '请先完成当前渠道的必要配置再发送验证通知'
     return
   }
 
@@ -1853,7 +1853,7 @@ async function test() {
       () => persistNotificationTestIntent(payload),
     )
   } catch (err) {
-    error.value = err?.message || '无法取得跨标签页通知测试锁，测试发送已禁用。'
+    error.value = err?.message || '无法取得跨标签页通知验证锁，验证发送已禁用。'
     return
   }
   if (!intent) return
@@ -1871,17 +1871,17 @@ async function test() {
       try {
         finishNotificationTestIntent(intent)
       } catch {
-        error.value = '通知结果与审计日志已确认，但浏览器无法清理旧意图；后续点击只会安全重放原结果。'
+        error.value = '通知结果与操作记录已确认，但浏览器无法清理旧验证任务；后续点击只会安全重放原结果。'
       }
       if (data.success === true) {
-        success.value = '当前渠道测试发送成功，审计日志已记录'
+        success.value = '当前渠道验证发送成功，操作记录已留存'
       } else {
-        error.value = '渠道明确返回发送失败，审计日志已记录；请检查渠道配置。'
+        error.value = '渠道明确返回发送失败，操作记录已留存；请检查渠道配置。'
       }
     } else {
       const message = data.attemptStatus === 'confirmed'
-        ? '通知结果已确认、审计日志待修复；必须使用原测试意图补写，系统不会重发渠道消息。'
-        : '通知测试状态尚未完成；必须使用原测试意图继续核对。'
+        ? '通知结果已确认、操作记录待补全；必须使用原验证任务补写，系统不会重发渠道消息。'
+        : '通知验证状态尚未完成；必须使用原验证任务继续核对。'
       rememberNotificationTestAttempt(intent, data, message)
       error.value = message
     }
@@ -1899,16 +1899,16 @@ async function test() {
         // Keeping the original key is safe; a later replay cannot duplicate a
         // provider send because the backend rejected before creating an attempt.
       }
-      error.value = err?.message || '通知测试请求未执行，请修正配置后重试。'
+      error.value = err?.message || '通知验证请求未执行，请修正配置后重试。'
     } else {
       const fallbackStatus = String(data.attemptStatus || 'unknown')
       const message = fallbackStatus === 'blocked'
-        ? '该渠道被另一测试意图锁定；仅持有原意图的浏览器可完成核对或审计日志修复。'
+        ? '该渠道被另一验证任务锁定；仅持有原验证任务的浏览器可完成核对或操作记录修复。'
         : fallbackStatus === 'in_progress'
-          ? '当前渠道测试正在发送；请保留此页面并使用同一意图核对。'
+          ? '当前渠道验证正在发送；请保留此页面并使用同一验证任务核对。'
           : fallbackStatus === 'confirmed' && data.logPersisted === false
-            ? '通知结果已确认、审计日志待修复；使用原意图只会补日志，不会重发。'
-            : '通知测试结果未知；禁止生成新幂等键，只能使用原意图核对且不会自动重发。'
+            ? '通知结果已确认、操作记录待补全；使用原验证任务只会补记录，不会重发。'
+            : '通知验证结果未知；禁止生成新的安全凭证，只能使用原验证任务核对且不会自动重发。'
       try {
         rememberNotificationTestAttempt(intent, {
           ...data,
@@ -1936,7 +1936,7 @@ async function test() {
 
 async function recoverNotificationTestAttempt() {
   if (!testAttempt.replaySafe) {
-    error.value = '当前浏览器不持有可恢复的原始测试意图，请回到原浏览器完成核对。'
+    error.value = '当前浏览器不持有可恢复的原始验证任务，请回到原浏览器完成核对。'
     return
   }
   await test()
@@ -1954,11 +1954,11 @@ async function resolveUnknownNotificationTestAttempt() {
   const channelKey = String(testAttempt.channelKey || selectedKey.value || '')
   const intent = loadNotificationTestIntent(channelKey)
   if (!intent || !NOTIFICATION_TEST_KEY_PATTERN.test(String(intent.idempotencyKey || ''))) {
-    error.value = '当前浏览器没有原始通知测试意图，禁止关闭未知状态。'
+    error.value = '当前浏览器没有原始通知验证任务，禁止关闭未知状态。'
     return
   }
   const confirmed = window.confirm(
-    '请再次确认：你已在通知服务方人工核对本次测试，确认不会再收到该测试消息。关闭未知意图不会撤回可能已送达的消息，也不会自动发送新测试。',
+    '请再次确认：你已在通知服务方人工核对本次验证消息，确认不会再收到该消息。关闭未知状态不会撤回可能已送达的消息，也不会自动发送新的验证消息。',
   )
   if (!confirmed) return
 
@@ -1973,13 +1973,13 @@ async function resolveUnknownNotificationTestAttempt() {
       }),
     )
     if (res?.data?.attemptStatus !== 'resolved' || res?.data?.providerCalled !== false) {
-      throw new Error('后端未明确确认未知意图已安全关闭')
+      throw new Error('系统未明确确认未知状态已安全关闭')
     }
     finishNotificationTestIntent(intent)
-    success.value = '未知通知测试已人工核对并关闭；本次操作未发送新通知。需要新测试时请再次主动点击测试连接。'
+    success.value = '未知通知验证已人工核对并关闭；本次操作未发送新通知。需要重新验证时请再次主动点击验证连接。'
     await load(false)
   } catch (err) {
-    error.value = err?.message || '关闭未知通知测试失败；原意图与渠道锁已保留。'
+    error.value = err?.message || '关闭未知通知验证失败；原验证任务与渠道锁已保留。'
     loadNotificationTestIntent(channelKey)
   } finally {
     resolving.value = false
