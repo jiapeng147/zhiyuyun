@@ -1,74 +1,164 @@
 <template>
-  <div class="data-v4">
-    <n-card class="data-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">运营数据</n-tag>
-        <h2>数据面板</h2>
-        <p>集中查看订单、发货、AI 回复和实时事件，失败区域不会用全零数据伪装正常结果。</p>
-      </div>
-      <n-space :size="8" align="center" wrap>
-        <span class="data-v4-updated">更新时间：{{ updatedAt }}</span>
-        <label class="data-v4-date" for="stats-date">统计日期</label>
-        <input id="stats-date" v-model="date" class="input data-v4-date-input" type="date" aria-label="统计日期" :disabled="loading" @change="load">
-        <n-button size="small" :loading="loading" @click="load">{{ loading ? '加载中...' : '刷新' }}</n-button>
-      </n-space>
-    </n-card>
-
+  <div class="data-board">
     <div v-if="error" class="global-notice error">{{ error }}</div>
 
-    <section class="data-v4-stats">
-      <n-card v-for="item in dataStatCards" :key="item.key" class="data-v4-stat" :class="item.tone" :bordered="false">
-        <span class="data-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
+    <section class="data-command-center">
+      <div class="data-command-main">
+        <div class="data-command-kicker">
+          <span>运营数据</span>
+          <b>{{ dataAvailable ? '汇总已同步' : '等待汇总' }}</b>
+        </div>
+        <h2>经营数据指挥台</h2>
+        <p>用订单、发货、AI 回复和实时事件组成运营监控视图；接口失败时保留真实状态，不用全零数据伪装正常结果。</p>
+        <div class="data-command-meta">
+          <span>{{ loading ? '正在刷新' : '刷新就绪' }}</span>
+          <span>更新时间 {{ updatedAt }}</span>
+          <span>{{ date || '默认统计日' }}</span>
+        </div>
+      </div>
+
+      <div class="data-control-panel">
+        <div class="data-control-head">
+          <span>数据口径</span>
+          <strong>{{ trendAvailable ? '趋势可用' : '趋势待恢复' }}</strong>
+        </div>
+        <label class="data-date-field" for="stats-date">
+          <span>统计日期</span>
+          <input id="stats-date" v-model="date" class="input" type="date" aria-label="统计日期" :disabled="loading" @change="load">
+        </label>
+        <button class="data-refresh-btn" type="button" :disabled="loading" @click="load">
+          {{ loading ? '刷新中...' : '刷新数据' }}
+        </button>
+      </div>
     </section>
 
-    <div class="data-v4-grid three">
-      <n-card class="data-v4-card" :bordered="false">
-        <template #header>发货成功趋势</template>
-        <template #header-extra><n-tag size="small" :bordered="false">近7天</n-tag></template>
-        <EmptyState v-if="!trendAvailable" icon="📊" title="趋势暂不可用" description="汇总与趋势独立加载，可点击刷新重试。" />
-        <MiniLineChart v-else :values="trend.deliverySuccess" :labels="trend.dates" />
-      </n-card>
-      <n-card class="data-v4-card" :bordered="false">
-        <template #header>发货失败趋势</template>
-        <EmptyState v-if="!trendAvailable" icon="📊" title="趋势暂不可用" description="汇总与趋势独立加载，可点击刷新重试。" />
-        <MiniLineChart v-else :values="trend.deliveryFail" :labels="trend.dates" />
-      </n-card>
-      <n-card class="data-v4-card" :bordered="false">
-        <template #header>AI 回复概况</template>
-        <EmptyState v-if="!dataAvailable" icon="📊" title="统计暂不可用" description="当前不会以全零数据代替查询失败。" />
-        <DonutChart v-else :center="String(totalReplies)" label="AI回复" :items="replyItems" />
-      </n-card>
-    </div>
+    <section class="data-status-ribbon" aria-label="数据状态">
+      <div :class="{ warn: !dataAvailable }">
+        <span>汇总服务</span>
+        <b>{{ dataAvailable ? '正常' : '不可用' }}</b>
+      </div>
+      <div :class="{ warn: !trendAvailable }">
+        <span>趋势服务</span>
+        <b>{{ trendAvailable ? '正常' : '不可用' }}</b>
+      </div>
+      <div>
+        <span>实时事件</span>
+        <b>{{ logs.length ? `${logs.length} 条` : '监听中' }}</b>
+      </div>
+    </section>
 
-    <div class="data-v4-grid three">
-      <n-card class="data-v4-card" :bordered="false">
-        <template #header>趋势明细</template>
-        <EmptyState v-if="!trendAvailable" icon="📋" title="明细暂不可用" description="趋势查询恢复后再显示。" />
-        <BaseTable v-else :columns="trendCols" :rows="trendRows" />
-      </n-card>
-      <n-card class="data-v4-card" :bordered="false">
-        <template #header>发货概况</template>
-        <EmptyState v-if="!dataAvailable" icon="📦" title="发货统计暂不可用" description="不会把查询失败显示为零。" />
+    <section class="data-metric-rail">
+      <article
+        v-for="item in dataStatCards"
+        :key="item.key"
+        class="data-metric-card"
+        :class="item.tone"
+      >
+        <span class="data-metric-icon">{{ item.symbol }}</span>
+        <div>
+          <p>{{ item.title }}</p>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.change }}</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="data-workbench">
+      <article class="data-panel data-panel-wide">
+        <header class="data-panel-head">
+          <div>
+            <span>近 7 天</span>
+            <h3>发货成功趋势</h3>
+          </div>
+          <b>{{ trendAvailable ? '已生成' : '等待数据' }}</b>
+        </header>
+        <EmptyState v-if="!trendAvailable" icon="△" title="趋势暂不可用" description="汇总与趋势独立加载，可点击刷新重试。" />
+        <MiniLineChart v-else :values="trend.deliverySuccess" :labels="trend.dates" />
+      </article>
+
+      <article class="data-panel">
+        <header class="data-panel-head">
+          <div>
+            <span>自动接待</span>
+            <h3>AI 回复概况</h3>
+          </div>
+          <b>{{ totalReplies }}</b>
+        </header>
+        <EmptyState v-if="!dataAvailable" icon="!" title="统计暂不可用" description="当前不会以全零数据代替查询失败。" />
+        <DonutChart v-else :center="String(totalReplies)" label="AI回复" :items="replyItems" />
+      </article>
+
+      <article class="data-panel">
+        <header class="data-panel-head">
+          <div>
+            <span>履约质量</span>
+            <h3>发货失败趋势</h3>
+          </div>
+          <b>{{ trendAvailable ? '近 7 天' : '待恢复' }}</b>
+        </header>
+        <EmptyState v-if="!trendAvailable" icon="△" title="趋势暂不可用" description="汇总与趋势独立加载，可点击刷新重试。" />
+        <MiniLineChart v-else :values="trend.deliveryFail" :labels="trend.dates" />
+      </article>
+
+      <article class="data-panel">
+        <header class="data-panel-head">
+          <div>
+            <span>履约结构</span>
+            <h3>发货概况</h3>
+          </div>
+          <b>{{ successRate }}</b>
+        </header>
+        <EmptyState v-if="!dataAvailable" icon="□" title="发货统计暂不可用" description="不会把查询失败显示为零。" />
         <template v-else>
           <DonutChart :center="String(totalDelivery)" label="发货合计" :items="deliveryItems" />
-          <div class="metric-row" style="margin-top:20px"><div class="metric-tile"><span>成功率</span><b style="color:var(--green)">{{ successRate }}</b></div><div class="metric-tile"><span>失败</span><b style="color:#ef4444">{{ stats.deliveryFailCount }}</b></div><div class="metric-tile"><span>待处理</span><b>{{ stats.pendingDeliveryCount }}</b></div></div>
+          <div class="data-health-grid">
+            <div><span>成功率</span><b class="good">{{ successRate }}</b></div>
+            <div><span>失败</span><b class="danger">{{ stats.deliveryFailCount }}</b></div>
+            <div><span>待处理</span><b>{{ stats.pendingDeliveryCount }}</b></div>
+          </div>
         </template>
-      </n-card>
-      <n-card class="data-v4-card" :bordered="false">
-        <template #header>最新实时事件</template>
-        <EmptyState v-if="logs.length === 0" icon="📡" title="暂无实时事件" description="订单、发货、AI 回复等实时事件会在这里显示。" />
-        <div v-for="n in logs" :key="n.t+n.time" class="option-line"><div><b>{{ n.t }}</b><p class="subtle" style="margin:4px 0 0">{{ n.d }}</p></div><span class="subtle">{{ n.time }}</span></div>
-      </n-card>
-    </div>
+      </article>
+
+      <article class="data-panel data-panel-wide">
+        <header class="data-panel-head">
+          <div>
+            <span>趋势明细</span>
+            <h3>日维度流水</h3>
+          </div>
+          <b>{{ trendRows.length }} 行</b>
+        </header>
+        <EmptyState v-if="!trendAvailable" icon="≡" title="明细暂不可用" description="趋势查询恢复后再显示。" />
+        <BaseTable v-else :columns="trendCols" :rows="trendRows" />
+      </article>
+
+      <article class="data-panel data-feed-panel">
+        <header class="data-panel-head">
+          <div>
+            <span>实时监听</span>
+            <h3>最新事件</h3>
+          </div>
+          <b>{{ logs.length ? '有更新' : '空闲' }}</b>
+        </header>
+        <EmptyState v-if="logs.length === 0" icon="·" title="暂无实时事件" description="订单、发货、AI 回复等实时事件会在这里显示。" />
+        <div v-else class="data-event-list">
+          <div v-for="n in logs" :key="n.t+n.time" class="data-event-row">
+            <div>
+              <b>{{ n.t }}</b>
+              <p>{{ n.d }}</p>
+            </div>
+            <time>{{ n.time }}</time>
+          </div>
+        </div>
+      </article>
+    </section>
   </div>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { NButton, NCard, NSpace, NStatistic, NTag } from 'naive-ui'
-import MiniLineChart from '../components/MiniLineChart.vue'; import DonutChart from '../components/DonutChart.vue'; import BaseTable from '../components/BaseTable.vue'; import EmptyState from '../components/EmptyState.vue'
+import MiniLineChart from '../components/MiniLineChart.vue'
+import DonutChart from '../components/DonutChart.vue'
+import BaseTable from '../components/BaseTable.vue'
+import EmptyState from '../components/EmptyState.vue'
 import { getDashboardSummary, getDashboardSalesTrend } from '../api/dashboard.js'
 import { shortText } from '../utils/format.js'
 const stats = ref({ orderCount:0, deliverySuccessCount:0, deliveryFailCount:0, pendingDeliveryCount:0, aiReplyCount:0, hasData:false })
@@ -174,152 +264,389 @@ onMounted(()=>{ window.addEventListener('xya-sse-event', onSse); window.addEvent
 onBeforeUnmount(()=>{ window.removeEventListener('xya-sse-event', onSse); window.removeEventListener('xya-header-action', onHeader) })
 </script>
 <style scoped>
-.data-v4 {
+.data-board {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
 }
 
-.data-v4-hero,
-.data-v4-card,
-.data-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+.data-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(14, 116, 144, .08), rgba(34, 197, 94, .06) 44%, rgba(245, 158, 11, .08)),
+    #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
 }
 
-.data-v4-hero :deep(.n-card__content) {
-  padding: 18px;
+.data-command-main {
+  min-width: 0;
+}
+
+.data-command-kicker,
+.data-command-meta,
+.data-control-head,
+.data-panel-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
-.data-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.25;
+.data-command-kicker {
+  justify-content: flex-start;
 }
 
-.data-v4-hero p,
-.data-v4-updated,
-.data-v4-date {
+.data-command-kicker span,
+.data-panel-head span,
+.data-control-head span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.data-command-kicker b,
+.data-panel-head b,
+.data-control-head strong {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.data-command-main h2 {
+  margin: 12px 0 8px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.data-command-main p {
+  max-width: 760px;
   margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.data-command-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.data-command-meta span,
+.data-status-ribbon div,
+.data-date-field {
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.data-command-meta span {
+  padding: 7px 10px;
+  color: #334155;
+  font-size: 12px;
+}
+
+.data-control-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(15, 118, 110, .18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .76);
+}
+
+.data-date-field {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.data-date-field span {
   color: #64748b;
+  font-size: 12px;
+}
+
+.data-date-field input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.data-date-field input:focus {
+  outline: none;
+}
+
+.data-refresh-btn {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #0f766e;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.data-refresh-btn:disabled {
+  cursor: wait;
+  opacity: .72;
+}
+
+.data-status-ribbon {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.data-status-ribbon div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.data-status-ribbon span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.data-status-ribbon b {
+  color: #047857;
   font-size: 13px;
-  line-height: 1.65;
 }
 
-.data-v4-date-input {
-  max-width: 180px;
+.data-status-ribbon .warn b {
+  color: #b45309;
 }
 
-.data-v4-stats {
+.data-metric-rail {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
-.data-v4-stat :deep(.n-card__content) {
-  padding: 16px;
+.data-metric-card {
   display: grid;
-  gap: 8px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
 }
 
-.data-v4-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.data-metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.data-v4-stat.tone-blue .data-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.data-v4-stat.tone-green .data-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.data-v4-stat.tone-orange .data-v4-stat-icon { background: #fff7ed; color: #ea580c; }
-.data-v4-stat.tone-cyan .data-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.data-v4-stat.tone-purple .data-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
-
-.data-v4-stat :deep(.n-statistic .n-statistic-label) {
+.data-metric-card p {
+  margin: 0;
   color: #64748b;
   font-size: 12px;
 }
 
-.data-v4-stat :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
+.data-metric-card strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f172a;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.data-v4-stat small {
+.data-metric-card small {
+  display: block;
+  margin-top: 6px;
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.data-v4-grid {
+.data-metric-card.tone-blue .data-metric-icon { background: #e0f2fe; color: #0369a1; }
+.data-metric-card.tone-green .data-metric-icon { background: #dcfce7; color: #15803d; }
+.data-metric-card.tone-orange .data-metric-icon { background: #ffedd5; color: #c2410c; }
+.data-metric-card.tone-cyan .data-metric-icon { background: #ccfbf1; color: #0f766e; }
+.data-metric-card.tone-purple .data-metric-icon { background: #ede9fe; color: #6d28d9; }
+
+.data-workbench {
   display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 16px;
 }
 
-.data-v4-grid.three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.data-v4-card :deep(.n-card__content) {
+.data-panel {
+  grid-column: span 4;
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
 }
 
-.data-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.data-panel-wide {
+  grid-column: span 8;
 }
 
-/* ===== 移动端响应式 (max-width: 900px) ===== */
+.data-panel-head {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.data-panel-head h3 {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.data-panel :deep(.chart-wrap) {
+  width: 100%;
+  overflow: hidden;
+}
+
+.data-panel :deep(.line-chart) {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.data-panel :deep(.base-table-wrap) {
+  border-radius: 8px;
+}
+
+.data-health-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.data-health-grid div {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.data-health-grid span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.data-health-grid b {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.data-health-grid .good {
+  color: #047857;
+}
+
+.data-health-grid .danger {
+  color: #dc2626;
+}
+
+.data-feed-panel {
+  align-self: stretch;
+}
+
+.data-event-list {
+  display: grid;
+  gap: 10px;
+}
+
+.data-event-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.data-event-row b {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.data-event-row p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.data-event-row time {
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
-  .data-v4 {
+  .data-board {
     gap: 12px;
   }
 
-  .data-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
-    padding: 14px;
+  .data-command-center {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
   }
 
-  .data-v4-stats,
-  .data-v4-grid.three {
+  .data-status-ribbon,
+  .data-metric-rail,
+  .data-health-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .data-v4-card :deep(.n-card__content) {
-    padding: 12px;
+  .data-workbench {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  /* 事件列表项：允许换行，时间另起一行 */
-  .option-line {
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 10px 0;
+  .data-panel,
+  .data-panel-wide {
+    grid-column: span 1;
   }
 
-  .option-line > div {
-    flex: 1 1 100%;
-    min-width: 0;
+  .data-command-meta,
+  .data-status-ribbon div,
+  .data-panel-head,
+  .data-event-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .option-line > span {
-    font-size: 11px;
+  .data-command-meta,
+  .data-panel-head {
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
-  /* chips 标签收敛 */
-  .chip {
-    font-size: 11px;
+  .data-event-row time {
+    white-space: normal;
   }
 }
 </style>
