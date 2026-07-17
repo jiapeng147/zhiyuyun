@@ -1,22 +1,41 @@
 <template>
-  <div class="source-v4">
-    <n-card class="source-v4-hero" :bordered="false">
-      <div>
-        <n-tag size="small" type="success" :bordered="false">货源库</n-tag>
-        <h2>货源库运营台</h2>
+  <div class="source-page">
+    <section class="source-command-center">
+      <div class="source-command-main">
+        <div class="source-command-kicker">
+          <span>货源资产</span>
+          <b>{{ selected?.title || '未选择货源' }}</b>
+        </div>
+        <h2>货源资产库</h2>
         <p>统一管理自动发货素材、绑定商品与 AI 推荐结果，配置关系加载失败时不会开放写操作。</p>
+        <div class="source-command-meta">
+          <span>{{ sourcesLoading ? '货源刷新中' : `共 ${sourceMetric(sourceTotal)} 条货源` }}</span>
+          <span>当前页 {{ sourceMetric(rows.length) }}</span>
+          <span>已选 {{ sourceMetric(selectedGoodsIds.length) }} 个商品</span>
+        </div>
       </div>
-      <n-space :size="8" align="center" wrap>
-        <AppButton :disabled="sourcesLoading || Boolean(mutationBusy)" @click="loadSources">{{ sourcesLoading ? '刷新中...' : '刷新货源' }}</AppButton>
-        <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
-      </n-space>
-    </n-card>
+      <div class="source-command-panel">
+        <div class="source-command-panel-head">
+          <span>货源动作</span>
+          <strong>{{ mutationBusy ? '任务处理中' : '可操作' }}</strong>
+        </div>
+        <div class="source-command-buttons">
+          <AppButton :disabled="sourcesLoading || Boolean(mutationBusy)" @click="loadSources">{{ sourcesLoading ? '刷新中...' : '刷新货源' }}</AppButton>
+          <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
+        </div>
+      </div>
+    </section>
 
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <n-card v-if="editing" ref="editorCardRef" class="source-v4-card source-v4-editor" :bordered="false">
-      <template #header>{{ editing.id ? '编辑货源' : '新增货源' }}</template>
+    <section v-if="editing" ref="editorCardRef" class="source-panel source-editor-panel">
+      <header class="source-panel-head">
+        <div>
+          <span>货源编辑</span>
+          <h3>{{ editing.id ? '编辑货源' : '新增货源' }}</h3>
+        </div>
+      </header>
       <div class="form-grid">
         <div class="form-row">
           <label>标题</label>
@@ -35,19 +54,25 @@
         <AppButton type="primary" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="saveSource">{{ mutationBusy === 'save' ? '保存中…' : '保存' }}</AppButton>
         <AppButton :disabled="mutationBusy === 'save'" @click="cancelEdit">取消</AppButton>
       </div>
-    </n-card>
-
-    <section class="source-v4-stats">
-      <n-card v-for="item in sourceStatCards" :key="item.key" class="source-v4-stat" :class="item.tone" :bordered="false">
-        <span class="source-v4-stat-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </n-card>
     </section>
 
-    <n-card class="source-v4-card" :bordered="false">
-      <template #header>货源库</template>
-      <div class="toolbar">
+    <section class="source-metric-rail">
+      <article v-for="item in sourceStatCards" :key="item.key" class="source-metric-card" :class="item.tone">
+        <span class="source-metric-icon">{{ item.symbol }}</span>
+        <n-statistic :label="item.title" :value="item.value" />
+        <small>{{ item.change }}</small>
+      </article>
+    </section>
+
+    <section class="source-panel source-library-panel">
+      <header class="source-panel-head">
+        <div>
+          <span>货源列表</span>
+          <h3>货源库</h3>
+        </div>
+        <b>{{ sourcesAvailable === true ? `共 ${sourceTotal} 条` : '等待加载' }}</b>
+      </header>
+      <div class="source-toolbar">
         <input v-model="query.keyword" class="input" placeholder="搜索标题 / 正文 / 备注" :disabled="sourcesLoading || Boolean(mutationBusy)" @keyup.enter="searchSources" />
         <AppButton type="primary" :disabled="sourcesLoading || Boolean(mutationBusy)" @click="searchSources">搜索</AppButton>
         <AppButton :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
@@ -81,11 +106,16 @@
       </BaseTable>
       <Pagination v-if="!mutationBusy" :total="sourceTotal" :current="query.current" :page-size="query.size" @page-change="goSourcePage" />
       </template>
-    </n-card>
+    </section>
 
-    <div v-if="selected" ref="detailCardRef" class="source-v4-detail-stack">
-      <n-card class="source-v4-card" :bordered="false">
-        <template #header>货源详情</template>
+    <div v-if="selected" ref="detailCardRef" class="source-detail-stack">
+      <section class="source-panel">
+        <header class="source-panel-head">
+          <div>
+            <span>货源详情</span>
+            <h3>当前货源</h3>
+          </div>
+        </header>
         <EmptyState v-if="detailLoading" icon="⏳" title="货源详情加载中" description="正在读取绑定商品，期间不会开放配置操作。" />
         <EmptyState v-else-if="detailAvailable === false" icon="⚠️" title="货源详情暂不可用" description="当前无法确认绑定关系；为避免把旧商品配置到新货源，所有写操作已禁用。">
           <template #actions>
@@ -109,11 +139,16 @@
         </div>
         <div class="subtle source-preview">{{ selected.content || '暂无正文内容' }}</div>
         </template>
-      </n-card>
+      </section>
 
-      <n-card v-if="detailAvailable === true" class="source-v4-card" :bordered="false">
-        <template #header>已配置商品</template>
-        <div class="toolbar">
+      <section v-if="detailAvailable === true" class="source-panel">
+        <header class="source-panel-head">
+          <div>
+            <span>绑定商品</span>
+            <h3>已配置商品</h3>
+          </div>
+        </header>
+        <div class="source-toolbar">
           <input
             v-model="configuredKeyword"
             class="input"
@@ -156,11 +191,17 @@
           :page-size="configuredGoodsPage.size"
           @page-change="goConfiguredGoodsPage"
         />
-      </n-card>
+      </section>
 
-      <n-card v-if="detailAvailable === true" class="source-v4-card" :bordered="false">
-        <template #header>{{ goodsView === 'recommend' ? 'AI 推荐商品' : '商品列表' }}</template>
-        <div class="toolbar">
+      <section v-if="detailAvailable === true" class="source-panel">
+        <header class="source-panel-head">
+          <div>
+            <span>{{ goodsView === 'recommend' ? '推荐结果' : '候选商品' }}</span>
+            <h3>{{ goodsView === 'recommend' ? 'AI 推荐商品' : '商品列表' }}</h3>
+          </div>
+          <b>{{ selectedGoodsIds.length }} 已选</b>
+        </header>
+        <div class="source-toolbar">
           <input
             v-model="goodsKeyword"
             class="input"
@@ -259,14 +300,14 @@
           :page-size="candidateGoodsPage.size"
           @page-change="goCandidateGoodsPage"
         />
-      </n-card>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NCard, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NStatistic } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue'
 import AppButton from '../components/AppButton.vue'
 import Badge from '../components/Badge.vue'
@@ -1026,107 +1067,237 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.source-v4 {
+.source-page {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
-.source-v4-hero,
-.source-v4-card,
-.source-v4-stat {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-}
-
-.source-v4-hero :deep(.n-card__content) {
-  padding: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+.source-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfe8e4;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(246, 248, 252, .98) 48%, rgba(255, 250, 245, .94)),
+    #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
 }
 
-.source-v4-hero h2 {
-  margin: 12px 0 6px;
-  color: #111827;
-  font-size: 22px;
-  font-weight: 650;
+.source-command-main {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.source-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.source-command-kicker span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, .1);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.source-command-kicker b {
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-command-main h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.25;
 }
 
-.source-v4-hero p {
+.source-command-main p {
   margin: 0;
-  color: #64748b;
+  max-width: 720px;
+  color: #526079;
   font-size: 13px;
   line-height: 1.65;
 }
 
-.source-v4-stats {
+.source-command-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.source-command-meta span {
+  padding: 6px 10px;
+  border: 1px solid rgba(15, 118, 110, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.source-command-panel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.source-command-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.source-command-panel-head strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.source-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.source-metric-rail {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
-.source-v4-stat :deep(.n-card__content) {
+.source-metric-card {
+  position: relative;
+  min-width: 0;
   padding: 16px;
   display: grid;
   gap: 8px;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+  overflow: hidden;
 }
 
-.source-v4-stat-icon {
+.source-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 0 14px;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #dbeafe;
+}
+
+.source-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.source-v4-stat.tone-blue .source-v4-stat-icon { background: #eff6ff; color: #2563eb; }
-.source-v4-stat.tone-cyan .source-v4-stat-icon { background: #ecfeff; color: #0891b2; }
-.source-v4-stat.tone-green .source-v4-stat-icon { background: #ecfdf5; color: #059669; }
-.source-v4-stat.tone-purple .source-v4-stat-icon { background: #f5f3ff; color: #7c3aed; }
-.source-v4-stat.tone-orange .source-v4-stat-icon { background: #fff7ed; color: #ea580c; }
+.source-metric-card.tone-blue .source-metric-icon { background: #eff6ff; color: #2563eb; }
+.source-metric-card.tone-cyan .source-metric-icon { background: #ecfeff; color: #0891b2; }
+.source-metric-card.tone-green .source-metric-icon { background: #ecfdf5; color: #059669; }
+.source-metric-card.tone-purple .source-metric-icon { background: #f5f3ff; color: #7c3aed; }
+.source-metric-card.tone-orange .source-metric-icon { background: #fff7ed; color: #ea580c; }
 
-.source-v4-stat :deep(.n-statistic .n-statistic-label) {
+.source-metric-card :deep(.n-statistic .n-statistic-label) {
   color: #64748b;
   font-size: 12px;
 }
 
-.source-v4-stat :deep(.n-statistic .n-statistic-value) {
+.source-metric-card :deep(.n-statistic .n-statistic-value) {
   color: #111827;
   font-size: 24px;
   font-weight: 700;
 }
 
-.source-v4-stat small {
+.source-metric-card small {
   color: #64748b;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.source-v4-card :deep(.n-card__content) {
+.source-panel {
+  min-width: 0;
   padding: 16px;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
 
-.source-v4-card :deep(.n-card-header) {
-  padding: 16px 16px 0;
+.source-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.source-v4-editor,
-.source-v4-detail-stack {
+.source-panel-head span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.source-panel-head h3 {
+  margin: 4px 0 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.source-panel-head b {
+  color: #101828;
+  font-size: 13px;
+}
+
+.source-editor-panel,
+.source-detail-stack {
   scroll-margin-top: 96px;
 }
 
-.source-v4-detail-stack {
+.source-detail-stack {
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+
+.source-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.source-toolbar .input {
+  max-width: 320px;
 }
 
 .content-preview {
@@ -1236,21 +1407,33 @@ onBeforeUnmount(() => {
 
 /* ───── 移动端适配 ───── */
 @media (max-width: 900px) {
-  .source-v4 {
+  .source-page {
     gap: 12px;
   }
 
-  .source-v4-hero :deep(.n-card__content) {
-    flex-direction: column;
+  .source-command-center,
+  .source-panel {
     padding: 14px;
+    border-radius: 12px;
   }
 
-  .source-v4-stats {
+  .source-command-main h2 {
+    font-size: 24px;
+  }
+
+  .source-command-center,
+  .source-command-buttons,
+  .source-metric-rail {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .source-v4-card :deep(.n-card__content) {
-    padding: 12px;
+  .source-panel-head {
+    display: grid;
+  }
+
+  .source-toolbar,
+  .source-toolbar .input {
+    width: 100%;
   }
 
   /* 货源正文预览宽度收窄并允许换行 */
