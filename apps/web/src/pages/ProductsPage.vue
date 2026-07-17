@@ -309,15 +309,16 @@
         <button class="drawer-close" @click="selected = null">×</button>
       </div>
       <template v-if="selected">
-        <div class="preview-card" style="height:210px;padding:0;overflow:hidden;border-radius:12px"><img v-if="selected.coverPic" :src="selected.coverPic" style="width:100%;height:100%;object-fit:cover" alt=""><div v-else class="product-thumb" style="width:100%;height:100%;border-radius:0;background:linear-gradient(135deg,#f5f7fb,#dfe9f8)"></div></div>
+        <div class="preview-card" style="height:210px;padding:0;overflow:hidden;border-radius:8px"><img v-if="selected.coverPic" :src="selected.coverPic" style="width:100%;height:100%;object-fit:cover" alt=""><div v-else class="product-thumb" style="width:100%;height:100%;border-radius:0;background:linear-gradient(135deg,#f5f7fb,#dfe9f8)"></div></div>
         <h3 class="drawer-title">{{ selected.name }}</h3>
         <p class="drawer-price"><b style="color:#ef4444;font-size:22px">{{ selected.price }}</b> <Badge :type="selected.statusType">{{ selected.status }}</Badge></p>
-        <n-card title="商品数据" class="drawer-card products-drawer-card" :bordered="false">
+        <section class="drawer-card products-drawer-panel" aria-label="商品数据">
+          <div class="products-drawer-panel-title">商品数据</div>
           <div class="option-line"><span>商品ID</span><b class="drawer-value">{{ selected.xyGoodId }}</b></div>
           <div class="option-line"><span>库存</span><b>{{ selected.stock }}</b></div>
           <div class="option-line"><span>曝光/浏览/想要</span><b>{{ selected.exposureCount }} / {{ selected.viewCount }} / {{ selected.wantCount }}</b></div>
           <div class="option-line"><span>更新时间</span><b>{{ selected.time }}</b></div>
-        </n-card>
+        </section>
         <div class="grid drawer-metrics">
           <div class="metric-tile"><span>自动发货</span><b :class="{'text-green':selected.deliveryOn,'text-gray':!selected.deliveryOn}">{{ selected.deliveryOn ? '已开启' : '已关闭' }}</b></div>
           <div class="metric-tile"><span>自动回复</span><b :class="{'text-green':selected.replyOn,'text-gray':!selected.replyOn}">{{ selected.replyOn ? '已开启' : '已关闭' }}</b></div>
@@ -421,7 +422,7 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NCard, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
 import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import ToggleSwitch from '../components/ToggleSwitch.vue';import AppButton from '../components/AppButton.vue';import EmptyState from '../components/EmptyState.vue'
 import { confirmAction } from '../utils/confirmAction.js'
 import { globalConfirm } from '../composables/confirmState.js'
@@ -2039,7 +2040,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe8e4;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(255, 250, 245, .94) 48%, rgba(246, 248, 252, .98)),
     #fff;
@@ -2117,7 +2118,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   min-width: 0;
   padding: 14px;
   border: 1px solid rgba(15, 118, 110, .16);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
 }
@@ -2155,7 +2156,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   min-width: 0;
   padding: 14px;
   border: 1px solid #e5eaf2;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
   display: grid;
@@ -2165,7 +2166,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 .products-metric-icon {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2203,7 +2204,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 .products-sync-panel {
   min-width: 0;
   border: 1px solid #e3e8ef;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
@@ -2241,7 +2242,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   margin: 16px 18px;
   padding: 12px;
   border: 1px solid #edf1f6;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8fafc;
   flex-wrap: wrap;
 }
@@ -2338,8 +2339,11 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   font-weight: 500;
   color: #64748b;
   background: transparent;
-  transition: all 0.15s;
+  transition: color 150ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 150ms cubic-bezier(0.23, 1, 0.32, 1), transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
   white-space: nowrap;
+}
+.tabs.products-tabs .tab:active {
+  transform: scale(.98);
 }
 .tabs.products-tabs .tab:hover {
   color: #af4a1e;
@@ -2356,7 +2360,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 .products-table {
   min-width: 1064px;
@@ -2592,11 +2596,14 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.15s;
+  transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms cubic-bezier(0.23, 1, 0.32, 1), border-color 150ms cubic-bezier(0.23, 1, 0.32, 1), color 150ms cubic-bezier(0.23, 1, 0.32, 1);
   user-select: none;
   background: #fff;
   border: 1px solid #f0e6e2;
   color: #475569;
+}
+.page-no:active:not(:disabled) {
+  transform: scale(.98);
 }
 .page-no:hover:not(:disabled) {
   background: #eef2ff;
@@ -2640,7 +2647,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   overflow-y: auto;
   background: #fff;
   border: 1px solid var(--line, #e5eaf2);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: var(--shadow, 0 1px 3px rgba(0,0,0,0.04));
   padding: 16px;
 }
@@ -2668,14 +2675,17 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms cubic-bezier(0.23, 1, 0.32, 1), color 150ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .drawer-close:hover {
   background: #f0e6e2;
   color: #1e293b;
 }
+.drawer-close:active {
+  transform: scale(.96);
+}
 .preview-card {
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   margin-bottom: 12px;
   border: 1px solid #eef2f7;
@@ -2696,20 +2706,17 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 .drawer-card {
   margin-bottom: 12px;
 }
-.products-drawer-card {
+.products-drawer-panel {
   border: 1px solid #dfe6f2;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  padding: 13px 14px 14px;
 }
-.products-drawer-card :deep(.n-card-header) {
-  padding: 12px 14px 0;
+.products-drawer-panel-title {
+  margin-bottom: 9px;
   color: #101828;
   font-size: 14px;
   font-weight: 800;
-}
-.products-drawer-card :deep(.n-card__content) {
-  padding: 10px 14px 14px;
 }
 .drawer-metrics {
   grid-template-columns: repeat(3, 1fr);
@@ -2718,7 +2725,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 .metric-tile {
   background: #f8fafc;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 8px;
   text-align: center;
   border: 1px solid #eef2f7;
