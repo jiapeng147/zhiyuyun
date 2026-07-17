@@ -1133,7 +1133,6 @@ table tbody tr:last-child td {
 }
 
 /* Dashboard sections should feel like navigation blocks, not bordered table panels. */
-.dashboard-page .dashboard-section .n-card-header,
 .dashboard-page .dashboard-section .panel-head,
 .dashboard-page .dashboard-section .zy-shell-card-head {
   min-height: 0 !important;

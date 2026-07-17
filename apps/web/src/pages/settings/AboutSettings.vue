@@ -1,6 +1,6 @@
 <template>
   <div class="about-page">
-    <n-card class="about-shell" :bordered="false">
+    <section class="about-shell" aria-label="关于智鱼云">
       <div class="about-content">
         <section class="hero-card">
           <div class="hero-visual">
@@ -60,13 +60,11 @@
         </div>
 
         <div class="main-grid">
-          <n-card class="about-panel" :bordered="false">
-            <template #header>
-              <div class="about-panel-head">
-                <h3>服务动态</h3>
-                <p>平台能力与服务更新记录</p>
-              </div>
-            </template>
+          <section class="about-panel">
+            <header class="about-panel-head">
+              <h3>服务动态</h3>
+              <p>平台能力与服务更新记录</p>
+            </header>
             <div class="changelog">
               <div v-for="(log, idx) in logs" :key="log.v" :class="['log-item', log.tone]">
                 <div class="log-rail">
@@ -91,15 +89,13 @@
                 </div>
               </div>
             </div>
-          </n-card>
+          </section>
 
-          <n-card v-if="sponsorCard" class="about-panel" :bordered="false" style="margin-top: 16px">
-            <template #header>
-              <div class="about-panel-head">
-                <h3>商务支持</h3>
-                <p>合作入口与服务支持</p>
-              </div>
-            </template>
+          <section v-if="sponsorCard" class="about-panel stack-panel">
+            <header class="about-panel-head">
+              <h3>商务支持</h3>
+              <p>合作入口与服务支持</p>
+            </header>
             <div class="sponsor-block">
               <p class="sponsor-headline">{{ sponsorHeadline }}</p>
               <div
@@ -111,16 +107,14 @@
                 <span v-else class="sponsor-banner-text">{{ sponsorCard.placeholderText || '待配置合作二维码' }}</span>
               </div>
             </div>
-          </n-card>
+          </section>
 
           <div class="side-stack">
-            <n-card class="about-panel" :bordered="false">
-              <template #header>
-                <div class="about-panel-head">
-                  <h3>服务支持</h3>
-                  <p>可用入口与响应能力以平台实际配置为准</p>
-                </div>
-              </template>
+            <section class="about-panel">
+              <header class="about-panel-head">
+                <h3>服务支持</h3>
+                <p>可用入口与响应能力以平台实际配置为准</p>
+              </header>
               <div class="support-grid">
                 <button v-for="support in supports" :key="support.label" class="support-card" type="button" @click="onSupport(support)">
                   <span class="support-icon" :class="support.tone">
@@ -132,15 +126,13 @@
                   </div>
                 </button>
               </div>
-            </n-card>
+            </section>
 
-            <n-card class="about-panel" :bordered="false" style="margin-top: 16px">
-              <template #header>
-                <div class="about-panel-head">
-                  <h3>客户社群与合作</h3>
-                  <p>查看交流群、服务通知与商务合作入口</p>
-                </div>
-              </template>
+            <section class="about-panel stack-panel">
+              <header class="about-panel-head">
+                <h3>客户社群与合作</h3>
+                <p>查看交流群、服务通知与商务合作入口</p>
+              </header>
               <div class="community-grid">
                 <button
                   v-for="card in communityCards"
@@ -171,15 +163,13 @@
                   </div>
                 </button>
               </div>
-            </n-card>
+            </section>
 
-            <n-card class="about-panel" :bordered="false" style="margin-top: 16px">
-              <template #header>
-                <div class="about-panel-head">
-                  <h3>相关链接</h3>
-                  <p>协议、隐私与服务信息</p>
-                </div>
-              </template>
+            <section class="about-panel stack-panel">
+              <header class="about-panel-head">
+                <h3>相关链接</h3>
+                <p>协议、隐私与服务信息</p>
+              </header>
               <div class="link-list">
                 <button v-for="link in links" :key="link.label" class="link-row" type="button" @click="link.action">
                   <span class="link-label">
@@ -189,17 +179,16 @@
                   <span class="link-action">{{ link.actionText }} <span class="link-arrow">›</span></span>
                 </button>
               </div>
-            </n-card>
+            </section>
           </div>
         </div>
       </div>
-    </n-card>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { NCard } from 'naive-ui'
 import { openExternalUrl } from '../../utils/externalUrl.js'
 import { showLegalNotice } from '../../utils/legalNotice.js'
 import Badge from '../../components/Badge.vue'
@@ -425,32 +414,33 @@ function exportServiceInfo() {
 </script>
 
 <style scoped>
-.about-page { width: 100%; }
+.about-page {
+  --about-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  width: 100%;
+}
 .about-shell {
   padding: 0;
   overflow: hidden;
   border: 1px solid #dfe6f2;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
-  box-shadow: none;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
 }
-.about-shell :deep(.n-card__content) { padding: 0; }
 .about-content { padding: 18px; }
 .about-panel {
+  padding: 18px 20px 20px;
   border: 1px solid #dfe6f2;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: none;
 }
-.about-panel :deep(.n-card-header) {
-  padding: 18px 20px 0;
-}
-.about-panel :deep(.n-card__content) {
-  padding: 14px 20px 20px;
+.stack-panel {
+  margin-top: 16px;
 }
 .about-panel-head {
   display: grid;
   gap: 5px;
+  margin-bottom: 14px;
 }
 .about-panel-head h3 {
   margin: 0;
@@ -469,7 +459,7 @@ function exportServiceInfo() {
 .hero-card {
   position: relative;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 8px;
   min-height: 164px;
   padding: 24px 28px 22px;
   background: #f8fafc;
@@ -512,7 +502,7 @@ function exportServiceInfo() {
   top: 0;
   width: 22px;
   height: 76px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #14b8a6, #0f766e);
   transform: rotate(42deg);
   box-shadow: 0 8px 22px rgba(20, 184, 166, 0.32);
@@ -541,7 +531,7 @@ function exportServiceInfo() {
 .metric-icon {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -596,21 +586,23 @@ function exportServiceInfo() {
   gap: 12px;
   padding: 14px;
   border: 1px solid rgba(231, 237, 247, 0.95);
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
   cursor: pointer;
   text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 160ms var(--about-ease), box-shadow 160ms var(--about-ease), border-color 160ms var(--about-ease), background-color 160ms var(--about-ease);
+}
+.support-card:active {
+  transform: scale(.98);
 }
 .support-card:hover {
-  transform: none;
   border-color: #99f6e4;
   box-shadow: none;
 }
 .support-icon {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 8px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -634,19 +626,21 @@ function exportServiceInfo() {
   flex-direction: column;
   gap: 14px;
   padding: 18px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #e3ebf6;
   background: #fff;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 160ms var(--about-ease), box-shadow 160ms var(--about-ease), border-color 160ms var(--about-ease), background-color 160ms var(--about-ease);
+}
+.community-card:active {
+  transform: scale(.98);
 }
 .community-card.has-media {
   flex-direction: row;
   align-items: center;
 }
 .community-card:hover {
-  transform: none;
   box-shadow: none;
 }
 .community-card.blue:hover { border-color: #ffd2bf; }
@@ -698,7 +692,7 @@ function exportServiceInfo() {
   flex-shrink: 0;
   width: 120px;
   height: 120px;
-  border-radius: 14px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e2eaf5;
   background: #fff;
@@ -727,7 +721,7 @@ function exportServiceInfo() {
   justify-content: center;
   width: 76px;
   height: 76px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
   color: #334155;
   font-size: 12px;
@@ -766,7 +760,10 @@ function exportServiceInfo() {
   background: transparent;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s ease;
+  transition: transform 150ms var(--about-ease), background-color 150ms var(--about-ease);
+}
+.link-row:active {
+  transform: scale(.99);
 }
 .link-row:last-child { border-bottom: 0; }
 .link-row:hover { background: #f6faff; }
@@ -801,7 +798,7 @@ function exportServiceInfo() {
   width: 100%;
   max-width: 420px;
   aspect-ratio: 2 / 1;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid #ffe5c2;
   background: #fff;
@@ -809,10 +806,12 @@ function exportServiceInfo() {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 160ms var(--about-ease), box-shadow 160ms var(--about-ease), border-color 160ms var(--about-ease), background-color 160ms var(--about-ease);
+}
+.sponsor-banner:active {
+  transform: scale(.99);
 }
 .sponsor-banner:hover {
-  transform: none;
   box-shadow: none;
   border-color: #ffd9ac;
 }
@@ -835,7 +834,7 @@ function exportServiceInfo() {
   align-items: center;
   justify-content: center;
   padding: 16px 24px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
   color: #b3bccd;
   font-size: 13px;
