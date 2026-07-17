@@ -4,32 +4,32 @@
     <div v-if="kbsWarning" class="global-notice warning" role="status">{{ kbsWarning }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <div class="grid stat-grid rag-v7-stats">
-      <n-card
+    <section class="rag-kb-stat-grid" aria-label="知识库统计">
+      <article
         v-for="item in ragStatCards"
         :key="item.key"
-        class="rag-v7-stat"
+        class="rag-kb-stat"
         :class="item.tone"
-        :bordered="false"
       >
-        <span class="rag-v7-stat-label">{{ item.title }}</span>
+        <span class="rag-kb-stat-label">{{ item.title }}</span>
         <strong>{{ item.value }}</strong>
-        <span class="rag-v7-stat-desc">{{ item.change }}</span>
-      </n-card>
-    </div>
+        <span class="rag-kb-stat-desc">{{ item.change }}</span>
+      </article>
+    </section>
 
     <div class="toolbar">
       <AppButton :disabled="kbsLoading" @click="refreshKbs">{{ kbsLoading ? '刷新中...' : '刷新' }}</AppButton>
       <AppButton type="primary" :disabled="kbsAvailable !== true" @click="openCreateKb">+ 新建知识库</AppButton>
     </div>
 
-    <n-card class="rag-v7-card" :bordered="false">
-      <template #header>
-        <div class="rag-card-head">
+    <section class="rag-kb-card">
+      <div class="rag-card-head">
+        <div>
+          <span>Knowledge Base</span>
           <h3>知识库列表</h3>
-          <p>管理 RAG 知识库与文档索引</p>
         </div>
-      </template>
+        <p>管理 RAG 知识库、文档索引、分块状态和检索验证。</p>
+      </div>
       <div v-if="kbsRefreshing" class="refresh-status" role="status" aria-live="polite">
         正在刷新知识库列表，现有数据仍可查看。
       </div>
@@ -55,7 +55,7 @@
           <EmptyState icon="📚" title="暂无知识库" description="点击「新建知识库」开始管理你的文档。" />
         </template>
       </BaseTable>
-    </n-card>
+    </section>
     <Teleport to="body">
       <div v-if="kbModal.visible" class="modal-mask" @click.self="closeKbModal">
         <section class="xy-modal" style="width:560px">
@@ -209,7 +209,6 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NCard } from 'naive-ui'
 import BaseTable from '../../components/BaseTable.vue'
 import Badge from '../../components/Badge.vue'
 import AppButton from '../../components/AppButton.vue'
@@ -734,63 +733,92 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.ops-rag { display: flex; flex-direction: column; gap: 16px; }
+.ops-rag {
+  --rag-primary: #2563eb;
+  --rag-primary-dark: #1d4ed8;
+  --rag-accent: #0f766e;
+  --rag-warning: #f59e0b;
+  --rag-text: #111827;
+  --rag-muted: #64748b;
+  --rag-line: #e5e7eb;
+  --rag-panel: #ffffff;
+  --rag-soft: #f8fafc;
+  --rag-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  display: grid;
+  gap: 16px;
+  color: var(--rag-text);
+}
 .warning { background: #fff8e8; color: #8a4b08; border-color: #f7c97a; }
 .refresh-status { margin-bottom: 10px; color: #526079; font-size: 13px; }
-.stat-grid { display: grid; gap: 12px; }
-.rag-v7-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.rag-v7-stat,
-.rag-v7-card {
-  border: 1px solid #dfe6f2;
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: none;
+.rag-kb-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
-.rag-v7-stat :deep(.n-card__content) {
+.rag-kb-stat,
+.rag-kb-card {
+  border: 1px solid var(--rag-line);
+  border-radius: 8px;
+  background: var(--rag-panel);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+.rag-kb-stat {
   display: grid;
   gap: 8px;
   padding: 16px;
+  border-top: 3px solid var(--rag-primary);
+  transition:
+    transform 180ms var(--rag-ease),
+    border-color 180ms ease,
+    box-shadow 180ms var(--rag-ease);
 }
-.rag-v7-stat-label {
-  color: #667085;
+.rag-kb-stat-label {
+  color: var(--rag-muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 850;
 }
-.rag-v7-stat strong {
-  color: #101828;
+.rag-kb-stat strong {
+  color: var(--rag-text);
   font-size: 24px;
   line-height: 1.15;
-  font-weight: 800;
+  font-weight: 900;
 }
-.rag-v7-stat-desc {
-  color: #667085;
+.rag-kb-stat-desc {
+  color: var(--rag-muted);
   font-size: 12px;
   line-height: 1.5;
 }
-.rag-v7-stat.is-info { border-top: 3px solid #2563eb; }
-.rag-v7-stat.is-ok { border-top: 3px solid #16a34a; }
-.rag-v7-stat.is-warn { border-top: 3px solid #f59e0b; }
-.rag-v7-stat.is-purple { border-top: 3px solid #7c3aed; }
-.rag-v7-card :deep(.n-card-header) {
-  padding: 18px 20px 0;
-}
-.rag-v7-card :deep(.n-card__content) {
-  padding: 14px 20px 20px;
+.rag-kb-stat.is-info { border-top-color: var(--rag-primary); }
+.rag-kb-stat.is-ok { border-top-color: #16a34a; }
+.rag-kb-stat.is-warn { border-top-color: var(--rag-warning); }
+.rag-kb-stat.is-purple { border-top-color: #7c3aed; }
+.rag-kb-card {
+  padding: 18px;
 }
 .rag-card-head {
-  display: grid;
-  gap: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+.rag-card-head span {
+  color: var(--rag-muted);
+  font-size: 12px;
+  font-weight: 850;
 }
 .rag-card-head h3 {
-  margin: 0;
-  color: #101828;
-  font-size: 16px;
+  margin: 4px 0 0;
+  color: var(--rag-text);
+  font-size: 20px;
   line-height: 1.3;
-  font-weight: 800;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 .rag-card-head p {
   margin: 0;
-  color: #667085;
+  max-width: 420px;
+  color: var(--rag-muted);
   font-size: 12px;
   line-height: 1.6;
   font-weight: 400;
@@ -818,11 +846,20 @@ onBeforeUnmount(() => {
 .hit-head { display: flex; justify-content: space-between; margin-bottom: 6px; color: #526079; font-size: 12px; }
 .hit-item pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; font-size: 13px; color: #2d3448; }
 
+@media (hover: hover) and (pointer: fine) {
+  .rag-kb-stat:hover,
+  .rag-kb-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: 0 18px 40px rgba(37, 99, 235, 0.1);
+  }
+}
+
 /* ===== 移动端响应式（max-width: 900px）===== */
 @media (max-width: 900px) {
   .ops-rag { gap: 12px; }
 
-  .stat-grid {
+  .rag-kb-stat-grid {
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 10px;
   }
@@ -868,7 +905,7 @@ onBeforeUnmount(() => {
     padding: 4px 2px;
   }
 
-  .stat-grid > *,
+  .rag-kb-stat-grid > *,
   .form-grid > * {
     min-width: 0;
   }
