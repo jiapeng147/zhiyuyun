@@ -1,5 +1,5 @@
 <template>
-  <div class="embedding-settings-page embedding-v9-shell">
+  <div class="embedding-settings-page embedding-v9-shell runtime-meter-v24-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
@@ -19,7 +19,7 @@
         <span>向量模型</span>
         <strong>{{ runtimeStatusAvailable ? (runtimeStatus.embeddingModelConfigured ? '已配置' : '未设置') : '状态未知' }}</strong>
         <div class="embedding-status-meter">
-          <i :style="{ width: runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? '78%' : '32%' }"></i>
+          <i :class="runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? 'meter-ready' : 'meter-empty'"></i>
         </div>
         <p>Embedding / RAG / Semantic Search</p>
       </aside>
@@ -447,6 +447,14 @@ function onHeaderAction(event) {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--embedding-primary), var(--embedding-accent));
   transition: width 220ms var(--embedding-ease);
+}
+
+.embedding-status-meter i.meter-ready {
+  width: 78%;
+}
+
+.embedding-status-meter i.meter-empty {
+  width: 32%;
 }
 
 .embedding-status-panel.orange .embedding-status-meter i {

@@ -1,5 +1,5 @@
 <template>
-  <div class="ops-system-settings system-settings-page system-main system-v9-shell">
+  <div class="ops-system-settings system-settings-page system-main system-v9-shell runtime-meter-v24-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
@@ -22,7 +22,7 @@
         <span>平台状态</span>
         <strong>{{ configAvailable ? '配置可用' : '状态未知' }}</strong>
         <div class="system-status-meter">
-          <i :style="{ width: adServiceReady ? '82%' : (runtimeStatusAvailable ? '56%' : '28%') }"></i>
+          <i :class="adServiceReady ? 'meter-ready' : (runtimeStatusAvailable ? 'meter-partial' : 'meter-empty')"></i>
         </div>
         <p>{{ adServiceReady ? '广告服务与基础保护均已就绪。' : '站点配置可维护，部分服务请查看下方运行状态。' }}</p>
       </aside>
@@ -585,6 +585,18 @@ function onHeaderAction(event) {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--system-primary), var(--system-accent));
   transition: width 220ms var(--system-ease);
+}
+
+.system-status-meter i.meter-ready {
+  width: 82%;
+}
+
+.system-status-meter i.meter-partial {
+  width: 56%;
+}
+
+.system-status-meter i.meter-empty {
+  width: 28%;
 }
 
 .system-stat-grid {

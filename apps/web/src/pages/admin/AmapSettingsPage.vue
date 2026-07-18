@@ -1,5 +1,5 @@
 <template>
-  <div class="amap-settings-page amap-v9-shell">
+  <div class="amap-settings-page amap-v9-shell runtime-meter-v24-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
@@ -19,7 +19,7 @@
         <span>地图状态</span>
         <strong>{{ runtimeStatusAvailable ? (runtimeStatus.amapConfigured ? '已配置' : '未配置') : '状态未知' }}</strong>
         <div class="amap-status-meter">
-          <i :style="{ width: runtimeStatusAvailable && runtimeStatus.amapConfigured ? '76%' : '34%' }"></i>
+          <i :class="runtimeStatusAvailable && runtimeStatus.amapConfigured ? 'meter-ready' : 'meter-empty'"></i>
         </div>
         <p>地址搜索 / POI 选择 / 发布校验</p>
       </aside>
@@ -420,6 +420,14 @@ function onHeaderAction(event) {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--amap-primary), var(--amap-accent));
   transition: width 220ms var(--amap-ease);
+}
+
+.amap-status-meter i.meter-ready {
+  width: 76%;
+}
+
+.amap-status-meter i.meter-empty {
+  width: 34%;
 }
 
 .amap-status-panel.orange .amap-status-meter i {

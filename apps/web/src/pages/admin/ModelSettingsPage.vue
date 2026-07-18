@@ -1,5 +1,5 @@
 <template>
-  <div class="model-settings-page model-v9-shell">
+  <div class="model-settings-page model-v9-shell runtime-meter-v24-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
@@ -19,7 +19,7 @@
         <span>通用模型</span>
         <strong>{{ runtimeStatusAvailable ? (runtimeStatus.generalModelConfigured ? '已配置' : '未设置') : '状态未知' }}</strong>
         <div class="model-status-meter">
-          <i :style="{ width: runtimeStatusAvailable && runtimeStatus.generalModelConfigured ? '76%' : '34%' }"></i>
+          <i :class="runtimeStatusAvailable && runtimeStatus.generalModelConfigured ? 'meter-ready' : 'meter-empty'"></i>
         </div>
         <p>对话 / 改写 / 文本生成</p>
       </aside>
@@ -589,6 +589,14 @@ function onHeaderAction(event) {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--model-primary), var(--model-accent));
   transition: width 220ms var(--model-ease);
+}
+
+.model-status-meter i.meter-ready {
+  width: 76%;
+}
+
+.model-status-meter i.meter-empty {
+  width: 34%;
 }
 
 .model-status-panel.orange .model-status-meter i {
