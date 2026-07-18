@@ -1,5 +1,5 @@
 <template>
-  <div class="feedback-page feedback-v9-shell">
+  <div class="feedback-page feedback-v20-shell">
     <div v-if="notice.text" :class="['global-notice', notice.type]">{{ notice.text }}</div>
     <div v-if="feedbackStorageMode === 'bridge'" class="global-notice info">
       反馈将进入支持队列，由维护团队统一查看和处理。
@@ -18,7 +18,7 @@
         <p>提交问题、建议和流程改进，跟踪处理状态，并在详情里继续补充上下文。</p>
 
         <div class="fbk-hero-actions">
-          <button type="button" class="fbk-btn-primary" @click="openSubmitModal">
+          <button type="button" class="fbk-btn-primary" :title="submitActionHint" @click="openSubmitModal">
             <span class="fbk-plus">+</span>
             <span>提交反馈</span>
           </button>
@@ -335,8 +335,9 @@
         </div>
 
         <div class="fbk-modal-foot">
-          <button type="button" class="fbk-btn-ghost" :disabled="loading.submit || feedbackCreateIntent.pending" @click="resetForm">清空</button>
-          <button type="submit" class="fbk-btn-primary" :disabled="loading.submit">
+          <p class="fbk-foot-hint">{{ submitActionHint }}</p>
+          <button type="button" class="fbk-btn-ghost" :title="submitActionHint" :disabled="loading.submit || feedbackCreateIntent.pending" @click="resetForm">清空</button>
+          <button type="submit" class="fbk-btn-primary" :title="submitActionHint" :disabled="loading.submit">
             {{ loading.submit ? '提交中...' : (feedbackCreateIntent.pending ? '复用原反馈任务重试' : '提交反馈') }}
           </button>
         </div>
@@ -413,11 +414,13 @@
             maxlength="2000"
             :disabled="loading.append || feedbackReplyIntent.pending"
           ></textarea>
+          <p class="fbk-foot-hint">{{ appendActionHint }}</p>
           <div class="fbk-detail-actions">
             <span class="fbk-counter">{{ appendContent.length }} / 2000</span>
             <button
               type="button"
               class="fbk-btn-primary"
+              :title="appendActionHint"
               :disabled="loading.append || !appendContent.trim()"
               @click="handleAppend"
             >
@@ -519,6 +522,20 @@ const storageModeDescription = computed(() => {
   if (feedbackStorageMode.value === 'bridge') return '反馈将进入支持队列，由维护团队统一查看和处理。'
   if (feedbackStorageMode.value === 'unknown') return '当前无法确认反馈存储模式，请稍后重试。'
   return '当前记录由维护团队在本系统内查看和处理。'
+})
+const submitActionHint = computed(() => {
+  if (loading.submit) return '反馈正在提交，请等待系统确认结果。'
+  if (feedbackCreateIntent.pending) return '上次反馈结果尚未确认，只能复用原内容和安全凭证重试。'
+  if (!form.title.trim()) return '先填写一句话标题，便于维护团队快速判断问题。'
+  if (!form.content.trim()) return '先补充详细描述，建议写清场景、复现步骤和期望结果。'
+  return '标题和描述已填写，可以提交到支持队列。'
+})
+const appendActionHint = computed(() => {
+  if (loading.append) return '补充说明正在发送，请等待系统确认结果。'
+  if (detailAvailable.value !== true) return '详情尚未加载完成，暂时不能追加补充。'
+  if (feedbackReplyIntent.pending) return '上次补充结果尚未确认，只能复用原内容重试。'
+  if (!appendContent.value.trim()) return '输入补充信息后，可以继续追加到当前反馈。'
+  return '补充内容已填写，可以发送给维护团队。'
 })
 
 function statsMetric(value) {
@@ -1072,7 +1089,10 @@ onMounted(() => {
   border-radius: 6px;
   border: 1px solid #e5e7eb;
   background: #fff;
-  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  transition:
+    transform 160ms var(--fbk-ease),
+    border-color 160ms var(--fbk-ease),
+    box-shadow 160ms var(--fbk-ease);
 }
 
 .fbk-stat-card:hover {
@@ -1203,7 +1223,7 @@ onMounted(() => {
   color: #5f708c;
   font-size: 13px;
   font-weight: 700;
-  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), background 160ms var(--fbk-ease), color 160ms var(--fbk-ease);
+  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), background-color 160ms var(--fbk-ease), color 160ms var(--fbk-ease);
 }
 
 .fbk-pill:hover {
@@ -1246,7 +1266,7 @@ onMounted(() => {
   background: #fff;
   color: #60738e;
   font-size: 16px;
-  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), background 160ms var(--fbk-ease), color 160ms var(--fbk-ease);
+  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), background-color 160ms var(--fbk-ease), color 160ms var(--fbk-ease);
 }
 
 .fbk-icon-btn:hover {
@@ -1274,7 +1294,10 @@ onMounted(() => {
   border-radius: 6px;
   border: 1px solid #e6edf7;
   background: #fff;
-  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  transition:
+    transform 160ms var(--fbk-ease),
+    border-color 160ms var(--fbk-ease),
+    box-shadow 160ms var(--fbk-ease);
 }
 
 .fbk-row:hover {
@@ -1516,7 +1539,7 @@ onMounted(() => {
   gap: 12px;
   align-items: flex-start;
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #FAFAFA;
   border: 1px solid #e6eef9;
 }
@@ -1525,7 +1548,7 @@ onMounted(() => {
   flex: 0 0 auto;
   width: 30px;
   height: 30px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #edf4ff;
   color: #0f766e;
   display: inline-flex;
@@ -1553,7 +1576,7 @@ onMounted(() => {
 
 .fbk-priority-item {
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid #e6eef9;
 }
 
@@ -1598,14 +1621,18 @@ onMounted(() => {
 .fbk-btn-ghost {
   height: 40px;
   padding: 0 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: transform .12s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+  transition:
+    transform 120ms var(--fbk-ease),
+    box-shadow 160ms var(--fbk-ease),
+    background-color 160ms var(--fbk-ease),
+    border-color 160ms var(--fbk-ease);
 }
 
 .fbk-btn-primary {
@@ -1661,7 +1688,7 @@ onMounted(() => {
 
 .fbk-modal {
   background: #fff;
-  border-radius: 24px;
+  border-radius: 8px;
   width: min(720px, 100%);
   max-height: 88vh;
   display: flex;
@@ -1718,7 +1745,7 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: transparent;
   color: #71809a;
   font-size: 24px;
@@ -1745,6 +1772,14 @@ onMounted(() => {
   gap: 10px;
 }
 
+.fbk-foot-hint {
+  flex: 1 1 220px;
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .fbk-detail-foot {
   flex-direction: column;
   align-items: stretch;
@@ -1752,7 +1787,7 @@ onMounted(() => {
 
 .fbk-modal-tip {
   padding: 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #dbe7fb;
   background: linear-gradient(135deg, #f3f8ff, #ffffff);
   margin-bottom: 16px;
@@ -1805,7 +1840,7 @@ onMounted(() => {
 .fbk-cat-btn {
   min-height: 42px;
   padding: 0 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid var(--line);
   background: #fff;
   color: #5c3d30;
@@ -1815,7 +1850,7 @@ onMounted(() => {
   gap: 6px;
   font-size: 13px;
   font-weight: 700;
-  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), background 160ms var(--fbk-ease), color 160ms var(--fbk-ease);
+  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), background-color 160ms var(--fbk-ease), color 160ms var(--fbk-ease);
 }
 
 .fbk-cat-btn:hover {
@@ -1834,12 +1869,14 @@ onMounted(() => {
   width: 100%;
   padding: 11px 13px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   color: #5c3d30;
   font-size: 14px;
   font-family: inherit;
-  transition: border-color .16s ease, box-shadow .16s ease;
+  transition:
+    border-color 160ms var(--fbk-ease),
+    box-shadow 160ms var(--fbk-ease);
 }
 
 .fbk-input::placeholder,
@@ -1937,7 +1974,7 @@ onMounted(() => {
   flex: 1;
   min-width: 0;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid #e4ecf7;
   background: #f7faff;
 }
@@ -1976,7 +2013,7 @@ onMounted(() => {
 .fbk-no-reply {
   text-align: center;
   padding: 18px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #FFFFFF;
   color: #6B6B6B;
   font-size: 13px;
@@ -1994,7 +2031,7 @@ onMounted(() => {
   margin-top: 10px;
 }
 
-.feedback-v9-shell .fbk-hero {
+.feedback-v20-shell .fbk-hero {
   position: relative;
   overflow: hidden;
   grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
@@ -2007,7 +2044,7 @@ onMounted(() => {
   box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
 }
 
-.feedback-v9-shell .fbk-hero::before {
+.feedback-v20-shell .fbk-hero::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
@@ -2015,187 +2052,187 @@ onMounted(() => {
   background: linear-gradient(90deg, var(--fbk-blue), var(--fbk-teal), #f59e0b);
 }
 
-.feedback-v9-shell .fbk-hero-pill,
-.feedback-v9-shell .fbk-board-eyebrow,
-.feedback-v9-shell .fbk-side-kicker,
-.feedback-v9-shell .fbk-modal-pill {
+.feedback-v20-shell .fbk-hero-pill,
+.feedback-v20-shell .fbk-board-eyebrow,
+.feedback-v20-shell .fbk-side-kicker,
+.feedback-v20-shell .fbk-modal-pill {
   border-radius: 999px;
   background: #eff6ff;
   color: var(--fbk-blue);
 }
 
-.feedback-v9-shell .fbk-hero-copy h2 {
+.feedback-v20-shell .fbk-hero-copy h2 {
   color: var(--fbk-ink);
   font-size: 34px;
   line-height: 1.15;
   letter-spacing: 0;
 }
 
-.feedback-v9-shell .fbk-response-banner,
-.feedback-v9-shell .fbk-stat-card,
-.feedback-v9-shell .fbk-board,
-.feedback-v9-shell .fbk-side-card,
-.feedback-v9-shell .fbk-row,
-.feedback-v9-shell .fbk-process-item,
-.feedback-v9-shell .fbk-priority-item,
-.feedback-v9-shell .fbk-modal,
-.feedback-v9-shell .fbk-modal-tip,
-.feedback-v9-shell .fbk-msg-bubble,
-.feedback-v9-shell .fbk-no-reply {
+.feedback-v20-shell .fbk-response-banner,
+.feedback-v20-shell .fbk-stat-card,
+.feedback-v20-shell .fbk-board,
+.feedback-v20-shell .fbk-side-card,
+.feedback-v20-shell .fbk-row,
+.feedback-v20-shell .fbk-process-item,
+.feedback-v20-shell .fbk-priority-item,
+.feedback-v20-shell .fbk-modal,
+.feedback-v20-shell .fbk-modal-tip,
+.feedback-v20-shell .fbk-msg-bubble,
+.feedback-v20-shell .fbk-no-reply {
   border: 1px solid var(--fbk-line);
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
 }
 
-.feedback-v9-shell .fbk-response-banner,
-.feedback-v9-shell .fbk-side-card.emphasis {
+.feedback-v20-shell .fbk-response-banner,
+.feedback-v20-shell .fbk-side-card.emphasis {
   background: linear-gradient(180deg, #ffffff, #fbfdff);
 }
 
-.feedback-v9-shell .fbk-stat-card {
+.feedback-v20-shell .fbk-stat-card {
   cursor: pointer;
-  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), box-shadow 160ms var(--fbk-ease), background 160ms var(--fbk-ease);
+  transition: transform 160ms var(--fbk-ease), border-color 160ms var(--fbk-ease), box-shadow 160ms var(--fbk-ease), background-color 160ms var(--fbk-ease);
 }
 
-.feedback-v9-shell .fbk-stat-card:hover,
-.feedback-v9-shell .fbk-row:hover {
+.feedback-v20-shell .fbk-stat-card:hover,
+.feedback-v20-shell .fbk-row:hover {
   transform: translateY(-1px);
   border-color: #cbd5e1;
   box-shadow: 0 14px 28px rgba(15, 23, 42, .08);
 }
 
-.feedback-v9-shell .fbk-stat-card.active {
+.feedback-v20-shell .fbk-stat-card.active {
   border-color: var(--fbk-blue);
   background: #eff6ff;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
 }
 
-.feedback-v9-shell .fbk-board-head h3,
-.feedback-v9-shell .fbk-row-title,
-.feedback-v9-shell .fbk-side-head strong,
-.feedback-v9-shell .fbk-side-card h3,
-.feedback-v9-shell .fbk-process-item strong,
-.feedback-v9-shell .fbk-modal-head h3,
-.feedback-v9-shell .fbk-detail-title,
-.feedback-v9-shell .fbk-label,
-.feedback-v9-shell .fbk-modal-tip strong,
-.feedback-v9-shell .fbk-msg-text {
+.feedback-v20-shell .fbk-board-head h3,
+.feedback-v20-shell .fbk-row-title,
+.feedback-v20-shell .fbk-side-head strong,
+.feedback-v20-shell .fbk-side-card h3,
+.feedback-v20-shell .fbk-process-item strong,
+.feedback-v20-shell .fbk-modal-head h3,
+.feedback-v20-shell .fbk-detail-title,
+.feedback-v20-shell .fbk-label,
+.feedback-v20-shell .fbk-modal-tip strong,
+.feedback-v20-shell .fbk-msg-text {
   color: var(--fbk-ink);
   letter-spacing: 0;
 }
 
-.feedback-v9-shell .fbk-pill,
-.feedback-v9-shell .fbk-select,
-.feedback-v9-shell .fbk-icon-btn,
-.feedback-v9-shell .fbk-btn-primary,
-.feedback-v9-shell .fbk-btn-ghost,
-.feedback-v9-shell .fbk-cat-btn,
-.feedback-v9-shell .fbk-input,
-.feedback-v9-shell .fbk-textarea,
-.feedback-v9-shell .fbk-close {
+.feedback-v20-shell .fbk-pill,
+.feedback-v20-shell .fbk-select,
+.feedback-v20-shell .fbk-icon-btn,
+.feedback-v20-shell .fbk-btn-primary,
+.feedback-v20-shell .fbk-btn-ghost,
+.feedback-v20-shell .fbk-cat-btn,
+.feedback-v20-shell .fbk-input,
+.feedback-v20-shell .fbk-textarea,
+.feedback-v20-shell .fbk-close {
   border-radius: 8px;
 }
 
-.feedback-v9-shell .fbk-pill:hover,
-.feedback-v9-shell .fbk-icon-btn:hover,
-.feedback-v9-shell .fbk-cat-btn:hover {
+.feedback-v20-shell .fbk-pill:hover,
+.feedback-v20-shell .fbk-icon-btn:hover,
+.feedback-v20-shell .fbk-cat-btn:hover {
   transform: translateY(-1px);
   border-color: #cbd5e1;
   background: #f8fafc;
   color: var(--fbk-blue);
 }
 
-.feedback-v9-shell .fbk-pill.active,
-.feedback-v9-shell .fbk-cat-btn.active {
+.feedback-v20-shell .fbk-pill.active,
+.feedback-v20-shell .fbk-cat-btn.active {
   border-color: var(--fbk-blue);
   background: #eff6ff;
   color: var(--fbk-blue);
 }
 
-.feedback-v9-shell .fbk-input,
-.feedback-v9-shell .fbk-textarea,
-.feedback-v9-shell .fbk-select {
+.feedback-v20-shell .fbk-input,
+.feedback-v20-shell .fbk-textarea,
+.feedback-v20-shell .fbk-select {
   border-color: var(--fbk-line);
   color: var(--fbk-ink);
 }
 
-.feedback-v9-shell .fbk-input:focus,
-.feedback-v9-shell .fbk-textarea:focus,
-.feedback-v9-shell .fbk-select:focus {
+.feedback-v20-shell .fbk-input:focus,
+.feedback-v20-shell .fbk-textarea:focus,
+.feedback-v20-shell .fbk-select:focus {
   border-color: var(--fbk-blue);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
 }
 
-.feedback-v9-shell .fbk-btn-primary,
-.feedback-v9-shell .fbk-btn-ghost,
-.feedback-v9-shell .fbk-inline-link,
-.feedback-v9-shell .fbk-close {
+.feedback-v20-shell .fbk-btn-primary,
+.feedback-v20-shell .fbk-btn-ghost,
+.feedback-v20-shell .fbk-inline-link,
+.feedback-v20-shell .fbk-close {
   cursor: pointer;
 }
 
-.feedback-v9-shell .fbk-btn-primary {
+.feedback-v20-shell .fbk-btn-primary {
   border-color: var(--fbk-blue);
   background: var(--fbk-blue);
   box-shadow: 0 14px 30px rgba(37, 99, 235, .18);
 }
 
-.feedback-v9-shell .fbk-btn-ghost {
+.feedback-v20-shell .fbk-btn-ghost {
   border-color: var(--fbk-line);
   color: #334155;
 }
 
-.feedback-v9-shell .fbk-btn-primary:hover:not(:disabled),
-.feedback-v9-shell .fbk-btn-ghost:hover:not(:disabled) {
+.feedback-v20-shell .fbk-btn-primary:hover:not(:disabled),
+.feedback-v20-shell .fbk-btn-ghost:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
 }
 
-.feedback-v9-shell .fbk-btn-primary:active:not(:disabled),
-.feedback-v9-shell .fbk-btn-ghost:active:not(:disabled),
-.feedback-v9-shell .fbk-cat-btn:active:not(:disabled),
-.feedback-v9-shell .fbk-stat-card:active,
-.feedback-v9-shell .fbk-row:active {
+.feedback-v20-shell .fbk-btn-primary:active:not(:disabled),
+.feedback-v20-shell .fbk-btn-ghost:active:not(:disabled),
+.feedback-v20-shell .fbk-cat-btn:active:not(:disabled),
+.feedback-v20-shell .fbk-stat-card:active,
+.feedback-v20-shell .fbk-row:active {
   transform: scale(.98);
 }
 
-.feedback-v9-shell .fbk-row {
+.feedback-v20-shell .fbk-row {
   cursor: pointer;
 }
 
-.feedback-v9-shell .fbk-row.is-open { border-left: 4px solid var(--fbk-amber); }
-.feedback-v9-shell .fbk-row.is-in_progress { border-left: 4px solid var(--fbk-blue); }
-.feedback-v9-shell .fbk-row.is-replied { border-left: 4px solid var(--fbk-teal); }
-.feedback-v9-shell .fbk-row.is-closed { border-left: 4px solid #94a3b8; }
+.feedback-v20-shell .fbk-row.is-open { border-left: 4px solid var(--fbk-amber); }
+.feedback-v20-shell .fbk-row.is-in_progress { border-left: 4px solid var(--fbk-blue); }
+.feedback-v20-shell .fbk-row.is-replied { border-left: 4px solid var(--fbk-teal); }
+.feedback-v20-shell .fbk-row.is-closed { border-left: 4px solid #94a3b8; }
 
-.feedback-v9-shell .fbk-tag.tag-in_progress,
-.feedback-v9-shell .fbk-category-pill.cat-feature {
+.feedback-v20-shell .fbk-tag.tag-in_progress,
+.feedback-v20-shell .fbk-category-pill.cat-feature {
   background: #eff6ff;
   color: var(--fbk-blue);
 }
 
-.feedback-v9-shell .fbk-modal {
+.feedback-v20-shell .fbk-modal {
   border-radius: 8px;
 }
 
-.feedback-v9-shell .fbk-modal-head,
-.feedback-v9-shell .fbk-modal-foot {
+.feedback-v20-shell .fbk-modal-head,
+.feedback-v20-shell .fbk-modal-foot {
   border-color: var(--fbk-line);
   background: #fff;
 }
 
-.feedback-v9-shell .fbk-msg-avatar,
-.feedback-v9-shell .fbk-msg-avatar.staff {
+.feedback-v20-shell .fbk-msg-avatar,
+.feedback-v20-shell .fbk-msg-avatar.staff {
   border-radius: 8px;
   background: var(--fbk-blue);
 }
 
-.feedback-v9-shell .fbk-msg-bubble {
+.feedback-v20-shell .fbk-msg-bubble {
   background: #f8fafc;
   box-shadow: none;
 }
 
-.feedback-v9-shell .fbk-msg-bubble.staff {
+.feedback-v20-shell .fbk-msg-bubble.staff {
   background: #ecfdf5;
   border-color: #bbf7d0;
 }
@@ -2285,7 +2322,7 @@ onMounted(() => {
     width: 100%;
     max-width: 100%;
     max-height: 90vh;
-    border-radius: 18px 18px 0 0;
+    border-radius: 8px 8px 0 0;
   }
 
   .fbk-modal-head {
