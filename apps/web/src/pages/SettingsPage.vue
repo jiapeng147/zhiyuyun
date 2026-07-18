@@ -1,5 +1,5 @@
 <template>
-  <div class="settings-page">
+  <div class="settings-page settings-v23-shell">
     <section class="settings-command-center">
       <div class="settings-command-main">
         <div class="settings-command-kicker">
@@ -24,11 +24,13 @@
             v-for="item in quickActions"
             :key="item.key"
             :type="item.key === active ? 'primary' : 'default'"
+            :title="settingsActionHint"
             @click="navigate(item.key)"
           >
             {{ item.label }}
           </n-button>
         </div>
+        <p class="settings-action-hint">{{ settingsActionHint }}</p>
       </div>
     </section>
 
@@ -38,6 +40,7 @@
         :key="tab.key"
         type="button"
         :class="['settings-section-item', { active: tab.key === active }]"
+        :title="tab.key === active ? settingsActionHint : `切换到${tab.label}`"
         @click="navigate(tab.key)"
       >
         <span>{{ tab.label }}</span>
@@ -99,6 +102,7 @@ const quickActions = computed(() => [
   { key: 'settings-rag', label: '知识库' },
   { key: 'settings-notify', label: '通知设置' },
 ])
+const settingsActionHint = computed(() => `当前正在配置“${activeTitle.value}”，切换模块不会提交表单，请先保存当前页面需要保留的修改。`)
 
 function navigate(key) {
   if (!key || key === props.active) return
@@ -118,7 +122,7 @@ function navigate(key) {
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe6f1;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(247, 249, 252, .98) 48%, rgba(255, 250, 245, .94)),
     #fff;
@@ -195,7 +199,7 @@ function navigate(key) {
   align-content: center;
   padding: 14px;
   border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -227,6 +231,13 @@ function navigate(key) {
   min-width: 0;
 }
 
+.settings-action-hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .settings-section-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -237,13 +248,17 @@ function navigate(key) {
   min-width: 0;
   padding: 12px;
   border: 1px solid #e5eaf0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   color: #475569;
   text-align: left;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .035);
-  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  transition:
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 180ms ease,
+    box-shadow 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 180ms ease;
 }
 
 .settings-section-item:hover,
@@ -255,6 +270,10 @@ function navigate(key) {
 
 .settings-section-item.active {
   background: linear-gradient(135deg, #eff6ff, #fff);
+}
+
+.settings-section-item:active {
+  transform: scale(.98);
 }
 
 .settings-section-item span {
@@ -306,7 +325,7 @@ function navigate(key) {
 
   .settings-command-center {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .settings-command-main h2 {
