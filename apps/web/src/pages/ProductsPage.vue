@@ -1,26 +1,26 @@
 <template>
-  <div class="products-page">
+  <div class="products-page products-v12-shell">
     <div class="products-main">
       <div v-if="notice.text" :class="['global-notice', notice.type]">{{ notice.text }}</div>
       
       <!-- 自动同步状态横幅 -->
-      <div v-if="autoSyncState.active" class="global-notice info">
+      <div v-if="autoSyncState.active" class="global-notice info product-sync-status sync-running">
         <strong>正在同步闲鱼商品...</strong>
         <template v-if="autoSyncState.accountTotal > 1">
           <span>（账号 {{ autoSyncState.accountIndex }}/{{ autoSyncState.accountTotal }}：{{ autoSyncState.accountLabel }}）</span>
         </template>
         <span v-if="autoSyncState.progress > 0">进度 {{ autoSyncState.progress }}%</span>
-        <span class="muted" style="margin-left:8px">请勿离开当前页面，同步完成后将自动展示最新商品</span>
+        <span class="muted product-sync-note">请勿离开当前页面，同步完成后将自动展示最新商品</span>
       </div>
-      <div v-else-if="autoSyncState.partial" class="global-notice warn">
+      <div v-else-if="autoSyncState.partial" class="global-notice warn product-sync-status">
         <strong>闲鱼商品同步部分完成：</strong>
         <span>成功 {{ autoSyncState.accountTotal - autoSyncState.failedAccounts.length }} / 失败 {{ autoSyncState.failedAccounts.length }}</span>
         <span class="muted">失败账号：{{ autoSyncState.failedAccounts.map(item => item.label).join('、') }}</span>
         <button class="link" @click="syncProducts">重新同步全部账号</button>
       </div>
-      <div v-else-if="autoSyncState.completed" class="global-notice success">
+      <div v-else-if="autoSyncState.completed" class="global-notice success product-sync-status">
         <strong>闲鱼商品同步完成！</strong>
-        <span style="margin-left:8px">
+        <span class="product-sync-summary">
           共同步 <b>{{ autoSyncState.summary.total }}</b> 件商品，
           新增 <b>{{ autoSyncState.summary.new }}</b>，
           更新 <b>{{ autoSyncState.summary.updated }}</b>
@@ -29,13 +29,13 @@
           </template>
           ，耗时 {{ autoSyncState.summary.duration }}秒
         </span>
-        <span v-if="autoSyncState.accountTotal > 1" class="muted" style="margin-left:8px">| 共同步 {{ autoSyncState.accountTotal }} 个账号</span>
-        <span class="muted" style="margin-left:8px">| 当前展示同步后的最新商品数据</span>
-        <button class="link" style="margin-left:8px" @click="showAllProducts">查看全部商品</button>
+        <span v-if="autoSyncState.accountTotal > 1" class="muted product-sync-note">共同步 {{ autoSyncState.accountTotal }} 个账号</span>
+        <span class="muted product-sync-note">当前展示同步后的最新商品数据</span>
+        <button class="link product-sync-action" @click="showAllProducts">查看全部商品</button>
       </div>
-      <div v-else-if="autoSyncState.error" class="global-notice error">
+      <div v-else-if="autoSyncState.error" class="global-notice error product-sync-status">
         <strong>自动同步失败：</strong>{{ autoSyncState.error }}
-        <button class="link" style="margin-left:8px" @click="syncProducts">重试同步</button>
+        <button class="link product-sync-action" @click="syncProducts">重试同步</button>
       </div>
 
       <div v-if="currentAccountPolishTask" :class="['global-notice', polishNoticeType(currentAccountPolishTask.status), 'polish-progress-banner']" role="status">
@@ -89,16 +89,18 @@
             <strong>{{ query.xianyuAccountId ? '账号范围' : '全局范围' }}</strong>
           </div>
           <div class="products-command-buttons">
-            <n-button type="primary" @click="emit('navigate','product-publish')">发布商品</n-button>
+            <n-button type="primary" :title="productActionHint" @click="emit('navigate','product-publish')">发布商品</n-button>
             <n-button
+              :title="productActionHint"
               :disabled="listAvailable === false || syncing || autoSyncState.active"
               :loading="syncing || autoSyncState.active"
               @click="syncProducts"
             >
               {{ syncing || autoSyncState.active ? (autoSyncState.accountTotal > 1 ? `同步中 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal}...` : '同步中...') : '同步闲鱼商品' }}
             </n-button>
-            <n-button tertiary :loading="loading" @click="loadItems">刷新列表</n-button>
+            <n-button tertiary :title="productActionHint" :loading="loading" @click="loadItems">刷新列表</n-button>
           </div>
+          <p class="products-action-hint">{{ productActionHint }}</p>
         </div>
       </section>
 
@@ -172,13 +174,13 @@
         <div v-if="batchDeleteState.active" class="global-notice warn">
           <strong>正在批量删除商品...</strong>
           <span>{{ batchDeleteState.done }}/{{ batchDeleteState.total }}</span>
-          <span v-if="batchDeleteState.current" class="muted" style="margin-left:8px">{{ batchDeleteState.current }}</span>
+          <span v-if="batchDeleteState.current" class="muted notice-inline">{{ batchDeleteState.current }}</span>
         </div>
         <div v-else-if="batchDeleteState.result" class="global-notice" :class="batchDeleteState.result.failed.length ? 'warn' : 'success'">
           <strong>批量删除完成：</strong>
           <span>成功 <b>{{ batchDeleteState.result.success }}</b> / 失败 <b>{{ batchDeleteState.result.failed.length }}</b></span>
-          <button v-if="batchDeleteState.result.failed.length" class="link" style="margin-left:8px" :title="batchDeleteState.result.failed.map(f => `${f.name}: ${f.reason}`).join('\n')">查看失败详情</button>
-          <button class="link" style="margin-left:8px" @click="batchDeleteState.result = null">关闭</button>
+          <button v-if="batchDeleteState.result.failed.length" class="link notice-inline" :title="batchDeleteState.result.failed.map(f => `${f.name}: ${f.reason}`).join('\n')">查看失败详情</button>
+          <button class="link notice-inline" @click="batchDeleteState.result = null">关闭</button>
         </div>
         <div class="table-scroll-wrap">
           <EmptyState v-if="listAvailable === false" icon="⚠" title="商品列表暂不可用" description="无法确认当前商品状态，所有商品写操作已安全禁用。请恢复服务后重试。">
@@ -309,9 +311,12 @@
         <button class="drawer-close" @click="selected = null">×</button>
       </div>
       <template v-if="selected">
-        <div class="preview-card" style="height:210px;padding:0;overflow:hidden;border-radius:8px"><img v-if="selected.coverPic" :src="selected.coverPic" style="width:100%;height:100%;object-fit:cover" alt=""><div v-else class="product-thumb" style="width:100%;height:100%;border-radius:0;background:linear-gradient(135deg,#f5f7fb,#dfe9f8)"></div></div>
+        <div class="preview-card product-detail-media">
+          <img v-if="selected.coverPic" :src="selected.coverPic" class="product-detail-image" alt="">
+          <div v-else class="product-detail-placeholder"></div>
+        </div>
         <h3 class="drawer-title">{{ selected.name }}</h3>
-        <p class="drawer-price"><b style="color:#ef4444;font-size:22px">{{ selected.price }}</b> <Badge :type="selected.statusType">{{ selected.status }}</Badge></p>
+        <p class="drawer-price"><b class="drawer-price-value">{{ selected.price }}</b> <Badge :type="selected.statusType">{{ selected.status }}</Badge></p>
         <section class="drawer-card products-drawer-panel" aria-label="商品数据">
           <div class="products-drawer-panel-title">商品数据</div>
           <div class="option-line"><span>商品ID</span><b class="drawer-value">{{ selected.xyGoodId }}</b></div>
@@ -656,6 +661,19 @@ const accountFilterOptions = computed(() => [
 const selectedAccountName = computed(() => {
   if (!query.xianyuAccountId) return '全部账号'
   return accountName(accounts.value.find(a => a.id === Number(query.xianyuAccountId)) || {})
+})
+const productActionHint = computed(() => {
+  if (autoSyncState.active) {
+    return autoSyncState.accountTotal > 1
+      ? `正在同步第 ${autoSyncState.accountIndex}/${autoSyncState.accountTotal} 个账号：${autoSyncState.accountLabel || '-'}。`
+      : '正在同步闲鱼商品，完成后会自动刷新列表。'
+  }
+  if (syncing.value) return '同步请求处理中，请等待本次任务完成。'
+  if (loading.value) return '商品列表正在刷新，当前数据仍可查看。'
+  if (listAvailable.value === false) return '商品列表暂不可用，写操作已安全禁用，请先重试加载。'
+  if (selectedKeys.value.length) return `已选择 ${selectedKeys.value.length} 件商品，可执行批量删除或先核对筛选范围。`
+  if (!query.xianyuAccountId) return '当前为全部账号视图；选择账号后可执行账号级同步和擦亮。'
+  return `当前范围：${selectedAccountName.value}，可同步商品、刷新列表或执行账号级运营动作。`
 })
 const productStatCards = computed(() => [
   { key: 'total', title: '商品总数', value: statsAvailable.value === true ? goodsStats.value.total : '—', change: statsAvailable.value === false ? '统计暂不可用' : '全部商品', symbol: '总', tone: 'tone-blue' },
@@ -2015,6 +2033,11 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 
 .products-page {
+  --products-text: #101828;
+  --products-muted: #64748b;
+  --products-line: #e5eaf0;
+  --products-primary: #1d4ed8;
+  --products-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   gap: 16px;
   width: 100%;
@@ -2144,6 +2167,46 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 
 .products-command-buttons :deep(.n-button) {
   width: 100%;
+}
+
+.products-action-hint {
+  margin: 12px 0 0;
+  min-height: 18px;
+  color: var(--products-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.product-sync-status {
+  align-items: center;
+  gap: 8px 10px;
+  border-radius: 8px;
+}
+
+.product-sync-status strong {
+  color: var(--products-text);
+}
+
+.product-sync-note,
+.product-sync-summary,
+.product-sync-action,
+.notice-inline {
+  margin-inline-start: 8px;
+}
+
+.sync-running {
+  position: relative;
+  overflow: hidden;
+}
+
+.sync-running::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(29, 78, 216, .42), transparent);
 }
 
 .products-metric-rail {
@@ -2449,7 +2512,14 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 13px;
-  transition: background 0.15s;
+  transition:
+    background-color 150ms var(--products-ease),
+    color 150ms var(--products-ease),
+    opacity 150ms var(--products-ease),
+    transform 150ms var(--products-ease);
+}
+.op-buttons .link:active:not(:disabled) {
+  transform: scale(.97);
 }
 .op-buttons .link:hover {
   background: #eef2ff;
@@ -2516,12 +2586,15 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 6px;
-  transition: background 0.15s;
+  transition: background-color 150ms var(--products-ease), transform 150ms var(--products-ease);
   white-space: nowrap;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
+}
+.delivery-type-configurable:active {
+  transform: scale(.97);
 }
 .delivery-type-configurable:hover {
   background: rgba(255, 125, 0, 0.1);
@@ -2690,6 +2763,22 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   margin-bottom: 12px;
   border: 1px solid #eef2f7;
 }
+.product-detail-media {
+  height: 210px;
+  padding: 0;
+  background: linear-gradient(135deg, #f5f7fb, #dfe9f8);
+}
+.product-detail-image,
+.product-detail-placeholder {
+  width: 100%;
+  height: 100%;
+}
+.product-detail-image {
+  object-fit: cover;
+}
+.product-detail-placeholder {
+  background: linear-gradient(135deg, #f5f7fb, #dfe9f8);
+}
 .drawer-title {
   margin: 0 0 6px;
   font-size: 15px;
@@ -2702,6 +2791,10 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.drawer-price-value {
+  color: #ef4444;
+  font-size: 22px;
 }
 .drawer-card {
   margin-bottom: 12px;
@@ -2756,6 +2849,22 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.products-v12-shell .link {
+  transition:
+    color 150ms var(--products-ease),
+    opacity 150ms var(--products-ease),
+    transform 150ms var(--products-ease);
+}
+
+.products-v12-shell .link:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.products-v12-shell .link:disabled {
+  cursor: not-allowed;
+  opacity: .45;
 }
 
 .products-table :deep(.badge.purple) {
