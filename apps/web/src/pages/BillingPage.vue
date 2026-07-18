@@ -1,5 +1,5 @@
 <template>
-  <div class="billing-page">
+  <div class="billing-page billing-quota-v25-shell">
     <div v-if="notice" :class="['billing-notice', noticeType]" role="status">{{ notice }}</div>
 
     <section class="billing-command-center">
@@ -83,7 +83,9 @@
           <strong>{{ usage.accounts.used }}</strong>
           <span>/ {{ displayLimit(usage.accounts.limit) }}</span>
         </div>
-        <div class="quota-bar"><i :style="{ width: percent(usage.accounts.used, usage.accounts.limit) + '%' }"></i></div>
+        <div class="quota-bar">
+          <progress :value="percent(usage.accounts.used, usage.accounts.limit)" max="100" aria-label="账号配额使用率"></progress>
+        </div>
         <p>剩余 {{ displayRemaining(usage.accounts.remaining, usage.accounts.limit) }} 个闲鱼账号可绑定。</p>
       </article>
 
@@ -99,7 +101,9 @@
           <strong>{{ usage.aiCallsToday.used }}</strong>
           <span>/ {{ displayLimit(usage.aiCallsToday.limit) }}</span>
         </div>
-        <div class="quota-bar ai"><i :style="{ width: percent(usage.aiCallsToday.used, usage.aiCallsToday.limit) + '%' }"></i></div>
+        <div class="quota-bar ai">
+          <progress :value="percent(usage.aiCallsToday.used, usage.aiCallsToday.limit)" max="100" aria-label="AI 今日额度使用率"></progress>
+        </div>
         <p>AI 客服验证、RAG 对话、货源推荐等会计入调用次数。</p>
       </article>
     </section>
@@ -1057,14 +1061,37 @@ onMounted(loadAll)
   background: #eef2f7;
 }
 
-.quota-bar i {
+.quota-bar progress {
   display: block;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.quota-bar progress::-webkit-progress-bar {
+  border-radius: inherit;
+  background: #eef2f7;
+}
+
+.quota-bar progress::-webkit-progress-value {
   border-radius: inherit;
   background: #0f766e;
 }
 
-.quota-bar.ai i {
+.quota-bar progress::-moz-progress-bar {
+  border-radius: inherit;
+  background: #0f766e;
+}
+
+.quota-bar.ai progress::-webkit-progress-value {
+  background: #2563eb;
+}
+
+.quota-bar.ai progress::-moz-progress-bar {
   background: #2563eb;
 }
 

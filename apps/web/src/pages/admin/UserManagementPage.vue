@@ -1,5 +1,5 @@
 <template>
-  <div class="user-mgmt-page user-v9-shell">
+  <div class="user-mgmt-page user-v9-shell user-quota-v25-shell">
     <div v-if="notice" :class="['global-notice', noticeType]" role="status">{{ notice }}</div>
 
     <section class="user-v9-hero">
@@ -623,12 +623,16 @@
               <span>账号配额</span>
               <strong>{{ profileUsage.accounts.used }} / {{ displayLimit(profileUsage.accounts.limit) }}</strong>
             </div>
-            <div class="profile-bar"><i :style="{ width: quotaPercent(profileUsage.accounts.used, profileUsage.accounts.limit) + '%' }"></i></div>
+            <div class="profile-bar">
+              <progress :value="quotaPercent(profileUsage.accounts.used, profileUsage.accounts.limit)" max="100" aria-label="用户账号配额使用率"></progress>
+            </div>
             <div class="quota-line">
               <span>AI 今日额度</span>
               <strong>{{ profileUsage.aiCallsToday.used }} / {{ displayLimit(profileUsage.aiCallsToday.limit) }}</strong>
             </div>
-            <div class="profile-bar ai"><i :style="{ width: quotaPercent(profileUsage.aiCallsToday.used, profileUsage.aiCallsToday.limit) + '%' }"></i></div>
+            <div class="profile-bar ai">
+              <progress :value="quotaPercent(profileUsage.aiCallsToday.used, profileUsage.aiCallsToday.limit)" max="100" aria-label="用户 AI 今日额度使用率"></progress>
+            </div>
             <div class="profile-features">
               <span
                 v-for="feature in profileData.billing?.plan?.featureItems || []"
@@ -2329,14 +2333,37 @@ textarea.input {
   background: #e8edf5;
 }
 
-.profile-bar i {
+.profile-bar progress {
   display: block;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.profile-bar progress::-webkit-progress-bar {
+  border-radius: inherit;
+  background: #e8edf5;
+}
+
+.profile-bar progress::-webkit-progress-value {
   border-radius: inherit;
   background: var(--accent);
 }
 
-.profile-bar.ai i {
+.profile-bar progress::-moz-progress-bar {
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.profile-bar.ai progress::-webkit-progress-value {
+  background: var(--primary);
+}
+
+.profile-bar.ai progress::-moz-progress-bar {
   background: var(--primary);
 }
 
