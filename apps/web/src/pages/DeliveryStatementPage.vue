@@ -1,5 +1,5 @@
 <template>
-  <div class="statement-console-page">
+  <div class="statement-console-page statement-v22-shell">
     <section class="statement-command-center">
       <div class="statement-command-main">
         <div class="statement-command-kicker">
@@ -20,10 +20,11 @@
           <strong>{{ saving ? '保存中' : '可操作' }}</strong>
         </div>
         <div class="statement-command-buttons">
-          <AppButton :disabled="statementLoading" @click="load">重新加载</AppButton>
-          <AppButton :disabled="!enabled || statementAvailable !== true" @click="refreshPreview">预览声明</AppButton>
-          <AppButton type="primary" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
+          <AppButton :title="statementActionHint" :disabled="statementLoading" @click="load">重新加载</AppButton>
+          <AppButton :title="previewActionHint" :loading="previewing" :disabled="previewing || !enabled || statementAvailable !== true" @click="refreshPreview">预览声明</AppButton>
+          <AppButton type="primary" :title="saveActionHint" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
         </div>
+        <p class="statement-action-hint">{{ statementActionHint }}</p>
       </div>
     </section>
 
@@ -71,15 +72,15 @@
           </button>
           <p class="field-desc">开启后，买家付款后系统先发送声明文案，买家确认后再进入自动发货流程</p>
 
-          <div class="form-row" style="margin-top:16px">
+          <div class="form-row statement-spaced-row">
             <label>生效范围</label>
-            <select v-model="scope" class="input" style="width:100%">
+            <select v-model="scope" class="input statement-full-input">
               <option value="all">全店所有自动发货商品生效</option>
               <option value="specific">仅对单独启用声明的商品生效</option>
             </select>
           </div>
 
-          <div class="form-row" style="margin-top:16px">
+          <div class="form-row statement-spaced-row">
             <label>声明文案</label>
             <textarea
               ref="textareaRef"
@@ -104,8 +105,9 @@
           </div>
 
           <div class="form-actions">
-            <AppButton type="primary" :loading="saving" @click="save">保存配置</AppButton>
-            <AppButton :disabled="saving || !enabled" @click="reset">恢复默认</AppButton>
+            <AppButton type="primary" :title="saveActionHint" :loading="saving" @click="save">保存配置</AppButton>
+            <AppButton :title="statementActionHint" :disabled="saving || !enabled" @click="reset">恢复默认</AppButton>
+            <p class="statement-action-hint statement-editor-hint">{{ saveActionHint }}</p>
           </div>
         </section>
       </div>
@@ -119,12 +121,13 @@
             </div>
           </header>
           <div class="preview-box">
-            <div v-if="!enabled" class="subtle" style="text-align:center;padding:20px 0">发货声明已禁用，启用后可预览效果</div>
-            <div v-else-if="!previewText" class="subtle" style="text-align:center;padding:20px 0">点击下方按钮预览声明效果</div>
+            <div v-if="!enabled" class="subtle preview-empty">发货声明已禁用，启用后可预览效果</div>
+            <div v-else-if="!previewText" class="subtle preview-empty">点击下方按钮预览声明效果</div>
             <pre v-else class="preview-content">{{ previewText }}</pre>
           </div>
-          <div style="margin-top:12px">
-            <AppButton :disabled="!enabled" @click="refreshPreview">预览声明</AppButton>
+          <div class="preview-actions">
+            <AppButton :title="previewActionHint" :loading="previewing" :disabled="previewing || !enabled" @click="refreshPreview">预览声明</AppButton>
+            <p class="statement-action-hint">{{ previewActionHint }}</p>
           </div>
         </section>
 
@@ -148,7 +151,7 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -179,6 +182,29 @@ const defaultContent = `订单编号：{订单编号}
 您好，该订单包含的商品为虚拟商品，发货后不支持退换。如无异议，请点击下方链接确认发货。
 
 {发货确认链接}`
+
+const saveActionHint = computed(() => {
+  if (saving.value) return '发货声明配置正在保存，请等待服务端确认。'
+  if (statementLoading.value && statementAvailable.value !== true) return '配置正在读取，加载完成后才能保存。'
+  if (statementAvailable.value !== true) return '配置状态未知，请先重新加载，避免覆盖未知配置。'
+  if (!content.value.trim()) return '先填写声明文案，再保存配置。'
+  return enabled.value ? '声明已启用，当前配置可以保存。' : '声明未启用，但文案和范围仍可保存为草稿配置。'
+})
+
+const previewActionHint = computed(() => {
+  if (previewing.value) return '正在生成买家视角预览，请等待结果返回。'
+  if (statementAvailable.value !== true) return '配置状态未知，请先重新加载后再预览。'
+  if (!enabled.value) return '发货声明未启用，启用后才能预览买家收到的文案。'
+  if (!content.value.trim()) return '先填写声明文案，才能生成预览。'
+  return previewText.value ? '预览已生成，修改文案后可重新预览。' : '可以生成买家视角预览，确认变量替换效果。'
+})
+
+const statementActionHint = computed(() => {
+  if (statementLoading.value && statementAvailable.value !== true) return '正在读取发货声明配置，当前不会保存或切换状态。'
+  if (statementAvailable.value !== true) return '发货声明配置不可用，请重新加载成功后再操作。'
+  if (saving.value) return '配置保存中，保存完成前避免重复操作。'
+  return enabled.value ? '发货声明已启用，自动发货前会先发送声明确认。' : '发货声明当前关闭，可先完善文案和范围再启用。'
+})
 
 async function load() {
   statementLoading.value = true
@@ -443,6 +469,13 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
+.statement-action-hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .statement-notices {
   display: grid;
   gap: 8px;
@@ -519,7 +552,9 @@ onBeforeUnmount(() => {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color .15s, background .15s;
+  transition:
+    border-color 150ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 150ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .statement-toggle:hover:not(:disabled) {
@@ -551,6 +586,17 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 
+.preview-empty {
+  padding: 20px 0;
+  text-align: center;
+}
+
+.preview-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .var-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -576,13 +622,20 @@ onBeforeUnmount(() => {
   color: #2563eb;
   cursor: pointer;
   font-weight: 650;
-  transition: all .15s;
+  transition:
+    transform 150ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
   white-space: nowrap;
 }
 .var-chip:hover:not(:disabled) {
   background: #eef6ff;
   border-color: #93b4ff;
   transform: translateY(-1px);
+}
+.var-chip:active:not(:disabled) {
+  transform: scale(.97);
 }
 .var-chip:disabled {
   opacity: 0.5;
@@ -659,8 +712,21 @@ onBeforeUnmount(() => {
 .form-actions {
   margin-top: 20px;
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.statement-editor-hint {
+  flex: 1 1 260px;
+}
+
+.statement-spaced-row {
+  margin-top: 16px;
+}
+
+.statement-full-input {
+  width: 100%;
 }
 
 .subtle {
