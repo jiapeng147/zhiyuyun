@@ -171,14 +171,14 @@ a {
   color: var(--primary-fg);
   font-weight: 700;
   font-size: 14px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   flex-shrink: 0;
 }
 .brand-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
 .brand-name {
   font-size: 15px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   color: var(--text);
   line-height: 1.2;
 }
@@ -257,7 +257,7 @@ a {
   margin-left: auto;
   background: var(--red);
   color: #fff;
-  border-radius: 99px;
+  border-radius: 999rem;
   font-size: 10px;
   font-weight: 600;
   min-width: 18px;
@@ -401,7 +401,7 @@ a {
   right: 4px;
   background: var(--red);
   color: #fff;
-  border-radius: 99px;
+  border-radius: 999rem;
   min-width: 14px;
   height: 14px;
   line-height: 14px;
@@ -440,7 +440,7 @@ a {
   font-size: 20px;
   font-weight: 600;
   line-height: 1.3;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   color: var(--text);
 }
 .page-head p {
@@ -682,7 +682,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   align-items: center;
   height: 22px;
   padding: 0 8px;
-  border-radius: 99px;
+  border-radius: 999rem;
   background: var(--bg-muted);
   color: var(--text-secondary);
   font-weight: 500;
@@ -704,7 +704,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .switch {
   width: 42px;
   height: 22px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: #cbd5e1;
   position: relative;
   display: inline-block;
@@ -721,7 +721,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: 2px;
   left: 2px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
-  transition: .2s
+  transition: transform 160ms ease-out
 }
 
 .switch.on {
@@ -830,7 +830,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   padding: 24px 16px;
   background: linear-gradient(135deg, #FAFAFA, #eef4ff);
   border: 1px dashed #eed0c3;
-  border-radius: 16px;
+  border-radius: 8px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -872,7 +872,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .config-nav {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 18px 14px;
   min-height: 860px
@@ -988,7 +988,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   height: 168px;
   background: linear-gradient(110deg, #f2f7ff 0, #e8f2ff 58%, #dbe9ff 100%);
   border: 1px solid #dfe9f8;
-  border-radius: 15px;
+  border-radius: 8px;
   position: relative;
   overflow: hidden;
   padding: 35px 125px
@@ -1034,7 +1034,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: 20px;
   width: 240px;
   height: 90px;
-  border-radius: 28px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #ffddcf, #0f766e);
   filter: drop-shadow(0 18px 28px rgba(20, 184, 166, .22));
   transform: skew(-18deg)
@@ -1047,7 +1047,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: 34px;
   width: 90px;
   height: 54px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .58);
   box-shadow: 70px -12px 0 rgba(255, 255, 255, .35), 120px 25px 0 rgba(255, 255, 255, .45)
 }
@@ -1065,7 +1065,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   height: 96px;
   border: 1px solid var(--line);
   background: #fff;
-  border-radius: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 18px;
@@ -1172,7 +1172,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .login-feature {
   height: 64px;
   width: 190px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .7);
   display: flex;
   align-items: center;
@@ -1202,7 +1202,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: 80px;
   width: 420px;
   height: 210px;
-  border-radius: 46px;
+  border-radius: 8px;
   background: linear-gradient(160deg, #eef6ff 0, #dbeaff 45%, #0f766e 100%);
   transform: perspective(500px) rotateX(52deg) rotateZ(-4deg);
   box-shadow: 0 35px 70px rgba(20, 184, 166, .22)
@@ -1226,7 +1226,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   height: 82px;
   background: rgba(255, 255, 255, .82);
   border: 1px solid #E8E8E8;
-  border-radius: 13px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -1240,7 +1240,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .login-card {
   background: rgba(255, 255, 255, .9);
   border: 1px solid #E5E5E5;
-  border-radius: 16px;
+  border-radius: 8px;
   box-shadow: 0 22px 50px rgba(94, 50, 31, .10);
   padding: 44px 42px 36px;
   align-self: start;
@@ -1373,7 +1373,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   width: 36px;
   height: 20px;
   background: #fff;
-  border-radius: 20px;
+  border-radius: 999rem;
   left: 14px;
   top: 14px;
   box-shadow: 18px -2px 0 rgba(255, 255, 255, .55)
@@ -1402,7 +1402,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .right-drawer {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 18px;
   min-height: 520px
@@ -1420,7 +1420,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .chat-side {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   overflow: hidden
 }
@@ -1476,7 +1476,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .bubble {
   max-width: 560px;
   padding: 16px 20px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f3f6fb;
   margin-bottom: 22px;
   line-height: 1.7
@@ -1517,7 +1517,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   background-image: radial-gradient(#f0e2dc 1px, transparent 1px);
   background-size: 16px 16px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   position: relative;
   padding: 90px 34px
 }
@@ -1533,7 +1533,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   height: 78px;
   background: #fff;
   border: 1px solid #f4e5df;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 8px 20px rgba(94, 50, 31, .06);
   display: flex;
   flex-direction: column;
@@ -1605,7 +1605,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 .mini-map {
   height: 165px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #d8f2e8 0, #e5eefc 35%, #fbf2d7 100%);
   position: relative;
   overflow: hidden;
@@ -1661,7 +1661,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   overflow: auto;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 14px
 }
@@ -1669,7 +1669,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .detail-card {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 18px
 }
@@ -1680,7 +1680,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 .toast-bar {
   height: 74px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
@@ -1705,7 +1705,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .trace-json {
   background: #f8fafc;
   border: 1px solid #edf2f7;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 14px;
   color: #46607f;
   line-height: 1.6;
@@ -1719,7 +1719,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .json-toggle{display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#334155;padding:4px 0}
 .json-toggle:hover{color:#0f766e}
 .json-toggle-icon{display:inline-block;width:14px;color:#64748b;font-size:12px}
-.json-copy{padding:3px 10px;font-size:12px;border:1px solid #f1e2db;background:#fff;color:#475569;border-radius:6px;cursor:pointer;transition:all .15s}
+.json-copy{padding:3px 10px;font-size:12px;border:1px solid #f1e2db;background:#fff;color:#475569;border-radius:6px;cursor:pointer;transition:border-color 150ms ease, color 150ms ease, background 150ms ease}
 .json-copy:hover:not(:disabled){border-color:#14b8a6;color:#0f766e}
 .json-copy:disabled{cursor:default;color:#16a34a;border-color:#bbf7d0;background:#f0fdf4}
 
@@ -1727,7 +1727,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden
 }
 
@@ -1746,7 +1746,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 .preview-card {
   height: 220px;
-  border-radius: 14px;
+  border-radius: 8px;
   border: 1px solid var(--line);
   background: #fff;
   box-shadow: var(--shadow);
@@ -1763,7 +1763,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   height: 88px;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px
 }
 
@@ -1780,7 +1780,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .file-drop {
   height: 110px;
   border: 1px dashed #e5c6b8;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #FFFFFF;
   display: flex;
   align-items: center;
@@ -1816,7 +1816,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .empty-placeholder {
   height: 140px;
   border: 1px dashed #f1dfd7;
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1932,7 +1932,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     height: 38px;
     border: 0;
     background: transparent;
-    border-radius: 10px;
+    border-radius: 8px;
     color: #526079;
     z-index: 2
   }
@@ -1954,7 +1954,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     height: 44px;
     margin-top: 12px;
     border: 1px solid #ffd6d6;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #fff8f8;
     color: #ef4444;
     font-weight: 700;
@@ -2052,7 +2052,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     flex-shrink: 0;
     border: 0;
     background: transparent;
-    border-radius: 12px;
+    border-radius: 8px;
     color: #482b1f
   }
 
@@ -2368,7 +2368,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     max-width: 100vw;
     max-height: 92vh;
     overflow-y: auto;
-    border-radius: 20px 20px 0 0;
+    border-radius: 8px 8px 0 0;
     padding: 22px 18px 20px
   }
 
@@ -2553,12 +2553,12 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   /* 页面标题：更好的视觉层次 */
   .page-head h1 {
     font-weight: 800;
-    letter-spacing: -0.3px;
+    letter-spacing: 0;
   }
 
   /* 表格横向滚动：更好的视觉提示 */
   .base-table {
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     border: 1px solid #eef2fa;
   }
@@ -2591,7 +2591,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   /* 按钮触摸区域优化 */
   .app-btn {
     min-height: 40px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-weight: 600;
   }
 
@@ -2609,7 +2609,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   select,
   textarea {
     min-height: 42px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 14px;
   }
 
@@ -2618,7 +2618,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .badge {
     font-size: 11px;
     padding: 3px 8px;
-    border-radius: 100px;
+    border-radius: 999rem;
   }
 
   /* 分页移动端优化 */
@@ -2630,7 +2630,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .pagination .page-btn {
     min-width: 36px;
     min-height: 36px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 13px;
   }
 
@@ -2652,14 +2652,14 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .toolbar {
     padding: 10px 12px;
     background: #fff;
-    border-radius: 14px;
+    border-radius: 8px;
     border: 1px solid #eef2fa;
   }
 
   /* 全局通知移动端优化 */
   .global-notice {
     margin: 8px 0 12px;
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 12px 14px;
     font-size: 13px;
   }
@@ -2796,7 +2796,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: -1px;
   width: 18px;
   height: 62px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #14b8a6, #0f766e);
   transform: rotate(42deg);
   box-shadow: 0 6px 18px rgba(20, 184, 166, .28)
@@ -2809,7 +2809,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: -1px;
   width: 18px;
   height: 62px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #14b8a6, #f44b03);
   transform: rotate(-42deg);
   box-shadow: 0 6px 18px rgba(20, 184, 166, .18)
@@ -2831,7 +2831,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   position: relative;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 18px;
+  border-radius: 8px;
   box-shadow: 0 28px 80px rgba(17, 35, 67, .25);
   padding: 26px 30px 22px;
   color: #18223d
@@ -2872,7 +2872,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .scan-steps {
   height: 78px;
   border: 1px solid #E8E8E8;
-  border-radius: 12px;
+  border-radius: 8px;
   display: grid;
   grid-template-columns: 1fr 72px 1fr 72px 1fr;
   align-items: center;
@@ -2925,7 +2925,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   width: 224px;
   height: 224px;
   border: 2px solid #ff7a41;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
   position: relative;
   background: #fff;
@@ -2987,7 +2987,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   margin-top: 20px;
   background: #FAFAFA;
   border: 1px solid #e6edf7;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 14px 16px
 }
 
@@ -3018,7 +3018,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .notice-box,
 .usage-box {
   border: 1px solid #e6edf7;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   padding: 16px;
   margin-top: 16px
@@ -3391,7 +3391,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   width: 100%;
   min-height: 132px;
   border: 1px solid #f4e5df;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #f8fafc;
   color: #46607f;
   line-height: 1.55;
@@ -3425,7 +3425,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .boot-card {
   width: 360px;
   padding: 32px;
-  border-radius: 24px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 24px 80px rgba(168, 76, 36, .14);
   display: grid;
@@ -3459,7 +3459,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   color: #ef4444;
   background: #fff5f5;
   border: 1px solid #ffd1d1;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 12px;
   margin: 8px 0 14px;
   font-weight: 700
@@ -3468,7 +3468,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .global-notice {
   margin: 0 0 14px;
   padding: 12px 16px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #eef5ff;
   color: #a84c24;
   font-weight: 700;
@@ -3521,7 +3521,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   text-align: center;
   color: #8a96aa;
   background: #FAFAFA;
-  border-radius: 14px;
+  border-radius: 8px;
   border: 1px dashed #f6e6df
 }
 
@@ -3540,7 +3540,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   top: 46px;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: 0 18px 40px rgba(92, 49, 30, .14);
   padding: 8px;
   z-index: 20
@@ -3551,7 +3551,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   border: 0;
   background: transparent;
   padding: 10px 18px;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   color: #ef4444;
   font-weight: 800
@@ -3584,7 +3584,7 @@ select.input {
 .base-table img.product-thumb {
   width: 58px;
   height: 58px;
-  border-radius: 12px;
+  border-radius: 8px;
   object-fit: cover;
   background: #edf2f7
 }
@@ -3597,9 +3597,9 @@ button:disabled {
 .xy-modal .manual-actions .app-btn,
 .xy-modal .modal-actions .app-btn {
   min-width: 96px
-}.table-empty{padding:28px;text-align:center;color:#8a94a6;background:#FFFFFF;border-radius:14px}
+}.table-empty{padding:28px;text-align:center;color:#8a94a6;background:#FFFFFF;border-radius:8px}
 
-.mobile-lite{min-height:100vh;padding:24px;background:linear-gradient(180deg,#eef5ff,#FAFAFA);box-sizing:border-box;color:#15223a}.mobile-lite-card{background:rgba(255,255,255,.92);border:1px solid #e5edf8;border-radius:24px;padding:22px;box-shadow:0 18px 42px rgba(94,50,31,.10)}.mobile-lite-card.hero{text-align:left}.mobile-lite-card.hero img{width:54px;height:54px;border-radius:16px;display:block;margin-bottom:14px}.mobile-lite-card h2{margin:0 0 8px;font-size:26px}.mobile-lite-card p{margin:0;color:#64748b;line-height:1.7}.mobile-lite-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.mobile-lite-tile{border:1px solid #e5edf8;background:#fff;border-radius:18px;padding:16px;text-align:left;box-shadow:0 10px 22px rgba(94,50,31,.06)}.mobile-lite-tile b{display:block;font-size:16px;color:#0f766e;margin-bottom:6px}.mobile-lite-tile span{display:block;font-size:12px;color:#667085;line-height:1.5}.mobile-lite-card.warning{border-color:#fde68a;background:#fffaf0}.mobile-lite-actions{display:flex;gap:10px;margin-top:16px}.mobile-lite-actions button{flex:1;height:44px;border:1px solid #f5e3db;border-radius:999px;background:#fff;color:#526079;font-weight:700}.mobile-lite-actions .primary{background:#0f766e;color:#fff;border-color:#0f766e}@media (max-width:430px){.mobile-lite{padding:16px}.mobile-lite-grid{grid-template-columns:1fr}.mobile-lite-actions{flex-direction:column}}
+.mobile-lite{min-height:100vh;padding:24px;background:linear-gradient(180deg,#eef5ff,#FAFAFA);box-sizing:border-box;color:#15223a}.mobile-lite-card{background:rgba(255,255,255,.92);border:1px solid #e5edf8;border-radius:8px;padding:22px;box-shadow:0 18px 42px rgba(94,50,31,.10)}.mobile-lite-card.hero{text-align:left}.mobile-lite-card.hero img{width:54px;height:54px;border-radius:8px;display:block;margin-bottom:14px}.mobile-lite-card h2{margin:0 0 8px;font-size:26px}.mobile-lite-card p{margin:0;color:#64748b;line-height:1.7}.mobile-lite-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.mobile-lite-tile{border:1px solid #e5edf8;background:#fff;border-radius:8px;padding:16px;text-align:left;box-shadow:0 10px 22px rgba(94,50,31,.06)}.mobile-lite-tile b{display:block;font-size:16px;color:#0f766e;margin-bottom:6px}.mobile-lite-tile span{display:block;font-size:12px;color:#667085;line-height:1.5}.mobile-lite-card.warning{border-color:#fde68a;background:#fffaf0}.mobile-lite-actions{display:flex;gap:10px;margin-top:16px}.mobile-lite-actions button{flex:1;height:44px;border:1px solid #f5e3db;border-radius:999rem;background:#fff;color:#526079;font-weight:700}.mobile-lite-actions .primary{background:#0f766e;color:#fff;border-color:#0f766e}@media (max-width:430px){.mobile-lite{padding:16px}.mobile-lite-grid{grid-template-columns:1fr}.mobile-lite-actions{flex-direction:column}}
 
 /* 视觉质感提升：hover/transition/focus */
 .right-drawer,
@@ -3638,7 +3638,7 @@ button:focus-visible {
 }
 
 /* 圆角层级：panel 14px / sub-card 10px / input 7px / chip 6px */
-.metric-tile { border-radius: 10px; }
+.metric-tile { border-radius: 8px; }
 .chip { border-radius: 6px; }
 
 /* 空态统一风格 */
@@ -3652,13 +3652,13 @@ button:focus-visible {
   color: #8a96aa;
   background: linear-gradient(135deg, #FFFFFF, #F7F7F8);
   border: 1px dashed #ead7cf;
-  border-radius: 14px;
+  border-radius: 8px;
 }
 .xya-legal-notice {
   width: min(520px, calc(100vw - 32px));
   padding: 24px;
   border: 1px solid #f4e1d9;
-  border-radius: 20px;
+  border-radius: 8px;
   color: #57301f;
   background: #fff;
   box-shadow: 0 24px 70px rgba(86, 43, 25, .24);
@@ -3667,4 +3667,4 @@ button:focus-visible {
 .xya-legal-notice::backdrop { background: rgba(15, 30, 55, .46); }
 .xya-legal-notice h1 { margin: 0 0 12px; font-size: 22px; }
 .xya-legal-notice p { margin: 0; color: #5c6f8d; line-height: 1.75; }
-.xya-legal-notice button { margin-top: 20px; min-height: 42px; padding: 0 18px; border: 0; border-radius: 11px; background: #0f766e; color: #fff; font-weight: 800; }
+.xya-legal-notice button { margin-top: 20px; min-height: 42px; padding: 0 18px; border: 0; border-radius: 8px; background: #0f766e; color: #fff; font-weight: 800; }
