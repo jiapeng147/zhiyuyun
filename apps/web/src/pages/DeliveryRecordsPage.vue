@@ -729,7 +729,7 @@ onBeforeUnmount(() => {
   min-height: 56px;
   padding: 12px;
   border: 1px solid #e6ecf5;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #FFFFFF;
   white-space: pre-wrap;
   word-break: break-word;

@@ -706,7 +706,7 @@ onBeforeUnmount(() => {
   min-height: 160px;
   padding: 10px 12px;
   border: 1px solid #f0e0d9;
-  border-radius: 10px;
+  border-radius: 8px;
   resize: vertical;
 }
 

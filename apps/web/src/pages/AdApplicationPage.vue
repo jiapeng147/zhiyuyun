@@ -1525,7 +1525,7 @@ onBeforeUnmount(() => {
   margin-top: 10px;
   padding: 10px 12px;
   border: 1px solid #f5c96b;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff8e8;
   color: #8a5a00;
   font-size: 12px;
@@ -1539,7 +1539,7 @@ onBeforeUnmount(() => {
   margin-bottom: 16px;
   padding: 14px;
   border: 1px solid #f0b44d;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff8e7;
   color: #714900;
 }
@@ -1588,7 +1588,7 @@ onBeforeUnmount(() => {
 .payment-attempt-meta div {
   min-width: 0;
   padding: 8px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.74);
 }
 

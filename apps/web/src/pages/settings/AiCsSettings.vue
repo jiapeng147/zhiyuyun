@@ -17,9 +17,9 @@
 
       <aside class="aics-hero-status" aria-label="AI 客服当前状态">
         <span>当前状态</span>
-        <strong :class="form.enabled && form.mode !== 'manual' ? 'green' : 'red'">{{ configuredStatusText }}</strong>
-        <div class="aics-status-meter">
-          <i :style="{ width: form.enabled && form.mode !== 'manual' ? '72%' : '30%' }"></i>
+        <strong :class="aiReceptionActive ? 'green' : 'red'">{{ configuredStatusText }}</strong>
+        <div class="aics-status-meter" aria-hidden="true">
+          <progress :value="statusMeterValue" max="100"></progress>
         </div>
         <p>{{ form.workHours24 ? `全天（${form.timeZone}）` : `${form.workStart}-${form.workEnd}（${form.timeZone}）` }}</p>
       </aside>
@@ -209,7 +209,7 @@
                     ref="kbFileInputRef"
                     type="file"
                     accept=".md,.txt,.pptx,.xlsx,.csv"
-                    style="display:none"
+                    class="aics-file-input"
                     @change="onKbFileChange"
                   />
                   <button type="button" class="aics-upload-btn" :disabled="kbUploading" @click="kbFileInputRef?.click()">
@@ -360,7 +360,7 @@
             <div class="aics-status-list">
               <div class="aics-status-row">
                 <span>当前状态</span>
-                <b :class="form.enabled && form.mode !== 'manual' ? 'green' : 'red'">{{ configuredStatusText }}</b>
+                <b :class="aiReceptionActive ? 'green' : 'red'">{{ configuredStatusText }}</b>
               </div>
               <div class="aics-status-row">
                 <span>工作时段</span>
@@ -462,6 +462,8 @@ const configuredStatusText = computed(() => {
   return '自动策略已配置'
 })
 
+const aiReceptionActive = computed(() => form.enabled && form.mode !== 'manual')
+const statusMeterValue = computed(() => aiReceptionActive.value ? 72 : 30)
 const keywordGateEnabled = computed(() => form.mode === 'hybrid' || form.safeMode)
 
 function resetNotices() {
@@ -924,12 +926,35 @@ onBeforeUnmount(() => {
   background: #e5e7eb;
 }
 
-.aics-status-meter i {
+.aics-status-meter progress {
   display: block;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.aics-status-meter progress::-webkit-progress-bar {
+  border-radius: inherit;
+  background: #e5e7eb;
+}
+
+.aics-status-meter progress::-webkit-progress-value {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--aics-primary), var(--aics-accent));
-  transition: width 220ms var(--aics-ease);
+  transition: inline-size 220ms var(--aics-ease);
+}
+
+.aics-status-meter progress::-moz-progress-bar {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--aics-primary), var(--aics-accent));
+}
+
+.aics-file-input {
+  display: none;
 }
 
 .aics-loading {

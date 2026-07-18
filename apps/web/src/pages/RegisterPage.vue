@@ -9,7 +9,7 @@
     @navigate="emit('navigate', $event)"
   >
     <div v-if="errorMsg" class="form-error" role="alert" aria-live="assertive">{{ errorMsg }}</div>
-    <div v-if="okMsg" class="form-error" style="color:var(--green);background:rgba(22,191,120,.08)" role="status">{{ okMsg }}</div>
+    <div v-if="okMsg" class="form-error form-success" role="status">{{ okMsg }}</div>
 
     <form class="auth-form" @submit.prevent="handleRegister">
       <!-- 邮箱 -->
@@ -62,7 +62,7 @@
       </button>
     </form>
 
-    <div class="auth-inline-row" style="justify-content:center;margin-top:14px">
+    <div class="auth-inline-row auth-register-login-row">
       <span class="auth-muted">已有账号？</span>
       <button type="button" class="auth-text-link" @click="emit('navigate', 'login')">去登录</button>
     </div>
@@ -158,3 +158,16 @@ async function handleRegister() {
   }
 }
 </script>
+
+<style scoped>
+.form-success {
+  color: var(--green);
+  background: rgba(22, 191, 120, .08);
+  border-color: rgba(22, 191, 120, .24);
+}
+
+.auth-register-login-row {
+  justify-content: center;
+  margin-top: 14px;
+}
+</style>
