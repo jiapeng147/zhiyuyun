@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-center profile-v9-shell">
+  <div class="profile-center profile-v9-shell profile-v17-shell">
     <div v-if="notice.text" :class="['global-notice', notice.type]">
       {{ notice.text }}
     </div>
@@ -11,7 +11,7 @@
       <aside class="profile-side">
         <div class="profile-v9-card profile-side-card">
           <div class="profile-side-head">
-            <span>Account Center</span>
+            <span>账户中心</span>
             <h2>账户工作台</h2>
           </div>
 
@@ -269,12 +269,12 @@
                     <p>{{ securityLevel.desc }}</p>
                   </div>
                 </div>
-                <span class="security-link-hint">安全等级说明</span>
+                <span class="security-link-hint">完成度 {{ securityLevel.percent }}%</span>
               </div>
 
               <div class="security-progress-wrap">
-                <div class="security-progress">
-                  <div class="security-progress-bar" :style="{ width: securityLevel.percent + '%' }"></div>
+                <div :class="['security-progress', securityLevel.tone]">
+                  <div class="security-progress-bar"></div>
                 </div>
                 <div class="security-progress-labels">
                   <span :class="{ active: securityLevel.score === 1 }">待维护</span>
@@ -546,7 +546,7 @@ onBeforeUnmount(() => {
 .account-panel,
 .quick-panel,
 .content-panel {
-  border-radius: 24px;
+  border-radius: 8px;
   border: 1px solid rgba(229, 236, 247, 0.96);
   box-shadow: 0 12px 34px rgba(87, 46, 29, 0.05);
 }
@@ -579,12 +579,17 @@ onBeforeUnmount(() => {
   min-width: 0;
   padding: 12px 14px;
   border: 1px solid rgba(243, 226, 219, 0.9);
-  border-radius: 16px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.86);
   color: #50617d;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition:
+    transform 160ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    box-shadow 160ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 160ms ease,
+    color 160ms ease,
+    background-color 160ms ease;
 }
 
 .profile-side-tab::before {
@@ -622,7 +627,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #eef4ff;
   color: #0f766e;
   flex: 0 0 auto;
@@ -677,7 +682,7 @@ onBeforeUnmount(() => {
   content: '';
   position: absolute;
   inset: 14px;
-  border-radius: 22px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   pointer-events: none;
 }
@@ -698,7 +703,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 24px;
+  border-radius: 8px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(231, 242, 255, 0.85) 100%);
   border: 1px solid rgba(255, 255, 255, 0.46);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 20px 40px rgba(163, 64, 22, 0.18);
@@ -715,7 +720,7 @@ onBeforeUnmount(() => {
   color: #ffffff;
   font-weight: 800;
   line-height: 1.12;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-shadow: 0 10px 24px rgba(177, 85, 45, 0.18);
 }
 
@@ -779,7 +784,7 @@ onBeforeUnmount(() => {
 .welcome-visual-glow {
   position: absolute;
   inset: 16px 24px 16px 38px;
-  border-radius: 68px;
+  border-radius: 8px;
   background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 218, 202, 0.18) 36%, transparent 74%);
   filter: blur(8px);
 }
@@ -806,13 +811,16 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   min-height: 116px;
   padding: 17px 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid rgba(228, 235, 247, 0.96);
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), transparent 36%),
     linear-gradient(180deg, #ffffff 0%, #FFFFFF 100%);
   box-shadow: 0 10px 28px rgba(94, 50, 31, 0.045);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 180ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    box-shadow 180ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 180ms ease;
 }
 
 .profile-v9-stat:hover {
@@ -830,7 +838,7 @@ onBeforeUnmount(() => {
 .profile-v9-stat .profile-v9-stat-icon {
   width: 48px;
   height: 48px;
-  border-radius: 16px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1030,7 +1038,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 92% 18%, rgba(255, 255, 255, 0.9), transparent 22%),
     linear-gradient(135deg, #fffaf1 0%, #ffffff 68%);
   border: 1px solid rgba(248, 227, 177, 0.9);
-  border-radius: 18px;
+  border-radius: 8px;
   margin-bottom: 12px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.88),
@@ -1041,7 +1049,7 @@ onBeforeUnmount(() => {
   content: '';
   position: absolute;
   inset: 10px;
-  border-radius: 14px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.56);
   pointer-events: none;
 }
@@ -1059,7 +1067,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-radius: 18px;
+  border-radius: 8px;
   box-shadow: 0 16px 28px rgba(234, 179, 8, 0.18);
 }
 
@@ -1119,7 +1127,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   padding: 10px 8px 9px;
-  border-radius: 15px;
+  border-radius: 8px;
   border: 1px solid rgba(229, 236, 247, 0.9);
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9), transparent 36%),
@@ -1131,7 +1139,7 @@ onBeforeUnmount(() => {
 .benefit-feature-icon {
   width: 28px;
   height: 28px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1177,7 +1185,7 @@ onBeforeUnmount(() => {
 .account-info-item {
   min-height: 72px;
   padding: 13px 15px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #e7eef8;
   background: linear-gradient(180deg, #FFFFFF 0%, #ffffff 100%);
   display: flex;
@@ -1218,13 +1226,16 @@ onBeforeUnmount(() => {
   min-height: 96px;
   padding: 16px;
   border: 1px solid #E8E8E8;
-  border-radius: 18px;
+  border-radius: 8px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.96), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
   text-align: left;
   gap: 12px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 180ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    box-shadow 180ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 180ms ease;
 }
 
 .quick-action-btn:hover {
@@ -1284,12 +1295,15 @@ onBeforeUnmount(() => {
 
 .security-card {
   border: 1px solid rgba(225, 235, 248, 0.96);
-  border-radius: 22px;
+  border-radius: 8px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #FFFFFF 100%);
   padding: 22px 20px 20px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 180ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    box-shadow 180ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 180ms ease;
   box-shadow: 0 12px 28px rgba(94, 50, 31, 0.05);
 }
 
@@ -1316,7 +1330,7 @@ onBeforeUnmount(() => {
 .security-card-icon {
   width: 56px;
   height: 56px;
-  border-radius: 18px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1351,7 +1365,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   margin-top: auto;
   align-self: stretch;
-  border-radius: 14px;
+  border-radius: 8px;
   font-size: 15px;
   font-weight: 800;
   box-shadow: 0 14px 24px rgba(20, 184, 166, 0.2);
@@ -1399,7 +1413,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 18px;
   padding: 24px 26px 16px;
-  border-radius: 24px;
+  border-radius: 8px;
   margin-bottom: 18px;
   border: 1px solid rgba(238, 227, 201, 0.9);
   background:
@@ -1414,7 +1428,7 @@ onBeforeUnmount(() => {
   content: '';
   position: absolute;
   inset: 12px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.56);
   pointer-events: none;
 }
@@ -1625,7 +1639,7 @@ onBeforeUnmount(() => {
   font-size: 58px;
   line-height: 1;
   font-weight: 900;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   color: var(--text);
 }
 
@@ -1690,24 +1704,21 @@ onBeforeUnmount(() => {
 }
 
 .security-link-hint {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
   color: #0f766e;
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
-  position: relative;
-  padding-right: 14px;
 }
 
 .security-link-hint::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 1px;
-  width: 6px;
-  height: 6px;
-  border-top: 1.8px solid currentColor;
-  border-right: 1.8px solid currentColor;
-  transform: translateY(-50%) rotate(45deg);
+  display: none;
 }
 
 .security-risk-pill.safe::before {
@@ -1754,8 +1765,12 @@ onBeforeUnmount(() => {
   height: 100%;
   border-radius: 999px;
   box-shadow: 0 8px 16px rgba(255, 159, 34, 0.24);
-  transition: width 0.35s ease;
+  transition: width 240ms var(--profile-ease, cubic-bezier(0.23, 1, 0.32, 1));
 }
+
+.security-progress.low .security-progress-bar { width: 33%; }
+.security-progress.medium .security-progress-bar { width: 66%; }
+.security-progress.high .security-progress-bar { width: 100%; }
 
 .security-level-card.high .security-progress-bar { background: linear-gradient(90deg, #16bf78, #0a8a55); }
 .security-level-card.medium .security-progress-bar { background: linear-gradient(90deg, #ffb547, #ff9f22); }
@@ -1797,7 +1812,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.96), transparent 34%),
     linear-gradient(180deg, #fcfdff 0%, #f7faff 100%);
   border: 1px solid #e6eefa;
-  border-radius: 22px;
+  border-radius: 8px;
 }
 
 .security-tips-copy h4 {
@@ -1819,7 +1834,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   min-height: 96px;
   padding: 16px 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid rgba(225, 235, 248, 0.9);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84);
@@ -1828,7 +1843,7 @@ onBeforeUnmount(() => {
 .security-tip-icon {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1891,7 +1906,7 @@ onBeforeUnmount(() => {
   min-width: 112px;
   margin-top: auto;
   align-self: flex-start;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 14px;
   box-shadow: 0 10px 20px rgba(20, 184, 166, 0.18);
 }
@@ -1900,7 +1915,7 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 0;
   padding: 16px 12px;
-  border-radius: 24px;
+  border-radius: 8px;
   border: 1px solid rgba(229, 236, 247, 0.96);
   background:
     radial-gradient(circle at top left, rgba(20, 184, 166, 0.06), transparent 34%),
@@ -1919,13 +1934,13 @@ onBeforeUnmount(() => {
   flex: none;
   width: 100%;
   padding: 10px 11px;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .profile-side-tab-icon {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .profile-side-tab-label {
@@ -1962,7 +1977,7 @@ onBeforeUnmount(() => {
 .account-info-item {
   min-height: 62px;
   padding: 11px 13px;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .account-info-label {
@@ -1976,7 +1991,7 @@ onBeforeUnmount(() => {
 .quick-action-btn {
   min-height: 84px;
   padding: 13px;
-  border-radius: 16px;
+  border-radius: 8px;
   gap: 10px;
 }
 
@@ -2066,7 +2081,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.72);
   color: var(--security-accent);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
@@ -2132,7 +2147,7 @@ onBeforeUnmount(() => {
 
 .security-card {
   padding: 16px 16px 14px;
-  border-radius: 20px;
+  border-radius: 8px;
   box-shadow: 0 10px 24px rgba(94, 50, 31, 0.04);
 }
 
@@ -2144,7 +2159,7 @@ onBeforeUnmount(() => {
 .security-card-icon {
   width: 50px;
   height: 50px;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .security-card b {
@@ -2263,7 +2278,7 @@ onBeforeUnmount(() => {
   height: 42px;
   border: 1px solid var(--line);
   background: #fff;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0 14px;
   outline: none;
   font-size: 14px;
@@ -2369,7 +2384,7 @@ onBeforeUnmount(() => {
 .page-btn {
   height: 36px;
   border: 1px solid rgba(126, 143, 179, 0.22);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 0 12px;
   background: #fff;
   color: var(--text);
@@ -2405,7 +2420,7 @@ onBeforeUnmount(() => {
   height: 36px;
   box-sizing: border-box;
   border: 1px solid rgba(126, 143, 179, 0.22);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 0 8px;
   background: #fff;
   color: var(--text);
@@ -2430,7 +2445,7 @@ onBeforeUnmount(() => {
   min-width: 36px;
   height: 36px;
   border: 1px solid rgba(126, 143, 179, 0.18);
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   color: #586780;
   font-size: 12px;
@@ -2763,8 +2778,8 @@ onBeforeUnmount(() => {
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .profile-v9-shell .profile-side-head h2 {
