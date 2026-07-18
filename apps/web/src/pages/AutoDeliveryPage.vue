@@ -1,5 +1,5 @@
 <template>
-  <div class="auto-delivery-page">
+  <div class="auto-delivery-page delivery-v13-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
@@ -23,10 +23,11 @@
           <strong>{{ filteredConfigUnknownCount > 0 ? '存在未知配置' : '可操作' }}</strong>
         </div>
         <div class="delivery-command-buttons">
-          <n-button @click="goSourceLibrary">管理货源库</n-button>
-          <n-button type="primary" @click="showBatchDialog = true">批量配置</n-button>
-          <n-button :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
+          <n-button :title="deliveryActionHint" @click="goSourceLibrary">管理货源库</n-button>
+          <n-button type="primary" :title="deliveryActionHint" :disabled="!goodsAvailable || filteredConfigUnknownCount > 0 || filteredGoods.length === 0" @click="showBatchDialog = true">批量配置</n-button>
+          <n-button :title="deliveryActionHint" :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
         </div>
+        <p class="delivery-action-hint">{{ deliveryActionHint }}</p>
       </div>
     </section>
 
@@ -157,58 +158,58 @@
         <div v-if="configTarget" class="modal-overlay" @click.self="closeConfig">
           <div class="modal-content config-modal">
             <h3>配置自动发货</h3>
-            <p class="subtle" style="margin:4px 0 0">商品：{{ configTarget.goods.title }}（ID：{{ configTarget.goods.id }}）</p>
+            <p class="subtle config-target-title">商品：{{ configTarget.goods.title }}（ID：{{ configTarget.goods.id }}）</p>
 
-          <div class="config-tabs">
-            <button v-for="timing in configTimings" :key="timing.key" :class="['config-tab', { active: configTiming === timing.key }]" @click="switchTiming(timing.key)">
-              {{ timing.label }}
-            </button>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-row">
-              <label>启用{{ currentTimingLabel }}</label>
-              <select v-model.number="configForm.enabled" class="input" style="max-width:200px">
-                <option :value="1">启用</option>
-                <option :value="0">停用</option>
-              </select>
+            <div class="config-tabs">
+              <button v-for="timing in configTimings" :key="timing.key" :class="['config-tab', { active: configTiming === timing.key }]" @click="switchTiming(timing.key)">
+                {{ timing.label }}
+              </button>
             </div>
 
-            <div class="form-row">
-              <label>发货模式</label>
-              <select v-model="configForm.mode" class="input" style="max-width:220px">
-                <option value="text">文本发货</option>
-                <option value="card">卡密发货</option>
-              </select>
-            </div>
-
-            <div v-if="configForm.mode === 'text'" class="form-row">
-              <label>关联货源库</label>
-              <div class="toolbar" style="justify-content:flex-start">
-              <select v-model="configForm.sourceId" class="input" style="max-width:320px" :disabled="sourcesAvailable === false">
-                  <option value="">不使用货源库，直接手写内容</option>
-                  <option v-for="source in textSources" :key="source.id" :value="source.id">{{ source.title }}</option>
+            <div class="form-grid">
+              <div class="form-row">
+                <label>启用{{ currentTimingLabel }}</label>
+                <select v-model.number="configForm.enabled" class="input config-select-sm">
+                  <option :value="1">启用</option>
+                  <option :value="0">停用</option>
                 </select>
-                <AppButton @click="goSourceLibrary">管理货源库</AppButton>
               </div>
-              <div v-if="sourcesAvailable === false" class="global-notice error">货源库暂不可用，无法确认可关联的文本货源。</div>
-              <div v-if="configForm.sourceId" class="subtle">
-                已关联货源：{{ sourceTitle(configForm.sourceId) }}
-              </div>
-            </div>
 
-            <div v-if="configForm.mode === 'text'" class="form-row">
-              <label>正文内容</label>
-              <textarea
-                v-model="configForm.content"
-                rows="5"
-                :placeholder="configForm.sourceId ? '已引用货源库正文，可继续补充或覆盖' : '请输入买家将收到的发货内容'"
-              ></textarea>
-            </div>
+              <div class="form-row">
+                <label>发货模式</label>
+                <select v-model="configForm.mode" class="input config-select-md">
+                  <option value="text">文本发货</option>
+                  <option value="card">卡密发货</option>
+                </select>
+              </div>
+
+              <div v-if="configForm.mode === 'text'" class="form-row">
+                <label>关联货源库</label>
+                <div class="toolbar config-source-toolbar">
+                  <select v-model="configForm.sourceId" class="input config-select-lg" :disabled="sourcesAvailable === false">
+                    <option value="">不使用货源库，直接手写内容</option>
+                    <option v-for="source in textSources" :key="source.id" :value="source.id">{{ source.title }}</option>
+                  </select>
+                  <AppButton @click="goSourceLibrary">管理货源库</AppButton>
+                </div>
+                <div v-if="sourcesAvailable === false" class="global-notice error">货源库暂不可用，无法确认可关联的文本货源。</div>
+                <div v-if="configForm.sourceId" class="subtle">
+                  已关联货源：{{ sourceTitle(configForm.sourceId) }}
+                </div>
+              </div>
+
+              <div v-if="configForm.mode === 'text'" class="form-row">
+                <label>正文内容</label>
+                <textarea
+                  v-model="configForm.content"
+                  rows="5"
+                  :placeholder="configForm.sourceId ? '已引用货源库正文，可继续补充或覆盖' : '请输入买家将收到的发货内容'"
+                ></textarea>
+              </div>
 
             <div v-if="configForm.mode === 'card'" class="form-row">
               <label>卡密来源</label>
-              <select v-model="configForm.cardSource" class="input" style="max-width:320px">
+              <select v-model="configForm.cardSource" class="input config-select-lg">
                 <option value="existing">绑定已有卡密分组</option>
                 <option value="direct">直接录入卡密（自动入库）</option>
               </select>
@@ -216,7 +217,7 @@
 
             <div v-if="configForm.mode === 'card' && configForm.cardSource === 'existing'" class="form-row">
               <label>绑定卡密分组</label>
-              <select v-model="configForm.cardGroupId" class="input" style="max-width:320px" :disabled="cardGroupsAvailable === false">
+              <select v-model="configForm.cardGroupId" class="input config-select-lg" :disabled="cardGroupsAvailable === false">
                 <option value="">请选择</option>
                 <option v-for="group in cardGroups" :key="group.id" :value="group.id">{{ group.groupName }}（余 {{ group.remainCount || 0 }}）</option>
               </select>
@@ -262,12 +263,12 @@
 
             <div class="form-row">
               <label>失败重试次数</label>
-              <input v-model.number="configForm.retryCount" type="number" min="0" max="10" class="input" style="max-width:120px" />
+              <input v-model.number="configForm.retryCount" type="number" min="0" max="10" class="input config-number-input" />
             </div>
 
             <div class="form-row">
               <label>库存预警阈值</label>
-              <input v-model.number="configForm.alertThreshold" type="number" min="0" class="input" style="max-width:120px" />
+              <input v-model.number="configForm.alertThreshold" type="number" min="0" class="input config-number-input" />
             </div>
 
             <div class="form-row">
@@ -279,7 +280,7 @@
             </div>
           </div>
 
-          <div class="toolbar" style="justify-content:flex-end;margin-top:16px">
+          <div class="toolbar modal-actions-row">
             <AppButton @click="closeConfig">取消</AppButton>
             <AppButton type="primary" :loading="configSaving" @click="saveConfig">保存配置</AppButton>
           </div>
@@ -289,9 +290,9 @@
     </div>
 
     <div v-if="showBatchDialog" class="modal-overlay" @click.self="showBatchDialog = false">
-      <div class="modal-content">
+      <div class="modal-content batch-modal">
         <h3>批量设置发货配置</h3>
-        <p class="subtle">将影响 <b>{{ filteredGoods.length }}</b> 个商品</p>
+        <p class="subtle config-target-title">将影响 <b>{{ filteredGoods.length }}</b> 个商品</p>
         <div class="form-grid">
           <div class="form-row">
             <label>发货时机</label>
@@ -331,7 +332,7 @@
             </select>
           </div>
         </div>
-        <div class="toolbar" style="justify-content:flex-end">
+        <div class="toolbar modal-actions-row">
           <AppButton @click="showBatchDialog = false">取消</AppButton>
           <AppButton type="primary" :loading="batchLoading" @click="submitBatch">确认执行</AppButton>
         </div>
@@ -511,6 +512,16 @@ const filteredGoods = computed(() => {
 const filteredConfigUnknownCount = computed(() => (
   filteredGoods.value.filter(goods => goods._configUnavailable).length
 ))
+
+const deliveryActionHint = computed(() => {
+  if (configSaving.value || batchLoading.value) return '正在写入发货配置，完成前请避免重复操作。'
+  if (!goodsAvailable.value) return '正在读取商品和发货配置，完成后可批量操作。'
+  if (filteredConfigUnknownCount.value > 0) return `有 ${filteredConfigUnknownCount.value} 个商品配置状态未知，请先刷新或排查后再批量配置。`
+  if (!filteredGoods.value.length) return '当前筛选范围没有可配置商品。'
+  if (sourcesAvailable.value === false) return '文本货源库暂不可用，可先刷新数据或切换为卡密发货。'
+  if (cardGroupsAvailable.value === false) return '卡密分组暂不可用，卡密发货配置需要先恢复库存服务。'
+  return `当前筛选可批量配置 ${filteredGoods.value.length} 个商品。`
+})
 
 const tableRows = computed(() => {
   const start = (current.value - 1) * pageSize.value
@@ -934,6 +945,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .auto-delivery-page {
+  --delivery-text: #101828;
+  --delivery-muted: #64748b;
+  --delivery-soft: #f8fafc;
+  --delivery-line: #e5eaf0;
+  --delivery-primary: #1d4ed8;
+  --delivery-primary-soft: #eff6ff;
+  --delivery-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
   gap: 16px;
   min-width: 0;
@@ -945,7 +963,7 @@ onBeforeUnmount(() => {
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe8e4;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(255, 250, 245, .94) 48%, rgba(246, 248, 252, .98)),
     #fff;
@@ -1022,7 +1040,7 @@ onBeforeUnmount(() => {
   align-content: center;
   padding: 14px;
   border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -1048,6 +1066,22 @@ onBeforeUnmount(() => {
 
 .delivery-command-buttons :deep(.n-button) {
   min-width: 0;
+  transition:
+    transform 150ms var(--delivery-ease),
+    box-shadow 150ms var(--delivery-ease),
+    border-color 150ms var(--delivery-ease),
+    background-color 150ms var(--delivery-ease);
+}
+
+.delivery-command-buttons :deep(.n-button:not(.n-button--disabled):active) {
+  transform: scale(.97);
+}
+
+.delivery-action-hint {
+  margin: 0;
+  color: var(--delivery-muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .delivery-metric-rail {
@@ -1063,7 +1097,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 8px;
   border: 1px solid #e5eaf0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
   overflow: hidden;
@@ -1081,7 +1115,7 @@ onBeforeUnmount(() => {
 .delivery-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1154,7 +1188,7 @@ onBeforeUnmount(() => {
 .delivery-table-panel {
   min-width: 0;
   border: 1px solid #e5eaf0;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
@@ -1274,13 +1308,21 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: 999px;
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   font-weight: 500;
   border: 0;
   font-family: inherit;
+  transition:
+    transform 150ms var(--delivery-ease),
+    background-color 150ms var(--delivery-ease),
+    color 150ms var(--delivery-ease);
+}
+
+.delivery-status:active {
+  transform: scale(.97);
 }
 
 .status-dot {
@@ -1300,7 +1342,7 @@ onBeforeUnmount(() => {
   gap: 4px;
   margin-bottom: 16px;
   background: #f5f6fa;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 3px;
 }
 
@@ -1311,12 +1353,24 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
+  color: var(--delivery-muted);
+  font-family: inherit;
+  font-weight: 650;
+  transition:
+    transform 150ms var(--delivery-ease),
+    background-color 150ms var(--delivery-ease),
+    color 150ms var(--delivery-ease),
+    box-shadow 150ms var(--delivery-ease);
 }
 
 .config-tab.active {
   background: #fff;
-  color: #ff6c2d;
+  color: var(--delivery-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+
+.config-tab:active {
+  transform: scale(.98);
 }
 
 .modal-overlay {
@@ -1331,7 +1385,7 @@ onBeforeUnmount(() => {
 
 .modal-content {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 8px;
   padding: 28px;
   max-width: 560px;
   width: 90%;
@@ -1350,6 +1404,11 @@ onBeforeUnmount(() => {
   font-size: 18px;
 }
 
+.config-target-title {
+  margin: 4px 0 0;
+  line-height: 1.55;
+}
+
 .config-modal .form-row textarea {
   min-height: 60px;
 }
@@ -1363,19 +1422,101 @@ onBeforeUnmount(() => {
 .form-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.form-row > label:first-child {
+  color: var(--delivery-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delivery-v13-shell .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-source-toolbar {
+  justify-content: flex-start;
+}
+
+.config-source-toolbar .config-select-lg {
+  flex: 1 1 260px;
+}
+
+.modal-actions-row {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.delivery-v13-shell .input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--delivery-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--delivery-text);
+  font-family: inherit;
+  font-size: 14px;
+  transition:
+    border-color 150ms var(--delivery-ease),
+    box-shadow 150ms var(--delivery-ease),
+    background-color 150ms var(--delivery-ease);
+}
+
+.delivery-v13-shell .input:focus {
+  outline: none;
+  border-color: var(--delivery-primary);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, .12);
+}
+
+.delivery-v13-shell .input:disabled {
+  cursor: not-allowed;
+  background: var(--delivery-soft);
+  color: #94a3b8;
+}
+
+.config-select-sm {
+  max-width: 200px;
+}
+
+.config-select-md {
+  max-width: 220px;
+}
+
+.config-select-lg {
+  max-width: 320px;
+}
+
+.config-number-input {
+  max-width: 120px;
 }
 
 .form-row textarea {
   width: 100%;
   min-height: 60px;
   padding: 8px 12px;
-  border: 1px solid #ede0db;
-  border-radius: 10px;
+  border: 1px solid var(--delivery-line);
+  border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
   box-sizing: border-box;
+  color: var(--delivery-text);
+  transition:
+    border-color 150ms var(--delivery-ease),
+    box-shadow 150ms var(--delivery-ease),
+    background-color 150ms var(--delivery-ease);
+}
+
+.form-row textarea:focus {
+  outline: none;
+  border-color: var(--delivery-primary);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, .12);
 }
 
 .checkbox-label {
@@ -1399,7 +1540,7 @@ onBeforeUnmount(() => {
   margin-bottom: 12px;
   background: linear-gradient(90deg, #fff8e6, #fffbf2);
   border: 1px solid #ffd98a;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 13px;
   color: #6b4f12;
   line-height: 1.6;
@@ -1451,7 +1592,7 @@ onBeforeUnmount(() => {
   .delivery-filter-card,
   .delivery-table-panel {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .delivery-command-main h2 {
@@ -1546,7 +1687,7 @@ onBeforeUnmount(() => {
     margin-bottom: 10px;
     font-size: 12px;
     line-height: 1.55;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .timing-notice-icon {
@@ -1564,7 +1705,7 @@ onBeforeUnmount(() => {
     max-width: 100%;
     width: 100%;
     padding: 16px;
-    border-radius: 16px 16px 0 0;
+    border-radius: 8px 8px 0 0;
     max-height: 90vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -1589,6 +1730,13 @@ onBeforeUnmount(() => {
     padding: 8px 10px;
     font-size: 13px;
     border-radius: 8px;
+  }
+
+  .config-select-sm,
+  .config-select-md,
+  .config-select-lg,
+  .config-number-input {
+    max-width: none;
   }
 
   .checkbox-label {
