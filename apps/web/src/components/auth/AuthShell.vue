@@ -55,12 +55,12 @@
 
             <div class="auth-preview-content">
               <div class="auth-preview-chart">
-                <span style="height:42%"></span>
-                <span style="height:68%"></span>
-                <span style="height:54%"></span>
-                <span style="height:82%"></span>
-                <span style="height:63%"></span>
-                <span style="height:74%"></span>
+                <span class="auth-chart-bar-42"></span>
+                <span class="auth-chart-bar-68"></span>
+                <span class="auth-chart-bar-54"></span>
+                <span class="auth-chart-bar-82"></span>
+                <span class="auth-chart-bar-63"></span>
+                <span class="auth-chart-bar-74"></span>
               </div>
               <div class="auth-preview-list">
                 <div><i></i><span></span><b></b></div>
@@ -254,7 +254,7 @@ function openDoc(title) {
 .auth-v8-shell .auth-v3-panel {
   min-width: 0;
   border: 1px solid #dbe4f0 !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   background: #fff !important;
   box-shadow: 0 24px 60px rgba(15, 23, 42, .09) !important;
 }
@@ -275,10 +275,10 @@ function openDoc(title) {
   color: #2563eb !important;
   background: #eef4ff;
   border: 1px solid #dbe7ff;
-  border-radius: 999px;
+  border-radius: 999rem;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -311,7 +311,7 @@ function openDoc(title) {
   display: grid;
   grid-template-columns: 60px minmax(0, 1fr);
   border: 1px solid #d9e3f1;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #0f172a;
   color: #fff;
   overflow: hidden;
@@ -333,7 +333,7 @@ function openDoc(title) {
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   overflow: hidden;
 }
@@ -348,7 +348,7 @@ function openDoc(title) {
 .auth-v8-shell .auth-preview-sidebar span {
   width: 32px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: rgba(255, 255, 255, .18);
 }
 
@@ -376,7 +376,7 @@ function openDoc(title) {
 .auth-v8-shell .auth-preview-float {
   border: 1px solid rgba(255, 255, 255, .12);
   background: rgba(255, 255, 255, .07);
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .auth-v8-shell .auth-preview-toolbar {
@@ -409,7 +409,7 @@ function openDoc(title) {
   padding: 0 10px;
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: 999rem;
   color: #86efac;
   background: rgba(22, 163, 74, .14);
   font-size: 11px;
@@ -460,9 +460,16 @@ function openDoc(title) {
 .auth-v8-shell .auth-preview-chart span {
   flex: 1;
   min-width: 8px;
-  border-radius: 999px 999px 5px 5px;
+  border-radius: 8px 8px 5px 5px;
   background: linear-gradient(180deg, #60a5fa, #14b8a6);
 }
+
+.auth-v8-shell .auth-chart-bar-42 { height: 42%; }
+.auth-v8-shell .auth-chart-bar-68 { height: 68%; }
+.auth-v8-shell .auth-chart-bar-54 { height: 54%; }
+.auth-v8-shell .auth-chart-bar-82 { height: 82%; }
+.auth-v8-shell .auth-chart-bar-63 { height: 63%; }
+.auth-v8-shell .auth-chart-bar-74 { height: 74%; }
 
 .auth-v8-shell .auth-preview-list {
   display: grid;
@@ -483,7 +490,7 @@ function openDoc(title) {
 .auth-v8-shell .auth-preview-list i {
   width: 8px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: 50%;
   background: #f59e0b;
 }
 
@@ -498,7 +505,7 @@ function openDoc(title) {
 .auth-v8-shell .auth-preview-list span,
 .auth-v8-shell .auth-preview-list b {
   height: 7px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: rgba(255, 255, 255, .18);
 }
 
@@ -606,7 +613,7 @@ function openDoc(title) {
   color: #2563eb;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: .08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -648,7 +655,7 @@ function openDoc(title) {
   min-height: 52px !important;
   padding: 0 15px !important;
   border: 1px solid #dfe6f2 !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   background: #fbfcff !important;
   transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
 }
@@ -693,7 +700,7 @@ function openDoc(title) {
   height: 48px !important;
   margin-top: 2px !important;
   border: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   font-weight: 700;
   letter-spacing: 0;
   box-shadow: 0 12px 24px rgba(37, 99, 235, .18) !important;
@@ -709,7 +716,7 @@ function openDoc(title) {
   color: #667085;
   background: #f8fafc;
   border: 1px solid #edf0f5;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 12px;
   line-height: 1.7;
 }
