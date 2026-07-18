@@ -1,5 +1,5 @@
 <template>
-  <div class="ops-rag">
+  <div class="ops-rag ops-rag-v21-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="kbsWarning" class="global-notice warning" role="status">{{ kbsWarning }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
@@ -18,8 +18,9 @@
     </section>
 
     <div class="toolbar">
-      <AppButton :disabled="kbsLoading" @click="refreshKbs">{{ kbsLoading ? '刷新中...' : '刷新' }}</AppButton>
-      <AppButton type="primary" :disabled="kbsAvailable !== true" @click="openCreateKb">+ 新建知识库</AppButton>
+      <AppButton :title="createKbActionHint" :disabled="kbsLoading" @click="refreshKbs">{{ kbsLoading ? '刷新中...' : '刷新' }}</AppButton>
+      <AppButton type="primary" :title="createKbActionHint" :disabled="kbsAvailable !== true" @click="openCreateKb">+ 新建知识库</AppButton>
+      <p class="rag-action-hint">{{ createKbActionHint }}</p>
     </div>
 
     <section class="rag-kb-card">
@@ -58,7 +59,7 @@
     </section>
     <Teleport to="body">
       <div v-if="kbModal.visible" class="modal-mask" @click.self="closeKbModal">
-        <section class="xy-modal" style="width:560px">
+        <section class="xy-modal rag-modal rag-kb-form-modal">
           <button class="modal-close" @click="closeKbModal"><Icon name="close" /></button>
           <h2>{{ kbModal.isEdit ? '编辑知识库' : '新建知识库' }}</h2>
           <form class="modal-form" @submit.prevent="submitKb">
@@ -96,8 +97,9 @@
               </div>
             </div>
             <div class="modal-actions">
+              <p class="rag-action-hint modal-action-hint">{{ kbFormActionHint }}</p>
               <AppButton native-type="button" @click="closeKbModal">取消</AppButton>
-              <AppButton type="primary" native-type="submit" :loading="kbModal.submitting">{{ kbModal.isEdit ? '保存' : '创建' }}</AppButton>
+              <AppButton type="primary" native-type="submit" :title="kbFormActionHint" :loading="kbModal.submitting">{{ kbModal.isEdit ? '保存' : '创建' }}</AppButton>
             </div>
           </form>
         </section>
@@ -106,7 +108,7 @@
 
     <Teleport to="body">
       <div v-if="detailKb" class="modal-mask" @click.self="closeDetail">
-        <section class="xy-modal" style="width:820px">
+        <section class="xy-modal rag-modal rag-detail-modal">
           <button class="modal-close" @click="closeDetail"><Icon name="close" /></button>
           <h2>知识库：{{ detailKb.name }}</h2>
           <p v-if="detailKb.description" class="subtle">{{ detailKb.description }}</p>
@@ -118,11 +120,11 @@
             <textarea v-model="uploadForm.content" class="input" :disabled="!canMutateDocs" rows="3" placeholder="输入文本内容（手动上传）"></textarea>
             <div class="detail-toolbar-row">
               <input ref="fileInput" type="file" accept=".txt,.md,text/plain,text/markdown" :disabled="!canMutateDocs" @change="onFilePick" />
-              <AppButton type="primary" :loading="uploading" :disabled="uploading || !canMutateDocs" @click="uploadManual">上传文本</AppButton>
-              <AppButton :loading="uploading" :disabled="uploading || !pickedFile || !canMutateDocs" @click="uploadFile">上传文件</AppButton>
+              <AppButton type="primary" :title="uploadActionHint" :loading="uploading" :disabled="uploading || !canMutateDocs" @click="uploadManual">上传文本</AppButton>
+              <AppButton :title="uploadActionHint" :loading="uploading" :disabled="uploading || !pickedFile || !canMutateDocs" @click="uploadFile">上传文件</AppButton>
               <AppButton :disabled="docsLoading" @click="loadDocs">{{ docsLoading ? '刷新中...' : '刷新' }}</AppButton>
             </div>
-            <small class="upload-hint">仅支持 UTF-8 编码的 .txt / .md 文档，单个文件不超过 10MB。</small>
+            <small class="upload-hint">{{ uploadActionHint }}</small>
           </div>
 
           <div v-if="docsRefreshing" class="refresh-status" role="status" aria-live="polite">
@@ -132,7 +134,7 @@
           <EmptyState v-else-if="docsAvailable === false" icon="⚠️" title="文档列表暂不可用" description="当前无法确认已有文档；上传、删除和重建索引均已禁用。">
             <template #actions><AppButton @click="loadDocs">重新加载</AppButton></template>
           </EmptyState>
-          <BaseTable v-else-if="docsAvailable === true" :columns="docCols" :rows="docs" style="margin-top:12px">
+          <BaseTable v-else-if="docsAvailable === true" class="rag-doc-table" :columns="docCols" :rows="docs">
             <template #fileName="{ row }"><strong>{{ row.fileName || '-' }}</strong></template>
             <template #fileType="{ row }">{{ row.fileType || '-' }}</template>
             <template #fileSize="{ row }">{{ formatSize(row.fileSize) }}</template>
@@ -165,7 +167,7 @@
     </Teleport>
     <Teleport to="body">
       <div v-if="chunksModal.visible" class="modal-mask" @click.self="chunksModal.visible = false">
-        <section class="xy-modal" style="width:720px">
+        <section class="xy-modal rag-modal rag-chunks-modal">
           <button class="modal-close" @click="chunksModal.visible = false"><Icon name="close" /></button>
           <h2>分块列表（共 {{ chunksModal.list.length }} 块）</h2>
           <div class="chunks-list">
@@ -184,13 +186,14 @@
 
     <Teleport to="body">
       <div v-if="searchModal.visible" class="modal-mask" @click.self="searchModal.visible = false">
-        <section class="xy-modal" style="width:680px">
+        <section class="xy-modal rag-modal rag-search-modal">
           <button class="modal-close" @click="searchModal.visible = false"><Icon name="close" /></button>
           <h2>检索验证 - {{ searchModal.kbName }}</h2>
           <div class="search-box">
             <input v-model="searchModal.query" class="input" placeholder="输入查询文本" @keyup.enter="runSearch" />
-            <AppButton type="primary" :loading="searchModal.loading" @click="runSearch">检索</AppButton>
+            <AppButton type="primary" :title="searchActionHint" :loading="searchModal.loading" @click="runSearch">检索</AppButton>
           </div>
+          <p class="rag-action-hint search-action-hint">{{ searchActionHint }}</p>
           <div class="search-hits">
             <EmptyState v-if="searchAvailable === false" icon="⚠️" title="检索结果暂不可用" description="本次检索失败，不会把失败显示为未命中；请检查服务后重试。" />
             <div v-for="(h, i) in searchModal.hits" :key="i" class="hit-item">
@@ -294,6 +297,31 @@ const canMutateDocs = computed(() => (
 ))
 const kbsRefreshing = computed(() => kbsLoading.value && kbsAvailable.value === true)
 const docsRefreshing = computed(() => docsLoading.value && docsAvailable.value === true)
+const createKbActionHint = computed(() => {
+  if (kbsLoading.value && kbsAvailable.value !== true) return '知识库列表正在初始化，加载完成后才能创建新知识库。'
+  if (kbsRefreshing.value) return '知识库列表正在后台刷新，当前记录仍可继续查看。'
+  if (kbsAvailable.value !== true) return '知识库状态未知，请先重新加载，避免覆盖未知数据。'
+  return '知识库列表已确认可用，可以创建新的索引空间。'
+})
+const kbFormActionHint = computed(() => {
+  if (kbModal.submitting) return '知识库配置正在保存，请等待服务端确认。'
+  if (!String(kbModal.form.name || '').trim()) return '先填写知识库名称，建议使用业务场景命名。'
+  if (kbModal.form.embeddingBaseUrl && !String(kbModal.form.embeddingBaseUrl).startsWith('https://')) return '向量模型接口地址建议使用公网 HTTPS，保存后请用检索验证确认。'
+  return kbModal.isEdit ? '配置已可保存，保存后建议刷新文档索引状态。' : '必填项已完成，可以创建知识库。'
+})
+const uploadActionHint = computed(() => {
+  if (uploading.value) return '文档正在上传并生成索引，请等待处理完成。'
+  if (!canMutateDocs.value) return '文档列表尚未确认可用，暂时不能上传或重建索引。'
+  if (uploadForm.content.trim()) return '已填写手动文本，可按“上传文本”保存并生成索引。'
+  if (pickedFile.value) return `已选择 ${pickedFile.value.name}，可按“上传文件”生成索引。`
+  return '仅支持 UTF-8 编码的 .txt / .md 文档，单个文件不超过 10MB。'
+})
+const searchActionHint = computed(() => {
+  if (searchModal.loading) return '正在检索相似分块，请等待结果返回。'
+  if (!searchModal.kbId) return '请先选择一个知识库再做检索验证。'
+  if (!searchModal.query.trim()) return '输入查询文本后，可以验证当前知识库的召回效果。'
+  return '查询已填写，可以发起 Top 5 相似分块检索。'
+})
 
 function kbMetric(value) {
   return kbsAvailable.value === true ? value : '—'
@@ -823,26 +851,53 @@ onBeforeUnmount(() => {
   line-height: 1.6;
   font-weight: 400;
 }
-.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ops-rag-v21-shell .toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--rag-line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+.rag-action-hint {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--rag-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; padding: 6px 4px; }
 .form-row { display: flex; flex-direction: column; gap: 6px; }
 .form-row-full { grid-column: 1 / -1; }
 .form-row label { font-size: 13px; color: #526079; font-weight: 600; }
 .form-row label em { color: #ef4444; font-style: normal; margin-left: 2px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.modal-action-hint { margin-right: auto; }
 .subtle { color: #758198; font-size: 13px; margin: 4px 0 12px; }
-.detail-toolbar { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 12px; }
+.rag-modal {
+  max-width: calc(100vw - 32px);
+}
+.rag-kb-form-modal { width: 560px; }
+.rag-detail-modal { width: 820px; }
+.rag-chunks-modal { width: 720px; }
+.rag-search-modal { width: 680px; }
+.detail-toolbar { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 8px; }
 .detail-toolbar-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .upload-hint { color: #667085; line-height: 1.6; }
+.rag-doc-table { margin-top: 12px; }
 .parse-status-cell { display: grid; gap: 4px; max-width: 240px; }
 .parse-status-cell small { color: #b42318; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chunks-list { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-.chunk-item { background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 10px; padding: 10px 12px; }
+.chunk-item { background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 8px; padding: 10px 12px; }
 .chunk-head { display: flex; justify-content: space-between; margin-bottom: 6px; color: #526079; font-size: 12px; }
 .chunk-item pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; font-size: 13px; color: #2d3448; }
 .search-box { display: flex; gap: 8px; margin-bottom: 14px; }
+.search-action-hint { margin: -6px 0 12px; }
 .search-hits { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-.hit-item { background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 10px; padding: 10px 12px; }
+.hit-item { background: #F7F7F8; border: 1px solid #e4ebf5; border-radius: 8px; padding: 10px 12px; }
 .hit-head { display: flex; justify-content: space-between; margin-bottom: 6px; color: #526079; font-size: 12px; }
 .hit-item pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; font-size: 13px; color: #2d3448; }
 
@@ -873,7 +928,7 @@ onBeforeUnmount(() => {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    border-radius: 14px 14px 0 0 !important;
+    border-radius: 8px 8px 0 0 !important;
     max-height: 90vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -922,7 +977,7 @@ onBeforeUnmount(() => {
   .detail-toolbar {
     padding: 10px;
     gap: 8px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .detail-toolbar-row {
