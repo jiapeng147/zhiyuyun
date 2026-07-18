@@ -1,10 +1,10 @@
 <template>
-  <div class="auto-reply-shell auto-reply-v9-shell">
+  <div class="auto-reply-shell auto-reply-v9-shell auto-reply-v16-shell">
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
     <div v-if="availabilityNotice" class="global-notice warn auto-reply-availability-notice" role="status">
       <span>{{ availabilityNotice }} 重新同步成功前，所有自动回复范围写操作均已禁用。</span>
-      <button type="button" class="retry-btn" :disabled="isRefreshing || scopeUpdating || batchUpdating" @click="refreshCurrentScope">
+      <button type="button" class="retry-btn" :title="autoReplyActionHint" :disabled="isRefreshing || scopeUpdating || batchUpdating" @click="refreshCurrentScope">
         {{ isRefreshing ? '同步中...' : '重新同步' }}
       </button>
     </div>
@@ -20,14 +20,15 @@
         </div>
 
         <div class="auto-reply-hero-actions">
-          <button type="button" class="auto-reply-action-button" :disabled="isRefreshing || scopeUpdating || batchUpdating" @click="refreshCurrentScope">
+          <button type="button" class="auto-reply-action-button" :title="autoReplyActionHint" :disabled="isRefreshing || scopeUpdating || batchUpdating" @click="refreshCurrentScope">
             <span class="auto-reply-button-dot"></span>
             {{ isRefreshing ? '同步中...' : '同步当前范围' }}
           </button>
-          <button type="button" class="auto-reply-action-button primary" @click="goToAiCsSettings">
+          <button type="button" class="auto-reply-action-button primary" :title="autoReplyActionHint" @click="goToAiCsSettings">
             <span class="auto-reply-button-dot"></span>
             前往 AI 客服配置
           </button>
+          <p class="auto-reply-action-hint">{{ autoReplyActionHint }}</p>
         </div>
       </div>
 
@@ -1129,6 +1130,16 @@ const currentScopeEnabled = computed(() => {
   return globalEnabled.value
 })
 
+const autoReplyActionHint = computed(() => {
+  if (isRefreshing.value) return '正在同步当前自动回复范围，完成前请避免重复操作。'
+  if (scopeUpdating.value || batchUpdating.value) return '正在写入自动回复范围配置，完成前请不要重复提交。'
+  if (!scopeWritesAvailable.value) return availabilityNotice.value || '自动回复范围依赖数据暂不可用，写操作已锁定。'
+  if (selectedProductIds.value.length > 1) return `已选择 ${selectedProductIds.value.length} 个商品，可批量开启或关闭自动回复。`
+  if (selectedProductIds.value.length === 1) return `当前商品自动回复${currentScopeEnabled.value ? '已开启' : '未开启'}，可单独切换。`
+  if (selectedAccount.value) return `当前账号自动回复${currentScopeEnabled.value ? '已开启' : '未开启'}，商品可继续细分配置。`
+  return `全局自动回复${currentScopeEnabled.value ? '已开启' : '未开启'}，可切换账号或商品查看覆盖范围。`
+})
+
 async function refreshCurrentScope() {
   if (isRefreshing.value || scopeUpdating.value || batchUpdating.value) return
   isRefreshing.value = true
@@ -1405,7 +1416,7 @@ onMounted(async () => {
   color: #c6643a;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -1421,7 +1432,7 @@ onMounted(async () => {
   margin: 10px 0;
   font-size: 44px;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   color: #5d2b16;
 }
 
@@ -1436,13 +1447,16 @@ onMounted(async () => {
 .auto-reply-hero-actions {
   display: flex;
   gap: 10px;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  max-width: 440px;
 }
 
 .auto-reply-action-button {
   min-height: 42px;
   border: 1px solid #f6e3db;
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
   padding: 0 16px;
   display: inline-flex;
@@ -1452,6 +1466,12 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 700;
   box-shadow: 0 10px 24px rgba(130, 68, 42, 0.08);
+  transition:
+    transform 140ms var(--auto-reply-ease),
+    border-color 140ms var(--auto-reply-ease),
+    background-color 140ms var(--auto-reply-ease),
+    box-shadow 140ms var(--auto-reply-ease),
+    color 140ms var(--auto-reply-ease);
 }
 
 .auto-reply-action-button.primary {
@@ -1471,6 +1491,19 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+.auto-reply-action-button:not(:disabled):active {
+  transform: scale(.97);
+}
+
+.auto-reply-action-hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--auto-reply-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: right;
+}
+
 .auto-reply-button-dot {
   width: 7px;
   height: 7px;
@@ -1483,7 +1516,7 @@ onMounted(async () => {
 .auto-reply-hero-side,
 .auto-reply-panel {
   border: 1px solid #e4ebf7;
-  border-radius: 28px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -1505,7 +1538,7 @@ onMounted(async () => {
   height: 320px;
   right: -120px;
   top: -120px;
-  border-radius: 48px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   transform: rotate(18deg);
 }
@@ -1533,7 +1566,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.12);
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .auto-reply-hero-kicker::before {
@@ -1558,7 +1591,7 @@ onMounted(async () => {
   margin: 16px 0 14px;
   font-size: 34px;
   line-height: 1.15;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .auto-reply-hero-main p {
@@ -1597,7 +1630,7 @@ onMounted(async () => {
 
 .auto-reply-hero-metric {
   padding: 16px 18px;
-  border-radius: 20px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(6px);
@@ -1607,7 +1640,7 @@ onMounted(async () => {
   display: block;
   margin-bottom: 6px;
   font-size: 26px;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .auto-reply-hero-metric span {
@@ -1637,7 +1670,7 @@ onMounted(async () => {
   margin: 0 0 8px;
   color: #6d83a7;
   font-size: 14px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -1646,7 +1679,7 @@ onMounted(async () => {
   display: block;
   font-size: 30px;
   line-height: 1.06;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   color: #5f2c16;
 }
 
@@ -1674,7 +1707,7 @@ onMounted(async () => {
 
 .auto-reply-side-note {
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid #e5edf8;
   background: linear-gradient(135deg, #f7faff, #eef5ff);
 }
@@ -1704,7 +1737,7 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #E8E8E8;
   background: #FFFFFF;
 }
@@ -1720,7 +1753,7 @@ onMounted(async () => {
   display: block;
   color: #5f2d17;
   font-size: 18px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .auto-reply-status-chip,
@@ -1801,7 +1834,7 @@ onMounted(async () => {
 .auto-reply-panel-head h3 {
   margin: 0 0 8px;
   font-size: 22px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: #5f2d18;
 }
 
@@ -1851,7 +1884,7 @@ onMounted(async () => {
 
 .auto-reply-account-item {
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 8px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -1887,7 +1920,7 @@ onMounted(async () => {
 .auto-reply-account-badge {
   width: 42px;
   height: 42px;
-  border-radius: 15px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
   flex: none;
@@ -1921,7 +1954,7 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 15px;
+  border-radius: 8px;
   display: block;
 }
 
@@ -1956,7 +1989,7 @@ onMounted(async () => {
 .auto-reply-mini-stat {
   min-width: 92px;
   padding: 10px 12px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid #e9eff9;
 }
@@ -1966,7 +1999,7 @@ onMounted(async () => {
   margin-bottom: 4px;
   color: #5f2d18;
   font-size: 17px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .auto-reply-mini-stat span {
@@ -1997,7 +2030,7 @@ onMounted(async () => {
   flex: 1;
   min-height: 44px;
   border: 1px solid #f4e1d9;
-  border-radius: 14px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #ffffff, #f7faff);
   padding: 0 14px;
   display: flex;
@@ -2078,7 +2111,7 @@ onMounted(async () => {
   margin: 18px;
   padding: 22px 18px;
   border: 1px solid #f0d6a7;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #fffaf0;
   color: #846128;
   text-align: center;
@@ -2095,7 +2128,7 @@ onMounted(async () => {
   min-height: 34px;
   padding: 0 14px;
   border: 1px solid currentColor;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font-weight: 800;
@@ -2126,7 +2159,7 @@ onMounted(async () => {
 
 .auto-reply-product-item {
   display: block;
-  border-radius: 18px;
+  border-radius: 8px;
   padding: 14px;
 }
 
@@ -2195,7 +2228,7 @@ onMounted(async () => {
 .auto-reply-selection-bar {
   margin: 0 18px 18px;
   padding: 14px 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #743317, #ff6e30);
   color: #fff;
   display: flex;
@@ -2222,7 +2255,7 @@ onMounted(async () => {
 .auto-reply-selection-actions .fill {
   min-height: 34px;
   padding: 0 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   font-size: 12px;
@@ -2261,7 +2294,7 @@ onMounted(async () => {
   color: #5f2d18;
   font-size: 30px;
   line-height: 1.1;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .auto-reply-strategy-copy p {
@@ -2290,7 +2323,7 @@ onMounted(async () => {
 
 .auto-reply-toggle-box {
   padding: 14px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid #dfebff;
   background: linear-gradient(135deg, #edf4ff, #FAFAFA);
   display: grid;
@@ -2302,7 +2335,7 @@ onMounted(async () => {
 .auto-reply-toggle-box b {
   color: #6e83a6;
   font-size: 12px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -2378,7 +2411,7 @@ onMounted(async () => {
 .auto-reply-metric-card {
   min-height: 116px;
   padding: 18px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid #e7eef8;
   background: linear-gradient(180deg, #ffffff, #FAFAFA);
   box-shadow: 0 10px 24px rgba(130, 68, 42, 0.08);
@@ -2416,7 +2449,7 @@ onMounted(async () => {
   color: #5d2c17;
   font-size: 28px;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .auto-reply-metric-card span {
@@ -2435,7 +2468,7 @@ onMounted(async () => {
 
 .auto-reply-summary-block {
   padding: 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #e7eef8;
   background: linear-gradient(180deg, #ffffff, #f9fbff);
 }
@@ -2446,7 +2479,7 @@ onMounted(async () => {
   color: #7187aa;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -2464,7 +2497,7 @@ onMounted(async () => {
 .auto-reply-logic-step {
   position: relative;
   padding: 14px 14px 14px 52px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #e7eef8;
   background: linear-gradient(180deg, #ffffff, #f9fbff);
 }
@@ -2507,7 +2540,7 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #e7eef8;
   background: linear-gradient(180deg, #ffffff, #f9fbff);
 }
@@ -2524,12 +2557,12 @@ onMounted(async () => {
   color: #5f2d17;
   font-size: 24px;
   font-weight: 900;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .auto-reply-impact-note {
   padding: 14px 16px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid rgba(20, 184, 166, 0.14);
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(24, 160, 88, 0.06));
   color: #79422a;
@@ -2668,7 +2701,7 @@ button:disabled {
   /* Hero 指标卡：单列 + 收敛 */
   .auto-reply-hero-metric {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-hero-metric b {
@@ -2694,7 +2727,7 @@ button:disabled {
 
   .auto-reply-side-note {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-side-note p {
@@ -2704,7 +2737,7 @@ button:disabled {
 
   .auto-reply-side-item {
     padding: 10px 12px;
-    border-radius: 14px;
+    border-radius: 8px;
     gap: 10px;
   }
 
@@ -2746,7 +2779,7 @@ button:disabled {
   /* 账号列表项收敛 */
   .auto-reply-account-item {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-account-row {
@@ -2760,7 +2793,7 @@ button:disabled {
   .auto-reply-account-badge {
     width: 36px;
     height: 36px;
-    border-radius: 12px;
+    border-radius: 8px;
     font-size: 12px;
   }
 
@@ -2783,7 +2816,7 @@ button:disabled {
     min-width: 0;
     flex: 1 1 calc(33.3% - 6px);
     padding: 8px 10px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .auto-reply-mini-stat b {
@@ -2809,7 +2842,7 @@ button:disabled {
 
   .auto-reply-search {
     min-height: 40px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .auto-reply-search input {
@@ -2820,7 +2853,7 @@ button:disabled {
     min-height: 40px;
     padding: 0 14px;
     font-size: 13px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .auto-reply-filter-row {
@@ -2842,7 +2875,7 @@ button:disabled {
 
   .auto-reply-product-item {
     padding: 10px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-product-top {
@@ -2869,7 +2902,7 @@ button:disabled {
   .auto-reply-selection-bar {
     margin: 0 12px 12px;
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
     gap: 10px;
   }
 
@@ -2909,7 +2942,7 @@ button:disabled {
 
   .auto-reply-toggle-box {
     padding: 10px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-toggle-box strong {
@@ -2920,7 +2953,7 @@ button:disabled {
   .auto-reply-metric-card {
     min-height: 0;
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-metric-card b {
@@ -2947,7 +2980,7 @@ button:disabled {
 
   .auto-reply-summary-block {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-summary-block label {
@@ -2967,7 +3000,7 @@ button:disabled {
   /* 生效逻辑步骤收敛 */
   .auto-reply-logic-step {
     padding: 10px 10px 10px 44px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-logic-step::before {
@@ -2994,7 +3027,7 @@ button:disabled {
     align-items: flex-start;
     gap: 6px;
     padding: 10px 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 
   .auto-reply-impact-row strong {
@@ -3014,7 +3047,7 @@ button:disabled {
 
   .auto-reply-impact-note {
     padding: 10px 12px;
-    border-radius: 14px;
+    border-radius: 8px;
     font-size: 11px;
     line-height: 1.65;
   }
