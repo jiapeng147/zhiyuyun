@@ -1,5 +1,5 @@
 <template>
-  <div class="card-warehouse-page">
+  <div class="card-warehouse-page warehouse-v14-shell">
     <div class="card-warehouse-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="groupsWarning" class="global-notice warning" role="status">{{ groupsWarning }}</div>
@@ -26,9 +26,10 @@
           <strong>{{ selected ? '分组已选' : '全局操作' }}</strong>
         </div>
         <div class="warehouse-command-buttons">
-          <n-button :loading="groupsLoading" @click="load">刷新库存</n-button>
-          <n-button type="primary" @click="openCreateDialog">新建卡密组</n-button>
+          <n-button :title="warehouseActionHint" :loading="groupsLoading" @click="load">刷新库存</n-button>
+          <n-button type="primary" :title="warehouseActionHint" :disabled="saving || importing" @click="openCreateDialog">新建卡密组</n-button>
         </div>
+        <p class="warehouse-action-hint">{{ warehouseActionHint }}</p>
       </div>
     </section>
 
@@ -69,13 +70,16 @@
         </EmptyState>
         <BaseTable v-else-if="groupsAvailable === true" :columns="groupCols" :rows="groupRows">
           <template #name="{row}">
-            <div><strong>{{ row.groupName }}</strong><em v-if="row.remark" class="subtle" style="margin-left:6px">{{ row.remark }}</em></div>
+            <div class="group-name-cell">
+              <strong>{{ row.groupName }}</strong>
+              <em v-if="row.remark" class="subtle group-remark">{{ row.remark }}</em>
+            </div>
           </template>
           <template #cardType="{row}">
             <Badge>{{ cardTypeLabel(row.cardType) }}</Badge>
           </template>
           <template #remain="{row}">
-            <b :style="{ color: row.remainCount < (row.alertThreshold || 10) ? '#ef4444' : '#16bf78' }">{{ row.remainCount }}</b>
+            <b :class="['remain-count', remainToneClass(row)]">{{ row.remainCount }}</b>
           </template>
           <template #status="{row}">
             <Badge :type="row.status === 1 ? 'green' : 'orange'">{{ row.status === 1 ? '启用' : '禁用' }}</Badge>
@@ -118,18 +122,18 @@
           <div v-if="importMode === 'paste'" class="form-row">
             <label>每行一条卡密</label>
             <textarea v-model="bulkText" class="input" rows="6" placeholder="CARD-AAAA-BBBB&#10;CARD-CCCC-DDDD&#10;支持格式：卡密内容&#10;卡号----密码（卡号+密码类型）"></textarea>
-            <span class="subtle" style="margin-top:4px">{{ bulkCount }} 条</span>
+            <span class="subtle bulk-count-note">{{ bulkCount }} 条</span>
           </div>
           <div v-if="importMode === 'file'" class="form-row">
             <label>选择文件（TXT / CSV）</label>
-            <input ref="fileInputRef" type="file" accept=".txt,.csv" style="display:none" @change="handleFileSelect">
+            <input ref="fileInputRef" type="file" accept=".txt,.csv" class="file-input-hidden" @change="handleFileSelect">
             <button type="button" class="file-drop-zone" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleFileDrop">
               <span v-if="!importFileName">点击或拖拽 TXT/CSV 文件到此处</span>
               <span v-else class="file-name">{{ importFileName }}</span>
             </button>
-            <span class="subtle" style="margin-top:4px">文件每行一条卡密，支持逗号/制表符/----分隔卡号和密码</span>
+            <span class="subtle file-format-note">文件每行一条卡密，支持逗号/制表符/----分隔卡号和密码</span>
           </div>
-          <div class="form-row" style="flex-direction:row;align-items:center;gap:12px">
+          <div class="form-row import-action-row">
             <AppButton type="primary" :disabled="importing || !importGroupId" @click="submitImport">
               {{ importing ? '导入中...' : '确认导入' }}
             </AppButton>
@@ -151,7 +155,7 @@
             <h3>{{ selected ? selected.groupName : '卡密详情' }}</h3>
           </div>
         </header>
-        <EmptyState v-if="!selected" icon="👈" title="请选择卡密分组" description="从左侧列表选择一个卡密组，查看卡密明细、使用记录和导入历史。" style="padding:40px 0" />
+        <EmptyState v-if="!selected" icon="👈" title="请选择卡密分组" description="从左侧列表选择一个卡密组，查看卡密明细、使用记录和导入历史。" class="detail-empty-state" />
         <template v-else>
           <div class="tab-bar">
             <button v-for="t in tabs" :key="t.key" :class="['tab-btn', { active: activeTab === t.key }]" @click="switchTab(t.key)">{{ t.label }}</button>
@@ -162,9 +166,9 @@
             <div v-if="itemsRefreshing" class="refresh-status" role="status" aria-live="polite">
               正在刷新卡密明细，现有数据仍可查看。
             </div>
-            <div class="toolbar" style="margin-bottom:8px">
+            <div class="toolbar detail-toolbar">
               <span class="table-info">共 <b>{{ itemsAvailable === false ? '—' : itemTotal }}</b> 条卡密</span>
-              <select v-model="itemStatusFilter" class="input" style="max-width:140px;margin-left:auto" @change="filterItems">
+              <select v-model="itemStatusFilter" class="input item-status-select" @change="filterItems">
                 <option value="">全部状态</option>
                 <option value="0">未使用</option>
                 <option value="1">已锁定</option>
@@ -209,7 +213,7 @@
             <div v-if="usageRefreshing" class="refresh-status" role="status" aria-live="polite">
               正在刷新使用记录，现有数据仍可查看。
             </div>
-            <div class="toolbar" style="margin-bottom:8px">
+            <div class="toolbar detail-toolbar">
               <span class="table-info">共 <b>{{ usageAvailable === false ? '—' : usageTotal }}</b> 条使用记录</span>
             </div>
             <EmptyState v-if="usageLoading && usageAvailable !== true" icon="⏳" title="使用记录加载中" description="正在读取当前分组的卡密使用记录。" />
@@ -277,7 +281,7 @@
     </div>
     <!-- Edit / Create Dialog -->
     <div v-if="editDialogVisible" class="modal-overlay" @click.self="closeEditDialog">
-      <div class="modal-content">
+      <div class="modal-content warehouse-edit-modal">
         <h3>{{ editForm.id ? '编辑卡密分组' : '新建卡密分组' }}</h3>
         <div class="form-grid">
           <div class="form-row">
@@ -321,12 +325,12 @@
               <option :value="0">禁用</option>
             </select>
           </div>
-          <div class="form-row" style="grid-column:1/-1">
+          <div class="form-row edit-remark-row">
             <label>备注</label>
             <textarea v-model="editForm.remark" class="input" rows="3" placeholder="可选备注信息"></textarea>
           </div>
         </div>
-        <div class="toolbar" style="justify-content:flex-end;margin-top:20px">
+        <div class="toolbar modal-actions-row">
           <AppButton @click="closeEditDialog">取消</AppButton>
           <AppButton type="primary" :loading="saving" @click="saveGroup">{{ editForm.id ? '保存' : '创建' }}</AppButton>
         </div>
@@ -497,6 +501,10 @@ const lowStockCount = computed(() => {
   return groups.value.filter(g => Number(g.remainCount || 0) < (g.alertThreshold || 10)).length
 })
 
+function remainToneClass(row) {
+  return Number(row.remainCount || 0) < (row.alertThreshold || 10) ? 'is-low' : 'is-healthy'
+}
+
 function groupsMetric(value) {
   return groupsAvailable.value === true ? value : '—'
 }
@@ -520,6 +528,17 @@ const groupsRefreshing = computed(() => groupsLoading.value && groupsAvailable.v
 const itemsRefreshing = computed(() => itemsLoading.value && itemsAvailable.value === true)
 const usageRefreshing = computed(() => usageLoading.value && usageAvailable.value === true)
 const stockRefreshing = computed(() => stockLoading.value && stockAvailable.value === true)
+const warehouseActionHint = computed(() => {
+  if (saving.value) return '正在保存卡密分组，完成前请不要重复提交。'
+  if (importing.value) return '正在导入卡密，导入完成后会自动刷新库存。'
+  if (groupsLoading.value && groupsAvailable.value !== true) return '正在读取卡密分组和库存摘要。'
+  if (groupsRefreshing.value) return '正在后台刷新库存，当前列表仍可查看。'
+  if (groupsAvailable.value === false) return '卡密分组暂不可用，请先恢复服务后再新增或导入。'
+  if (!groups.value.length) return '还没有卡密组，请先创建分组再导入库存。'
+  if (!selected.value) return '请选择一个卡密分组查看明细和使用记录。'
+  if (lowStockCount.value > 0) return `有 ${lowStockCount.value} 个分组低于预警阈值，建议补充库存。`
+  return `当前选中「${selected.value.groupName || '卡密分组'}」，可查看明细或导入库存。`
+})
 
 function resetSelectedGroupData() {
   itemsRequestGuard.invalidate()
@@ -966,10 +985,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .card-warehouse-page {
+  --warehouse-text: #101828;
+  --warehouse-muted: #64748b;
+  --warehouse-line: #e5eaf0;
+  --warehouse-soft: #f8fafc;
+  --warehouse-primary: #1d4ed8;
+  --warehouse-primary-soft: #eff6ff;
+  --warehouse-danger: #dc2626;
+  --warehouse-success: #059669;
+  --warehouse-ease: cubic-bezier(0.23, 1, 0.32, 1);
   display: grid;
   gap: 18px;
   min-width: 0;
-  color: #111827;
+  color: var(--warehouse-text);
 }
 
 .card-warehouse-page * {
@@ -1101,6 +1129,22 @@ onBeforeUnmount(() => {
 
 .warehouse-command-buttons :deep(.n-button) {
   min-width: 0;
+  transition:
+    transform 150ms var(--warehouse-ease),
+    box-shadow 150ms var(--warehouse-ease),
+    border-color 150ms var(--warehouse-ease),
+    background-color 150ms var(--warehouse-ease);
+}
+
+.warehouse-command-buttons :deep(.n-button:not(.n-button--disabled):active) {
+  transform: scale(.97);
+}
+
+.warehouse-action-hint {
+  margin: 0;
+  color: var(--warehouse-muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .warehouse-metric-rail {
@@ -1238,6 +1282,142 @@ onBeforeUnmount(() => {
   top: 118px;
 }
 
+.group-name-cell {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.group-name-cell strong {
+  min-width: 0;
+  color: var(--warehouse-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-remark {
+  font-style: normal;
+}
+
+.remain-count {
+  font-weight: 760;
+}
+
+.remain-count.is-healthy {
+  color: var(--warehouse-success);
+}
+
+.remain-count.is-low {
+  color: var(--warehouse-danger);
+}
+
+.warehouse-v14-shell .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.warehouse-import-panel .form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.warehouse-edit-modal .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form-row {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row > label:first-child {
+  color: var(--warehouse-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.warehouse-v14-shell .input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--warehouse-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--warehouse-text);
+  font: inherit;
+  transition:
+    border-color 150ms var(--warehouse-ease),
+    box-shadow 150ms var(--warehouse-ease),
+    background-color 150ms var(--warehouse-ease);
+}
+
+textarea.input {
+  min-height: 96px;
+  padding: 9px 11px;
+  resize: vertical;
+}
+
+.warehouse-v14-shell .input:focus {
+  outline: none;
+  border-color: var(--warehouse-primary);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, .12);
+}
+
+.warehouse-v14-shell .input:disabled {
+  cursor: not-allowed;
+  background: var(--warehouse-soft);
+  color: #94a3b8;
+}
+
+.bulk-count-note,
+.file-format-note {
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.import-action-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-empty-state {
+  padding: 40px 0;
+}
+
+.detail-toolbar {
+  margin-bottom: 8px;
+}
+
+.item-status-select {
+  max-width: 140px;
+  margin-left: auto;
+}
+
+.edit-remark-row {
+  grid-column: 1 / -1;
+}
+
+.modal-actions-row {
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
 .success { background: #ecfdf3; color: #067647; border-color: #abefc6; }
 .warning,
 .inline-warning {
@@ -1264,7 +1444,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 4px;
   background: #f5f6fa;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 3px;
 }
 .import-tab {
@@ -1277,35 +1457,53 @@ onBeforeUnmount(() => {
   font-size: 13px;
   cursor: pointer;
   font-weight: 500;
-  transition: all .15s;
+  transition:
+    transform 150ms var(--warehouse-ease),
+    background-color 150ms var(--warehouse-ease),
+    color 150ms var(--warehouse-ease),
+    box-shadow 150ms var(--warehouse-ease);
 }
 .import-tab.active {
   background: #fff;
-  color: #ff6c2d;
+  color: var(--warehouse-primary);
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
-.import-tab:hover:not(.active) { color: #ff6c2d; }
+.import-tab:active { transform: scale(.98); }
+.import-tab:hover:not(.active) { color: var(--warehouse-primary); }
 
 .file-drop-zone {
-  border: 1px dashed #e5c6b8;
-  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
   background: #FFFFFF;
   padding: 24px 16px;
   text-align: center;
   color: #0f766e;
   font-weight: 600;
   cursor: pointer;
-  transition: all .15s;
+  transition:
+    transform 150ms var(--warehouse-ease),
+    border-color 150ms var(--warehouse-ease),
+    background-color 150ms var(--warehouse-ease),
+    color 150ms var(--warehouse-ease);
   width: 100%;
   color: inherit;
   font: inherit;
 }
-.file-drop-zone:hover {
-  border-color: #0f766e;
-  background: #F5F5F5;
+
+@media (hover: hover) and (pointer: fine) {
+  .file-drop-zone:hover {
+    border-color: var(--warehouse-primary);
+    background: var(--warehouse-primary-soft);
+    color: var(--warehouse-primary);
+  }
 }
+
+.file-drop-zone:active {
+  transform: scale(.99);
+}
+
 .file-drop-zone .file-name {
-  color: #16213e;
+  color: var(--warehouse-text);
   font-weight: 600;
 }
 
@@ -1324,7 +1522,7 @@ onBeforeUnmount(() => {
   gap: 4px;
   margin-bottom: 14px;
   background: #f5f6fa;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 3px;
 }
 .tab-btn {
@@ -1337,14 +1535,19 @@ onBeforeUnmount(() => {
   font-size: 13px;
   cursor: pointer;
   font-weight: 500;
-  transition: all .15s;
+  transition:
+    transform 150ms var(--warehouse-ease),
+    background-color 150ms var(--warehouse-ease),
+    color 150ms var(--warehouse-ease),
+    box-shadow 150ms var(--warehouse-ease);
 }
 .tab-btn.active {
   background: #fff;
-  color: #ff6c2d;
+  color: var(--warehouse-primary);
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
-.tab-btn:hover:not(.active) { color: #ff6c2d; }
+.tab-btn:active { transform: scale(.98); }
+.tab-btn:hover:not(.active) { color: var(--warehouse-primary); }
 
 .table-info {
   font-size: 14px;
@@ -1370,7 +1573,7 @@ onBeforeUnmount(() => {
 .stat-item {
   background: #f8faff;
   border: 1px solid #F0F0F0;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
   text-align: center;
 }
@@ -1414,15 +1617,39 @@ onBeforeUnmount(() => {
   cursor: pointer;
   font-size: 15px;
   color: #526079;
-  transition: all .15s;
+  transition:
+    transform 150ms var(--warehouse-ease),
+    border-color 150ms var(--warehouse-ease),
+    color 150ms var(--warehouse-ease),
+    background-color 150ms var(--warehouse-ease);
 }
 .page-no:hover:not(:disabled) {
-  border-color: #0f766e;
-  color: #0f766e;
+  border-color: var(--warehouse-primary);
+  color: var(--warehouse-primary);
+  background: var(--warehouse-primary-soft);
+}
+.page-no:active:not(:disabled) {
+  transform: scale(.97);
 }
 .page-no:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.warehouse-v14-shell .link {
+  transition:
+    color 150ms var(--warehouse-ease),
+    opacity 150ms var(--warehouse-ease),
+    transform 150ms var(--warehouse-ease);
+}
+
+.warehouse-v14-shell .link:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.warehouse-v14-shell .link:disabled {
+  cursor: not-allowed;
+  opacity: .45;
 }
 
 /* Modal */
@@ -1437,7 +1664,7 @@ onBeforeUnmount(() => {
 }
 .modal-content {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 8px;
   padding: 28px;
   max-width: 540px;
   width: 90%;
@@ -1576,7 +1803,7 @@ onBeforeUnmount(() => {
     width: 100vw;
     max-width: 100vw;
     max-height: 90vh;
-    border-radius: 20px 20px 0 0;
+    border-radius: 8px 8px 0 0;
     padding: 16px 14px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -1584,6 +1811,20 @@ onBeforeUnmount(() => {
   .modal-content h3 {
     margin: 0 0 12px;
     font-size: 18px;
+  }
+
+  .warehouse-edit-modal .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .import-action-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .item-status-select {
+    max-width: none;
+    margin-left: 0;
   }
 }
 </style>
