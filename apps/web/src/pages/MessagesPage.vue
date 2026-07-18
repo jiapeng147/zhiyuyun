@@ -1,5 +1,5 @@
 <template>
-  <div class="xya-msg-page">
+  <div class="xya-msg-page messages-v15-shell">
     <section class="messages-command-center">
       <div class="messages-command-main">
         <div class="messages-command-kicker">
@@ -20,10 +20,11 @@
           <strong>{{ query.xianyuAccountId ? '账号范围' : '等待选择账号' }}</strong>
         </div>
         <div class="messages-command-buttons">
-          <n-button :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
-          <n-button @click="startCurrentConnection">启动连接</n-button>
-          <n-button type="primary" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
+          <n-button :title="messageActionHint" :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
+          <n-button :title="messageActionHint" :disabled="!query.xianyuAccountId || loading" @click="startCurrentConnection">启动连接</n-button>
+          <n-button type="primary" :title="messageActionHint" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
         </div>
+        <p class="messages-action-hint">{{ messageActionHint }}</p>
       </div>
     </section>
 
@@ -94,13 +95,13 @@
 
         <div class="xya-msg-conversation-list" :aria-busy="loading || conversationRefreshing">
           <div v-if="loading && displayList.length === 0" class="xya-msg-empty">正在加载会话...</div>
-          <div v-else-if="error && displayList.length === 0" class="xya-msg-empty" style="color:#ef4444">{{ error }}</div>
+          <div v-else-if="error && displayList.length === 0" class="xya-msg-empty xya-msg-empty-error">{{ error }}</div>
           <div v-else-if="displayList.length === 0 && !loading" class="xya-msg-empty">
-            <p style="margin-bottom:8px">暂无会话数据</p>
-            <p style="font-size:11px;color:#99a4b4">
+            <p class="xya-msg-empty-title">暂无会话数据</p>
+            <p class="xya-msg-empty-desc">
               {{ accounts.length ? `当前账号：${accountLabel || query.xianyuAccountId}。可能尚未收到买家消息，或 WebSocket 未连接。` : '还没有可用的闲鱼账号，请先添加账号。' }}
             </p>
-            <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <div class="xya-msg-empty-actions">
               <button v-if="accounts.length" type="button" class="xya-msg-mini-btn" @click="startCurrentConnection">启动当前账号连接</button>
               <button type="button" class="xya-msg-mini-btn" @click="reload">刷新会话</button>
               <button type="button" class="xya-msg-mini-btn" @click="emit('navigate', accounts.length ? 'connections' : 'accounts')">{{ accounts.length ? '去连接管理' : '去添加账号' }}</button>
@@ -368,11 +369,11 @@
             <h3>快捷回复模板</h3>
             <button type="button" class="xya-msg-link-btn" @click="showTemplateModal = true">更多模板</button>
           </div>
-          <div v-if="!templatesAvailable" class="subtle" style="padding:14px 4px">
+          <div v-if="!templatesAvailable" class="subtle xya-msg-template-state">
             快捷回复服务暂不可用
             <button type="button" class="xya-msg-mini-btn" :disabled="templatesLoading" @click="loadQuickTemplates">{{ templatesLoading ? '重试中...' : '重试' }}</button>
           </div>
-          <div v-else-if="quickTemplates.length === 0" class="subtle" style="padding:14px 4px">
+          <div v-else-if="quickTemplates.length === 0" class="subtle xya-msg-template-state">
             暂无快捷回复模板
           </div>
           <div v-else class="xya-msg-template-list">
@@ -413,12 +414,12 @@
                   <button type="button" class="xya-msg-mini-btn danger" @click="deleteTemplate(item.id)">删除</button>
                 </div>
               </div>
-              <div v-if="!templatesAvailable" class="subtle" style="padding:20px;text-align:center">
+              <div v-if="!templatesAvailable" class="subtle xya-msg-modal-empty">
                 模板服务暂不可用，请重试加载
               </div>
-              <div v-else-if="allTemplates.length === 0" class="subtle" style="padding:20px;text-align:center">
+              <div v-else-if="allTemplates.length === 0" class="subtle xya-msg-modal-empty">
                 暂无模板，请在上方添加
-</div>
+              </div>
             </div>
           </div>
         </div>
@@ -832,6 +833,18 @@ async function ensureAiCustomerServiceEnabled() {
 
 const accountLabel = computed(() => accountName(accounts.value.find(a => a.id === Number(query.xianyuAccountId)) || {}))
 const selfAvatarText = computed(() => avatarText(accountLabel.value || '我'))
+const messageActionHint = computed(() => {
+  if (!accounts.value.length) return '请先添加闲鱼账号，再启动会话连接。'
+  if (!query.xianyuAccountId) return '请选择一个闲鱼账号后查看会话和启动连接。'
+  if (loading.value) return '正在读取会话列表，请稍候。'
+  if (conversationRefreshing.value) return '正在后台同步会话，当前列表仍可操作。'
+  if (sending.value || sendingImage.value) return '正在发送消息，完成前请避免重复提交。'
+  if (!conversationsAvailable.value) return '会话服务暂不可用，请刷新或检查连接状态。'
+  if (!contextAvailable.value && selected.value) return '当前会话记录暂不可用，已限制发送以避免发错会话。'
+  if (realtimeMode.value.key === 'realtime') return `实时接待已连接，当前筛选 ${displayList.value.length} 条会话。`
+  if (realtimeMode.value.key === 'polling') return '实时连接未稳定，系统正在使用轮询模式保持同步。'
+  return `当前账号 ${accountLabel.value || query.xianyuAccountId} 可处理 ${displayList.value.length} 条会话。`
+})
 
 function selectedAccountRecord() {
   return accounts.value.find(a => Number(a?.id) === Number(query.xianyuAccountId)) || null
@@ -2946,6 +2959,15 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 <style scoped>
 .xya-msg-page {
+  --messages-text: #101828;
+  --messages-muted: #64748b;
+  --messages-line: #e5eaf0;
+  --messages-soft: #f8fafc;
+  --messages-primary: #1d4ed8;
+  --messages-primary-soft: #eff6ff;
+  --messages-danger: #dc2626;
+  --messages-success: #059669;
+  --messages-ease: cubic-bezier(0.23, 1, 0.32, 1);
   width: 100%;
   display: grid;
   gap: 16px;
@@ -2958,7 +2980,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   gap: 16px;
   padding: 18px;
   border: 1px solid #dfe6f1;
-  border-radius: 14px;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(239, 253, 246, .95) 48%, rgba(255, 250, 245, .94)),
     #fff;
@@ -3035,7 +3057,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   align-content: center;
   padding: 14px;
   border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -3061,6 +3083,22 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .messages-command-buttons :deep(.n-button) {
   min-width: 0;
+  transition:
+    transform 150ms var(--messages-ease),
+    box-shadow 150ms var(--messages-ease),
+    border-color 150ms var(--messages-ease),
+    background-color 150ms var(--messages-ease);
+}
+
+.messages-command-buttons :deep(.n-button:not(.n-button--disabled):active) {
+  transform: scale(.97);
+}
+
+.messages-action-hint {
+  margin: 0;
+  color: var(--messages-muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .messages-metric-rail {
@@ -3076,7 +3114,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   display: grid;
   gap: 8px;
   border: 1px solid #e5eaf0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
   overflow: hidden;
@@ -3094,7 +3132,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .messages-metric-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3134,7 +3172,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   align-items: stretch;
   padding: 12px;
   border: 1px solid #e5eaf0;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #f8fafc;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
 }
@@ -3155,7 +3193,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-sidebar {
   height: 100%;
-  border-radius: 24px;
+  border-radius: 8px;
   padding: 16px 0 14px;
   display: flex;
   flex-direction: column;
@@ -3276,7 +3314,10 @@ watch(() => selected.value?.xyGoodsId, () => {
   background: #f8fafc;
   color: #64748b;
   border: 1px solid #cbd5e1;
-  transition: all .3s ease;
+  transition:
+    background-color 180ms var(--messages-ease),
+    border-color 180ms var(--messages-ease),
+    color 180ms var(--messages-ease);
   flex-shrink: 0;
 }
 .xya-msg-realtime-badge.connected {
@@ -3351,7 +3392,12 @@ watch(() => selected.value?.xyGoodsId, () => {
   color: #6b4738;
   border-radius: 999px;
   cursor: pointer;
-  transition: all .2s ease;
+  transition:
+    transform 150ms var(--messages-ease),
+    box-shadow 150ms var(--messages-ease),
+    border-color 150ms var(--messages-ease),
+    background-color 150ms var(--messages-ease),
+    color 150ms var(--messages-ease);
 }
 
 .xya-msg-tabs button,
@@ -3380,28 +3426,47 @@ watch(() => selected.value?.xyGoodsId, () => {
   box-shadow: 0 10px 24px rgba(20, 184, 166, 0.22);
 }
 
-.xya-msg-tabs button:hover,
-.xya-msg-filter-btn:hover,
-.xya-msg-tool-chip:hover,
-.xya-msg-editor-tabs button:hover,
-.xya-msg-link-btn:hover,
-.xya-msg-mini-btn:hover,
-.xya-msg-more-btn:hover,
-.xya-msg-secondary-btn:hover,
-.xya-msg-head-btn:hover,
-.xya-msg-image-url-send:hover,
-.xya-msg-send-btn:hover,
-.xya-msg-template-item:hover,
-.xya-msg-icon-btn:hover,
-.xya-msg-retry-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(84, 41, 22, 0.10);
+@media (hover: hover) and (pointer: fine) {
+  .xya-msg-tabs button:hover,
+  .xya-msg-filter-btn:hover,
+  .xya-msg-tool-chip:hover,
+  .xya-msg-editor-tabs button:hover,
+  .xya-msg-link-btn:hover,
+  .xya-msg-mini-btn:hover,
+  .xya-msg-more-btn:hover,
+  .xya-msg-secondary-btn:hover,
+  .xya-msg-head-btn:hover,
+  .xya-msg-image-url-send:hover,
+  .xya-msg-send-btn:hover,
+  .xya-msg-template-item:hover,
+  .xya-msg-icon-btn:hover,
+  .xya-msg-retry-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(84, 41, 22, 0.10);
+  }
+}
+
+.xya-msg-tabs button:active,
+.xya-msg-filter-btn:active,
+.xya-msg-tool-chip:active,
+.xya-msg-editor-tabs button:active,
+.xya-msg-link-btn:active,
+.xya-msg-mini-btn:active,
+.xya-msg-more-btn:active,
+.xya-msg-secondary-btn:active,
+.xya-msg-head-btn:active,
+.xya-msg-image-url-send:active,
+.xya-msg-send-btn:active,
+.xya-msg-template-item:active,
+.xya-msg-icon-btn:active,
+.xya-msg-retry-btn:active {
+  transform: scale(.97);
 }
 
 .xya-msg-icon-btn {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3434,7 +3499,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   gap: 8px;
   height: 42px;
   padding: 0 14px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #FAFAFA;
   border: 1px solid #e5edf9;
 }
@@ -3459,7 +3524,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-select,
 .xya-msg-image-url-input {
   height: 42px;
-  border-radius: 14px;
+  border-radius: 8px;
   border: 1px solid #f6e3db;
   background: #fff;
   padding: 0 14px;
@@ -3494,7 +3559,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   padding: 14px 12px;
   border: 0;
   background: transparent;
-  border-radius: 18px;
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
   margin-bottom: 6px;
@@ -3512,7 +3577,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-avatar {
   width: 44px;
   height: 44px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #0f766e, #2dd4bf);
   color: #fff;
   display: inline-flex;
@@ -3532,14 +3597,14 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-avatar.large {
   width: 54px;
   height: 54px;
-  border-radius: 18px;
+  border-radius: 8px;
   font-size: 20px;
 }
 
 .xya-msg-avatar.small {
   width: 34px;
   height: 34px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 13px;
 }
 
@@ -3628,13 +3693,13 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-product-thumb {
   width: 28px;
   height: 28px;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .xya-msg-product-large {
   width: 72px;
   height: 72px;
-  border-radius: 18px;
+  border-radius: 8px;
 }
 
 .xya-msg-product-line em,
@@ -3673,7 +3738,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-chat-panel {
   height: 100%;
-  border-radius: 26px;
+  border-radius: 8px;
   padding: 18px;
   display: flex;
   flex-direction: column;
@@ -3744,7 +3809,29 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-empty.soft {
   background: #FAFAFA;
-  border-radius: 18px;
+  border-radius: 8px;
+}
+
+.xya-msg-empty-error {
+  color: var(--messages-danger);
+}
+
+.xya-msg-empty-title {
+  margin: 0 0 8px;
+}
+
+.xya-msg-empty-desc {
+  margin: 0;
+  color: #99a4b4;
+  font-size: 11px;
+}
+
+.xya-msg-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .xya-msg-bubble-row {
@@ -3769,7 +3856,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-bubble {
   padding: 12px 14px;
-  border-radius: 18px 18px 18px 6px;
+  border-radius: 8px 8px 8px 4px;
   background: #F7F7F8;
   line-height: 1.65;
   white-space: pre-wrap;
@@ -3779,7 +3866,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-bubble.me {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
-  border-radius: 18px 18px 6px 18px;
+  border-radius: 8px 8px 4px 8px;
 }
 
 .xya-msg-bubble-meta {
@@ -3809,7 +3896,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 .xya-msg-inline-image {
   display: block;
   max-width: 220px;
-  border-radius: 14px;
+  border-radius: 8px;
   cursor: zoom-in;
 }
 
@@ -3862,7 +3949,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-editor-box,
 .xya-msg-card {
-  border-radius: 22px;
+  border-radius: 8px;
   background: #f9fbff;
   border: 1px solid #e7effb;
 }
@@ -3872,7 +3959,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 .xya-msg-tool-chip {
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 8px 12px;
 }
 
@@ -3910,7 +3997,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
 .xya-msg-emoji-btn {
   border: 1px solid #f6e3db;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   padding: 8px 0;
   cursor: pointer;
@@ -3969,7 +4056,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   margin-top: 12px;
   padding: 10px 12px;
   border: 1px solid #dbeafe;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #eff6ff;
   color: #475569;
   font-size: 12px;
@@ -3994,7 +4081,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   padding: 12px;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .xya-msg-secondary-btn.wide,
@@ -4003,10 +4090,16 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 
 .xya-msg-template-item {
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 12px 14px;
   text-align: left;
   background: #fff;
+}
+
+.xya-msg-template-state {
+  display: grid;
+  gap: 10px;
+  padding: 14px 4px;
 }
 
 @media (max-width: 1440px) {
@@ -4069,8 +4162,8 @@ watch(() => selected.value?.xyGoodsId, () => {
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: #ccc;
-  transition: .3s;
-  border-radius: 22px;
+  transition: background-color 180ms var(--messages-ease);
+  border-radius: 999px;
 }
 .xya-msg-switch-slider:before {
   position: absolute;
@@ -4080,7 +4173,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .3s;
+  transition: transform 180ms var(--messages-ease);
   border-radius: 50%;
 }
 .xya-msg-switch input:checked + .xya-msg-switch-slider {
@@ -4112,7 +4205,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 }
 .xya-msg-modal {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 8px;
   width: 90%;
   max-width: 560px;
   max-height: 80vh;
@@ -4184,7 +4277,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   padding: 10px 12px;
   background: #f9fbff;
   border: 1px solid #e7effb;
-  border-radius: 10px;
+  border-radius: 8px;
   gap: 10px;
 }
 .xya-msg-template-manage-info {
@@ -4239,7 +4332,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   width: 100%;
   max-height: calc(92vh - 60px);
   object-fit: contain;
-  border-radius: 22px;
+  border-radius: 8px;
   background: rgba(15, 23, 42, 0.18);
   box-shadow: 0 24px 72px rgba(15, 23, 42, 0.28);
 }
@@ -4252,7 +4345,7 @@ watch(() => selected.value?.xyGoodsId, () => {
 
   .messages-command-center {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .messages-command-main h2 {
@@ -4272,7 +4365,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   }
   .xya-msg-sidebar,
   .xya-msg-chat-panel {
-    border-radius: 14px;
+    border-radius: 8px;
     height: auto;
     max-height: none;
   }
@@ -4331,7 +4424,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   .xya-msg-conversation {
     padding: 10px;
     gap: 10px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
   .xya-msg-avatar {
     width: 38px;
@@ -4356,7 +4449,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   }
   .xya-msg-chat-panel {
     padding: 12px;
-    border-radius: 16px;
+    border-radius: 8px;
   }
   .xya-msg-chat-head {
     padding-bottom: 10px;
@@ -4379,10 +4472,10 @@ watch(() => selected.value?.xyGoodsId, () => {
   .xya-msg-bubble {
     padding: 10px 12px;
     font-size: 13px;
-    border-radius: 14px 14px 14px 4px;
+    border-radius: 8px 8px 8px 4px;
   }
   .xya-msg-bubble.me {
-    border-radius: 14px 14px 4px 14px;
+    border-radius: 8px 8px 4px 8px;
   }
   .xya-msg-inline-image {
     max-width: 160px;
@@ -4403,7 +4496,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   }
   .xya-msg-editor-box {
     padding: 10px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
   .xya-msg-editor textarea {
     min-height: 80px;
@@ -4421,12 +4514,12 @@ watch(() => selected.value?.xyGoodsId, () => {
   }
   .xya-msg-card {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
   .xya-msg-product-large {
     width: 56px;
     height: 56px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
   .xya-msg-profile-grid,
   .xya-msg-metric-grid {
@@ -4435,7 +4528,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   }
   .xya-msg-template-item {
     padding: 10px 12px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
   .xya-msg-modal-mask {
     align-items: flex-end;
@@ -4444,7 +4537,7 @@ watch(() => selected.value?.xyGoodsId, () => {
     width: 100%;
     max-width: none;
     max-height: 88vh;
-    border-radius: 14px 14px 0 0;
+    border-radius: 8px 8px 0 0;
     margin: 0;
   }
   .xya-msg-modal-head,
@@ -4474,7 +4567,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   }
   .xya-msg-image-preview-img {
     max-height: calc(80vh - 60px);
-    border-radius: 14px;
+    border-radius: 8px;
   }
   .xya-msg-emoji-panel {
     grid-template-columns: repeat(6, minmax(0, 1fr));
