@@ -1,5 +1,5 @@
 <template>
-  <div class="publish-console">
+  <div class="publish-console publish-v19-shell">
     <div class="publish-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
       <div v-if="warning" class="global-notice warning">{{ warning }}</div>
@@ -34,9 +34,10 @@
           <strong>{{ checks.filter(item => item.ok).length }}/{{ checks.length }} 项通过</strong>
         </div>
         <div class="publish-command-actions">
-          <AppButton @click="handleCancel">取消</AppButton>
-          <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
+          <AppButton :title="publishActionHint" @click="handleCancel">取消</AppButton>
+          <AppButton type="primary" :title="publishActionHint" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
         </div>
+        <p class="publish-action-hint">{{ publishActionHint }}</p>
       </div>
     </section>
 
@@ -397,8 +398,8 @@
     </section>
 
     <div class="publish-bottom-actions">
-      <AppButton @click="handleCancel">取消</AppButton>
-      <AppButton type="primary" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
+      <AppButton :title="publishActionHint" @click="handleCancel">取消</AppButton>
+      <AppButton type="primary" :title="publishActionHint" :loading="submitting" :disabled="publishSubmitDisabled" @click="submit">{{ publishSubmitLabel }}</AppButton>
     </div>
   </div>
 </template>
@@ -1092,6 +1093,17 @@ const checks = computed(() => [
   { text: '库存数大于 0', ok: totalStock.value > 0 },
 ])
 
+const publishActionHint = computed(() => {
+  const failedCheck = checks.value.find(item => !item.ok)
+  if (submitting.value) return '发布请求正在执行，请等待平台返回结果，避免重复提交。'
+  if (publishOutcome.value?.status === 'unknown') return '上次发布结果未知，请先到闲鱼 App 或商品同步结果中核对，当前禁止重复发布。'
+  if (unsafePublishFailure.value) return '上次发布失败且系统未确认可安全重试，当前任务已锁定。'
+  if (publishIntent.payload) return '当前处于恢复任务模式，会固定使用原发布数据和安全凭证。'
+  if (accountsAvailable.value !== true) return '账号列表尚不可用，发布前必须先完成账号状态确认。'
+  if (failedCheck) return `还需完成：${failedCheck.text}。`
+  return '必填项已通过，可以提交发布；提交后请等待确认结果。'
+})
+
 // 触发文件选择
 function triggerUpload() {
   if (uploadingImages.value) {
@@ -1564,6 +1576,13 @@ onMounted(load)
   gap: 10px;
 }
 
+.publish-action-hint {
+  margin: -4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .publish-workbench {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -1830,11 +1849,14 @@ onMounted(load)
   width: 100px;
   height: 100px;
   border: 2px solid #e8e8e8;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
   cursor: grab;
-  transition: border-color 0.2s;
+  transition:
+    border-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 160ms ease,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .img-card:hover {
   border-color: var(--primary, #0f766e);
@@ -1853,6 +1875,9 @@ onMounted(load)
 .img-card.add-card:hover:not(:disabled) {
   border-color: var(--primary, #0f766e);
   background: #f0f5ff;
+}
+.img-card.add-card:active:not(:disabled) {
+  transform: scale(.98);
 }
 .img-card.add-card:disabled { cursor: wait; opacity: .72; }
 .img-card.add-card:focus-visible,
@@ -1908,16 +1933,16 @@ onMounted(load)
   min-height: 60px;
 }
 .category-tools { display: flex; gap: 8px; margin-bottom: 10px; }
-.category-search { flex: 1; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; outline: none; }
+.category-search { flex: 1; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; }
 .category-search:focus { border-color: var(--primary, #0f766e); }
-.category-clear { border: 1px solid #efe1db; background: #fff; border-radius: 10px; padding: 0 12px; cursor: pointer; }
-.category-ai-btn { border: 1px solid #99f6e4; background: #F6F6F6; color: #0f766e; border-radius: 10px; padding: 0 12px; cursor: pointer; font-weight: 700; }
+.category-clear { border: 1px solid #efe1db; background: #fff; border-radius: 8px; padding: 0 12px; cursor: pointer; }
+.category-ai-btn { border: 1px solid #99f6e4; background: #F6F6F6; color: #0f766e; border-radius: 8px; padding: 0 12px; cursor: pointer; font-weight: 700; }
 .category-ai-btn-blocked { margin-bottom: 10px; }
 .category-ai-btn:disabled { cursor: not-allowed; opacity: .55; }
 .ai-unconfigured-tip { margin: 8px 0 0; color: #b45309; font-size: 12px; line-height: 1.6; }
 .ai-category-tip { margin-left: 10px; color: #16bf78; font-weight: 700; }
-.category-search-results { display: grid; gap: 6px; max-height: 220px; overflow: auto; margin-bottom: 10px; padding: 8px; border: 1px solid #e8edf5; border-radius: 12px; background: #FFFFFF; }
-.category-result { display: grid; gap: 2px; padding: 8px 10px; border-radius: 9px; cursor: pointer; }
+.category-search-results { display: grid; gap: 6px; max-height: 220px; overflow: auto; margin-bottom: 10px; padding: 8px; border: 1px solid #e8edf5; border-radius: 8px; background: #FFFFFF; }
+.category-result { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
 .category-result:hover { background: #eef5ff; }
 .category-result strong { color: #111827; font-size: 13px; }
 .category-result span { color: #64748b; font-size: 12px; }
@@ -1931,7 +1956,7 @@ onMounted(load)
   display: flex;
   gap: 8px;
   border: 1px solid #e8e8e8;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
 }
 .cascader-col {
@@ -1988,11 +2013,11 @@ onMounted(load)
   width: 100%;
   padding: 10px 14px;
   border: 2px solid #e8e8e8;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s;
+  transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease;
 }
 .location-input:focus {
   border-color: var(--primary, #0f766e);
@@ -2004,7 +2029,7 @@ onMounted(load)
   right: 0;
   background: #fff;
   border: 1px solid #e8e8e8;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   max-height: 260px;
   overflow-y: auto;
@@ -2015,7 +2040,7 @@ onMounted(load)
   padding: 10px 14px;
   cursor: pointer;
   border-bottom: 1px solid #f5f5f5;
-  transition: background 0.15s;
+  transition: background-color 150ms ease;
 }
 .poi-item:last-child {
   border-bottom: none;
@@ -2100,7 +2125,7 @@ onMounted(load)
   padding: 8px 12px;
   background: #f0f7ff;
   border: 1px solid #ffe1d4;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #0f766e;
   font-size: 13px;
 }
@@ -2120,7 +2145,7 @@ onMounted(load)
 .auto-category-msg {
   margin-bottom: 10px;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -2152,7 +2177,7 @@ onMounted(load)
   margin-bottom: 10px;
   padding: 8px 12px;
   border: 1px solid #e4eaf2;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fafcff;
 }
 .candidates-label {
@@ -2169,7 +2194,14 @@ onMounted(load)
   padding: 5px 12px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.15s;
+  transition:
+    transform 150ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+.candidate-btn:active {
+  transform: scale(.97);
 }
 .candidate-btn:hover {
   background: #dbeafe;
@@ -2223,7 +2255,7 @@ onMounted(load)
   .img-card {
     width: 78px;
     height: 78px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
   .image-strip {
     gap: 8px;
@@ -2232,7 +2264,7 @@ onMounted(load)
   .cascader-levels {
     flex-direction: column;
     gap: 6px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
   .cascader-col {
     min-width: 0;
