@@ -1,5 +1,5 @@
 <template>
-  <div class="notify-settings-shell notify-v8-shell">
+  <div class="notify-settings-shell notify-v8-shell notify-v18-shell">
     <div v-if="loading" class="global-notice" role="status" aria-live="polite">正在加载通知配置与投递记录...</div>
     <div v-if="error" class="global-notice error" role="alert">{{ error }}</div>
     <div v-if="success" class="global-notice success" role="status">{{ success }}</div>
@@ -64,8 +64,8 @@
             <strong>{{ heroHealthLabel }}</strong>
           </div>
         </div>
-        <div class="notify-health-progress">
-          <span :style="{ width: `${healthPercent}%` }"></span>
+        <div class="notify-health-progress" :class="healthTone">
+          <span :class="healthWidthClass"></span>
         </div>
         <div class="notify-health-foot">
           <span>今日应用内通知 {{ visualTodayDisplay }}</span>
@@ -308,7 +308,7 @@
                   <li>在飞书中与机器人发起对话，获取你的 open_id 填入「接收者 ID」</li>
                   <li>权限管理勾选：发送消息、上传图片、读取用户信息</li>
                 </ol>
-                <p style="margin-top: 8px; color: #ff9800;">
+                <p class="notify-tips-warning">
                   <strong>提示：</strong>账号登录会话过期时，系统会通过此渠道主动推送通知。飞书对话不提供二维码自动登录；请前往管理端的账号管理页，选择账号后使用“重新扫码”安全登录。
                 </p>
               </div>
@@ -680,8 +680,8 @@
 
               <div class="notify-mini-lines">
                 <div></div>
-                <div style="width: 84%"></div>
-                <div style="width: 72%"></div>
+                <div class="notify-mini-line-wide"></div>
+                <div class="notify-mini-line-mid"></div>
               </div>
             </div>
           </div>
@@ -1124,6 +1124,18 @@ const healthPercent = computed(() => {
   if (!deliveryLogs.value.length) return 0
   const okCount = deliveryLogs.value.filter(log => toBool(log.success, false)).length
   return Math.max(0, Math.min(100, Number(((okCount / deliveryLogs.value.length) * 100).toFixed(1))))
+})
+
+const healthTone = computed(() => {
+  if (!logsLoaded.value || !deliveryLogs.value.length) return 'empty'
+  if (healthPercent.value >= 90) return 'high'
+  if (healthPercent.value >= 60) return 'medium'
+  return 'low'
+})
+
+const healthWidthClass = computed(() => {
+  const bucket = Math.max(0, Math.min(100, Math.round(healthPercent.value / 10) * 10))
+  return `w${bucket}`
 })
 
 const heroHealthLabel = computed(() => {
@@ -2070,7 +2082,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding: 14px 16px;
   border: 1px solid #f3c568;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff8e6;
   color: #714900;
 }
@@ -2121,7 +2133,7 @@ onBeforeUnmount(() => {
 
 .notification-resolution-warning {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(176, 46, 33, .09);
   font-weight: 700;
 }
@@ -2130,7 +2142,7 @@ onBeforeUnmount(() => {
   justify-self: start;
   padding: 9px 14px;
   border: 1px solid #d55a4d;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #fff;
   color: #a9362a;
   font-weight: 800;
@@ -2171,7 +2183,7 @@ onBeforeUnmount(() => {
 .notify-hero::after {
   content: none;
   position: absolute;
-  border-radius: 30px;
+  border-radius: 8px;
   pointer-events: none;
 }
 
@@ -2207,7 +2219,7 @@ onBeforeUnmount(() => {
   color: #2563eb;
   font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .notify-hero-pill::before {
@@ -2269,7 +2281,7 @@ onBeforeUnmount(() => {
   height: 160px;
   right: -36px;
   top: -54px;
-  border-radius: 48px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.12);
   transform: rotate(18deg);
 }
@@ -2329,7 +2341,37 @@ onBeforeUnmount(() => {
 .notify-health-progress span {
   display: block;
   height: 100%;
+  width: 0;
   border-radius: inherit;
+  background: #2563eb;
+  transition: width 240ms cubic-bezier(0.23, 1, 0.32, 1), background-color 180ms ease;
+}
+
+.notify-health-progress.empty span {
+  width: 0;
+}
+
+.notify-health-progress span.w0 { width: 0; }
+.notify-health-progress span.w10 { width: 10%; }
+.notify-health-progress span.w20 { width: 20%; }
+.notify-health-progress span.w30 { width: 30%; }
+.notify-health-progress span.w40 { width: 40%; }
+.notify-health-progress span.w50 { width: 50%; }
+.notify-health-progress span.w60 { width: 60%; }
+.notify-health-progress span.w70 { width: 70%; }
+.notify-health-progress span.w80 { width: 80%; }
+.notify-health-progress span.w90 { width: 90%; }
+.notify-health-progress span.w100 { width: 100%; }
+
+.notify-health-progress.low span {
+  background: #ef4444;
+}
+
+.notify-health-progress.medium span {
+  background: #f59e0b;
+}
+
+.notify-health-progress.high span {
   background: #2563eb;
 }
 
@@ -2488,13 +2530,17 @@ onBeforeUnmount(() => {
   width: 100%;
   padding: 14px;
   border: 1px solid #e3ebf7;
-  border-radius: 20px;
+  border-radius: 8px;
   background: #f7faff;
   display: flex;
   align-items: flex-start;
   gap: 12px;
   text-align: left;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  transition:
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 180ms ease,
+    background-color 180ms ease;
 }
 
 .notify-channel-item:hover {
@@ -2511,7 +2557,7 @@ onBeforeUnmount(() => {
 .notify-channel-icon {
   width: 44px;
   height: 44px;
-  border-radius: 16px;
+  border-radius: 8px;
   flex: none;
   display: flex;
   align-items: center;
@@ -2561,7 +2607,7 @@ onBeforeUnmount(() => {
 
 .notify-add-channel {
   height: 48px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px dashed #edcdbf;
   background: linear-gradient(135deg, rgba(24, 160, 88, 0.05), rgba(229, 229, 229, 0.03));
   display: flex;
@@ -2580,7 +2626,7 @@ onBeforeUnmount(() => {
 
 .notify-side-note {
   padding: 18px;
-  border-radius: 22px;
+  border-radius: 8px;
   color: #fff;
   background: linear-gradient(135deg, rgba(116, 51, 23, 0.98), rgba(24, 160, 88, 0.92));
   box-shadow: 0 18px 32px rgba(177, 76, 32, 0.18);
@@ -2620,7 +2666,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid rgba(20, 184, 109, 0.18);
   background: linear-gradient(135deg, rgba(20, 184, 109, 0.08), rgba(24, 160, 88, 0.05));
 }
@@ -2641,7 +2687,7 @@ onBeforeUnmount(() => {
   flex: none;
   width: 36px;
   height: 36px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2707,7 +2753,7 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 15px;
   color: #6c82a5;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .notify-section-headline {
@@ -2768,6 +2814,11 @@ onBeforeUnmount(() => {
   color: #8a9ab3;
 }
 
+.notify-tips-warning {
+  margin-top: 8px;
+  color: #b45309;
+}
+
 .notify-field-full {
   grid-column: 1 / -1;
 }
@@ -2776,7 +2827,7 @@ onBeforeUnmount(() => {
 .notify-field textarea,
 .notify-select {
   width: 100%;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid #f4e1d9;
   background: linear-gradient(180deg, #ffffff, #f7faff);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94);
@@ -2820,7 +2871,7 @@ onBeforeUnmount(() => {
   width: 32px;
   height: 32px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: rgba(24, 160, 88, 0.08);
   display: inline-flex;
   align-items: center;
@@ -2845,7 +2896,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 6px;
   padding: 5px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid #f4e1d9;
   background: linear-gradient(180deg, #ffffff, #f7faff);
 }
@@ -2854,7 +2905,7 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 36px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: transparent;
   color: #6780a5;
   font-size: 13px;
@@ -2877,7 +2928,7 @@ onBeforeUnmount(() => {
 .notify-rule-actions button {
   height: 38px;
   padding: 0 14px;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid #f4e0d8;
   background: #fff;
   color: #5f7397;
@@ -2906,7 +2957,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 14px;
   padding: 18px;
-  border-radius: 24px;
+  border-radius: 8px;
   border: 1px solid rgba(244, 223, 214, 0.96);
   background: linear-gradient(135deg, rgba(24, 160, 88, 0.08), rgba(255, 255, 255, 0.98));
 }
@@ -2936,7 +2987,7 @@ onBeforeUnmount(() => {
 .notify-tutorial-icon {
   width: 52px;
   height: 52px;
-  border-radius: 18px;
+  border-radius: 8px;
   flex: none;
   display: flex;
   align-items: center;
@@ -3022,7 +3073,7 @@ onBeforeUnmount(() => {
 
 .notify-tutorial-block {
   padding: 18px;
-  border-radius: 24px;
+  border-radius: 8px;
   border: 1px solid rgba(231, 238, 249, 0.98);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98));
 }
@@ -3041,7 +3092,7 @@ onBeforeUnmount(() => {
 .notify-tutorial-head-icon {
   width: 42px;
   height: 42px;
-  border-radius: 16px;
+  border-radius: 8px;
   flex: none;
   display: flex;
   align-items: center;
@@ -3061,7 +3112,7 @@ onBeforeUnmount(() => {
   margin-bottom: 4px;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   color: #c69a87;
 }
 
@@ -3091,7 +3142,7 @@ onBeforeUnmount(() => {
 .notify-step-index {
   width: 36px;
   height: 36px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3138,7 +3189,7 @@ onBeforeUnmount(() => {
 
 .notify-tutorial-field {
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid #ebf1fb;
   background: rgba(255, 255, 255, 0.9);
 }
@@ -3202,7 +3253,7 @@ onBeforeUnmount(() => {
 
 .notify-tutorial-highlight {
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -3236,7 +3287,7 @@ onBeforeUnmount(() => {
 
 .notify-rule-group {
   padding: 14px 14px 8px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid #ebf1fb;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 250, 255, 0.96));
 }
@@ -3255,7 +3306,7 @@ onBeforeUnmount(() => {
 .notify-group-icon {
   width: 34px;
   height: 34px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3342,7 +3393,7 @@ onBeforeUnmount(() => {
 .notify-log-icon {
   width: 40px;
   height: 40px;
-  border-radius: 14px;
+  border-radius: 8px;
   flex: none;
   display: flex;
   align-items: center;
@@ -3387,7 +3438,7 @@ onBeforeUnmount(() => {
 
 .notify-preview-card {
   padding: 20px;
-  border-radius: 28px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(228, 236, 247, 0.96);
   box-shadow: 0 20px 42px rgba(128, 64, 36, 0.1);
@@ -3423,7 +3474,7 @@ onBeforeUnmount(() => {
   max-width: 284px;
   margin: 0 auto;
   padding: 14px 12px 18px;
-  border-radius: 34px;
+  border-radius: 8px;
   border: 1px solid rgba(128, 57, 27, 0.16);
   background: linear-gradient(180deg, #6f2e12, #97411c 22%, #F2F2F2 22.2%, #F7F7F8 100%);
   box-shadow: 0 24px 48px rgba(112, 48, 20, 0.22);
@@ -3433,14 +3484,14 @@ onBeforeUnmount(() => {
   width: 94px;
   height: 26px;
   margin: 0 auto 12px;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 8px 8px;
   background: #0f2750;
 }
 
 .notify-phone-screen {
   min-height: 364px;
   padding: 16px;
-  border-radius: 24px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #f7faff, #eef4ff);
   display: flex;
   flex-direction: column;
@@ -3459,7 +3510,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 10px;
   padding: 12px;
-  border-radius: 18px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid #e1eaf8;
   box-shadow: 0 10px 22px rgba(128, 64, 36, 0.08);
@@ -3473,7 +3524,7 @@ onBeforeUnmount(() => {
   flex: none;
   width: 36px;
   height: 36px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3523,6 +3574,14 @@ onBeforeUnmount(() => {
   height: 10px;
   border-radius: 999px;
   background: #dce6fa;
+}
+
+.notify-mini-line-wide {
+  width: 84%;
+}
+
+.notify-mini-line-mid {
+  width: 72%;
 }
 
 .notify-foot-note {
