@@ -9,7 +9,7 @@
         <b>{{ completedCount }}/{{ steps.length }} 已完成</b>
         <p>建议按顺序完成账号绑定、商品同步和自动化配置，先跑通一个最小运营闭环。</p>
       </div>
-      <div class="onboarding-progress" :style="{ '--progress': `${progress}%` }"><span>{{ progress }}%</span></div>
+      <div :class="['onboarding-progress', progressClass]"><span>{{ progress }}%</span></div>
     </div>
     <div class="onboarding-steps">
       <button
@@ -48,6 +48,7 @@ const steps = [
 const isDone = key => done.value.includes(key)
 const completedCount = computed(() => steps.filter(s => isDone(s.key)).length)
 const progress = computed(() => Math.round((completedCount.value / steps.length) * 100))
+const progressClass = computed(() => `progress-${progress.value}`)
 function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(done.value)) }
 function markDone(key) { if (!done.value.includes(key)) { done.value = [...done.value, key]; persist() } }
 function go(step) { markDone(step.key); emit('navigate', step.to) }
@@ -125,7 +126,19 @@ function resetProgress() { done.value = []; persist() }
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: conic-gradient(var(--onboarding-primary) var(--progress), #edf2fb 0);
+  background: conic-gradient(var(--onboarding-primary) 0%, #edf2fb 0);
+}
+
+.onboarding-progress.progress-33 {
+  background: conic-gradient(var(--onboarding-primary) 33%, #edf2fb 0);
+}
+
+.onboarding-progress.progress-67 {
+  background: conic-gradient(var(--onboarding-primary) 67%, #edf2fb 0);
+}
+
+.onboarding-progress.progress-100 {
+  background: conic-gradient(var(--onboarding-primary) 100%, #edf2fb 0);
 }
 
 .onboarding-progress span {

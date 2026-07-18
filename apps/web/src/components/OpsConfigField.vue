@@ -36,7 +36,7 @@ defineProps({
   flex-direction: column;
   gap: 10px;
   padding: 18px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid rgba(223, 232, 247, 0.98);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
@@ -89,7 +89,7 @@ defineProps({
   align-items: center;
   min-height: 20px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: rgba(239, 68, 68, 0.08);
   color: #e14d4d;
   font-size: 11px;
@@ -108,7 +108,7 @@ defineProps({
   align-items: center;
   min-height: 24px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: rgba(20, 184, 166, 0.08);
   color: #d45e2c;
   font-size: 11px;
@@ -125,7 +125,7 @@ defineProps({
 .ops-config-field-control :deep(.config-textarea) {
   width: 100%;
   border: 1px solid rgba(242, 222, 214, 0.95);
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   color: #5f4033;
   text-align: left;
@@ -168,7 +168,7 @@ defineProps({
 .ops-config-field-control :deep(.secret-input) {
   width: 100%;
   height: 46px;
-  border-radius: 14px;
+  border-radius: 8px;
 }
 
 .ops-config-field-meta {

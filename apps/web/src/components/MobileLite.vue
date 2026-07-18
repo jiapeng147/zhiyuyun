@@ -309,7 +309,7 @@ onMounted(() => {
   font-weight: 800;
   color: #111111;
   line-height: 1.2;
-  letter-spacing: -0.2px;
+  letter-spacing: 0;
 }
 .m-brand-sub {
   font-size: 11px;

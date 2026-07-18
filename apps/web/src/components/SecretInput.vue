@@ -36,7 +36,7 @@ const revealed = ref(false)
   height: 46px;
   border: 1px solid var(--line, #E5E5E5);
   background: linear-gradient(180deg, #ffffff, #FFFFFF);
-  border-radius: 14px;
+  border-radius: 8px;
   overflow: hidden;
   transition: border-color .18s ease, box-shadow .18s ease;
 }

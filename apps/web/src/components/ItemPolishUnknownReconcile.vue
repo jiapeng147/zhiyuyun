@@ -70,7 +70,7 @@ async function confirmOutcome(result, outcome) {
   margin-top: 12px;
   padding: 12px;
   border: 1px solid #f4c56a;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fffaf0;
 }
 

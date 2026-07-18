@@ -155,7 +155,7 @@ function trapFocus(event) {
   width: 420px;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 18px;
+  border-radius: 8px;
   box-shadow: 0 28px 80px rgba(17, 35, 67, .25);
   padding: 40px 36px 28px;
   text-align: center;
@@ -266,7 +266,7 @@ function trapFocus(event) {
     max-width: 100vw;
     max-height: 90vh;
     overflow-y: auto;
-    border-radius: 20px 20px 0 0;
+    border-radius: 8px 8px 0 0;
     padding: 32px 20px 22px;
   }
   .global-confirm-modal h2 {

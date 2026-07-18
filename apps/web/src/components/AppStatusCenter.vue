@@ -66,7 +66,7 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
   min-height: 52px;
   padding: 12px 14px;
   border: 1px solid #fae2d8;
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, .97);
   box-shadow: 0 18px 48px rgba(86, 43, 25, .2);
   color: #6f3a24;

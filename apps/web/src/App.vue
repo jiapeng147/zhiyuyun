@@ -824,7 +824,7 @@ const headerActions = computed(() => {
   color: #526079;
   background: #fff;
   border: 1px solid #E8E8E8;
-  border-radius: 18px;
+  border-radius: 8px;
   padding: 28px;
   text-align: center;
   box-shadow: 0 10px 26px rgba(94, 50, 31, .08);
@@ -842,7 +842,7 @@ const headerActions = computed(() => {
   min-height: 36px;
   padding: 0 14px;
   border: 1px solid currentColor;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   color: inherit;
   font-weight: 800;

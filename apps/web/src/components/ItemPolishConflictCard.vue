@@ -66,7 +66,7 @@ const view = computed(() => itemPolishConflictCardState(props.conflict))
   margin: 14px 0;
   padding: 16px;
   border: 1px solid #f4c56a;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fffaf0;
   color: #344054;
 }

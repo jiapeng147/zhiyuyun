@@ -61,7 +61,7 @@ const menuOptions = computed(() => tabs.map(tab => ({
 <style scoped>
 .config-nav {
   border: 1px solid #e5eaf0;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
   min-height: calc(100vh - 188px);
@@ -100,7 +100,7 @@ const menuOptions = computed(() => tabs.map(tab => ({
 
 .config-nav-list :deep(.n-menu-item-content) {
   height: 40px;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #475569;
 }
 
@@ -128,7 +128,7 @@ const menuOptions = computed(() => tabs.map(tab => ({
 
 @media (max-width: 900px) {
   .config-nav {
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .config-nav-head {
