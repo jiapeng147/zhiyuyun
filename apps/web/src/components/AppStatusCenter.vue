@@ -65,11 +65,11 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
 .app-status-banner {
   min-height: 52px;
   padding: 12px 14px;
-  border: 1px solid #fae2d8;
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: rgba(255, 255, 255, .97);
-  box-shadow: 0 18px 48px rgba(86, 43, 25, .2);
-  color: #6f3a24;
+  box-shadow: var(--shadow-md);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -79,21 +79,28 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
 
 .app-status-banner.offline,
 .app-status-banner.warn {
-  border-color: #f2ca73;
-  background: rgba(255, 249, 232, .98);
-  color: #8a5300;
+  border-color: rgba(245, 158, 11, .34);
+  background: rgba(255, 251, 235, .98);
+  color: #9a6700;
+}
+
+.app-status-banner.info,
+.app-status-banner.loading {
+  border-color: rgba(24, 160, 88, .22);
+  background: rgba(240, 253, 244, .98);
+  color: var(--primary);
 }
 
 .app-status-banner.error {
-  border-color: #ffc9c9;
-  background: rgba(255, 245, 245, .98);
-  color: #c73535;
+  border-color: rgba(220, 38, 38, .26);
+  background: rgba(254, 242, 242, .98);
+  color: var(--red);
 }
 
 .app-status-banner.success {
-  border-color: #a9e5c4;
-  background: rgba(241, 253, 246, .98);
-  color: #137547;
+  border-color: rgba(24, 160, 88, .24);
+  background: rgba(240, 253, 244, .98);
+  color: var(--green);
 }
 
 .app-status-banner.loading {
@@ -116,10 +123,15 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
   height: 32px;
   padding: 0 12px;
   border: 1px solid currentColor;
-  border-radius: 9px;
+  border-radius: 4px;
   background: transparent;
   color: inherit;
-  font-weight: 800;
+  font-weight: 650;
+  transition: background-color 160ms ease-out, opacity 120ms ease-out, transform 120ms ease-out;
+}
+
+.app-status-retry:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .app-status-retry:disabled {
@@ -164,15 +176,29 @@ const isUrgent = computed(() => ['error', 'warn'].includes(props.notice?.type))
   height: 32px;
   flex: 0 0 auto;
   border: 0;
-  border-radius: 9px;
+  border-radius: 4px;
   background: transparent;
   color: inherit;
   font-size: 24px;
   line-height: 1;
+  transition: background-color 160ms ease-out, transform 120ms ease-out;
 }
 
-.app-status-close:hover {
-  background: rgba(105, 46, 20, .08);
+.app-status-close:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .app-status-retry:hover:not(:disabled),
+  .app-status-close:hover {
+    background: rgba(15, 23, 42, .06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-status-spinner {
+    animation-duration: 1.6s;
+  }
 }
 
 @media (max-width: 600px) {

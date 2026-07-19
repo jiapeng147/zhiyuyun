@@ -1217,7 +1217,6 @@ table tbody tr:last-child td {
 
 .global-notice,
 .xya-msg-alert,
-.app-status-banner,
 .modal-hint,
 .input-error {
   border: 1px solid var(--line) !important;
