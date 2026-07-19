@@ -1301,7 +1301,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   font-weight: 800;
   margin: 14px 0 28px;
   cursor: pointer;
-  transition: opacity 0.2s
+  transition: opacity 200ms ease
 }
 .login-submit:disabled {
   opacity: 0.6;
@@ -1911,7 +1911,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     background: rgba(255, 255, 255, .98);
     backdrop-filter: blur(12px);
     transform: translateX(-100%);
-    transition: transform .26s cubic-bezier(.4, 0, .2, 1);
+    transition: transform var(--dur-slow) var(--ease);
     z-index: 60;
     overflow-y: auto
   }
@@ -2086,7 +2086,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     flex-shrink: 0;
     padding: 0 12px;
     border: 1px solid #f2d8cd;
-    border-radius: 999px;
+    border-radius: 999rem;
     background: #F6F6F6;
     color: #a84c24;
     font-size: 12px;
@@ -3490,7 +3490,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
-  transition: opacity .2s;
+  transition: opacity 200ms ease;
 }
 .global-notice .retry-btn:hover:not(:disabled) { opacity: .8 }
 .global-notice .retry-btn:disabled { opacity: .5; cursor: not-allowed }
@@ -3609,7 +3609,7 @@ button:disabled {
 .feature-card,
 .preview-card,
 .metric-tile {
-  transition: transform .18s ease, box-shadow .18s ease;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .quick-card:hover,
@@ -3619,7 +3619,7 @@ button:disabled {
 }
 
 .app-btn {
-  transition: transform .12s ease, box-shadow .18s ease, opacity .15s ease;
+  transition: transform 120ms ease, box-shadow 180ms ease, opacity 150ms ease;
 }
 
 .app-btn:active:not(:disabled) {

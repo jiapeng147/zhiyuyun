@@ -248,7 +248,7 @@ textarea {
   color: rgba(255, 255, 255, .74) !important;
   font-weight: 500 !important;
   line-height: 40px !important;
-  transition: background .16s ease, color .16s ease !important;
+  transition: background-color 160ms ease, color 160ms ease !important;
 }
 
 .zy-shell-sider .zy-shell-menu .n-menu-item-content:hover {
@@ -1836,7 +1836,7 @@ table tbody tr:last-child td {
   .sidebar,
   .zy-shell-sider {
     transform: translateX(-100%) !important;
-    transition: transform .2s ease !important;
+    transition: transform 200ms ease !important;
   }
 
   .sidebar.open,

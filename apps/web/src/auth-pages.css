@@ -496,7 +496,7 @@
   align-items: center;
   gap: 12px;
   padding: 0 18px;
-  transition: border-color .2s ease, box-shadow .2s ease;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
 .auth-field:focus-within {
@@ -1078,7 +1078,7 @@
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-  transition: background .15s, opacity .15s;
+  transition: background-color 150ms ease, opacity 150ms ease;
 }
 .auth-code-btn:hover:not(:disabled) { background: rgba(20, 184, 166, .12); }
 .auth-code-btn:disabled { opacity: .5; cursor: not-allowed; }
