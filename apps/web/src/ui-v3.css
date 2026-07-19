@@ -516,7 +516,6 @@ table tbody tr:last-child td {
   font-weight: 600 !important;
 }
 
-.stat-icon,
 .circle-ico,
 .notify-summary-icon,
 .panel-head-mark,
@@ -531,30 +530,21 @@ table tbody tr:last-child td {
   justify-content: center !important;
 }
 
-.stat-icon.green,
 .dot.green,
 .tag.green {
   background: var(--green-soft) !important;
   color: var(--green) !important;
 }
 
-.stat-icon.orange,
 .dot.orange,
 .status-card.orange {
   background: var(--orange-soft) !important;
   color: var(--orange) !important;
 }
 
-.stat-icon.purple,
 .status-card.purple {
   background: var(--purple-soft) !important;
   color: var(--purple) !important;
-}
-
-.stat-icon.cyan,
-.blue-bg {
-  background: var(--cyan-soft) !important;
-  color: var(--cyan) !important;
 }
 
 /* Tabs and chips */
