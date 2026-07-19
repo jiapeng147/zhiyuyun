@@ -1,7 +1,5 @@
 import { showLegalNotice } from '../../utils/legalNotice.js'
 
-const asset = path => `/xya/${path}`
-
 function strokeIcon(paths) {
   return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`
 }
@@ -31,33 +29,6 @@ export const authIcons = {
   wechat: fillIcon('<path d="M8.6 6.1c-3.4 0-6.1 2.3-6.1 5.2 0 1.7.9 3.2 2.4 4.2l-.6 2.4 2.4-1.2c.6.1 1.2.2 1.9.2 3.4 0 6.1-2.3 6.1-5.2s-2.7-5.2-6.1-5.2Zm-2 4.2a.9.9 0 1 1 0-1.8.9.9 0 0 1 0 1.8Zm4 0a.9.9 0 1 1 0-1.8.9.9 0 0 1 0 1.8Z"/><path d="M16.4 10.1c-2.9 0-5.2 1.9-5.2 4.3 0 2.4 2.3 4.3 5.2 4.3.6 0 1.3-.1 1.8-.2l2 1-.5-2c1.2-.8 1.9-1.9 1.9-3.1 0-2.4-2.3-4.3-5.2-4.3Zm-1.7 3a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6Zm3.5 0a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6Z"/>'),
   qq: fillIcon('<path d="M12 4.2c-2.1 0-3.8 2.1-3.8 4.8 0 .6.1 1.1.3 1.7-.7.8-1.1 1.9-1.1 3.1 0 1.8.8 3.4 2.1 4.3l-.7 1.7c-.1.3.2.5.5.4l2.2-1.1c.2 0 .3.1.5.1s.3 0 .5-.1l2.2 1.1c.3.1.6-.1.5-.4l-.7-1.7c1.3-.9 2.1-2.5 2.1-4.3 0-1.2-.4-2.3-1.1-3.1.2-.5.3-1.1.3-1.7 0-2.7-1.7-4.8-3.8-4.8Zm-1.2 5.2a.9.9 0 1 1 0-1.8.9.9 0 0 1 0 1.8Zm2.4 0a.9.9 0 1 1 0-1.8.9.9 0 0 1 0 1.8Z"/>'),
 }
-
-export const authStats = [
-  { value: '专属环境', label: '运行与配置自主可控', icon: authIcons.user },
-  { value: '业务数据', label: '数据由当前系统统一管理', icon: authIcons.check },
-  { value: '按需配置', label: '能力以实际启用模块为准', icon: authIcons.shield },
-]
-
-export const dashboardVisualLayers = [
-  { key: 'chart-left', className: 'auth-visual-chart-left', src: asset('dashboard_3d/dashboard_3d_001.png') },
-  { key: 'logo-main', className: 'auth-visual-logo-main', src: asset('dashboard_3d/dashboard_3d_003.png') },
-  { key: 'chart-right', className: 'auth-visual-chart-right', src: asset('dashboard_3d/dashboard_3d_002.png') },
-  { key: 'cube-right', className: 'auth-visual-cube-right', src: asset('security_3d/security_3d_003.png') },
-  { key: 'base', className: 'auth-visual-base-main', src: asset('dashboard_3d/dashboard_3d_007.png') },
-]
-
-export const securityVisualLayers = [
-  { key: 'phone-left', className: 'auth-visual-security-phone', src: asset('security_3d/security_3d_001.png') },
-  { key: 'shield-main', className: 'auth-visual-security-main', src: asset('profile-center/profile-hero.png') },
-  { key: 'password-right', className: 'auth-visual-security-password', src: asset('security_3d/security_3d_008.png') },
-  { key: 'cube-right', className: 'auth-visual-security-cube', src: asset('security_3d/security_3d_003.png') },
-]
-
-export const loginFeatures = [
-  { title: '账号集中管理', desc: '查看账号与连接状态', icon: authIcons.robot },
-  { title: '运营数据概览', desc: '展示平台实际业务数据', icon: authIcons.chart },
-  { title: '自动化能力', desc: '以实际启用模块为准', icon: authIcons.layers },
-]
 
 export function openLegalDoc(title) {
   showLegalNotice(title)
