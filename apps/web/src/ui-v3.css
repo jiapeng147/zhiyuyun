@@ -1322,13 +1322,6 @@ table tbody tr:last-child td {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.mobile-lite,
-.m-page,
-.m-topbar {
-  background: var(--platform-bg) !important;
-  color: var(--text) !important;
-}
-
 @media (max-width: 1280px) {
   .dashboard-grid,
   .xya-msg-layout {
