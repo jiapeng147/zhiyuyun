@@ -196,3 +196,106 @@ onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', onFullscreenChange)
 })
 </script>
+
+<style scoped>
+.topbar.zy-shell-header {
+  position: static;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  height: var(--topbar);
+  margin: 0;
+  padding: 0 24px;
+  gap: 12px;
+  border-bottom: 0;
+  background: var(--platform-header);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.zy-shell-search {
+  width: min(460px, 42vw);
+}
+
+.zy-shell-search :deep(kbd) {
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #f9fafb;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+}
+
+.zy-shell-header-spacer {
+  flex: 1;
+}
+
+.zy-shell-user {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 8px;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.zy-shell-user:hover {
+  border-color: var(--line-strong);
+  background: #f9fafb;
+}
+
+.zy-shell-user span {
+  display: grid;
+  text-align: left;
+  line-height: 1.12;
+}
+
+.zy-shell-user strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.zy-shell-user small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.zy-shell-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+.zy-shell-status-dot.connected {
+  background: var(--green);
+}
+
+.zy-shell-status-dot.failed,
+.zy-shell-status-dot.disconnected {
+  background: var(--red);
+}
+
+.zy-shell-notice-time {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .topbar.zy-shell-header {
+    margin: 0 -14px 14px;
+    padding: 0 14px;
+  }
+
+  .zy-shell-search {
+    display: none;
+  }
+}
+</style>
