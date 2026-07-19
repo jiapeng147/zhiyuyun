@@ -740,22 +740,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   color: #758198
 }
 
-.status-bar {
-  position: fixed;
-  left: var(--sidebar);
-  right: 0;
-  bottom: 0;
-  height: 40px;
-  background: rgba(255, 255, 255, .92);
-  border-top: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  gap: 36px;
-  padding: 0 28px;
-  color: #6B6B6B;
-  z-index: 10
-}
-
 .dot {
   width: 8px;
   height: 8px;
@@ -771,74 +755,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 .dot.orange {
   background: #ff9f22
-}
-
-.hero {
-  height: 168px;
-  background: linear-gradient(110deg, #f2f7ff 0, #e8f2ff 58%, #dbe9ff 100%);
-  border: 1px solid #dfe9f8;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-  padding: 35px 125px
-}
-
-.hero h2 {
-  font-size: 28px;
-  color: #d8490c;
-  margin: 0 0 10px
-}
-
-.hero p {
-  color: #62718b;
-  margin: 0 0 18px;
-  font-size: 16px
-}
-
-.hero .chip {
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, .75);
-  border: 1px solid #dce8fa;
-  color: #0f766e;
-  margin-right: 9px;
-  display: inline-flex;
-  align-items: center;
-  font-weight: 700
-}
-
-.quick-grid {
-  grid-template-columns: repeat(4, 1fr)
-}
-
-.feature-grid {
-  grid-template-columns: repeat(4, 1fr)
-}
-
-.quick-card,
-.feature-card {
-  height: 96px;
-  border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(94, 50, 31, .04)
-}
-
-.quick-card b,
-.feature-card b {
-  display: block;
-  font-size: 17px;
-  margin-bottom: 6px
-}
-
-.quick-card span,
-.feature-card span {
-  color: #6B6B6B
 }
 
 .circle-ico {
@@ -1166,93 +1082,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   height: 34px
 }
 
-.bottom-actions {
-  position: fixed;
-  right: 0;
-  left: var(--sidebar);
-  bottom: 0;
-  height: 78px;
-  background: rgba(255, 255, 255, .94);
-  border-top: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 18px;
-  padding: 0 34px;
-  z-index: 12
-}
-
-.mini-map {
-  height: 165px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #d8f2e8 0, #e5eefc 35%, #fbf2d7 100%);
-  position: relative;
-  overflow: hidden;
-  border: 1px solid #f4e5df
-}
-
-.mini-map:before,
-.mini-map:after {
-  content: "";
-  position: absolute;
-  background: rgba(255, 255, 255, .75);
-  height: 18px;
-  width: 150%;
-  transform: rotate(-23deg);
-  left: -40px;
-  top: 62px
-}
-
-.mini-map:after {
-  transform: rotate(26deg);
-  top: 94px
-}
-
-.pin {
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  transform: translate(-50%, -50%);
-  width: 22px;
-  height: 22px;
-  background: #0f766e;
-  border-radius: 50% 50% 50% 0;
-  rotate: -45deg;
-  z-index: 2
-}
-
-.pin:after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: #fff
-}
-
-.kanban {
-  display: grid;
-  grid-template-columns: 310px minmax(0, 1fr) 430px;
-  gap: 18px
-}
-
-.list-card {
-  height: 680px;
-  overflow: auto;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  padding: 14px
-}
-
-.detail-card {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  padding: 18px
-}
-
 .settings-main {
   min-width: 0
 }
@@ -1277,27 +1106,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .json-copy{padding:3px 10px;font-size:12px;border:1px solid #f1e2db;background:#fff;color:#475569;border-radius:6px;cursor:pointer;transition:border-color 150ms ease, color 150ms ease, background 150ms ease}
 .json-copy:hover:not(:disabled){border-color:#14b8a6;color:#0f766e}
 .json-copy:disabled{cursor:default;color:#16a34a;border-color:#bbf7d0;background:#f0fdf4}
-
-.compare {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden
-}
-
-.compare th,
-.compare td {
-  height: 44px;
-  border: 1px solid #F0F0F0;
-  text-align: center
-}
-
-.compare th:first-child,
-.compare td:first-child {
-  text-align: left;
-  padding-left: 18px
-}
 
 .preview-card {
   height: 220px;
@@ -1332,18 +1140,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   margin-bottom: 8px
 }
 
-.file-drop {
-  height: 110px;
-  border: 1px dashed #e5c6b8;
-  border-radius: 8px;
-  background: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0f766e;
-  font-weight: 700
-}
-
 .pagination {
   height: 48px;
   display: flex;
@@ -1368,16 +1164,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   color: white
 }
 
-.empty-placeholder {
-  height: 140px;
-  border: 1px dashed #f1dfd7;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #98a4b7
-}
-
 @media (max-width:1500px) {
   :root {
     --sidebar: 250px
@@ -1385,11 +1171,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
   .stat-grid {
     grid-template-columns: repeat(3, 1fr)
-  }
-
-  .quick-grid,
-  .feature-grid {
-    grid-template-columns: repeat(2, 1fr)
   }
 
   .wide-right,
@@ -1724,26 +1505,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     margin: 10px 0 14px
   }
 
-  .quick-grid,
-  .feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px
-  }
-
-  .quick-card,
-  .feature-card {
-    height: auto;
-    min-height: 84px;
-    padding: 14px;
-    min-width: 0;
-    gap: 12px
-  }
-
-  .quick-card b,
-  .feature-card b {
-    font-size: 15px
-  }
-
   .form-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px
@@ -1764,66 +1525,13 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .publish-layout > *,
   .form-grid > *,
   .settings-layout > *,
-  .stat-grid > *,
-  .quick-grid > *,
-  .feature-grid > * {
+  .stat-grid > * {
     min-width: 0
   }
 
   .settings-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px
-  }
-
-  .kanban {
-    grid-template-columns: 1fr;
-    gap: 12px
-  }
-
-  .list-card {
-    height: auto;
-    max-height: 400px
-  }
-
-  /* ===== 英雄区 ===== */
-  .hero {
-    height: auto;
-    min-height: 120px;
-    padding: 22px 18px
-  }
-
-  .hero h2 {
-    font-size: 22px
-  }
-
-  .hero p {
-    font-size: 14px;
-    margin-bottom: 12px
-  }
-
-  /* ===== 状态栏 / 底部操作栏 ===== */
-  .status-bar {
-    left: 0;
-    gap: 16px;
-    padding: 0 14px;
-    overflow-x: auto;
-    font-size: 12px;
-    -webkit-overflow-scrolling: touch
-  }
-
-  .bottom-actions {
-    left: 0;
-    height: 64px;
-    padding: 0 14px;
-    gap: 10px;
-    flex-wrap: wrap
-  }
-
-  .bottom-actions .app-btn {
-    height: 38px;
-    min-width: 0;
-    padding: 0 14px;
-    font-size: 13px
   }
 
   .panel-head {
@@ -1833,12 +1541,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
   .panel-head h3 {
     font-size: 16px
-  }
-
-  .compare {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap
   }
 
   /* ===== 模态框 ===== */
@@ -2656,21 +2358,8 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 }
 
 .metric-tile,
-.right-drawer,
-.list-card,
-.detail-card {
+.right-drawer {
   box-shadow: 0 10px 26px rgba(94, 50, 31, .055)
-}
-
-.quick-card .circle-ico,
-.feature-card .circle-ico {
-  overflow: visible
-}
-
-.quick-card .circle-ico .ui-icon-img,
-.feature-card .circle-ico .ui-icon-img {
-  width: 34px;
-  height: 34px
 }
 
 .login-feature .circle-ico .ui-icon-img {
@@ -2904,14 +2593,6 @@ select.input {
   background: #fff
 }
 
-.quick-card {
-  cursor: pointer;
-  width: 100%;
-  color: inherit;
-  font: inherit;
-  text-align: left
-}
-
 button:disabled {
   opacity: .6;
   cursor: not-allowed
@@ -2924,19 +2605,9 @@ button:disabled {
 
 /* 视觉质感提升：hover/transition/focus */
 .right-drawer,
-.list-card,
-.detail-card,
-.quick-card,
-.feature-card,
 .preview-card,
 .metric-tile {
   transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.quick-card:hover,
-.feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 1px 2px rgba(94, 50, 31, .04), 0 12px 32px rgba(94, 50, 31, .10);
 }
 
 .app-btn {
@@ -2963,10 +2634,7 @@ button:focus-visible {
 .chip { border-radius: 6px; }
 
 /* 空态统一风格 */
-.empty-state,
-.empty-mini,
-.empty-box,
-.empty-placeholder {
+.empty-state {
   padding: 24px;
   text-align: center;
   color: #8a96aa;

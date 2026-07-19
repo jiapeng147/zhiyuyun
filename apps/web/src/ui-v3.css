@@ -330,9 +330,7 @@ label,
 .page-no,
 .link,
 .tab,
-.tabs button,
-.quick-card,
-.feature-card {
+.tabs button {
   border-radius: 4px !important;
   font-weight: 500 !important;
   box-shadow: none !important;
@@ -698,9 +696,6 @@ table tbody tr:last-child td {
   border-radius: 4px !important;
 }
 
-.quick-start-grid,
-.feature-grid,
-.quick-grid,
 .support-grid,
 .community-grid,
 .benefits-grid,
@@ -712,8 +707,6 @@ table tbody tr:last-child td {
   gap: 12px !important;
 }
 
-.quick-card,
-.feature-card,
 .support-card,
 .community-card,
 .option-card,
@@ -731,8 +724,6 @@ table tbody tr:last-child td {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.quick-card:hover,
-.feature-card:hover,
 .support-card:hover,
 .community-card:hover,
 .option-card:hover,
@@ -744,161 +735,6 @@ table tbody tr:last-child td {
 
 .card-arrow {
   color: var(--muted) !important;
-}
-
-/* Dashboard sections should feel like navigation blocks, not bordered table panels. */
-.dashboard-page .dashboard-section .panel-head,
-.dashboard-page .dashboard-section .zy-shell-card-head {
-  min-height: 0 !important;
-  padding: 0 !important;
-  border-bottom: 0 !important;
-  align-items: flex-start !important;
-}
-
-.dashboard-page .dashboard-section .panel-head > div {
-  min-width: 0 !important;
-  display: grid !important;
-  gap: 6px !important;
-}
-
-.dashboard-page .dashboard-section .panel-head h3 {
-  margin: 0 !important;
-  color: var(--text) !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  line-height: 1.35 !important;
-}
-
-.dashboard-page .dashboard-section .panel-head p {
-  margin: 0 !important;
-  color: var(--muted) !important;
-  font-size: 13px !important;
-  font-weight: 400 !important;
-  line-height: 1.6 !important;
-}
-
-/* Dashboard navigation cards need a stricter layout than generic quick cards. */
-.dashboard-page .quick-start-grid,
-.dashboard-page .feature-grid {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 16px !important;
-}
-
-.dashboard-page .quick-card,
-.dashboard-page .feature-card {
-  width: 100% !important;
-  height: auto !important;
-  min-height: 112px !important;
-  padding: 18px 16px !important;
-  display: grid !important;
-  grid-template-columns: 48px minmax(0, 1fr) 16px !important;
-  align-items: center !important;
-  column-gap: 14px !important;
-  row-gap: 8px !important;
-  overflow: visible !important;
-}
-
-.dashboard-page .feature-card {
-  min-height: 132px !important;
-}
-
-.dashboard-page .quick-card .circle-ico,
-.dashboard-page .feature-card .circle-ico {
-  grid-column: 1 !important;
-  width: 48px !important;
-  height: 48px !important;
-  flex: 0 0 48px !important;
-  align-self: center !important;
-}
-
-.dashboard-page .quick-text,
-.dashboard-page .feature-text {
-  grid-column: 2 !important;
-  min-width: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  justify-content: center !important;
-  gap: 5px !important;
-  overflow: visible !important;
-}
-
-.dashboard-page .quick-text strong,
-.dashboard-page .feature-text strong {
-  display: block !important;
-  width: 100% !important;
-  margin: 0 !important;
-  color: var(--text) !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  line-height: 1.35 !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-}
-
-.dashboard-page .quick-text span,
-.dashboard-page .feature-text span,
-.dashboard-page .feature-text em {
-  display: block !important;
-  width: 100% !important;
-  margin: 0 !important;
-  font-size: 12.5px !important;
-  line-height: 1.55 !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-}
-
-.dashboard-page .quick-text span,
-.dashboard-page .feature-text span {
-  color: var(--muted) !important;
-}
-
-.dashboard-page .feature-text em {
-  color: var(--primary) !important;
-  font-style: normal !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  line-height: 1.45 !important;
-}
-
-.dashboard-page .card-arrow {
-  grid-column: 3 !important;
-  align-self: center !important;
-  justify-self: end !important;
-  margin: 0 !important;
-  color: #8a94a6 !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
-  line-height: 1 !important;
-}
-
-@media (max-width: 1500px) {
-  .dashboard-page .quick-start-grid,
-  .dashboard-page .feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-}
-
-@media (max-width: 720px) {
-  .dashboard-page .quick-start-grid,
-  .dashboard-page .feature-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .dashboard-page .quick-card,
-  .dashboard-page .feature-card {
-    min-height: 0 !important;
-    grid-template-columns: 44px minmax(0, 1fr) 16px !important;
-    padding: 14px !important;
-  }
-
-  .dashboard-page .quick-card .circle-ico,
-  .dashboard-page .feature-card .circle-ico {
-    width: 44px !important;
-    height: 44px !important;
-    flex-basis: 44px !important;
-  }
 }
 
 .side-panel,
