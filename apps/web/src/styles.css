@@ -120,76 +120,6 @@ a {
   color: inherit
 }
 
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  background: var(--bg);
-}
-
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--sidebar);
-  background: var(--bg-elevated);
-  border-right: 1px solid var(--line);
-  padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  z-index: 20;
-  font-size: var(--text-sm);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  margin: 4px 4px 16px;
-  padding: 0 8px;
-  cursor: pointer;
-  width: calc(100% - 8px);
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  transition: background var(--dur) var(--ease);
-}
-.brand:hover { background: var(--bg-muted); }
-
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius);
-  background: var(--primary);
-  color: var(--primary-fg);
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0;
-  flex-shrink: 0;
-}
-.brand-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
-.brand-name {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0;
-  color: var(--text);
-  line-height: 1.2;
-}
-.brand-sub {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .avatar {
   width: 32px;
   height: 32px;
@@ -213,60 +143,6 @@ a {
   width: 26px;
   height: 26px;
   font-size: 11px;
-}
-
-.main {
-  margin-left: var(--sidebar);
-  width: calc(100% - var(--sidebar));
-  padding: 16px 32px 32px;
-  min-height: 100vh;
-  max-width: 100%;
-}
-
-.topbar {
-  position: sticky;
-  top: 0;
-  left: 0;
-  height: var(--topbar);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  z-index: 25;
-  background: rgba(250, 250, 250, 0.85);
-  backdrop-filter: saturate(180%) blur(8px);
-  -webkit-backdrop-filter: saturate(180%) blur(8px);
-  border-bottom: 1px solid var(--line);
-  margin: -16px -32px 16px;
-  padding: 0 32px;
-  justify-content: flex-end;
-}
-.page-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 16px;
-  min-height: 48px;
-  gap: 16px;
-}
-.page-head h1 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0;
-  color: var(--text);
-}
-.page-head p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
-.head-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
 }
 
 .app-btn {
@@ -813,23 +689,9 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     grid-template-columns: 1fr
   }
 
-  .topbar {
-    position: absolute
-  }
-
-  .page-head {
-    padding-right: 0
-  }
-
   .settings-layout {
     grid-template-columns: 1fr
   }
-}
-
-/* 桌面端隐藏移动端专用元素 */
-.sidebar-close,
-.sidebar-logout {
-  display: none
 }
 
 /* 移动端顶栏按钮（默认隐藏，仅移动端渲染时显示） */
@@ -843,83 +705,9 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 @media (max-width:900px) {
   /* ===== 移动端外壳：抽屉式侧边栏 ===== */
-  .app-shell {
-    display: block;
-    min-height: auto
-  }
-
   .app-shell.is-mobile.m-nav-open {
     overflow: hidden;
     height: 100vh
-  }
-
-  .sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: 280px;
-    max-width: 86vw;
-    border-right: 1px solid var(--line);
-    padding: 16px 16px 18px;
-    background: rgba(255, 255, 255, .98);
-    backdrop-filter: blur(12px);
-    transform: translateX(-100%);
-    transition: transform var(--dur-slow) var(--ease);
-    z-index: 60;
-    overflow-y: auto
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: 0 24px 60px rgba(20, 36, 58, .28)
-  }
-
-  .sidebar-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    right: 12px;
-    top: 14px;
-    width: 38px;
-    height: 38px;
-    border: 0;
-    background: transparent;
-    border-radius: 8px;
-    color: #526079;
-    z-index: 2
-  }
-
-  .sidebar-close:active {
-    background: #F0F0F0
-  }
-
-  .sidebar-close .ui-icon {
-    width: 22px;
-    height: 22px
-  }
-
-  .sidebar-logout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 44px;
-    margin-top: 12px;
-    border: 1px solid #ffd6d6;
-    border-radius: 8px;
-    background: #fff8f8;
-    color: #ef4444;
-    font-weight: 700;
-    font-size: 15px
-  }
-
-  .brand.brand-image {
-    margin-bottom: 14px;
-    height: 50px
-  }
-
-  .brand-logo {
-    width: 168px
   }
 
   /* 移动端遮罩层 */
@@ -951,7 +739,7 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--line);
     z-index: 40;
-    /* 贴满页面边缘，抵消 .main 的 padding */
+    /* 贴满页面边缘，抵消内容区内边距 */
     margin: -12px -14px 0;
     width: calc(100% + 28px)
   }
@@ -1024,53 +812,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
   .m-appbar-user:active {
     background: #F0F0F0
-  }
-
-  /* ===== 主内容区 ===== */
-  .main {
-    margin-left: 0;
-    width: 100%;
-    min-height: auto;
-    padding: 12px 14px 24px
-  }
-
-  .topbar {
-    display: none
-  }
-
-  .page-head {
-    height: auto;
-    gap: 10px;
-    margin-top: 8px;
-    margin-bottom: 6px;
-    padding-right: 0;
-    flex-direction: column;
-    align-items: flex-start
-  }
-
-  .page-head h1 {
-    font-size: 22px;
-    line-height: 1.2
-  }
-
-  .page-head p {
-    margin-top: 4px;
-    font-size: 13px;
-    line-height: 1.5
-  }
-
-  .head-actions {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 8px
-  }
-
-  .head-actions .app-btn {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 38px;
-    padding: 0 12px;
-    font-size: 13px
   }
 
   .toolbar {
@@ -1228,12 +969,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .panel-head h3 {
     font-size: 16px;
     font-weight: 700;
-  }
-
-  /* 页面标题：更好的视觉层次 */
-  .page-head h1 {
-    font-weight: 800;
-    letter-spacing: 0;
   }
 
   /* 按钮触摸区域优化 */
@@ -1793,24 +1528,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   width: 24px;
   height: 24px;
   opacity: .78
-}
-
-.brand.brand-image {
-  height: 62px;
-  margin-bottom: 18px
-}
-
-.brand-logo {
-  width: 210px;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain
-}
-
-.brand-logo.brand-icon {
-  width: 48px;
-  height: 48px
 }
 
 .avatar-img {
