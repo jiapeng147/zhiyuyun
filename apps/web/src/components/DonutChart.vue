@@ -151,4 +151,11 @@ const segments = computed(() => {
   margin-left: auto;
   color: #1b2942;
 }
+
+@media (max-width: 900px) {
+  .donut-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
 </style>

@@ -699,73 +699,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   text-anchor: middle
 }
 
-.donut-row {
-  display: flex;
-  align-items: center;
-  gap: 24px
-}
-
-.donut {
-  width: 176px;
-  height: 176px;
-  border-radius: 50%;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto
-}
-
-.donut:after {
-  content: "";
-  position: absolute;
-  inset: 32px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: inset 0 0 0 1px #F0F0F0
-}
-
-.donut strong,
-.donut span {
-  position: relative;
-  z-index: 2
-}
-
-.donut strong {
-  font-size: 22px
-}
-
-.donut span {
-  color: #758198;
-  font-size: 13px;
-  margin-top: 4px
-}
-
-.donut-legend {
-  flex: 1
-}
-
-.donut-legend div {
-  height: 31px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #4b5870
-}
-
-.donut-legend i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  display: inline-block
-}
-
-.donut-legend b {
-  margin-left: auto;
-  color: #1b2942
-}
-
 .health-summary-card {
   width: 176px;
   flex: 0 0 auto;
@@ -2336,12 +2269,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
   .login-top .brand-logo {
     width: 170px
-  }
-
-  /* ===== 其他组件 ===== */
-  .donut-row {
-    flex-direction: column;
-    gap: 16px
   }
 
   .health-summary-card {
