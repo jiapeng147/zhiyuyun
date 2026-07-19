@@ -144,3 +144,241 @@ function onMenuSelect(key) {
   if (key) emit('navigate', key)
 }
 </script>
+
+<style scoped>
+.sidebar.zy-shell-sider {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar);
+  padding: 0;
+  border: 0;
+  background: var(--platform-sider);
+  box-shadow: 2px 0 8px rgba(29, 35, 41, 0.05);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+:global(.zy-layout-sider) .sidebar.zy-shell-sider {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.sidebar-close {
+  display: none;
+}
+
+.zy-shell-logo {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  padding: 0 18px;
+  gap: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.zy-shell-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.zy-shell-logo-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.zy-shell-logo-text {
+  display: grid;
+  gap: 0;
+  line-height: 1.15;
+}
+
+.zy-shell-logo-text strong {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.zy-shell-logo-text small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+}
+
+.zy-shell-menu-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 10px 12px;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu),
+.zy-shell-sider :deep(.n-menu) {
+  background: transparent;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-content) {
+  height: 40px;
+  margin: 1px 0;
+  padding-right: 12px;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 500;
+  line-height: 40px;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-content:hover) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-content--selected),
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-content--selected:hover) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-content-header) {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 40px;
+  overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  line-height: 40px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-content__icon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  min-width: 20px;
+  height: 40px;
+  margin-right: 10px;
+  color: inherit;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-group-title) {
+  height: auto;
+  min-height: 22px;
+  padding: 14px 12px 5px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.zy-shell-sider :deep(.zy-shell-menu .n-menu-item-group:first-child .n-menu-item-group-title) {
+  padding-top: 6px;
+}
+
+.zy-shell-sider-bottom {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-top: 0;
+}
+
+.zy-shell-profile {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 50px;
+  padding: 0 8px;
+  gap: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.zy-shell-profile span {
+  display: grid;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.zy-shell-profile strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.zy-shell-profile small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+}
+
+.zy-shell-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.76);
+  font-weight: 500;
+}
+
+.zy-shell-logout:hover {
+  border-color: rgba(208, 48, 80, 0.45);
+  background: rgba(208, 48, 80, 0.12);
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .sidebar.zy-shell-sider {
+    z-index: 60;
+    max-width: 86vw;
+    transform: translateX(-100%);
+    transition: transform 200ms ease;
+  }
+
+  .sidebar.zy-shell-sider.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+</style>
