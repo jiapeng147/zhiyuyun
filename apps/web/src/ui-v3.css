@@ -148,16 +148,13 @@ textarea {
 }
 
 /* Platform primitives and active controls */
-.zy-shell-card,
 .table-wrap,
 .xy-modal,
 .modal-card,
 .modal-content,
 .order-modal,
 .drawer,
-.drawer-panel,
 .content-panel,
-.setting-card,
 .notify-panel,
 .notify-preview-card,
 .xya-msg-card,
@@ -170,12 +167,7 @@ textarea {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.zy-shell-card:hover {
-  border-color: var(--line-strong) !important;
-}
-
 .panel-head,
-.zy-shell-card-head,
 .notify-panel-head,
 .xya-msg-card-head,
 .modal-head,
@@ -201,9 +193,7 @@ textarea {
 .panel-head p,
 .subtle,
 .muted,
-.modal-subtitle,
-.drawer-subtitle,
-.section-desc {
+.modal-subtitle {
   color: var(--muted) !important;
 }
 
@@ -212,8 +202,7 @@ textarea {
 .toolbar-actions,
 .detail-toolbar,
 .xya-msg-filter-row,
-.xya-msg-search-row,
-.notify-toolbar {
+.xya-msg-search-row {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
@@ -294,16 +283,14 @@ input:focus,
 .form-grid,
 .field-grid,
 .notify-form-grid,
-.cookie-field-grid,
-  .ops-form-grid {
+.cookie-field-grid {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 16px !important;
 }
 
 .form-grid .form-row,
-.field,
-.config-field {
+.field {
   display: grid !important;
   gap: 8px !important;
 }
@@ -311,7 +298,6 @@ input:focus,
 label,
 .field-label,
 .form-row label,
-.config-label,
 .notify-field label {
   color: var(--text-secondary) !important;
   font-weight: 500 !important;
@@ -470,9 +456,7 @@ table tbody tr:last-child td {
   margin: 0 0 16px !important;
 }
 
-.metric-card,
 .overview-card,
-.status-card,
 .summary-item,
 .metric-tile,
 .notify-summary-card,
@@ -487,7 +471,6 @@ table tbody tr:last-child td {
   box-shadow: var(--shadow-xs) !important;
 }
 
-.metric-card:hover,
 .overview-card:hover,
 .summary-item:hover,
 .metric-tile:hover,
@@ -495,20 +478,15 @@ table tbody tr:last-child td {
   border-color: var(--primary) !important;
 }
 
-.stat-info span,
 .metric-tile span,
 .summary-label,
-.account-info-label,
-.notify-summary-label {
+.account-info-label {
   color: var(--muted) !important;
   font-size: 13px !important;
 }
 
-.stat-info strong,
 .metric-tile b,
 .summary-value,
-.account-info-value,
-.notify-summary-value,
 .ov-value,
 .metric-value {
   color: var(--text) !important;
@@ -536,23 +514,15 @@ table tbody tr:last-child td {
   color: var(--green) !important;
 }
 
-.dot.orange,
-.status-card.orange {
+.dot.orange {
   background: var(--orange-soft) !important;
   color: var(--orange) !important;
-}
-
-.status-card.purple {
-  background: var(--purple-soft) !important;
-  color: var(--purple) !important;
 }
 
 /* Tabs and chips */
 .tabs,
 .products-tabs,
-.xya-msg-tabs,
-.profile-tabs,
-.notify-channel-tabs {
+.xya-msg-tabs {
   min-height: 38px !important;
   padding: 3px !important;
   border: 1px solid var(--line) !important;
@@ -566,9 +536,7 @@ table tbody tr:last-child td {
 
 .tab,
 .tabs button,
-.xya-msg-tabs button,
-.profile-tabs button,
-.notify-channel-tabs button {
+.xya-msg-tabs button {
   height: 30px !important;
   padding: 0 12px !important;
   border: 0 !important;
@@ -580,9 +548,7 @@ table tbody tr:last-child td {
 
 .tab.active,
 .tabs button.active,
-.xya-msg-tabs button.active,
-.profile-tabs button.active,
-.notify-channel-tabs button.active {
+.xya-msg-tabs button.active {
   background: #fff !important;
   color: var(--text) !important;
   box-shadow: var(--shadow-xs) !important;
@@ -633,20 +599,10 @@ table tbody tr:last-child td {
   color: #9a6700 !important;
 }
 
-/* Dashboard */
-.dashboard-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 360px !important;
-  gap: 16px !important;
-  align-items: start !important;
-}
-
 .hero-card,
-.page-hero,
 .fbk-hero,
 .welcome-hero,
-.about-hero,
-.settings-hero {
+.about-hero {
   border: 1px solid var(--line) !important;
   border-radius: 6px !important;
   background: #fff !important;
@@ -656,34 +612,6 @@ table tbody tr:last-child td {
 
 .hero-card {
   min-height: 220px !important;
-}
-
-.hero-banner {
-  min-height: 220px !important;
-  background: #f8fafc !important;
-  color: var(--text) !important;
-}
-
-.hero-content,
-.hero-copy {
-  padding: 24px !important;
-}
-
-.hero-content h2,
-.hero-copy h1 {
-  color: var(--text) !important;
-  font-size: 24px !important;
-  font-weight: 600 !important;
-}
-
-.hero-content p,
-.hero-copy p {
-  color: var(--muted) !important;
-}
-
-.hero-arrow,
-.hero-dots button {
-  border-radius: 4px !important;
 }
 
 .support-grid,
@@ -699,7 +627,6 @@ table tbody tr:last-child td {
 
 .support-card,
 .community-card,
-.option-card,
 .batch-auth-card,
 .guide-card,
 .aics-entry-card,
@@ -716,20 +643,10 @@ table tbody tr:last-child td {
 
 .support-card:hover,
 .community-card:hover,
-.option-card:hover,
 .batch-auth-card:hover,
 .guide-card:hover {
   border-color: var(--primary) !important;
   background: #fbfffd !important;
-}
-
-.card-arrow {
-  color: var(--muted) !important;
-}
-
-.side-panel,
-.ad-side-panel {
-  margin-bottom: 16px !important;
 }
 
 .status-list,
@@ -739,7 +656,6 @@ table tbody tr:last-child td {
   gap: 8px !important;
 }
 
-.status-row,
 .option-line,
 .xya-msg-status-row {
   min-height: 38px !important;
@@ -752,9 +668,7 @@ table tbody tr:last-child td {
 }
 
 /* Product, account, order drawers */
-.drawer,
-.detail-drawer,
-.side-drawer {
+.drawer {
   background: #fff !important;
   border-left: 1px solid var(--line) !important;
   box-shadow: -8px 0 24px rgba(15, 23, 42, .10) !important;
@@ -944,9 +858,7 @@ table tbody tr:last-child td {
 }
 
 .settings-main,
-.page-grid,
 .aics-grid,
-.po-grid,
 .notify-workspace-grid {
   min-width: 0 !important;
 }
@@ -1058,9 +970,7 @@ table tbody tr:last-child td {
 }
 
 .auth-v3-showcase,
-.auth-v3-panel,
-.auth-panel,
-.auth-card {
+.auth-v3-panel {
   border: 1px solid var(--line) !important;
   border-radius: 6px !important;
   background: #fff !important;
@@ -1086,14 +996,6 @@ table tbody tr:last-child td {
 .auth-v3-showcase h1 span,
 .auth-v3-eyebrow {
   color: var(--primary) !important;
-}
-
-.auth-v3-console {
-  border: 1px solid #dbe3ee !important;
-  border-radius: 6px !important;
-  background: #0f172a !important;
-  box-shadow: 0 16px 44px rgba(15, 23, 42, .16) !important;
-  overflow: hidden !important;
 }
 
 .auth-v3-panel {
@@ -1148,7 +1050,6 @@ table tbody tr:last-child td {
 }
 
 @media (max-width: 1280px) {
-  .dashboard-grid,
   .xya-msg-layout {
     grid-template-columns: minmax(0, 1fr) !important;
   }
