@@ -808,39 +808,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   font-weight: 700
 }
 
-.hero-art {
-  position: absolute;
-  right: 70px;
-  top: 22px;
-  width: 360px;
-  height: 124px
-}
-
-.hero-art:before {
-  content: "";
-  position: absolute;
-  right: 30px;
-  top: 20px;
-  width: 240px;
-  height: 90px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #ffddcf, #0f766e);
-  filter: drop-shadow(0 18px 28px rgba(20, 184, 166, .22));
-  transform: skew(-18deg)
-}
-
-.hero-art:after {
-  content: "";
-  position: absolute;
-  right: 130px;
-  top: 34px;
-  width: 90px;
-  height: 54px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .58);
-  box-shadow: 70px -12px 0 rgba(255, 255, 255, .35), 120px 25px 0 rgba(255, 255, 255, .45)
-}
-
 .quick-grid {
   grid-template-columns: repeat(4, 1fr)
 }
@@ -968,46 +935,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   gap: 14px;
   padding: 0 17px;
   box-shadow: 0 8px 25px rgba(94, 50, 31, .06)
-}
-
-.big-illus {
-  width: 760px;
-  height: 360px;
-  margin-top: 20px;
-  position: relative
-}
-
-.big-illus {
-  width: 760px;
-  height: 360px;
-  margin-top: 20px;
-  position: relative
-}
-
-.big-illus:before {
-  content: "";
-  position: absolute;
-  left: 140px;
-  top: 80px;
-  width: 420px;
-  height: 210px;
-  border-radius: 8px;
-  background: linear-gradient(160deg, #eef6ff 0, #dbeaff 45%, #0f766e 100%);
-  transform: perspective(500px) rotateX(52deg) rotateZ(-4deg);
-  box-shadow: 0 35px 70px rgba(20, 184, 166, .22)
-}
-
-.big-illus:after {
-  content: "X";
-  position: absolute;
-  left: 310px;
-  top: 95px;
-  font-size: 172px;
-  line-height: 1;
-  font-weight: 900;
-  color: #0f766e;
-  text-shadow: 35px 30px 0 rgba(244, 75, 2, .18);
-  transform: rotate(-17deg)
 }
 
 .login-stats {
@@ -2033,10 +1960,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     margin-bottom: 12px
   }
 
-  .hero-art {
-    display: none
-  }
-
   /* ===== 状态栏 / 底部操作栏 ===== */
   .status-bar {
     left: 0;
@@ -2168,13 +2091,8 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     padding: 0 10px
   }
 
-  .big-illus,
   .login-stats {
     width: 100%
-  }
-
-  .big-illus {
-    height: 220px
   }
 
   .login-card {
@@ -2232,14 +2150,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
   .cookie-area {
     height: 120px
-  }
-
-  .alert-line {
-    height: auto;
-    min-height: 44px;
-    padding: 10px 14px;
-    font-size: 13px;
-    line-height: 1.5
   }
 
   .panel-head {
@@ -2336,35 +2246,12 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   }
 }
 
-.alert-line {
-  height: 48px;
-  border: 1px solid #99f6e4;
-  background: #eef6ff;
-  color: #864427;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  padding: 0 22px;
-  margin-bottom: 14px
-}
-
 .link {
   border: 0;
   background: transparent;
   color: #0f766e;
   font-weight: 700;
   margin-right: 12px
-}
-
-.cyan-bg {
-  background: #eafcff;
-  color: #d84d11
-}
-
-.orange-button {
-  background: #f59e0b !important;
-  border-color: #f59e0b !important;
-  color: #fff !important
 }
 
 /* visual polish: local SVG assets and normalized line icons */
@@ -2418,25 +2305,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .circle-ico .ui-icon {
   width: 20px;
   height: 20px
-}
-
-.hero-art {
-  background-image: url('./assets/illustrations/hero-dashboard.svg') !important;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center
-}
-
-.big-illus {
-  background-image: url('./assets/illustrations/auth-hero.svg');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center
-}
-
-.big-illus:before,
-.big-illus:after {
-  display: none !important
 }
 
 .avatar-img {
@@ -2945,22 +2813,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 .side-user .avatar {
   box-shadow: 0 6px 16px rgba(155, 61, 21, .15)
-}
-
-.hero-art {
-  background-image: url('/xya/dashboard_3d/dashboard_3d_002.png'), url('/xya/dashboard_3d/dashboard_3d_003.png'), url('/xya/dashboard_3d/dashboard_3d_004.png'), url('/xya/dashboard_3d/dashboard_3d_007.png') !important;
-  background-size: 170px auto, 170px auto, 95px auto, 420px auto !important;
-  background-repeat: no-repeat !important;
-  background-position: 72% 25%, 58% 51%, 91% 51%, 74% 86% !important;
-  filter: drop-shadow(0 16px 26px rgba(255, 100, 34, .15))
-}
-
-.big-illus {
-  background-image: url('/xya/dashboard_3d/dashboard_3d_001.png'), url('/xya/dashboard_3d/dashboard_3d_003.png'), url('/xya/dashboard_3d/dashboard_3d_002.png'), url('/xya/dashboard_3d/dashboard_3d_007.png') !important;
-  background-size: 190px auto, 210px auto, 220px auto, 520px auto !important;
-  background-repeat: no-repeat !important;
-  background-position: 13% 22%, 44% 42%, 75% 30%, 45% 88% !important;
-  filter: drop-shadow(0 20px 34px rgba(255, 100, 33, .14))
 }
 
 
