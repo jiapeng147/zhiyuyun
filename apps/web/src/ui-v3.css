@@ -147,64 +147,6 @@ textarea {
   max-width: var(--content-max) !important;
 }
 
-/* Page header */
-.page-head,
-.zy-shell-page-head {
-  min-height: 74px !important;
-  margin: 0 0 16px !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: space-between !important;
-  gap: 16px !important;
-}
-
-.zy-shell-title-block {
-  min-width: 0 !important;
-  display: grid !important;
-  gap: 8px !important;
-}
-
-.zy-shell-breadcrumb {
-  font-size: 13px !important;
-}
-
-.zy-shell-title-row {
-  display: flex !important;
-  align-items: baseline !important;
-  gap: 12px !important;
-  min-width: 0 !important;
-}
-
-.page-head h1 {
-  margin: 0 !important;
-  color: var(--text) !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
-  line-height: 1.25 !important;
-}
-
-.page-head p {
-  margin: 0 !important;
-  color: var(--muted) !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
-}
-
-.page-head-actions,
-.head-actions,
-.zy-shell-page-actions {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
-}
-
 /* Platform primitives and active controls */
 .zy-shell-card,
 .table-wrap,
@@ -1509,18 +1451,6 @@ table tbody tr:last-child td {
   .zy-layout-body {
     width: 100% !important;
     margin-left: 0 !important;
-  }
-
-  .page-head,
-  .zy-shell-page-head {
-    min-height: auto !important;
-    align-items: flex-start !important;
-    flex-direction: column !important;
-  }
-
-  .zy-shell-title-row {
-    display: grid !important;
-    gap: 4px !important;
   }
 
   .settings-layout,
