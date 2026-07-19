@@ -39,3 +39,31 @@ const labelPoints = computed(() => dotList.value.map((point, index) => ({
   x: point.x
 })))
 </script>
+
+<style scoped>
+.chart-wrap {
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+}
+
+.line-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.line-chart .grid line {
+  stroke: #edf2f7;
+  stroke-width: 1;
+}
+
+.line-chart text {
+  font-size: 13px;
+  fill: #6b6b6b;
+}
+
+.axis text {
+  text-anchor: middle;
+}
+</style>

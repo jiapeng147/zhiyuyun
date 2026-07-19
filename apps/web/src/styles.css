@@ -674,31 +674,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 .badge.gray { background: var(--bg-muted); color: var(--muted); }
 .badge.outline { background: transparent; border-color: var(--line); }
 
-.chart-wrap {
-  width: 100%;
-  height: 250px;
-  overflow: hidden
-}
-
-.line-chart {
-  width: 100%;
-  height: 100%
-}
-
-.line-chart .grid line {
-  stroke: #edf2f7;
-  stroke-width: 1
-}
-
-.line-chart text {
-  font-size: 13px;
-  fill: #6B6B6B
-}
-
-.axis text {
-  text-anchor: middle
-}
-
 .health-summary-card {
   width: 176px;
   flex: 0 0 auto;
