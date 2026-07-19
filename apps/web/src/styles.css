@@ -811,40 +811,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   gap: 18px
 }
 
-.config-nav {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  padding: 18px 14px;
-  min-height: 860px
-}
-
-.config-link {
-  width: 100%;
-  height: 48px;
-  border: 0;
-  background: transparent;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 0 14px;
-  color: #526079;
-  font-weight: 700;
-  margin-bottom: 7px
-}
-
-.config-link span {
-  width: 18px;
-  text-align: center
-}
-
-.config-link.active {
-  background: #eff5ff;
-  color: #0f766e
-}
-
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1802,17 +1768,8 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     padding-right: 0
   }
 
-  .config-nav {
-    min-height: auto
-  }
-
   .settings-layout {
     grid-template-columns: 1fr
-  }
-
-  .config-nav {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr)
   }
 }
 
@@ -2177,24 +2134,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .settings-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px
-  }
-
-  .config-nav {
-    display: flex;
-    overflow-x: auto;
-    gap: 8px;
-    padding: 10px;
-    min-height: auto;
-    -webkit-overflow-scrolling: touch
-  }
-
-  .config-link {
-    flex-shrink: 0;
-    height: 40px;
-    padding: 0 14px;
-    margin-bottom: 0;
-    white-space: nowrap;
-    font-size: 13px
   }
 
   .chat-shell {
@@ -2602,11 +2541,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 }
 
 .nav-icon .ui-icon {
-  width: 18px;
-  height: 18px
-}
-
-.config-link .ui-icon {
   width: 18px;
   height: 18px
 }
@@ -3119,11 +3053,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
 
 .nav-item.active .nav-icon .ui-icon-img {
   filter: brightness(0) invert(1) drop-shadow(0 2px 3px rgba(0, 0, 0, .08))
-}
-
-.config-link .ui-icon-img {
-  width: 22px;
-  height: 22px
 }
 
 .top-icon .ui-icon-img {

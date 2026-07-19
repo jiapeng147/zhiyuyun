@@ -329,7 +329,6 @@ label,
 .xya-msg-send-btn,
 .page-no,
 .link,
-.config-link,
 .tab,
 .tabs button,
 .quick-card,
@@ -1119,52 +1118,6 @@ table tbody tr:last-child td {
   align-items: start !important;
 }
 
-.config-nav,
-.zy-shell-config-nav {
-  position: sticky !important;
-  top: 72px !important;
-  min-height: calc(100vh - 112px) !important;
-  padding: 0 !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 6px !important;
-  background: #fff !important;
-  box-shadow: var(--shadow-xs) !important;
-  overflow: hidden !important;
-}
-
-.config-nav-head {
-  padding: 16px !important;
-  margin: 0 !important;
-  border-bottom: 1px solid var(--line) !important;
-  background: #fafafa !important;
-}
-
-.config-nav-head span {
-  color: var(--text) !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-}
-
-.config-nav-head p {
-  margin: 6px 0 0 !important;
-  color: var(--muted) !important;
-  font-size: 12px !important;
-}
-
-.config-nav-list {
-  padding: 8px !important;
-}
-
-.config-nav .n-menu-item-content {
-  height: 38px !important;
-  border-radius: 4px !important;
-}
-
-.config-nav .n-menu-item-content--selected {
-  background: var(--primary-soft) !important;
-  color: var(--primary) !important;
-}
-
 .settings-main,
 .page-grid,
 .aics-grid,
@@ -1409,12 +1362,6 @@ table tbody tr:last-child td {
   .field-grid,
   .notify-form-grid {
     grid-template-columns: 1fr !important;
-  }
-
-  .config-nav,
-  .zy-shell-config-nav {
-    position: static !important;
-    min-height: auto !important;
   }
 
   .xya-msg-layout {

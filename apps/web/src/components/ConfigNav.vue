@@ -1,5 +1,5 @@
 <template>
-  <aside class="config-nav">
+  <aside class="config-nav zy-shell-config-nav">
     <div class="config-nav-head">
       <span>配置目录</span>
       <p>站点、模型、通知与知识库</p>
@@ -64,9 +64,10 @@ const menuOptions = computed(() => tabs.map(tab => ({
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
-  min-height: calc(100vh - 188px);
+  min-height: calc(100vh - 112px);
+  padding: 0;
   position: sticky;
-  top: 112px;
+  top: 72px;
   overflow: hidden;
 }
 
