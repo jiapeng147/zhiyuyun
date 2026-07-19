@@ -142,118 +142,143 @@ function trapFocus(event) {
 .global-confirm-mask {
   position: fixed;
   inset: 0;
-  background: rgba(20, 36, 58, .58);
-  backdrop-filter: blur(2px);
   z-index: 2000;
+  padding: 24px;
+  background: rgba(17, 24, 39, .48);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .global-confirm-modal {
   position: relative;
-  width: 420px;
+  width: min(430px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: #fff;
-  border: 1px solid #E8E8E8;
-  border-radius: 8px;
-  box-shadow: 0 28px 80px rgba(17, 35, 67, .25);
-  padding: 40px 36px 28px;
+  box-shadow: var(--shadow-md);
   text-align: center;
-  color: #18223d;
+  color: var(--text);
+  box-sizing: border-box;
 }
 
 .global-confirm-close {
   position: absolute;
-  right: 20px;
-  top: 18px;
+  right: 14px;
+  top: 14px;
   width: 32px;
   height: 32px;
-  border: 0;
-  background: transparent;
-  color: #35435d;
-  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--muted);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out, transform 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .global-confirm-close:hover {
+    color: var(--red);
+    border-color: #f5c2cc;
+    background: var(--red-soft);
+  }
+}
+
+.global-confirm-close:active {
+  transform: scale(0.97);
 }
 
 .global-confirm-close .ui-icon {
-  width: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .global-confirm-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 18px;
+  width: 48px;
+  height: 48px;
+  margin: 4px auto 14px;
   border-radius: 50%;
-  background: #f0f7ff;
+  background: var(--cyan-soft);
+  color: var(--cyan);
 }
 
 .global-confirm-icon.dangerous {
-  background: #fef2f2;
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .global-confirm-icon .ui-icon {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
 }
 
 .global-confirm-modal h2 {
-  margin: 0 0 12px;
+  margin: 0 32px 10px;
   font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
   text-align: center;
 }
 
 .global-confirm-desc {
-  margin: 0 0 28px;
+  margin: 0 0 18px;
   font-size: 13px;
-  line-height: 1.8;
+  line-height: 1.7;
   white-space: pre-wrap;
-  color: #64748b;
+  color: var(--muted);
   text-align: center;
 }
 
 .global-confirm-input-wrap {
-  margin: 0 0 24px;
+  margin: 0 0 18px;
 }
 
 .global-confirm-input {
   width: 100%;
-  height: 42px;
-  padding: 0 14px;
-  border: 1px solid #ede1dc;
-  border-radius: 8px;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
   font-size: 14px;
-  color: #1e293b;
+  color: var(--text);
   outline: none;
   box-sizing: border-box;
-  transition: border-color 200ms ease;
+  transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
 
 .global-confirm-input:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(24, 160, 88, .1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(24, 160, 88, .14);
 }
 
 .global-confirm-input::placeholder {
-  color: #94a3b8;
+  color: var(--muted-foreground);
 }
 
 .global-confirm-actions {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 .global-confirm-actions .app-btn {
-  min-width: 120px;
-  height: 40px;
-  font-size: 14px;
+  min-width: 96px;
 }
 
 @media (max-width: 900px) {
@@ -262,7 +287,7 @@ function trapFocus(event) {
     padding: 0;
   }
   .global-confirm-modal {
-    width: 100% !important;
+    width: 100%;
     max-width: 100vw;
     max-height: 90vh;
     overflow-y: auto;

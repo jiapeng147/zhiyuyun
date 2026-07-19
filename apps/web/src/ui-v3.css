@@ -240,7 +240,6 @@ input[type="tel"],
 input[type="date"],
 .config-input,
 .config-textarea,
-.global-confirm-input,
 .xya-msg-select,
 .xya-msg-search-box,
 .xya-msg-image-url-input {
@@ -276,7 +275,6 @@ textarea:focus,
 input:focus,
 .config-input:focus,
 .config-textarea:focus,
-.global-confirm-input:focus,
 .xya-msg-search-box:focus-within,
 .xya-msg-image-url-input:focus {
   border-color: var(--primary) !important;
@@ -941,8 +939,7 @@ table tbody tr:last-child td {
 .drawer-close,
 .detail-close,
 .modal-close,
-.order-modal-close,
-.global-confirm-close {
+.order-modal-close {
   width: 32px !important;
   height: 32px !important;
   border: 1px solid var(--line) !important;
@@ -957,8 +954,7 @@ table tbody tr:last-child td {
 .drawer-close:hover,
 .detail-close:hover,
 .modal-close:hover,
-.order-modal-close:hover,
-.global-confirm-close:hover {
+.order-modal-close:hover {
   color: var(--red) !important;
   border-color: #f5c2cc !important;
   background: var(--red-soft) !important;
@@ -1180,8 +1176,7 @@ table tbody tr:last-child td {
 /* Modals and notices */
 .modal-mask,
 .modal-overlay,
-.order-modal-mask,
-.global-confirm-mask {
+.order-modal-mask {
   position: fixed !important;
   inset: 0 !important;
   z-index: 2000 !important;
@@ -1196,8 +1191,7 @@ table tbody tr:last-child td {
 .xy-modal,
 .modal-card,
 .modal-content,
-.order-modal,
-.global-confirm-modal {
+.order-modal {
   width: min(680px, 100%) !important;
   max-height: calc(100vh - 48px) !important;
   overflow: auto !important;
@@ -1212,27 +1206,7 @@ table tbody tr:last-child td {
   width: min(460px, 100%) !important;
 }
 
-.global-confirm-modal {
-  width: min(430px, 100%) !important;
-  text-align: center !important;
-}
-
-.global-confirm-icon {
-  width: 48px !important;
-  height: 48px !important;
-  margin: 4px auto 14px !important;
-  border-radius: 50% !important;
-  background: var(--cyan-soft) !important;
-  color: var(--cyan) !important;
-}
-
-.global-confirm-icon.dangerous {
-  background: var(--red-soft) !important;
-  color: var(--red) !important;
-}
-
 .modal-actions,
-.global-confirm-actions,
 .drawer-actions {
   display: flex !important;
   align-items: center !important;
