@@ -119,11 +119,13 @@
           <div v-if="acc.health != null" class="m-acc-health">
             <span class="m-acc-health-label">健康</span>
             <div class="m-acc-health-bar">
-              <div
+              <progress
                 class="m-acc-health-progress"
                 :class="healthBarClass(acc.health)"
-                :style="{ width: healthPercent(acc.health) + '%' }"
-              ></div>
+                :value="healthPercent(acc.health)"
+                max="100"
+                aria-label="账号健康度"
+              ></progress>
             </div>
             <span class="m-acc-health-num" :class="healthBarClass(acc.health)">{{ acc.health }}</span>
           </div>
@@ -332,12 +334,12 @@ onMounted(() => {
 .m-state-warning {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   margin-bottom: 12px; padding: 12px 14px; border: 1px solid #f6d58a;
-  border-radius: 14px; color: #8a4b08; background: #fff8e8;
+  border-radius: 8px; color: #8a4b08; background: #fff8e8;
   font-size: 12px; line-height: 1.5;
 }
 .m-state-warning button {
   min-height: 40px; padding: 0 14px; flex-shrink: 0; border: 1px solid #e2ad3b;
-  border-radius: 12px; color: #744006; background: white; font-weight: 600;
+  border-radius: 8px; color: #744006; background: white; font-weight: 600;
 }
 
 .m-acc-stats {
@@ -348,7 +350,7 @@ onMounted(() => {
 }
 .m-acc-stat-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 14px;
   display: flex;
   align-items: center;
@@ -359,7 +361,7 @@ onMounted(() => {
 .m-acc-stat-icon {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -412,7 +414,7 @@ onMounted(() => {
 }
 .m-acc-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -494,7 +496,7 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 600;
   padding: 2px 7px;
-  border-radius: 100px;
+  border-radius: 999rem;
   background: linear-gradient(135deg, #fff4e0, #ffe7c2);
   color: #ff9f22;
   flex-shrink: 0;
@@ -513,7 +515,7 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 100px;
+  border-radius: 999rem;
 }
 .m-acc-status-pill-on {
   background: rgba(22, 191, 120, 0.12);
@@ -581,18 +583,35 @@ onMounted(() => {
   flex: 1;
   height: 6px;
   background: #f0f4fa;
-  border-radius: 100px;
+  border-radius: 999rem;
   overflow: hidden;
   min-width: 40px;
 }
 .m-acc-health-progress {
+  display: block;
+  width: 100%;
   height: 100%;
-  border-radius: 100px;
-  transition: width 0.3s ease;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: 999rem;
+  background: transparent;
 }
-.m-acc-health-progress-high { background: linear-gradient(90deg, #16bf78, #2dd58a); }
-.m-acc-health-progress-mid { background: linear-gradient(90deg, #ff9f22, #ffb94a); }
-.m-acc-health-progress-low { background: linear-gradient(90deg, #ff5252, #ff7a7a); }
+.m-acc-health-progress::-webkit-progress-bar {
+  background: #f0f4fa;
+}
+.m-acc-health-progress::-webkit-progress-value {
+  border-radius: 999rem;
+}
+.m-acc-health-progress::-moz-progress-bar {
+  border-radius: 999rem;
+}
+.m-acc-health-progress-high::-webkit-progress-value { background: linear-gradient(90deg, #16bf78, #2dd58a); }
+.m-acc-health-progress-mid::-webkit-progress-value { background: linear-gradient(90deg, #ff9f22, #ffb94a); }
+.m-acc-health-progress-low::-webkit-progress-value { background: linear-gradient(90deg, #ff5252, #ff7a7a); }
+.m-acc-health-progress-high::-moz-progress-bar { background: linear-gradient(90deg, #16bf78, #2dd58a); }
+.m-acc-health-progress-mid::-moz-progress-bar { background: linear-gradient(90deg, #ff9f22, #ffb94a); }
+.m-acc-health-progress-low::-moz-progress-bar { background: linear-gradient(90deg, #ff5252, #ff7a7a); }
 .m-acc-health-num {
   font-size: 13px;
   font-weight: 700;
@@ -609,7 +628,7 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: 100px;
+  border-radius: 999rem;
   flex-shrink: 0;
 }
 .m-acc-cookie :deep(svg) { flex-shrink: 0; }
@@ -644,7 +663,7 @@ onMounted(() => {
   min-height: 44px;
   margin-top: 12px;
   border: 1px solid #f2dacf;
-  border-radius: 12px;
+  border-radius: 8px;
   color: #0f766e;
   background: #fff;
   font-weight: 600;
@@ -654,7 +673,7 @@ onMounted(() => {
 .m-acc-tip {
   margin-top: 20px;
   background: #f8faff;
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
@@ -668,7 +687,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
-  border-radius: 100px;
+  border-radius: 999rem;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;

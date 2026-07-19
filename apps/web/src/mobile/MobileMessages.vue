@@ -817,11 +817,11 @@ onBeforeUnmount(() => {
   padding: 10px 16px;
   min-height: 44px;
   box-sizing: border-box;
-  border-radius: 100px;
+  border-radius: 999rem;
   white-space: nowrap;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.15s;
+  transition: transform 150ms ease, border-color 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 .m-chip.active {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
@@ -864,11 +864,11 @@ onBeforeUnmount(() => {
   padding: 10px 14px;
   min-height: 44px;
   box-sizing: border-box;
-  border-radius: 100px;
+  border-radius: 999rem;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: all 0.15s;
+  transition: transform 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 .m-filter-tab.active {
   background: rgba(20, 184, 166,0.1);
@@ -880,7 +880,7 @@ onBeforeUnmount(() => {
   color: #0f766e;
   font-size: 10px;
   padding: 1px 6px;
-  border-radius: 100px;
+  border-radius: 999rem;
   font-weight: 600;
 }
 .m-filter-tab.active .m-filter-count {
@@ -895,7 +895,7 @@ onBeforeUnmount(() => {
   margin-bottom: 12px;
   padding: 12px 14px;
   border: 1px solid #f6d58a;
-  border-radius: 14px;
+  border-radius: 8px;
   color: #8a4b08;
   background: #fff8e8;
   font-size: 12px;
@@ -907,7 +907,7 @@ onBeforeUnmount(() => {
   padding: 0 14px;
   flex-shrink: 0;
   border: 1px solid #e2ad3b;
-  border-radius: 12px;
+  border-radius: 8px;
   color: #744006;
   background: white;
   font-weight: 600;
@@ -921,7 +921,7 @@ onBeforeUnmount(() => {
   margin: 10px 12px 0;
   padding: 9px 10px;
   border: 1px solid #fecaca;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff7f7;
   color: #b42318;
   font-size: 12px;
@@ -968,7 +968,7 @@ onBeforeUnmount(() => {
 
 .m-msg-list {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid #f0f4fa;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(94,50,31,0.05);
@@ -980,7 +980,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   border-bottom: 1px solid #f4f7fc;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background-color 150ms ease;
 }
 .m-msg-item:last-child { border-bottom: none; }
 .m-msg-item:active { background: #f8faff; }
@@ -1047,7 +1047,7 @@ onBeforeUnmount(() => {
   align-items: center;
   height: 18px;
   padding: 0 7px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: rgba(22, 163, 74, 0.12);
   color: #15803d;
   font-size: 10px;
@@ -1062,7 +1062,7 @@ onBeforeUnmount(() => {
 .m-msg-badge {
   min-width: 20px;
   height: 20px;
-  border-radius: 10px;
+  border-radius: 999rem;
   background: #ff5252;
   color: white;
   font-size: 11px;
@@ -1076,7 +1076,7 @@ onBeforeUnmount(() => {
 .m-msg-status {
   font-size: 11px;
   padding: 2px 8px;
-  border-radius: 100px;
+  border-radius: 999rem;
   flex-shrink: 0;
 }
 .m-msg-status-done {
@@ -1102,7 +1102,7 @@ onBeforeUnmount(() => {
 .m-msg-tip {
   margin-top: 20px;
   background: #f8faff;
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
@@ -1117,7 +1117,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
-  border-radius: 100px;
+  border-radius: 999rem;
   padding: 10px 16px;
   min-height: 44px;
   box-sizing: border-box;
@@ -1243,7 +1243,7 @@ onBeforeUnmount(() => {
   max-width: 75%;
   min-width: 0;
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   font-size: 14px;
   line-height: 1.5;
   word-wrap: break-word;
@@ -1267,7 +1267,7 @@ onBeforeUnmount(() => {
 .m-bubble-image {
   max-width: 100%;
   max-height: 200px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: block;
   cursor: pointer;
 }
@@ -1290,7 +1290,7 @@ onBeforeUnmount(() => {
   margin-top: 5px;
   padding: 0 10px;
   border: 1px solid rgba(255,255,255,0.65);
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
   background: rgba(0,0,0,0.08);
   font-size: 11px;
@@ -1325,12 +1325,12 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 44px;
   border: 1px solid #e8edf5;
-  border-radius: 100px;
+  border-radius: 999rem;
   padding: 0 16px;
   font-size: 14px;
   background: #f8faff;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .m-chat-input input:focus { border-color: #0f766e; background: white; box-shadow: 0 0 0 3px rgba(20, 184, 166,0.1); }
 .m-chat-send {
@@ -1346,7 +1346,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   flex-shrink: 0;
   box-shadow: 0 4px 10px rgba(20, 184, 166,0.3);
-  transition: transform 0.1s;
+  transition: transform 120ms ease-out;
 }
 .m-chat-send:active { transform: scale(0.95); }
 .m-chat-send:disabled {

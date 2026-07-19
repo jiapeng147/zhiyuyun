@@ -53,7 +53,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'profile')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e8f1ff,#ffded0);color:#0f766e">
+          <div class="m-menu-icon m-menu-icon-profile">
             <MIcon name="user" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -63,7 +63,7 @@
           <MIcon name="chevronRight" :size="16" class="m-menu-arrow" />
         </div>
         <div class="m-menu-item" @click="$emit('navigate', 'settings-notify')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#fff4e0,#ffe7c2);color:#ff9f22">
+          <div class="m-menu-icon m-menu-icon-notify">
             <MIcon name="bell" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -73,7 +73,7 @@
           <MIcon name="chevronRight" :size="16" class="m-menu-arrow" />
         </div>
         <div class="m-menu-item" @click="$emit('navigate', 'settings-system')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#e2f8ee,#cdf2df);color:#16bf78">
+          <div class="m-menu-icon m-menu-icon-system">
             <MIcon name="settings" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -92,7 +92,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'profile')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#f0ebff,#e2d8ff);color:#f68a5c">
+          <div class="m-menu-icon m-menu-icon-security">
             <MIcon name="lock" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -111,7 +111,7 @@
       </div>
       <div class="m-menu-list">
         <div class="m-menu-item" @click="$emit('navigate', 'logs')">
-          <div class="m-menu-icon" style="background:linear-gradient(135deg,#f0ebff,#e2d8ff);color:#f68a5c">
+          <div class="m-menu-icon m-menu-icon-logs">
             <MIcon name="help" :size="20" />
           </div>
           <div class="m-menu-info">
@@ -191,7 +191,7 @@ onMounted(() => {
 
 .m-pro-hero {
   background: linear-gradient(135deg, #e8f1ff 0%, #f0f5ff 100%);
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 16px;
   display: flex;
   align-items: flex-start;
@@ -242,7 +242,7 @@ onMounted(() => {
   gap: 3px;
   font-size: 10px;
   padding: 3px 7px;
-  border-radius: 100px;
+  border-radius: 999rem;
   font-weight: 500;
 }
 .m-pro-tag.ok {
@@ -256,17 +256,17 @@ onMounted(() => {
 .m-state-warning {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   margin-bottom: 16px; padding: 12px 14px; border: 1px solid #f6d58a;
-  border-radius: 14px; color: #8a4b08; background: #fff8e8;
+  border-radius: 8px; color: #8a4b08; background: #fff8e8;
   font-size: 12px; line-height: 1.5;
 }
 .m-state-warning button {
   min-height: 40px; padding: 0 14px; flex-shrink: 0; border: 1px solid #e2ad3b;
-  border-radius: 12px; color: #744006; background: white; font-weight: 600;
+  border-radius: 8px; color: #744006; background: white; font-weight: 600;
 }
 
 .m-pro-stats {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 16px 8px;
   display: flex;
   align-items: center;
@@ -298,7 +298,7 @@ onMounted(() => {
 
 .m-section {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(94,50,31,0.05);
@@ -324,7 +324,7 @@ onMounted(() => {
   padding: 4px 10px;
   min-height: 44px;
   box-sizing: border-box;
-  border-radius: 100px;
+  border-radius: 999rem;
   flex-shrink: 0;
 }
 .m-section-action:active { background: rgba(20, 184, 166,0.08); }
@@ -337,8 +337,8 @@ onMounted(() => {
   gap: 12px;
   padding: 14px 10px;
   cursor: pointer;
-  border-radius: 14px;
-  transition: background 0.15s;
+  border-radius: 8px;
+  transition: background-color 150ms ease;
   min-height: 56px;
   min-width: 0;
 }
@@ -346,11 +346,28 @@ onMounted(() => {
 .m-menu-icon {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+.m-menu-icon-profile {
+  background: linear-gradient(135deg, #e8f1ff, #ffded0);
+  color: #0f766e;
+}
+.m-menu-icon-notify {
+  background: linear-gradient(135deg, #fff4e0, #ffe7c2);
+  color: #ff9f22;
+}
+.m-menu-icon-system {
+  background: linear-gradient(135deg, #e2f8ee, #cdf2df);
+  color: #16bf78;
+}
+.m-menu-icon-security,
+.m-menu-icon-logs {
+  background: linear-gradient(135deg, #f0ebff, #e2d8ff);
+  color: #f68a5c;
 }
 .m-menu-info { flex: 1; min-width: 0; }
 .m-menu-title { font-size: 14px; font-weight: 600; color: #111111; margin-bottom: 2px; }
@@ -368,7 +385,7 @@ onMounted(() => {
   min-height: 22px;
   display: inline-flex;
   align-items: center;
-  border-radius: 100px;
+  border-radius: 999rem;
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -392,7 +409,7 @@ onMounted(() => {
   width: 100%;
   height: 48px;
   min-width: 0;
-  border-radius: 24px;
+  border-radius: 8px;
   border: none;
   font-size: 15px;
   font-weight: 600;
@@ -401,7 +418,7 @@ onMounted(() => {
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 120ms ease-out;
 }
 .m-btn:active { transform: scale(0.98); }
 .m-btn-outline {
@@ -428,7 +445,7 @@ onMounted(() => {
   .m-section { padding: 14px; }
   .m-section-header h2 { font-size: 16px; }
   .m-menu-item { padding: 12px 8px; gap: 10px; min-height: 52px; }
-  .m-menu-icon { width: 38px; height: 38px; border-radius: 10px; }
+  .m-menu-icon { width: 38px; height: 38px; border-radius: 8px; }
   .m-menu-title { font-size: 13px; }
   .m-menu-desc { font-size: 11px; }
 }

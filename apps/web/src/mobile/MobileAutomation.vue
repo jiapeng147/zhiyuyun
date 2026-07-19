@@ -155,7 +155,7 @@ defineEmits(['navigate', 'force-desktop'])
   align-items: flex-start;
   padding: 16px;
   margin-bottom: 16px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #fdf4e7, #fff8ef);
   border: 1px solid rgba(247, 186, 79, 0.28);
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
@@ -164,7 +164,7 @@ defineEmits(['navigate', 'force-desktop'])
 .m-summary-icon {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #ffcf70, #ff9f43);
   color: #fff;
   display: flex;
@@ -231,7 +231,7 @@ defineEmits(['navigate', 'force-desktop'])
   position: relative;
   padding: 14px;
   min-height: 44px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
   border: 1px solid #f0f4fa;
@@ -241,7 +241,7 @@ defineEmits(['navigate', 'force-desktop'])
 .m-auto-icon {
   width: 50px;
   height: 50px;
-  border-radius: 16px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -286,7 +286,7 @@ defineEmits(['navigate', 'force-desktop'])
   gap: 12px;
   padding: 14px;
   min-height: 44px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
   border: 1px solid #f0f4fa;
@@ -295,7 +295,7 @@ defineEmits(['navigate', 'force-desktop'])
 .m-menu-icon {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -333,7 +333,7 @@ defineEmits(['navigate', 'force-desktop'])
   gap: 12px;
   padding: 14px 16px;
   margin-top: 10px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #eff6ff, #F7F7F8);
   border: 1px solid rgba(20, 184, 166, 0.1);
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
@@ -342,7 +342,7 @@ defineEmits(['navigate', 'force-desktop'])
 .m-pc-notice-icon {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #d8e9ff, #ffd2bf);
   color: #0f766e;
   display: flex;
@@ -376,7 +376,7 @@ defineEmits(['navigate', 'force-desktop'])
   min-height: 48px;
   margin-top: 16px;
   border: none;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 14px 16px;
   background: linear-gradient(135deg, #0f766e, #ff7235);
   color: #fff;
@@ -405,11 +405,11 @@ defineEmits(['navigate', 'force-desktop'])
   .m-section-header h2 { font-size: 16px; }
   .m-auto-grid { gap: 8px; }
   .m-auto-item { padding: 12px; }
-  .m-auto-icon { width: 44px; height: 44px; border-radius: 13px; }
+  .m-auto-icon { width: 44px; height: 44px; border-radius: 8px; }
   .m-auto-title { font-size: 14px; }
   .m-auto-desc { font-size: 11px; min-height: 32px; }
   .m-menu-item { padding: 12px; gap: 10px; }
-  .m-menu-icon { width: 40px; height: 40px; border-radius: 12px; }
+  .m-menu-icon { width: 40px; height: 40px; border-radius: 8px; }
   .m-menu-title { font-size: 14px; }
   .m-menu-desc { font-size: 11px; }
   .m-menu-list { gap: 8px; }

@@ -127,7 +127,7 @@
         </div>
       </div>
       <div class="m-onboard-progress">
-        <div class="m-onboard-bar" :style="{ width: onboardingProgress + '%' }"></div>
+        <progress class="m-onboard-bar" :value="onboardingProgress" max="100" aria-label="新手引导完成进度"></progress>
         <span class="m-onboard-text">{{ onboardingDoneCount }}/3 已完成</span>
       </div>
     </div>
@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 18px rgba(37, 99, 235, .18); padding: 8px 5px; transform: rotate(-4deg);
 }
 .m-phone::before { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 22px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 4px; }
-.m-phone-screen { background: rgba(255,255,255,0.95); border-radius: 10px; height: 100%; padding: 12px 8px; margin-top: 4px; }
+.m-phone-screen { background: rgba(255,255,255,0.95); border-radius: 8px; height: 100%; padding: 12px 8px; margin-top: 4px; }
 .m-phone-msg { height: 10px; background: #e8f0ff; border-radius: 4px; margin-bottom: 6px; }
 .m-phone-msg-2 { width: 60%; }
 .m-fish-badge {
@@ -408,7 +408,7 @@ onBeforeUnmount(() => {
   background: white; border-radius: 6px; padding: 14px;
   display: flex; flex-direction: column; gap: 6px; min-width: 0;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04); border: 1px solid #e5e7eb;
-  cursor: pointer; transition: transform 0.15s;
+  cursor: pointer; transition: transform 150ms ease-out;
 }
 .m-stat-card:active { transform: scale(0.97); }
 .m-stat-icon {
@@ -478,7 +478,7 @@ onBeforeUnmount(() => {
 .m-quick-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .m-quick-item {
   display: flex; align-items: center; gap: 10px; min-width: 0;
-  padding: 12px; background: #f8fafc; border-radius: 6px; cursor: pointer; transition: background 0.15s;
+  padding: 12px; background: #f8fafc; border-radius: 6px; cursor: pointer; transition: background-color 150ms ease;
 }
 .m-quick-item:active { background: #eef4ff; }
 .m-quick-icon {
@@ -499,7 +499,7 @@ onBeforeUnmount(() => {
 .m-starter-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .m-starter-item {
   background: #f8fafc; border-radius: 6px; padding: 14px 10px; min-width: 0;
-  text-align: left; cursor: pointer; position: relative; transition: background 0.15s;
+  text-align: left; cursor: pointer; position: relative; transition: background-color 150ms ease;
 }
 .m-starter-item.done { background: #e8f8ee; }
 .m-starter-item:active { background: #eef4ff; }
@@ -521,8 +521,19 @@ onBeforeUnmount(() => {
   margin-top: 14px; height: 8px; background: #f0f4fa; border-radius: 4px; position: relative; overflow: hidden;
 }
 .m-onboard-bar {
-  height: 100%; background: #059669;
-  border-radius: 4px; transition: width 0.3s;
+  display: block; width: 100%; height: 100%; overflow: hidden; appearance: none;
+  border: 0; border-radius: 4px; background: transparent;
+}
+.m-onboard-bar::-webkit-progress-bar {
+  background: #f0f4fa;
+}
+.m-onboard-bar::-webkit-progress-value {
+  border-radius: 4px;
+  background: #059669;
+}
+.m-onboard-bar::-moz-progress-bar {
+  border-radius: 4px;
+  background: #059669;
 }
 .m-onboard-text {
   position: absolute; right: 0; top: -20px; font-size: 11px; color: #8c98ae;
@@ -576,7 +587,7 @@ onBeforeUnmount(() => {
   flex: 1; height: 48px; min-width: 0; border-radius: 6px; border: none;
   font-size: 15px; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  cursor: pointer; transition: transform 0.1s;
+  cursor: pointer; transition: transform 120ms ease-out;
 }
 .m-btn:active { transform: scale(0.97); }
 .m-btn-outline { background: white; color: #111111; border: 1px solid #e5e7eb; }

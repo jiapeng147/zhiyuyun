@@ -114,11 +114,11 @@
           </div>
           <div class="m-overview-row">
             <div class="m-overview-label">发货成功率</div>
-            <div class="m-overview-value">{{ successRateText }}</div>
-          </div>
-          <div class="m-progress">
-            <div class="m-progress-bar" :style="{ width: `${successRatePercent ?? 0}%` }"></div>
-          </div>
+          <div class="m-overview-value">{{ successRateText }}</div>
+        </div>
+        <div class="m-progress">
+            <progress class="m-progress-bar" :value="successRatePercent ?? 0" max="100" aria-label="发货成功率"></progress>
+        </div>
           <div class="m-overview-meta">
             <span class="m-overview-meta-item">
               <i class="m-dot m-dot-green"></i>成功 {{ stats.deliverySuccessCount }}
@@ -141,11 +141,15 @@
               class="m-chart-col"
             >
               <div class="m-chart-bar-wrap">
-                <div
+                <svg
                   class="m-chart-bar"
-                  :style="{ height: barHeight(item.success) + '%' }"
+                  viewBox="0 0 10 100"
+                  preserveAspectRatio="none"
                   :title="`${item.date}：${item.success}`"
-                ></div>
+                  :aria-label="`${item.date} 发货成功 ${item.success}`"
+                >
+                  <rect class="m-chart-bar-fill" x="0" :y="100 - barHeight(item.success)" width="10" :height="barHeight(item.success)" rx="2"></rect>
+                </svg>
               </div>
               <div class="m-chart-date">{{ item.shortDate }}</div>
               <div class="m-chart-val">{{ item.success }}</div>
@@ -394,7 +398,7 @@ onMounted(() => {
   font-weight: 600;
   color: #6B6B6B;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 }
 .m-date-tab.active {
   background: white;
@@ -454,7 +458,7 @@ onMounted(() => {
   min-width: 0;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
   border: 1px solid #e5e7eb;
-  transition: transform 0.15s;
+  transition: transform 150ms ease-out;
 }
 .m-stat-card:active {
   transform: scale(0.97);
@@ -568,10 +572,25 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 .m-progress-bar {
+  display: block;
+  width: 100%;
   height: 100%;
-  background: #059669;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
   border-radius: 6px;
-  transition: width 0.4s ease;
+  background: transparent;
+}
+.m-progress-bar::-webkit-progress-bar {
+  background: #e5e7eb;
+}
+.m-progress-bar::-webkit-progress-value {
+  border-radius: 6px;
+  background: #059669;
+}
+.m-progress-bar::-moz-progress-bar {
+  border-radius: 6px;
+  background: #059669;
 }
 .m-overview-meta {
   display: flex;
@@ -619,11 +638,13 @@ onMounted(() => {
 .m-chart-bar {
   width: 70%;
   max-width: 28px;
-  background: #2563eb;
+  height: 100%;
   border-radius: 6px 6px 0 0;
-  transition: height 0.4s ease;
-  min-height: 4px;
+  overflow: hidden;
   box-shadow: 0 2px 6px rgba(20, 184, 166, 0.18);
+}
+.m-chart-bar-fill {
+  fill: #2563eb;
 }
 .m-chart-date {
   margin-top: 6px;
@@ -650,9 +671,9 @@ onMounted(() => {
   padding: 12px;
   min-width: 0;
   background: #f8faff;
-  border-radius: 14px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background-color 150ms ease;
 }
 .m-quick-item:active {
   background: #eef4ff;
@@ -660,7 +681,7 @@ onMounted(() => {
 .m-quick-icon {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -736,7 +757,7 @@ onMounted(() => {
   .m-page-sub { font-size: 12px; }
   .m-stat-card { padding: 12px; }
   .m-stat-value { font-size: 20px; }
-  .m-stat-icon { width: 40px; height: 40px; border-radius: 11px; }
+  .m-stat-icon { width: 40px; height: 40px; border-radius: 8px; }
   .m-section { padding: 14px; }
   .m-overview-card { padding: 14px; }
   .m-overview-value { font-size: 22px; }

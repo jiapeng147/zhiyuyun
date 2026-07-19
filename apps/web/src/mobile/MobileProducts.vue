@@ -321,7 +321,7 @@ onMounted(async () => {
   height: 36px;
   background: white;
   border: 1px solid #f0f4fa;
-  border-radius: 100px;
+  border-radius: 999rem;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -340,7 +340,7 @@ onMounted(async () => {
   padding: 0 14px;
   background: white;
   border: 1px solid #f0f4fa;
-  border-radius: 100px;
+  border-radius: 999rem;
   color: #5a6a85;
   font-size: 13px;
   font-weight: 600;
@@ -349,7 +349,7 @@ onMounted(async () => {
   gap: 5px;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
-  transition: all 0.15s;
+  transition: transform 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
 .m-prod-refresh:active { transform: scale(0.96); }
 .m-prod-refresh :deep(svg) { color: #0f766e; flex-shrink: 0; }
@@ -358,12 +358,12 @@ onMounted(async () => {
 .m-data-warning {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   margin-bottom: 12px; padding: 12px 14px; border: 1px solid #f6d58a;
-  border-radius: 14px; color: #8a4b08; background: #fff8e8;
+  border-radius: 8px; color: #8a4b08; background: #fff8e8;
   font-size: 12px; line-height: 1.5;
 }
 .m-data-warning button {
   min-height: 40px; padding: 0 14px; flex-shrink: 0; border: 1px solid #e2ad3b;
-  border-radius: 12px; color: #744006; background: white; font-weight: 600;
+  border-radius: 8px; color: #744006; background: white; font-weight: 600;
 }
 
 .m-prod-stats {
@@ -374,7 +374,7 @@ onMounted(async () => {
 }
 .m-prod-stat-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 14px;
   display: flex;
   align-items: center;
@@ -385,7 +385,7 @@ onMounted(async () => {
 .m-prod-stat-icon {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,11 +431,11 @@ onMounted(async () => {
   border: 1px solid #f0e5e0;
   color: #5a6a85;
   padding: 0 14px;
-  border-radius: 100px;
+  border-radius: 999rem;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 150ms ease, border-color 150ms ease, color 150ms ease, background-color 150ms ease;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -475,7 +475,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
-  border-radius: 100px;
+  border-radius: 999rem;
   padding: 8px 18px;
   font-size: 13px;
   font-weight: 600;
@@ -485,7 +485,7 @@ onMounted(async () => {
 .m-empty-btn :deep(svg) { flex-shrink: 0; }
 .m-load-more {
   width: 100%; min-height: 44px; margin-top: 12px; border: 1px solid #fbe2d7;
-  border-radius: 14px; color: #0f766e; background: #f5f9ff; font-weight: 600;
+  border-radius: 8px; color: #0f766e; background: #f5f9ff; font-weight: 600;
   cursor: pointer;
 }
 .m-load-more:disabled { opacity: 0.65; cursor: wait; }
@@ -497,7 +497,7 @@ onMounted(async () => {
 }
 .m-prod-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 12px;
   box-shadow: 0 2px 8px rgba(94, 50, 31, 0.05);
   border: 1px solid #f0f4fa;
@@ -512,7 +512,7 @@ onMounted(async () => {
 .m-prod-cover {
   width: 80px;
   height: 80px;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
   background: #f4f7fc;
@@ -567,7 +567,7 @@ onMounted(async () => {
   font-size: 10px;
   font-weight: 600;
   padding: 3px 8px;
-  border-radius: 100px;
+  border-radius: 999rem;
   flex-shrink: 0;
 }
 .m-prod-status-on {
@@ -602,7 +602,7 @@ onMounted(async () => {
   gap: 2px;
   font-size: 10px;
   padding: 2px 7px;
-  border-radius: 100px;
+  border-radius: 999rem;
   font-weight: 600;
 }
 .m-prod-delivery :deep(svg) { flex-shrink: 0; }
@@ -641,7 +641,7 @@ onMounted(async () => {
 .m-prod-tip {
   margin-top: 20px;
   background: #f8faff;
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
@@ -655,7 +655,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: white;
   border: none;
-  border-radius: 100px;
+  border-radius: 999rem;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
