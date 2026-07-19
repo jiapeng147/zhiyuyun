@@ -166,8 +166,46 @@ async function handleRegister() {
   border-color: rgba(22, 191, 120, .24);
 }
 
+.auth-code-btn {
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(37, 99, 235, .32);
+  border-radius: 8px;
+  background: #eef4ff;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+.auth-code-btn:hover:not(:disabled) {
+  border-color: rgba(37, 99, 235, .5);
+  background: #e0ebff;
+}
+
+.auth-code-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.auth-muted {
+  color: var(--muted);
+  font-size: 13px;
+  margin-right: 6px;
+}
+
 .auth-register-login-row {
   justify-content: center;
   margin-top: 14px;
+}
+
+@media (max-width: 520px) {
+  .auth-code-btn {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
 }
 </style>

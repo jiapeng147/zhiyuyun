@@ -648,12 +648,29 @@ function openDoc(title) {
 .auth-v8-shell :deep(.auth-form) {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 14px;
+}
+
+.auth-v8-shell :deep(.auth-sr-only) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .auth-v8-shell :deep(.auth-field) {
   min-height: 52px !important;
   padding: 0 15px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
   border: 1px solid #dfe6f2 !important;
   border-radius: 8px !important;
   background: #fbfcff !important;
@@ -667,17 +684,47 @@ function openDoc(title) {
 }
 
 .auth-v8-shell :deep(.auth-field-control) {
+  flex: 1;
+  min-width: 0;
   min-height: 48px;
   border: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .auth-v8-shell :deep(.auth-field input) {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  outline: none !important;
+  background: transparent !important;
   color: #101828;
   font-size: 14px;
+  box-shadow: none !important;
+}
+
+.auth-v8-shell :deep(.auth-field input::placeholder) {
+  color: #98a2b3;
 }
 
 .auth-v8-shell :deep(.auth-field-icon) {
+  width: 20px;
   color: #98a2b3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.auth-v8-shell :deep(.auth-field-icon .ui-icon),
+.auth-v8-shell :deep(.auth-eye-btn .ui-icon) {
+  width: 18px;
+  height: 18px;
+}
+
+.auth-v8-shell :deep(.auth-field-with-action) {
+  justify-content: space-between;
 }
 
 .auth-v8-shell :deep(.auth-eye-btn) {
@@ -686,14 +733,38 @@ function openDoc(title) {
   color: #667085;
   background: transparent;
   border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.auth-v8-shell :deep(.auth-eye-btn:hover:not(:disabled)) {
+  background: #f2f5fa;
+  color: #344054;
 }
 
 .auth-v8-shell :deep(.auth-inline-row) {
   min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .auth-v8-shell :deep(.auth-check) {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: #475467;
+  font-size: 14px;
+}
+
+.auth-v8-shell :deep(.auth-check input) {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #2563eb;
 }
 
 .auth-v8-shell :deep(.auth-submit) {
@@ -701,13 +772,31 @@ function openDoc(title) {
   margin-top: 2px !important;
   border: 0 !important;
   border-radius: 8px !important;
+  background: #2563eb !important;
+  color: #fff !important;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0;
   box-shadow: 0 12px 24px rgba(37, 99, 235, .18) !important;
+  transition: background-color 160ms ease, transform 120ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.auth-v8-shell :deep(.auth-submit:hover:not(:disabled)) {
+  background: #1d4ed8 !important;
+}
+
+.auth-v8-shell :deep(.auth-submit:active:not(:disabled)) {
+  transform: scale(.98);
 }
 
 .auth-v8-shell :deep(.auth-text-link) {
   color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-v8-shell :deep(.auth-text-link:hover:not(:disabled)) {
+  color: #1d4ed8;
 }
 
 .auth-v8-shell :deep(.auth-agreement) {
@@ -801,6 +890,7 @@ function openDoc(title) {
 
   .auth-v8-shell :deep(.auth-inline-row) {
     align-items: flex-start;
+    flex-wrap: wrap;
     gap: 10px;
   }
 }
