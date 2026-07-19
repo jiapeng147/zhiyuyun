@@ -64,8 +64,3 @@ export const Icons = {
   info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
   power: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>`,
 }
-
-export function renderIcon(name, size = 24, className = '') {
-  const svg = Icons[name] || Icons.help
-  return `<span class="m-icon ${className}" style="width:${size}px;height:${size}px;display:inline-flex">${svg}</span>`
-}
