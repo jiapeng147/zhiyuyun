@@ -1023,27 +1023,9 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   stroke-linejoin: round
 }
 
-.circle-ico {
-  display: flex;
-  align-items: center;
-  justify-content: center
-}
-
 .circle-ico .ui-icon {
   width: 20px;
   height: 20px
-}
-
-.avatar-img {
-  background-image: url('./assets/avatars/xiaolongguo.svg') !important;
-  background-size: cover !important;
-  background-position: center !important
-}
-
-.product-thumb {
-  background-image: url('./assets/products/product-card.svg') !important;
-  background-size: cover !important;
-  background-position: center
 }
 
 .product-thumb:after {
@@ -1419,11 +1401,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   background-color: #f7fbff !important
 }
 
-.metric-tile,
-.right-drawer {
-  box-shadow: 0 10px 26px rgba(94, 50, 31, .055)
-}
-
 .xy-modal .ui-icon-img {
   width: 18px;
   height: 18px
@@ -1542,15 +1519,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   border-color: #bbf7d0
 }
 
-.empty-state {
-  padding: 24px;
-  text-align: center;
-  color: #8a96aa;
-  background: #FAFAFA;
-  border-radius: 8px;
-  border: 1px dashed #f6e6df
-}
-
 .danger-text {
   color: #ef4444 !important
 }
@@ -1595,10 +1563,6 @@ button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
 }
-
-/* 圆角层级：panel 14px / sub-card 10px / input 7px / chip 6px */
-.metric-tile { border-radius: 8px; }
-.chip { border-radius: 6px; }
 
 /* 空态统一风格 */
 .empty-state {
