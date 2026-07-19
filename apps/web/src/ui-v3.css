@@ -1285,23 +1285,12 @@ table tbody tr:last-child td {
   color: #9a6700 !important;
 }
 
-.zy-empty-state,
-.empty-cta,
 .xya-msg-empty {
   min-height: 160px !important;
   border: 1px dashed var(--line-strong) !important;
   border-radius: 6px !important;
   background: #fafafa !important;
   color: var(--muted) !important;
-}
-
-.zy-empty-icon,
-.empty-cta-icon {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 6px !important;
-  background: var(--cyan-soft) !important;
-  color: var(--cyan) !important;
 }
 
 /* Auth */
