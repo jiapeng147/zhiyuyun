@@ -376,8 +376,6 @@ label,
 }
 
 /* Tables */
-.base-table-wrap,
-.zy-shell-table,
 .table-wrap {
   width: 100% !important;
   overflow: auto !important;
@@ -386,7 +384,6 @@ label,
   background: #fff !important;
 }
 
-.base-table,
 table.table,
 .table {
   width: 100% !important;
@@ -397,7 +394,6 @@ table.table,
   overflow: hidden !important;
 }
 
-.base-table th,
 .table th,
 table th {
   height: 44px !important;
@@ -412,7 +408,6 @@ table th {
   white-space: nowrap !important;
 }
 
-.base-table td,
 .table td,
 table td {
   min-height: 52px !important;
@@ -424,29 +419,22 @@ table td {
   vertical-align: middle !important;
 }
 
-.base-table tbody tr:hover td,
 .table tbody tr:hover td,
 table tbody tr:hover td {
   background: #f7fbff !important;
 }
 
-.base-table tbody tr:last-child td,
 .table tbody tr:last-child td,
 table tbody tr:last-child td {
   border-bottom: 0 !important;
 }
 
-.table-empty,
 .empty-cell {
   min-height: 150px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   color: var(--muted) !important;
-}
-
-.bt-checkbox {
-  accent-color: var(--primary) !important;
 }
 
 .pagination,

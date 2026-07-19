@@ -650,33 +650,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   font-weight: 600;
 }
 
-.base-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.base-table th {
-  height: 36px;
-  text-align: left;
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 12px;
-  border-bottom: 1px solid var(--line);
-  background: transparent;
-  padding: 0 12px;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-.base-table td {
-  height: 44px;
-  border-bottom: 1px solid var(--line);
-  color: var(--text);
-  padding: 0 12px;
-  vertical-align: middle;
-}
-.base-table tr:last-child td { border-bottom: 0; }
-.base-table tr:hover td { background: var(--bg-muted); }
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -2333,24 +2306,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
     font-size: 16px
   }
 
-  /* ===== 表格横向滚动 ===== */
-  .base-table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch
-  }
-
-  .base-table thead,
-  .base-table tbody,
-  .base-table tr {
-    display: table;
-    width: max-content;
-    min-width: 100%;
-    table-layout: auto
-  }
-
   .compare {
     display: block;
     overflow-x: auto;
@@ -2554,38 +2509,6 @@ textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--prima
   .page-head h1 {
     font-weight: 800;
     letter-spacing: 0;
-  }
-
-  /* 表格横向滚动：更好的视觉提示 */
-  .base-table {
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #eef2fa;
-  }
-
-  .base-table thead {
-    background: #f8faff;
-  }
-
-  .base-table th {
-    font-size: 13px;
-    font-weight: 600;
-    color: #5a6a85;
-    padding: 10px 12px;
-    white-space: nowrap;
-  }
-
-  .base-table td {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .base-table tbody tr {
-    border-bottom: 1px solid #f4f7fc;
-  }
-
-  .base-table tbody tr:last-child {
-    border-bottom: none;
   }
 
   /* 按钮触摸区域优化 */
@@ -3574,21 +3497,6 @@ select.input {
   text-align: left
 }
 
-.base-table img.avatar.small {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover
-}
-
-.base-table img.product-thumb {
-  width: 58px;
-  height: 58px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: #edf2f7
-}
-
 button:disabled {
   opacity: .6;
   cursor: not-allowed
@@ -3597,7 +3505,7 @@ button:disabled {
 .xy-modal .manual-actions .app-btn,
 .xy-modal .modal-actions .app-btn {
   min-width: 96px
-}.table-empty{padding:28px;text-align:center;color:#8a94a6;background:#FFFFFF;border-radius:8px}
+}
 
 .mobile-lite{min-height:100vh;padding:24px;background:linear-gradient(180deg,#eef5ff,#FAFAFA);box-sizing:border-box;color:#15223a}.mobile-lite-card{background:rgba(255,255,255,.92);border:1px solid #e5edf8;border-radius:8px;padding:22px;box-shadow:0 18px 42px rgba(94,50,31,.10)}.mobile-lite-card.hero{text-align:left}.mobile-lite-card.hero img{width:54px;height:54px;border-radius:8px;display:block;margin-bottom:14px}.mobile-lite-card h2{margin:0 0 8px;font-size:26px}.mobile-lite-card p{margin:0;color:#64748b;line-height:1.7}.mobile-lite-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.mobile-lite-tile{border:1px solid #e5edf8;background:#fff;border-radius:8px;padding:16px;text-align:left;box-shadow:0 10px 22px rgba(94,50,31,.06)}.mobile-lite-tile b{display:block;font-size:16px;color:#0f766e;margin-bottom:6px}.mobile-lite-tile span{display:block;font-size:12px;color:#667085;line-height:1.5}.mobile-lite-card.warning{border-color:#fde68a;background:#fffaf0}.mobile-lite-actions{display:flex;gap:10px;margin-top:16px}.mobile-lite-actions button{flex:1;height:44px;border:1px solid #f5e3db;border-radius:999rem;background:#fff;color:#526079;font-weight:700}.mobile-lite-actions .primary{background:#0f766e;color:#fff;border-color:#0f766e}@media (max-width:430px){.mobile-lite{padding:16px}.mobile-lite-grid{grid-template-columns:1fr}.mobile-lite-actions{flex-direction:column}}
 
@@ -3645,8 +3553,7 @@ button:focus-visible {
 .empty-state,
 .empty-mini,
 .empty-box,
-.empty-placeholder,
-.table-empty {
+.empty-placeholder {
   padding: 24px;
   text-align: center;
   color: #8a96aa;

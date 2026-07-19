@@ -141,6 +141,72 @@ function onRowSelectClick(row, idx, e) {
 }
 </script>
 <style scoped>
+.base-table-wrap {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.base-table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.base-table th {
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: #fafafa;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.base-table td {
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #f0f2f5;
+  background: #fff;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.base-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .base-table tbody tr:hover td {
+    background: #f7fbff;
+  }
+}
+
+.base-table tbody tr[tabindex="0"] {
+  cursor: pointer;
+}
+
+.table-empty {
+  min-height: 150px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+}
+
 .col-select {
   width: 44px;
   text-align: center;
@@ -152,9 +218,36 @@ function onRowSelectClick(row, idx, e) {
   height: 16px;
   cursor: pointer;
   vertical-align: middle;
+  accent-color: var(--primary);
 }
 .base-table tbody tr[tabindex="0"]:focus-visible {
   outline: 3px solid rgba(20, 184, 166, 0.3);
   outline-offset: -3px;
+}
+
+.base-table :deep(img.avatar.small) {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.base-table :deep(img.product-thumb) {
+  width: 58px;
+  height: 58px;
+  border-radius: 8px;
+  background: #edf2f7;
+  object-fit: cover;
+}
+
+@media (max-width: 760px) {
+  .base-table-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .base-table th,
+  .base-table td {
+    padding: 10px 12px;
+  }
 }
 </style>
