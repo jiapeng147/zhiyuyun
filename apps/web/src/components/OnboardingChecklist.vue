@@ -84,7 +84,7 @@ function resetProgress() { done.value = []; persist() }
   min-height: 24px;
   padding: 0 9px;
   border: 1px solid rgba(15, 118, 110, .16);
-  border-radius: 999px;
+  border-radius: 999rem;
   background: rgba(236, 253, 245, .8);
   color: var(--onboarding-accent);
   font-size: 12px;

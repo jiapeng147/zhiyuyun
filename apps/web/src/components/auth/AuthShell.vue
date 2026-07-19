@@ -657,7 +657,7 @@ function openDoc(title) {
   border: 1px solid #dfe6f2 !important;
   border-radius: 8px !important;
   background: #fbfcff !important;
-  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .auth-v8-shell :deep(.auth-field:focus-within) {
@@ -735,7 +735,7 @@ function openDoc(title) {
 
 .auth-v8-shell .auth-panel-assurance span {
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: #f8fafc;
 }
 

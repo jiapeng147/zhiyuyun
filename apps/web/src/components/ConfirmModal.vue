@@ -232,7 +232,7 @@ function trapFocus(event) {
   color: #1e293b;
   outline: none;
   box-sizing: border-box;
-  transition: border-color .2s;
+  transition: border-color 200ms ease;
 }
 
 .global-confirm-input:focus {

@@ -314,7 +314,7 @@ onMounted(() => {
 .m-brand-sub {
   font-size: 11px;
   color: #6B6B6B;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   margin-top: 1px;
 }
 
@@ -328,7 +328,7 @@ onMounted(() => {
   box-shadow: none;
   border: 1px solid #eef2fa;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 120ms ease-out;
   color: inherit;
   font: inherit;
 }
@@ -395,10 +395,10 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 200ms ease;
   position: relative;
 }
-.m-tab :deep(svg) { transition: transform 0.2s; }
+.m-tab :deep(svg) { transition: transform 200ms ease-out; }
 .m-tab.active {
   color: #2563eb;
 }

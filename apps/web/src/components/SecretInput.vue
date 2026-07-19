@@ -38,7 +38,7 @@ const revealed = ref(false)
   background: linear-gradient(180deg, #ffffff, #FFFFFF);
   border-radius: 8px;
   overflow: hidden;
-  transition: border-color .18s ease, box-shadow .18s ease;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .secret-input:hover {
@@ -70,7 +70,7 @@ const revealed = ref(false)
 
 .secret-input-control.masked {
   -webkit-text-security: disc;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 .secret-input-toggle {
@@ -86,7 +86,7 @@ const revealed = ref(false)
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: background .15s ease, color .15s ease;
+  transition: background-color 150ms ease, color 150ms ease;
   white-space: nowrap;
 }
 

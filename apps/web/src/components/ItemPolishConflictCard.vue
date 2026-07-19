@@ -95,7 +95,7 @@ const view = computed(() => itemPolishConflictCardState(props.conflict))
 .conflict-status {
   flex: none;
   padding: 4px 9px;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: #fff0c2;
   color: #8a5700;
   font-size: 12px;

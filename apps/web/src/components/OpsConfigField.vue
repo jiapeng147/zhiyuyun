@@ -41,7 +41,7 @@ defineProps({
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .ops-config-field:hover {
@@ -81,7 +81,7 @@ defineProps({
   font-size: 14px;
   font-weight: 800;
   color: #111111;
-  letter-spacing: 0.2px;
+  letter-spacing: 0;
 }
 
 .ops-config-field-required {
@@ -129,7 +129,7 @@ defineProps({
   background: #fff;
   color: #5f4033;
   text-align: left;
-  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .ops-config-field-control :deep(.config-input) {
