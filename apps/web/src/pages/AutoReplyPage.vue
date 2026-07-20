@@ -9,7 +9,8 @@
       </button>
     </div>
 
-    <section class="auto-reply-hero auto-reply-command-center">
+    <BusinessStatusStrip :items="autoReplyStatusItems" />
+<section class="auto-reply-hero auto-reply-command-center">
       <div class="auto-reply-hero-head">
         <div class="auto-reply-hero-copy">
           <span class="auto-reply-hero-pill">客服自动化</span>
@@ -428,6 +429,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import { getAccounts } from '../api/accounts.js'
 import { getAutoReplyScopeProducts, getAutoReplyScopeStatus, updateProductAutoReplyScope, updateAccountAutoReplyScope, batchUpdateAutoReplyScope } from '../api/autoReplyScope.js'
 import { getBusinessSettings } from '../api/businessSettings.js'
@@ -670,6 +672,13 @@ const heroMetricCards = computed(() => [
     value: coverageRate.value == null ? '—' : `${coverageRate.value}%`,
     detail: '按已加载商品中配置启用自动回复的占比计算，不代表消息送达率。'
   }
+])
+
+const autoReplyStatusItems = computed(() => [
+  { key: 'scope', label: '作用域', value: selectedAccountSummary.value.title, tone: 'blue' },
+  { key: 'state', label: '状态', value: scopeStatusLabel.value, tone: scopeWritesAvailable.value ? 'green' : 'orange' },
+  { key: 'risk', label: '风险提醒', value: riskSummaryText.value, tone: riskSummaryText.value ? 'orange' : 'green' },
+  { key: 'pills', label: '当前范围', value: heroPills.value[0] || '未确认', tone: 'blue' }
 ])
 
 const heroPills = computed(() => [
