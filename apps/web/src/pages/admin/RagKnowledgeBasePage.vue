@@ -17,6 +17,8 @@
       </article>
     </section>
 
+    <BusinessStatusStrip :items="ragStatusItems" />
+
     <div class="toolbar">
       <AppButton :title="createKbActionHint" :disabled="kbsLoading" @click="refreshKbs">{{ kbsLoading ? '刷新中...' : '刷新' }}</AppButton>
       <AppButton type="primary" :title="createKbActionHint" :disabled="kbsAvailable !== true" @click="openCreateKb">+ 新建知识库</AppButton>
@@ -212,6 +214,7 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import BaseTable from '../../components/BaseTable.vue'
 import Badge from '../../components/Badge.vue'
 import AppButton from '../../components/AppButton.vue'
@@ -235,6 +238,14 @@ import { confirmAction } from '../../utils/confirmAction.js'
 import { createLatestRequestGuard, listRefreshRequestConfig } from '../../utils/latestRequest.js'
 
 const error = ref('')
+const ragStatusItems = computed(() => [
+  { key: 'list', label: '知识库列表', value: kbsAvailable.value === true ? '已加载' : (kbsAvailable.value === false ? '加载失败' : '加载中'), tone: kbsAvailable.value === true ? 'green' : (kbsAvailable.value === false ? 'red' : 'orange') },
+  { key: 'refreshing', label: '后台同步', value: kbsRefreshing.value ? '同步中' : '空闲', tone: kbsRefreshing.value ? 'orange' : 'green' },
+  { key: 'count', label: '知识库数', value: kbsAvailable.value === true ? kbs.value.length + ' 个' : '—', tone: kbsAvailable.value === true && kbs.value.length ? 'blue' : 'gray' },
+  { key: 'docs', label: '文档总数', value: kbsAvailable.value === true ? kbs.value.reduce((acc, k) => acc + Number(k.docCount || 0), 0) + ' 份' : '—', tone: 'blue' }
+])
+
+
 const success = ref('')
 const kbsWarning = ref('')
 const kbs = ref([])
