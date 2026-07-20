@@ -49,6 +49,17 @@ async def _refresh_group_counts(db: AsyncSession, group_id: int):
         group.available_count = max(total - used, 0)
 
 
+async def _load_owned_group(db: AsyncSession, group_id: int, current_user: dict):
+    result = await db.execute(
+        scope_by_owner(
+            select(CardGroup).where(CardGroup.id == group_id, CardGroup.deleted == 0),
+            CardGroup.owner_user_id,
+            current_user,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
 @router.post("/config/list", response_model=ResultObject[list])
 async def list_kami_configs(
     db: AsyncSession = Depends(get_db),
@@ -95,6 +106,9 @@ async def list_kami_items(
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        group = await _load_owned_group(db, req.kami_config_id, current_user)
+        if not group:
+            return ResultObject.failed("卡密分组不存在", code=404)
         result = await db.execute(
             select(CardItem).where(
                 CardItem.group_id == req.kami_config_id,
@@ -115,6 +129,9 @@ async def add_kami_item(
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        group = await _load_owned_group(db, req.kami_config_id, current_user)
+        if not group:
+            return ResultObject.failed("卡密分组不存在", code=404)
         item = CardItem(
             group_id=req.kami_config_id,
             card_key=req.kami_content,
@@ -137,6 +154,9 @@ async def batch_import_kami(
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        group = await _load_owned_group(db, req.kami_config_id, current_user)
+        if not group:
+            return ResultObject.failed("卡密分组不存在", code=404)
         for content in req.kami_list:
             item = CardItem(
                 group_id=req.kami_config_id,
