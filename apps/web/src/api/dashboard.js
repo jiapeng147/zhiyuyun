@@ -15,6 +15,3 @@ export function getDashboardSalesTrend(params) {
     params
   })
 }
-
-// 向后兼容：旧调用名保留给数据面板和移动端统计。
-export const getDashboardStats = getDashboardSummary
