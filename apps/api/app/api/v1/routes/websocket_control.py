@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import assert_account_owned
 from ....models.entities import XianyuAccount, XianyuAccountAuth
 from ....services.ws_client import ws_manager
 from ..deps import get_current_user
@@ -35,6 +36,15 @@ def _parse_account_id(value: Any) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+async def _require_owned_account(
+    db: AsyncSession,
+    current_user: dict,
+    account_id: int,
+) -> None:
+    if not await assert_account_owned(db, current_user, account_id):
+        raise HTTPException(status_code=400, detail="账号不存在或无权操作。")
 
 
 async def _require_account_credential(
@@ -108,6 +118,7 @@ async def ws_refresh_cookie(
     account_id = _parse_account_id(data.get("xianyuAccountId") or data.get("accountId"))
     if account_id is None or account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+    await _require_owned_account(db, current_user, account_id)
     await _require_account_credential(
         db,
         account_id,
@@ -152,7 +163,7 @@ async def ws_check_login(
     account_id = _parse_account_id(data.get("xianyuAccountId") or data.get("accountId"))
     if account_id is None or account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正数。")
-    del db, current_user
+    await _require_owned_account(db, current_user, account_id)
     from ....services.cookie_token_refresher import check_cookie_login
 
     check = await check_cookie_login(account_id)
@@ -192,6 +203,7 @@ async def ws_update_cookie(
     if not cookie:
         raise HTTPException(status_code=422, detail="cookie 不能为空。")
     try:
+        await _require_owned_account(db, current_user, account_id)
         await _require_account_credential(db, account_id, require_cookie=False)
         # account.update_account_cookie 接收 data: dict，统一 {"accountId":..., "cookie":...}
         result = await _account_update_cookie(
@@ -286,6 +298,7 @@ async def ws_retry_auto_captcha(
     if account_id is None or account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
     try:
+        await _require_owned_account(db, current_user, account_id)
         await _require_account_credential(db, account_id, require_cookie=True)
         from app.services.captcha_solver import handle_captcha_for_account
         result = await handle_captcha_for_account(
