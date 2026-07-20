@@ -25,6 +25,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip :items="modelStatusItems" />
+
     <section class="model-summary-grid" aria-label="模型接入摘要">
       <article class="model-summary-card">
         <span class="model-summary-icon blue">01</span>
@@ -235,6 +237,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import OpsConfigField from '../../components/OpsConfigField.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
@@ -274,6 +277,19 @@ const PROVIDER_PRESETS = [
   { value: 'siliconflow', label: 'SiliconFlow 硅基流动' },
   { value: 'openrouter', label: 'OpenRouter' },
 ]
+
+
+const modelStatusItems = computed(() => {
+  const configReady = configAvailable.value === true
+  const runtimeReady = runtimeStatus.value?.generalModelConfigured === true
+  const items = [
+    { key: 'config', label: '配置', value: configReady ? '已加载' : (configAvailable.value === false ? '加载失败' : '加载中'), tone: configReady ? 'green' : (configAvailable.value === false ? 'red' : 'orange') },
+    { key: 'runtime', label: '通用模型', value: runtimeReady ? '已配置' : (runtimeStatusAvailable.value === true ? '未设置' : '状态未知'), tone: runtimeReady ? 'green' : (runtimeStatusAvailable.value === true ? 'orange' : 'gray') },
+    { key: 'save', label: '保存', value: saving.value ? '保存中' : (configReady ? '可保存' : '不可保存'), tone: saving.value ? 'orange' : (configReady ? 'green' : 'gray') },
+    { key: 'load', label: '读取', value: loading.value ? '读取中' : '空闲', tone: loading.value ? 'orange' : 'green' }
+  ]
+  return items
+})
 
 const customProvider = ref('')
 
