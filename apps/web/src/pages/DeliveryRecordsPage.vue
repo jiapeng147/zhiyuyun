@@ -6,49 +6,52 @@
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <section class="delivery-records-command-center">
-      <div class="delivery-records-command-main">
-        <div class="delivery-records-command-kicker">
-          <span>发货审计</span>
-          <b>{{ recordsAvailable === true ? `共 ${total} 条` : '记录未确认' }}</b>
+    <BusinessSection class="delivery-records-command-section" title="发货记录" eyebrow="发货审计">
+      <template #extra>
+        <n-tag :type="recordsAvailable === false ? 'error' : (recordsLoading ? 'warning' : 'success')" size="small" :bordered="false">
+          {{ recordsAvailable === false ? '记录不可用' : (recordsLoading ? '刷新中' : '记录已就绪') }}
+        </n-tag>
+      </template>
+      <div class="delivery-records-command-layout">
+        <div class="delivery-records-command-copy">
+          <p>集中查看真实发货执行结果、失败原因、卡密/文本方式和订单闭环状态。</p>
+          <n-space class="delivery-records-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ recordsAvailable === true ? `共 ${total} 条` : '记录未确认' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>当前页 {{ rows.length }} 条</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ detailView ? '详情已展开' : '未选择详情' }}</n-tag>
+          </n-space>
         </div>
-        <h2>发货记录</h2>
-        <p>集中查看真实发货执行结果、失败原因、卡密/文本方式和订单闭环状态。</p>
-        <div class="delivery-records-command-meta">
-          <span>{{ recordsLoading ? '记录刷新中' : '记录已就绪' }}</span>
-          <span>当前页 {{ rows.length }} 条</span>
-          <span>{{ detailView ? '详情已展开' : '未选择详情' }}</span>
+        <div class="delivery-records-command-panel">
+          <div class="delivery-records-command-panel-head">
+            <span>审计动作</span>
+            <strong>{{ exportLoading ? '导出中' : '可操作' }}</strong>
+          </div>
+          <div class="delivery-records-command-buttons">
+            <n-button :loading="recordsLoading" @click="load">刷新记录</n-button>
+            <n-button type="primary" :disabled="recordsAvailable !== true || exportLoading" @click="exportCsv">
+              {{ exportLoading ? '导出中...' : '导出 CSV' }}
+            </n-button>
+          </div>
         </div>
       </div>
-      <div class="delivery-records-command-panel">
-        <div class="delivery-records-command-panel-head">
-          <span>审计动作</span>
-          <strong>{{ exportLoading ? '导出中' : '可操作' }}</strong>
-        </div>
-        <div class="delivery-records-command-buttons">
-          <n-button :loading="recordsLoading" @click="load">刷新记录</n-button>
-          <n-button type="primary" :disabled="recordsAvailable !== true || exportLoading" @click="exportCsv">
-            {{ exportLoading ? '导出中...' : '导出 CSV' }}
-          </n-button>
-        </div>
-      </div>
-    </section>
+    </BusinessSection>
+
+    <BusinessStatusStrip :items="deliveryRecordsStatusItems" />
 
     <div class="delivery-records-safety-note" role="status">
       为确保交易安全，发货记录暂不提供一键自动重试。请先在闲鱼 App 核对买家消息与平台发货状态；确需再次操作时，请前往“订单管理”使用手动发货闭环。
     </div>
 
-    <section class="delivery-records-metric-rail">
-      <article
+    <section class="delivery-records-metric-grid">
+      <BusinessMetricCard
         v-for="item in recordStatCards"
         :key="item.key"
-        class="delivery-records-metric-card"
-        :class="item.tone"
-      >
-        <span class="delivery-records-metric-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </article>
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </section>
 
     <section class="delivery-records-panel delivery-records-filter-panel">
@@ -161,7 +164,16 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NSelect, NStatistic } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NTag } from 'naive-ui'
+import {
+  CheckmarkCircleOutline,
+  FileTrayOutline,
+  LayersOutline,
+  WarningOutline,
+} from '@vicons/ionicons5'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -239,12 +251,18 @@ const recordStatCards = computed(() => {
   const failedCount = rows.value.filter(row => ['失败', '缺货', '配置错误'].includes(row.deliveryStatusText)).length
   const cardCount = rows.value.filter(row => row.deliveryModeText === '卡密').length
   return [
-    { key: 'total', title: '记录总数', value: recordsAvailable.value === true ? total.value : '—', change: '当前筛选分页总数', symbol: '总', tone: 'tone-blue' },
-    { key: 'page', title: '当前页', value: rows.value.length, change: `每页 ${query.size} 条`, symbol: '页', tone: 'tone-green' },
-    { key: 'success', title: '成功记录', value: successCount, change: '当前页成功/已完成', symbol: '成', tone: 'tone-cyan' },
-    { key: 'risk', title: '异常记录', value: failedCount, change: `当前页卡密 ${cardCount} 条`, symbol: '异', tone: 'tone-orange' }
+    { key: 'total', title: '记录总数', value: recordsAvailable.value === true ? total.value : '—', change: '当前筛选分页总数', icon: LayersOutline, tone: 'blue' },
+    { key: 'page', title: '当前页', value: rows.value.length, change: `每页 ${query.size} 条`, icon: FileTrayOutline, tone: 'green' },
+    { key: 'success', title: '成功记录', value: successCount, change: '当前页成功/已完成', icon: CheckmarkCircleOutline, tone: 'cyan' },
+    { key: 'risk', title: '异常记录', value: failedCount, change: `当前页卡密 ${cardCount} 条`, icon: WarningOutline, tone: failedCount ? 'red' : 'green' }
   ]
 })
+const deliveryRecordsStatusItems = computed(() => [
+  { key: 'list', label: '记录状态', value: recordsAvailable.value === true ? '已加载' : (recordsAvailable.value === false ? '不可用' : '加载中'), tone: recordsAvailable.value === false ? 'red' : (recordsAvailable.value === true ? 'green' : 'orange') },
+  { key: 'page', label: '当前页', value: `${rows.value.length} 条`, tone: 'blue' },
+  { key: 'risk', label: '异常记录', value: recordsAvailable.value === true ? `${rows.value.filter(row => ['失败','缺货','配置错误'].includes(row.deliveryStatusText)).length} 条` : '待确认', tone: 'orange' },
+  { key: 'export', label: '导出', value: exportLoading.value ? '导出中' : '可导出', tone: exportLoading.value ? 'orange' : 'green' }
+])
 
 function clearNotice() {
   error.value = ''
@@ -439,118 +457,30 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.delivery-records-command-center {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
-  gap: 16px;
-  min-width: 0;
-  padding: 18px;
-  border: 1px solid #dbe4ef;
-  border-left: 5px solid #2563eb;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(15, 118, 110, .05) 48%, rgba(255, 255, 255, .96)),
-    #fff;
-  box-shadow: 0 16px 42px rgba(15, 23, 42, .08);
-}
-
-.delivery-records-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: start;
-  gap: 10px;
-}
-
-.delivery-records-command-kicker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 740;
-}
-
 .delivery-records-command-kicker span,
-.delivery-records-command-kicker b {
-  min-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, .1);
-}
 
-.delivery-records-command-kicker b {
-  color: #0f766e;
-  background: rgba(15, 118, 110, .1);
-}
-
-.delivery-records-command-main h2 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 26px;
-  font-weight: 760;
-  line-height: 1.2;
-}
-
-.delivery-records-command-main p {
-  max-width: 760px;
-  margin: 0;
-  color: #526079;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.delivery-records-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.delivery-records-command-meta span {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 10px;
-  border: 1px solid rgba(148, 163, 184, .28);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, .82);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.delivery-records-command-panel {
-  align-self: stretch;
-  min-width: 0;
+.delivery-records-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.delivery-records-command-layout {
   display: grid;
-  gap: 14px;
-  padding: 14px;
-  border: 1px solid rgba(148, 163, 184, .25);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .92);
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: start;
 }
-
-.delivery-records-command-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.delivery-records-command-panel-head strong {
-  color: #2563eb;
-  font-size: 13px;
-}
-
-.delivery-records-command-buttons {
+.delivery-records-command-copy { min-width: 0; }
+.delivery-records-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.delivery-records-command-meta { margin-top: 12px; }
+.delivery-records-metric-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1280px) {
+  .delivery-records-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .delivery-records-command-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .delivery-records-metric-grid { grid-template-columns: minmax(0, 1fr); }
+  .delivery-records-command-copy h2 { font-size: 24px; }
 }
 
 .delivery-records-safety-note {
@@ -564,64 +494,7 @@ onBeforeUnmount(() => {
   line-height: 1.65;
 }
 
-.delivery-records-metric-rail {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.delivery-records-metric-card {
-  min-width: 0;
-  min-height: 132px;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid #e4ebf5;
-  border-top: 3px solid #64748b;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
-}
-
-.delivery-records-metric-icon {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: #fff;
-  background: #64748b;
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.delivery-records-metric-card.tone-blue { border-top-color: #2563eb; }
-.delivery-records-metric-card.tone-blue .delivery-records-metric-icon { background: #2563eb; }
-.delivery-records-metric-card.tone-green { border-top-color: #059669; }
-.delivery-records-metric-card.tone-green .delivery-records-metric-icon { background: #059669; }
-.delivery-records-metric-card.tone-cyan { border-top-color: #0891b2; }
-.delivery-records-metric-card.tone-cyan .delivery-records-metric-icon { background: #0891b2; }
-.delivery-records-metric-card.tone-orange { border-top-color: #ea580c; }
-.delivery-records-metric-card.tone-orange .delivery-records-metric-icon { background: #ea580c; }
-
-.delivery-records-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.delivery-records-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 760;
-}
-
-.delivery-records-metric-card small {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.45;
-}
+.delivery-records-metric-card.tone-blue .delivery-records-metric-card.tone-green .delivery-records-metric-card.tone-cyan .delivery-records-metric-card.tone-orange 
 
 .delivery-records-panel {
   min-width: 0;
@@ -771,33 +644,19 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 
-  .delivery-records-command-center,
+  .delivery-records-command-layout,
   .delivery-records-filter-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .delivery-records-command-center,
+  .delivery-records-command-layout,
   .delivery-records-panel {
     padding: 14px;
-  }
-
-  .delivery-records-command-main h2 {
-    font-size: 22px;
   }
 
   .delivery-records-command-buttons,
   .delivery-records-filter-actions {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .delivery-records-metric-rail {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .delivery-records-metric-card {
-    min-height: 124px;
-    padding: 12px;
   }
 
   .delivery-records-panel-head {
