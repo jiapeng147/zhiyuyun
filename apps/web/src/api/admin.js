@@ -28,7 +28,6 @@ export const adminUpdateBillingCoupon = (id, data) => request.put(`/admin/billin
 export const adminDeleteBillingCoupon = (id) => request.delete(`/admin/billing-coupons/${id}`)
 export const adminGetBillingSettings = () => request.get('/admin/billing-settings')
 export const adminSetBillingSettings = (data) => request.put('/admin/billing-settings', data)
-export const adminGetUserBilling = (id) => request.get(`/admin/users/${id}/billing`)
 export const adminGetUserProfile = (id) => request.get(`/admin/users/${id}/profile`)
 export const adminActivateSubscription = (id, data) => request.post(`/admin/users/${id}/subscription`, data)
 export const adminMarkBillingOrderPaid = (id, data = {}) => request.post(`/admin/billing-orders/${id}/mark-paid`, data)
@@ -40,6 +39,3 @@ export const getRegistration = () => request.get('/admin/registration')
 export const setRegistration = (enabled) => request.put('/admin/registration', { enabled })
 export const getEmailConfig = () => request.get('/admin/email-config')
 export const setEmailConfig = (data) => request.put('/admin/email-config', data)
-
-// === 公开套餐列表 (注册页用) ===
-export const getPublicPlans = () => request.get('/auth/plans', { suppressGlobalError: true })
