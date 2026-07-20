@@ -11,7 +11,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
+from ....core.tenancy import assert_account_owned, is_superadmin
 from ....models.entities import QuickReplyTemplate
+from ..deps import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -37,19 +39,60 @@ def _template_to_dict(t: QuickReplyTemplate) -> dict[str, Any]:
     }
 
 
+def _account_id_from_request(request: Request) -> int | None:
+    raw = (
+        request.query_params.get("accountId")
+        or request.query_params.get("xianyuAccountId")
+        or request.query_params.get("account_id")
+        or request.headers.get("X-Account-Id")
+    )
+    if raw in (None, ""):
+        return None
+    try:
+        account_id = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="accountId 必须为正整数") from exc
+    if account_id <= 0:
+        raise HTTPException(status_code=422, detail="accountId 必须为正整数")
+    return account_id
+
+
+async def _require_account_from_request(
+    request: Request,
+    db: AsyncSession,
+    current_user: dict,
+) -> int | None:
+    account_id = _account_id_from_request(request)
+    if account_id is None:
+        if is_superadmin(current_user):
+            return None
+        raise HTTPException(status_code=422, detail="accountId 不能为空")
+    if not await assert_account_owned(db, current_user, account_id):
+        raise HTTPException(status_code=400, detail="账号不存在或无权操作")
+    return account_id
+
+
+def _account_sql_scope(account_id: int | None, current_user: dict) -> str:
+    if is_superadmin(current_user) and account_id is None:
+        return "1 = 1"
+    return "account_id = :account_id"
+
+
 @router.get("/list")
 async def list_templates(
     request: Request,
     size: int = 100,
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """列出快捷回复模板（按 sort_order, id 排序）。"""
-    account_id = _account_id_from_request(request)
+    account_id = await _require_account_from_request(request, db, current_user)
     # 查询：当前账号专属 + 全租户通用（account_id IS NULL）
-    sql = text("""
+    account_scope = _account_sql_scope(account_id, current_user)
+    sql = text(f"""
         SELECT * FROM quick_reply_template
         WHERE deleted = 0
-          AND (account_id IS NULL OR account_id = :account_id)
+          AND ({account_scope} OR account_id IS NULL)
         ORDER BY sort_order ASC, id ASC
         LIMIT :size
     """)
@@ -66,20 +109,23 @@ async def save_template(
     body: TemplateSaveRequest,
     request: Request,
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """新增或更新快捷回复模板。id 为空时新增，否则更新。"""
-    account_id = _account_id_from_request(request)
+    account_id = await _require_account_from_request(request, db, current_user)
+    account_scope = _account_sql_scope(account_id, current_user)
 
     if body.id:
         # 更新
         result = await db.execute(
-            text("""
+            text(f"""
                 UPDATE quick_reply_template
                 SET title = :title, content = :content, sort_order = :sort_order, updated_time = NOW()
-                WHERE id = :id AND deleted = 0
+                WHERE id = :id AND deleted = 0 AND {account_scope}
             """),
             {
                 "id": body.id,
+                "account_id": account_id,
                 "title": body.title.strip(),
                 "content": body.content.strip(),
                 "sort_order": body.sort_order,
@@ -113,15 +159,17 @@ async def delete_template(
     request: Request,
     id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """软删除快捷回复模板。"""
-    pass  # account_id not needed here
+    account_id = await _require_account_from_request(request, db, current_user)
+    account_scope = _account_sql_scope(account_id, current_user)
     result = await db.execute(
-        text("""
+        text(f"""
             UPDATE quick_reply_template SET deleted = 1, updated_time = NOW()
-            WHERE id = :id
+            WHERE id = :id AND deleted = 0 AND {account_scope}
         """),
-        {"id": id}
+        {"id": id, "account_id": account_id}
     )
     if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="模板不存在或无权删除")
@@ -133,13 +181,21 @@ async def delete_template(
 async def init_default_templates(
     request: Request,
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """初始化 10 条默认快捷回复模板（仅当当前租户无模板时执行）。"""
-    account_id = _account_id_from_request(request)
+    account_id = await _require_account_from_request(request, db, current_user)
+    if account_id is None:
+        raise HTTPException(status_code=422, detail="accountId 不能为空")
 
     # 检查是否已有模板
     check = await db.execute(
-        text("SELECT COUNT(*) AS cnt FROM quick_reply_template WHERE deleted = 0")
+        text("""
+            SELECT COUNT(*) AS cnt
+            FROM quick_reply_template
+            WHERE deleted = 0 AND account_id = :account_id
+        """),
+        {"account_id": account_id},
     )
     existing = check.scalar() or 0
     if existing > 0:
@@ -165,7 +221,7 @@ async def init_default_templates(
                 VALUES (:account_id, :title, :content, :sort_order, 1, 0, NOW(), NOW())
             """),
             {
-                "account_id": None,  # 默认模板设为全租户通用
+                "account_id": account_id,
                 "title": title,
                 "content": content,
                 "sort_order": sort_order,
