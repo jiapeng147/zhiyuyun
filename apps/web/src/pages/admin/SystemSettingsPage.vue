@@ -28,6 +28,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip :items="systemStatusItems" />
+
     <section class="system-stat-grid" aria-label="系统服务状态">
       <article
         v-for="item in systemStatCards"
@@ -182,6 +184,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import { listKnowledgeBases } from '../../api/rag.js'
 import {
   cloneOpenSourceConfig,
@@ -266,6 +269,17 @@ const allAdCapabilitiesEnabled = computed(() => {
   return Boolean(runtimeStatus.commercialMutationIdempotencyEnabled)
     && Boolean(runtimeStatus.commercialPaymentIdempotencyEnabled)
     && Boolean(runtimeStatus.commercialPaidAdPlacementEnforced)
+})
+
+
+const systemStatusItems = computed(() => {
+  const items = [
+    { key: 'config', label: '配置状态', value: configAvailable.value ? '可用' : '加载中', tone: configAvailable.value ? 'green' : 'orange' },
+    { key: 'ads', label: '广告服务', value: adServiceReady.value ? '已就绪' : '待检测', tone: adServiceReady.value ? 'green' : 'gray' },
+    { key: 'save', label: '保存', value: saving.value ? '保存中' : '可保存', tone: saving.value ? 'orange' : 'green' },
+    { key: 'load', label: '读取', value: loading.value ? '读取中' : '空闲', tone: loading.value ? 'orange' : 'green' },
+  ]
+  return items
 })
 
 const adServiceReady = computed(() => {
