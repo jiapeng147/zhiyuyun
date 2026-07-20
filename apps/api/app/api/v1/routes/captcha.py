@@ -9,8 +9,11 @@
 """
 import logging
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import assert_account_owned
 from ..deps import get_current_user
 from ....services.captcha_solver import (
     detect_captcha_from_response,
@@ -23,9 +26,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/captcha", tags=["captcha"])
 
 
+async def _validate_account(
+    db: AsyncSession,
+    current_user: dict,
+    account_id: int,
+) -> ResultObject | None:
+    if not account_id:
+        return ResultObject.validate_failed("accountId 不能为空")
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在或无权操作", code=404)
+    return None
+
+
 @router.post("/detect", response_model=ResultObject[dict])
 async def detect_captcha(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """检测 API 响应是否包含滑块验证需求。
@@ -34,7 +50,11 @@ async def detect_captcha(
     """
     try:
         response = data.get("response")
-        account_id = data.get("accountId")
+        account_id = int(data.get("accountId") or 0)
+        if account_id:
+            invalid = await _validate_account(db, current_user, account_id)
+            if invalid:
+                return invalid
 
         result = detect_captcha_from_response(response)
         return ResultObject.success({
@@ -51,6 +71,7 @@ async def detect_captcha(
 @router.post("/instructions", response_model=ResultObject[dict])
 async def get_instructions(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """获取滑块验证操作指引。
@@ -59,6 +80,9 @@ async def get_instructions(
     """
     try:
         account_id = int(data.get("accountId") or 0)
+        invalid = await _validate_account(db, current_user, account_id)
+        if invalid:
+            return invalid
         captcha_url = data.get("captchaUrl")
         account_name = data.get("accountName")
 
@@ -80,6 +104,7 @@ async def get_instructions(
 @router.post("/auto-solve", response_model=ResultObject[dict])
 async def auto_solve_captcha(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """调用 Playwright 自动求解滑块。
@@ -93,8 +118,9 @@ async def auto_solve_captcha(
     """
     try:
         account_id = int(data.get("accountId") or 0)
-        if not account_id:
-            return ResultObject.validate_failed("accountId 不能为空")
+        invalid = await _validate_account(db, current_user, account_id)
+        if invalid:
+            return invalid
 
         target_url = data.get("targetUrl")
         headless = bool(data.get("headless", False))
@@ -115,6 +141,7 @@ async def auto_solve_captcha(
 @router.post("/handle", response_model=ResultObject[dict])
 async def handle_captcha(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """综合处理滑块验证场景：检测 + 通知 + 自动求解。
@@ -130,8 +157,9 @@ async def handle_captcha(
         account_id = int(data.get("accountId") or 0)
         response = data.get("response")
         auto_solve = bool(data.get("autoSolve", False))
-        if not account_id:
-            return ResultObject.validate_failed("accountId 不能为空")
+        invalid = await _validate_account(db, current_user, account_id)
+        if invalid:
+            return invalid
         result = await handle_captcha_for_account(
             account_id=account_id,
             response=response,

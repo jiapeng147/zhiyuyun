@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import assert_account_owned
 from ....core.upload_security import (
     UnsafePathError,
     UnsafeRemoteURLError,
@@ -91,6 +92,9 @@ async def auto_category(
     request_id = body.get("requestId", "")
 
     try:
+        if not await assert_account_owned(db, current_user, account_id):
+            return ResultObject.failed("账号不存在或无权操作", code=404)
+
         cover_image_url = (body.get("coverImageUrl") or "").strip()
         if not cover_image_url:
             return ResultObject.validate_failed("coverImageUrl 不能为空")
@@ -168,6 +172,9 @@ async def auto_category_upload(
     使用 multipart/form-data 上传。
     """
     try:
+        if not await assert_account_owned(db, current_user, account_id):
+            return ResultObject.failed("账号不存在或无权操作", code=404)
+
         if not file:
             return ResultObject.validate_failed("文件不能为空")
 
