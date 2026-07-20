@@ -1,19 +1,21 @@
 <template>
   <div class="accounts-page accounts-v11-shell" v-bind="$attrs">
     <main class="accounts-main">
-      <section class="accounts-command-center">
-        <div class="accounts-command-main">
-          <div class="accounts-command-kicker">
-            <span>账号资产</span>
-            <b>{{ selected ? accountTitle(selected) : '未选择账号' }}</b>
-          </div>
-          <h2>账号资产</h2>
+      <BusinessSection class="accounts-command-section" title="账号资产" eyebrow="账号资产">
+        <template #extra>
+          <n-tag :type="dataAvailable === false ? 'error' : (loading ? 'warning' : 'success')" size="small" :bordered="false">
+            {{ dataAvailable === false ? '列表不可用' : (loading ? '刷新中' : '可操作') }}
+          </n-tag>
+        </template>
+        <div class="accounts-command-layout">
+        <div class="accounts-command-copy">
           <p>统一管理闲鱼账号、登录凭证、资料刷新、实时连接、账号策略与商品擦亮任务。</p>
-          <div class="accounts-command-meta">
-            <span>{{ loading ? '账号刷新中' : `当前 ${accountMetric(stats.total)} 个账号` }}</span>
-            <span>正常 {{ accountMetric(stats.normal) }}</span>
-            <span>在线 {{ accountMetric(stats.wsOnline) }}</span>
-          </div>
+          <n-space class="accounts-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ selected ? accountTitle(selected) : '未选择账号' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ loading ? '账号刷新中' : `当前 ${accountMetric(stats.total)} 个账号` }}</n-tag>
+            <n-tag size="small" :bordered="false" round>正常 {{ accountMetric(stats.normal) }}</n-tag>
+            <n-tag size="small" :bordered="false" round>在线 {{ accountMetric(stats.wsOnline) }}</n-tag>
+          </n-space>
         </div>
         <div class="accounts-command-panel">
           <div class="accounts-command-panel-head">
@@ -27,7 +29,8 @@
           </div>
           <p class="accounts-action-hint">{{ accountActionHint }}</p>
         </div>
-      </section>
+        </div>
+      </BusinessSection>
 
       <div class="accounts-intel-banner">
         <Icon name="shield" />
@@ -48,17 +51,18 @@
         @refresh="refreshActivePolishConflict"
       />
 
-      <section class="accounts-metric-rail">
-        <article
+      <BusinessStatusStrip :items="accountsStatusItems" />
+
+      <section class="accounts-metric-grid">
+        <BusinessMetricCard
           v-for="item in accountStatCards"
           :key="item.key"
-          class="accounts-metric-card"
-          :class="item.tone"
-        >
-          <span class="accounts-metric-icon"><Icon :name="item.icon" /></span>
-          <n-statistic :label="item.title" :value="item.value" />
-          <small>{{ item.change }}</small>
-        </article>
+          :label="item.title"
+          :value="item.value"
+          :hint="item.change"
+          :tone="item.tone"
+          :icon="item.icon"
+        />
       </section>
 
       <section class="accounts-workspace">
@@ -667,8 +671,18 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NSelect, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NTag } from 'naive-ui'
+import {
+  AlertCircleOutline,
+  KeyOutline,
+  LinkOutline,
+  PeopleOutline,
+  ShieldCheckmarkOutline,
+} from '@vicons/ionicons5'
 import BaseTable from '../components/BaseTable.vue'; import Badge from '../components/Badge.vue'; import AppButton from '../components/AppButton.vue'; import Icon from '../components/Icon.vue'; import Pagination from '../components/Pagination.vue'; import EmptyState from '../components/EmptyState.vue'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import { checkAccountAuth, deleteAccount, getAccounts, createAccountByCookie, refreshAccountProfile, updateAccountCookie, getAccountAutoRateConfig, saveAccountAutoRateConfig, getAccountStrategyConfig, saveAccountStrategyConfig } from '../api/accounts.js'
 import { startWebSocket, stopWebSocket, websocketStatus } from '../api/websocket.js'
 import { useDebouncedRef } from '../composables/useDebouncedRef.js'
@@ -1432,11 +1446,40 @@ const statusOptions = [
 ]
 
 const accountStatCards = computed(() => [
-  { key: 'total', title: '账号总数', value: accountMetric(stats.value.total), change: '全部记录', icon: 'users', tone: 'tone-blue' },
-  { key: 'normal', title: '正常账号', value: accountMetric(stats.value.normal), change: '当前页', icon: 'account', tone: 'tone-green' },
-  { key: 'verify', title: '需验证', value: accountMetric(stats.value.verify), change: '当前页', icon: 'shield', tone: 'tone-orange' },
-  { key: 'wsOnline', title: '实时在线', value: accountMetric(stats.value.wsOnline), change: '当前页已确认', icon: 'link', tone: 'tone-purple' },
-  { key: 'cookieWarn', title: '登录凭证异常', value: accountMetric(stats.value.cookieWarn), change: '当前页已确认', icon: 'opportunity', tone: 'tone-orange' },
+  { key: 'total', title: '账号总数', value: accountMetric(stats.value.total), change: '全部记录', icon: PeopleOutline, tone: 'blue' },
+  { key: 'normal', title: '正常账号', value: accountMetric(stats.value.normal), change: '当前页', icon: ShieldCheckmarkOutline, tone: 'green' },
+  { key: 'verify', title: '需验证', value: accountMetric(stats.value.verify), change: '当前页', icon: AlertCircleOutline, tone: 'orange' },
+  { key: 'wsOnline', title: '实时在线', value: accountMetric(stats.value.wsOnline), change: '当前页已确认', icon: LinkOutline, tone: 'purple' },
+  { key: 'cookieWarn', title: '登录凭证异常', value: accountMetric(stats.value.cookieWarn), change: '当前页已确认', icon: KeyOutline, tone: stats.value.cookieWarn ? 'red' : 'green' },
+])
+
+const accountsStatusItems = computed(() => [
+  {
+    key: 'list',
+    label: '账号列表',
+    value: dataAvailable.value === true ? '已加载' : (dataAvailable.value === false ? '不可用' : '加载中'),
+    tone: dataAvailable.value === false ? 'red' : (dataAvailable.value === true ? 'green' : 'orange'),
+  },
+  {
+    key: 'selected',
+    label: '当前账号',
+    value: selected.value ? '已选择' : '未选择',
+    tone: selected.value ? 'blue' : 'orange',
+  },
+  {
+    key: 'auth',
+    label: '登录凭证异常',
+    value: dataAvailable.value === true ? `${stats.value.cookieWarn} 个` : '待确认',
+    tone: dataAvailable.value !== true ? 'orange' : (stats.value.cookieWarn ? 'red' : 'green'),
+  },
+  {
+    key: 'qr',
+    label: '扫码监听',
+    value: qr.polling ? '监听中' : (qrReady.value ? '二维码就绪' : '空闲'),
+    tone: ['error', 'expired', 'failed', 'cancelled'].includes(normalizeQrStatus(qr.status))
+      ? 'red'
+      : (qr.polling ? 'orange' : (qrReady.value ? 'blue' : 'green')),
+  },
 ])
 
 function accountMetric(value) {
@@ -1925,81 +1968,31 @@ onBeforeUnmount(() => {
   top: 118px;
 }
 
-.accounts-command-center {
+.accounts-command-section :deep(.n-card-header) {
+  padding-bottom: 8px;
+}
+
+.accounts-command-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dfe8e4;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(246, 248, 252, .98) 48%, rgba(255, 250, 245, .94)),
-    #fff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
+  gap: 18px;
+  align-items: start;
 }
 
-.accounts-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-}
-
-.accounts-command-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.accounts-command-copy {
   min-width: 0;
 }
 
-.accounts-command-kicker span {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(15, 118, 110, .1);
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.accounts-command-kicker b {
-  min-width: 0;
-  color: #475569;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.accounts-command-main h2 {
-  margin: 0;
-  color: #101828;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.accounts-command-main p {
+.accounts-command-copy p {
   margin: 0;
   max-width: 720px;
-  color: #526079;
-  font-size: 13px;
-  line-height: 1.65;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.75;
 }
 
 .accounts-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.accounts-command-meta span {
-  padding: 6px 10px;
-  border: 1px solid rgba(15, 118, 110, .12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
+  margin-top: 12px;
 }
 
 .accounts-command-panel {
@@ -2069,83 +2062,10 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.accounts-metric-rail {
+.accounts-metric-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
-}
-
-.accounts-metric-card {
-  position: relative;
-  min-width: 0;
-  padding: 16px;
-  display: grid;
-  gap: 8px;
-  border: 1px solid #e5eaf0;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
-  overflow: hidden;
-}
-
-.accounts-metric-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 14px 0 14px;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: #dbeafe;
-}
-
-.accounts-metric-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.accounts-metric-icon :deep(.ui-icon) {
-  width: 19px;
-  height: 19px;
-}
-
-.accounts-metric-card.tone-blue .accounts-metric-icon {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.accounts-metric-card.tone-green .accounts-metric-icon {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.accounts-metric-card.tone-orange .accounts-metric-icon {
-  background: #fff7ed;
-  color: #ea580c;
-}
-
-.accounts-metric-card.tone-purple .accounts-metric-icon {
-  background: #f5f3ff;
-  color: #7c3aed;
-}
-
-.accounts-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.accounts-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.accounts-metric-card small {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.4;
 }
 
 .accounts-workspace {
@@ -2212,11 +2132,11 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1500px) {
-  .accounts-metric-rail {
+  .accounts-metric-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .accounts-command-center {
+  .accounts-command-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -2242,21 +2162,24 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 
-  .accounts-command-center,
   .accounts-workspace {
     padding: 14px;
     border-radius: 8px;
   }
 
-  .accounts-command-main h2 {
-    font-size: 24px;
+  .accounts-command-section :deep(.n-card-header) {
+    padding: 16px 16px 10px;
+  }
+
+  .accounts-command-section :deep(.n-card__content) {
+    padding: 0 16px 16px;
   }
 
   .accounts-command-buttons {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .accounts-metric-rail {
+  .accounts-metric-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
