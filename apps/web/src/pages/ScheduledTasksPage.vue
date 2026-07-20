@@ -5,30 +5,46 @@
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <section class="scheduled-command-center">
-      <div class="scheduled-command-main">
-        <div class="scheduled-command-kicker">
-          <span>任务调度</span>
-          <b>{{ tasksAvailable === true ? `共 ${total} 条` : '任务未确认' }}</b>
+    <BusinessSection class="scheduled-command-section" title="定时任务" eyebrow="任务调度">
+      <template #extra>
+        <n-tag :type="tasksAvailable === false ? 'error' : (tasksAvailable === null ? 'warning' : 'success')" size="small" :bordered="false">
+          {{ tasksAvailable === false ? '列表不可用' : (tasksAvailable === null ? '读取中' : '可管理') }}
+        </n-tag>
+      </template>
+      <div class="scheduled-command-layout">
+        <div class="scheduled-command-copy">
+          <p>统一配置商品同步、订单同步和手动触发执行，旧任务类型会被明确标记为不可用。</p>
+          <n-space class="scheduled-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ tasksAvailable === null ? '任务读取中' : (tasksAvailable === true ? '任务可管理' : '任务不可用') }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ runningTaskId ? `任务 #${runningTaskId} 执行中` : '暂无运行任务' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ form.id ? `编辑 #${form.id}` : '新建配置' }}</n-tag>
+          </n-space>
         </div>
-        <h2>定时任务</h2>
-        <p>统一配置商品同步、订单同步和手动触发执行，旧任务类型会被明确标记为不可用。</p>
-        <div class="scheduled-command-meta">
-          <span>{{ tasksAvailable === null ? '任务读取中' : (tasksAvailable === true ? '任务可管理' : '任务不可用') }}</span>
-          <span>{{ runningTaskId ? `任务 #${runningTaskId} 执行中` : '暂无运行任务' }}</span>
-          <span>{{ form.id ? `编辑 #${form.id}` : '新建配置' }}</span>
+        <div class="scheduled-command-panel">
+          <div class="scheduled-command-panel-head">
+            <span>调度动作</span>
+            <strong>{{ saving ? '保存中' : '可操作' }}</strong>
+          </div>
+          <div class="scheduled-command-buttons">
+            <n-button :loading="tasksAvailable === null" @click="load">刷新任务</n-button>
+            <n-button type="primary" @click="reset">创建任务</n-button>
+          </div>
         </div>
       </div>
-      <div class="scheduled-command-panel">
-        <div class="scheduled-command-panel-head">
-          <span>调度动作</span>
-          <strong>{{ saving ? '保存中' : '可操作' }}</strong>
-        </div>
-        <div class="scheduled-command-buttons">
-          <n-button :loading="tasksAvailable === null" @click="load">刷新任务</n-button>
-          <n-button type="primary" @click="reset">创建任务</n-button>
-        </div>
-      </div>
+    </BusinessSection>
+
+    <BusinessStatusStrip :items="taskStatusItems" />
+
+    <section class="scheduled-metric-grid">
+      <BusinessMetricCard
+        v-for="item in taskStatCards"
+        :key="item.key"
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </section>
 
     <div class="scheduled-service-note" role="status">
@@ -155,7 +171,16 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NSelect, NStatistic, NSwitch } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NSwitch, NTag } from 'naive-ui'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
+import {
+  CalendarOutline,
+  FlashOutline,
+  PulseOutline,
+  TimerOutline,
+} from '@vicons/ionicons5'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -239,12 +264,18 @@ const taskStatCards = computed(() => {
   const runningCount = rows.value.filter(row => row.lastStatusText === '执行中').length
   const failedCount = rows.value.filter(row => ['失败', '超时', '不可用', '类型不可用', '状态保存失败'].includes(row.lastStatusText)).length
   return [
-    { key: 'total', title: '任务总数', value: tasksAvailable.value === true ? total.value : '—', change: '当前分页任务总量', symbol: '总', tone: 'tone-blue' },
-    { key: 'enabled', title: '已启用', value: enabledCount, change: '当前页启用任务', symbol: '启', tone: 'tone-green' },
-    { key: 'running', title: '执行中', value: runningCount, change: runningTaskId.value ? '有任务正在运行' : '暂无运行任务', symbol: '执', tone: 'tone-cyan' },
-    { key: 'risk', title: '异常', value: failedCount, change: '当前页失败或不可用', symbol: '异', tone: 'tone-orange' }
+    { key: 'total', title: '任务总数', value: tasksAvailable.value === true ? total.value : '—', change: '当前分页任务总量', tone: 'blue', icon: CalendarOutline },
+    { key: 'enabled', title: '已启用', value: enabledCount, change: '当前页启用任务', tone: 'green', icon: FlashOutline },
+    { key: 'running', title: '执行中', value: runningCount, change: runningTaskId.value ? '有任务正在运行' : '暂无运行任务', tone: 'cyan', icon: PulseOutline },
+    { key: 'risk', title: '异常', value: failedCount, change: '当前页失败或不可用', tone: 'orange', icon: TimerOutline }
   ]
 })
+const taskStatusItems = computed(() => [
+  { key: 'list', label: '任务列表', value: tasksAvailable.value === true ? '已加载' : (tasksAvailable.value === false ? '不可用' : '加载中'), tone: tasksAvailable.value === false ? 'red' : (tasksAvailable.value === true ? 'green' : 'orange') },
+  { key: 'running', label: '运行任务', value: runningTaskId.value ? `#${runningTaskId.value}` : '空闲', tone: runningTaskId.value ? 'orange' : 'green' },
+  { key: 'edit', label: '当前表单', value: form.id ? `编辑 #${form.id.value || form.id}` : '新建配置', tone: 'blue' },
+  { key: 'save', label: '保存状态', value: saving.value ? '保存中' : '可保存', tone: saving.value ? 'orange' : 'green' }
+])
 
 function statusText(status) {
   return {
@@ -643,6 +674,14 @@ onBeforeUnmount(() => {
   line-height: 1.45;
 }
 
+.scheduled-task-section :deep(.n-card-header) { padding-bottom: 8px; }
+.scheduled-task-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.scheduled-task-copy { min-width: 0; }
+.scheduled-task-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.scheduled-task-meta { margin-top: 12px; }
+.scheduled-task-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1500px) { .scheduled-task-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .scheduled-task-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) { .scheduled-task-grid, .scheduled-task-layout { grid-template-columns: minmax(0, 1fr); } }
 .scheduled-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(380px, .48fr);
