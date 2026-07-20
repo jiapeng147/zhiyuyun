@@ -5,7 +5,7 @@
 
     <section class="model-hero">
       <div class="model-hero-copy">
-        <span class="model-kicker">Model Gateway</span>
+        <span class="model-kicker">模型网关</span>
         <h1>模型接入</h1>
         <p>统一维护通用大模型的供应商、模型名、接口地址、协议模式和密钥。客服回复、文本生成、商品改写等能力都会读取这里的通用模型配置。</p>
 

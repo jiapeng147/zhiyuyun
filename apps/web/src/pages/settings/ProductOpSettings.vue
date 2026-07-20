@@ -2,7 +2,7 @@
   <div class="po-page po-v9-shell">
     <section class="po-hero">
       <div class="po-hero-copy">
-        <span class="po-kicker">Product Operations</span>
+        <span class="po-kicker">商品运营</span>
         <h1>商品运营能力中心</h1>
         <p>集中查看商品自动化能力、上线前置条件和风险控制状态。当前库存归零自动下架仍保持关闭，避免库存误判导致商品被错误下架。</p>
         <div class="po-hero-actions">

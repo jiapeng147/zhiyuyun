@@ -4,7 +4,7 @@
 
     <section class="user-v9-hero">
       <div class="user-hero-copy">
-        <span class="user-kicker">User Operations</span>
+        <span class="user-kicker">用户运营</span>
         <h1>用户运营</h1>
         <p>集中处理平台概览、套餐、手动建用户、自助注册、邮件服务与账号状态。</p>
       </div>

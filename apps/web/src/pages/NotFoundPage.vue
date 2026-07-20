@@ -2,7 +2,7 @@
   <section class="not-found-page notfound-v9-shell" aria-labelledby="not-found-title">
     <div class="notfound-hero">
       <div class="notfound-copy">
-        <span class="notfound-kicker">Route Recovery</span>
+        <span class="notfound-kicker">页面恢复</span>
         <h1 id="not-found-title">页面暂时无法访问</h1>
         <p>{{ description }}</p>
 

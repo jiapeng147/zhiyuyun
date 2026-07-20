@@ -5,7 +5,7 @@
 
     <section class="aics-hero">
       <div class="aics-hero-copy">
-        <span class="aics-kicker">AI Service Desk</span>
+        <span class="aics-kicker">AI 客服</span>
         <h1>AI 客服策略中心</h1>
         <p>统一配置自动回复工作模式、客服人设、知识库、安全门禁和验证流程。策略保存前先用右侧模拟消息验证，避免错误话术直接进入真实会话。</p>
         <div class="aics-hero-actions">

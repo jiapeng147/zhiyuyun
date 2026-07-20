@@ -5,7 +5,7 @@
 
     <section class="system-hero">
       <div class="system-hero-copy">
-        <span class="system-kicker">System Operations</span>
+        <span class="system-kicker">系统运营</span>
         <h1>系统运营</h1>
         <p>
           这里维护站点基础信息、广告服务运营状态和关键服务概览。高德地图、通用模型、向量模型与 RAG 知识库已经拆分成独立页面，

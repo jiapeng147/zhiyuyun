@@ -2,7 +2,7 @@
   <div class="rag-settings-page rag-v9-shell">
     <section class="rag-hero">
       <div class="rag-hero-copy">
-        <span class="rag-kicker">Knowledge Operations</span>
+        <span class="rag-kicker">知识运营</span>
         <h1>知识库运营工作台</h1>
         <p>
           集中维护 FAQ、售后说明、商品知识与行业文档。知识库创建、文档上传、

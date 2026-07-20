@@ -5,7 +5,7 @@
 
     <section class="embedding-hero">
       <div class="embedding-hero-copy">
-        <span class="embedding-kicker">Embedding Gateway</span>
+        <span class="embedding-kicker">向量检索</span>
         <h1>向量检索</h1>
         <p>独立维护 Embedding 模型的供应商、模型名、接口地址和密钥。知识库导入、文档向量化、语义召回和 RAG 检索都会读取这里的专用配置。</p>
 
