@@ -1,18 +1,20 @@
 <template>
   <div class="source-page source-v9-shell">
-    <section class="source-command-center">
-      <div class="source-command-main">
-        <div class="source-command-kicker">
-          <span>货源资产</span>
-          <b>{{ selected?.title || '未选择货源' }}</b>
-        </div>
-        <h2>货源资产库</h2>
+    <BusinessSection class="source-command-section" title="货源资产库" eyebrow="货源资产">
+      <template #extra>
+        <n-tag :type="mutationBusy ? 'warning' : 'success'" size="small" :bordered="false">
+          {{ mutationBusy ? '任务处理中' : '可操作' }}
+        </n-tag>
+      </template>
+      <div class="source-command-layout">
+        <div class="source-command-copy">
         <p>统一管理自动发货素材、绑定商品与 AI 推荐结果，配置关系加载失败时不会开放写操作。</p>
-        <div class="source-command-meta">
-          <span>{{ sourcesLoading ? '货源刷新中' : `共 ${sourceMetric(sourceTotal)} 条货源` }}</span>
-          <span>当前页 {{ sourceMetric(rows.length) }}</span>
-          <span>已选 {{ sourceMetric(selectedGoodsIds.length) }} 个商品</span>
-        </div>
+          <n-space class="source-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ selected?.title || '未选择货源' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ sourcesLoading ? '货源刷新中' : `共 ${sourceMetric(sourceTotal)} 条货源` }}</n-tag>
+            <n-tag size="small" :bordered="false" round>当前页 {{ sourceMetric(rows.length) }}</n-tag>
+            <n-tag size="small" :bordered="false" round>已选 {{ sourceMetric(selectedGoodsIds.length) }} 个商品</n-tag>
+          </n-space>
       </div>
       <div class="source-command-panel">
         <div class="source-command-panel-head">
@@ -25,10 +27,17 @@
           <AppButton type="primary" :title="sourceActionHint" :disabled="sourcesAvailable !== true || Boolean(mutationBusy)" @click="openCreate">新增货源</AppButton>
         </div>
       </div>
-    </section>
+      </div>
+    </BusinessSection>
 
-    <div v-if="error" class="global-notice error">{{ error }}</div>
-    <div v-if="success" class="global-notice success">{{ success }}</div>
+    <BusinessStatusStrip :items="sourceStatusItems" />
+
+    <n-alert v-if="error" class="source-notice" type="error" :bordered="false" closable @close="error = ''">
+      {{ error }}
+    </n-alert>
+    <n-alert v-if="success" class="source-notice" type="success" :bordered="false" closable @close="success = ''">
+      {{ success }}
+    </n-alert>
 
     <section v-if="editing" ref="editorCardRef" class="source-panel source-editor-panel">
       <header class="source-panel-head">
@@ -57,12 +66,17 @@
       </div>
     </section>
 
-    <section class="source-metric-rail">
-      <article v-for="item in sourceStatCards" :key="item.key" class="source-metric-card" :class="item.tone">
-        <span class="source-metric-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </article>
+    <section class="source-metric-grid">
+      <BusinessMetricCard
+        v-for="item in sourceStatCards"
+        :key="item.key"
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+        :compact-value="item.compactValue"
+      />
     </section>
 
     <section class="source-panel source-library-panel">
@@ -306,10 +320,21 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NStatistic } from 'naive-ui'
+import { NAlert, NSpace, NTag } from 'naive-ui'
+import {
+  AlbumsOutline,
+  CheckboxOutline,
+  CubeOutline,
+  FileTrayFullOutline,
+  LinkOutline,
+  SparklesOutline,
+} from '@vicons/ionicons5'
 import BaseTable from '../components/BaseTable.vue'
 import AppButton from '../components/AppButton.vue'
 import Badge from '../components/Badge.vue'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import EmptyState from '../components/EmptyState.vue'
 import Pagination from '../components/Pagination.vue'
 import {
@@ -408,12 +433,18 @@ const goodsColumns = [
 
 const configuredGoodsIds = computed(() => new Set(configuredGoods.value.map(row => String(row.id))))
 const sourceStatCards = computed(() => [
-  { key: 'total', title: '货源总数', value: sourceMetric(sourceTotal.value), change: '库内素材', symbol: '源', tone: 'tone-blue' },
-  { key: 'page', title: '当前页', value: sourceMetric(rows.value.length), change: '本页货源', symbol: '页', tone: 'tone-cyan' },
-  { key: 'bound', title: '已配置商品', value: sourceMetric(selected.value?.usageCount || 0), change: selected.value ? '当前货源' : '未选择货源', symbol: '绑', tone: 'tone-green' },
-  { key: 'candidate', title: '候选商品', value: sourceMetric(candidateLibraryTotal.value), change: '可配置商品池', symbol: '候', tone: 'tone-purple' },
-  { key: 'selected', title: '待批量配置', value: sourceMetric(selectedGoodsIds.value.length), change: '当前勾选', symbol: '选', tone: 'tone-orange' },
-  { key: 'ai', title: 'AI推荐', value: aiStatus.value?.configured ? '已配置' : '未配置', change: '模型状态', symbol: 'AI', tone: aiStatus.value?.configured ? 'tone-green' : 'tone-orange' }
+  { key: 'total', title: '货源总数', value: sourceMetric(sourceTotal.value), change: '库内素材', tone: 'blue', icon: FileTrayFullOutline },
+  { key: 'page', title: '当前页', value: sourceMetric(rows.value.length), change: '本页货源', tone: 'cyan', icon: AlbumsOutline },
+  { key: 'bound', title: '已配置商品', value: sourceMetric(selected.value?.usageCount || 0), change: selected.value ? '当前货源' : '未选择货源', tone: 'green', icon: LinkOutline },
+  { key: 'candidate', title: '候选商品', value: sourceMetric(candidateLibraryTotal.value), change: '可配置商品池', tone: 'purple', icon: CubeOutline },
+  { key: 'selected', title: '待批量配置', value: sourceMetric(selectedGoodsIds.value.length), change: '当前勾选', tone: 'orange', icon: CheckboxOutline },
+  { key: 'ai', title: 'AI推荐', value: aiStatus.value?.configured ? '已配置' : '未配置', change: '模型状态', tone: aiStatus.value?.configured ? 'green' : 'orange', icon: SparklesOutline, compactValue: true }
+])
+const sourceStatusItems = computed(() => [
+  { key: 'sources', label: '货源列表', value: sourcesAvailable.value === true ? '已加载' : (sourcesAvailable.value === false ? '不可用' : '加载中'), tone: sourcesAvailable.value === true ? 'green' : 'orange' },
+  { key: 'detail', label: '绑定关系', value: selected.value ? (detailAvailable.value === true ? '已加载' : (detailAvailable.value === false ? '不可用' : '等待加载')) : '未选择货源', tone: detailAvailable.value === false ? 'red' : (selected.value ? 'blue' : 'orange') },
+  { key: 'ai', label: 'AI 推荐', value: aiStatus.value?.configured ? '已配置' : '未配置', tone: aiStatus.value?.configured ? 'green' : 'orange' },
+  { key: 'busy', label: '当前任务', value: mutationBusy.value ? '处理中' : '空闲', tone: mutationBusy.value ? 'orange' : 'green' },
 ])
 
 const sourceActionHint = computed(() => {
@@ -710,14 +741,25 @@ async function saveSource() {
   if (!canUseSourceActions('保存')) return
   error.value = ''
   success.value = ''
+  const title = form.title.trim()
+  const content = form.content.trim()
+  if (!title && !content) {
+    error.value = '请至少填写标题或正文，再保存货源。'
+    return
+  }
   mutationBusy.value = 'save'
   try {
     const editingId = editing.value?.id
+    const payload = {
+      title,
+      content,
+      remark: form.remark.trim()
+    }
     if (editingId) {
-      await updateDeliverySource(editingId, { ...form })
+      await updateDeliverySource(editingId, payload)
       success.value = '货源已更新'
     } else {
-      await createDeliverySource({ ...form })
+      await createDeliverySource(payload)
       success.value = '货源已新增'
     }
     editing.value = null
@@ -1153,81 +1195,31 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.source-command-center {
+.source-command-section :deep(.n-card-header) {
+  padding-bottom: 8px;
+}
+
+.source-command-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dfe8e4;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(246, 248, 252, .98) 48%, rgba(255, 250, 245, .94)),
-    #fff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
+  gap: 18px;
+  align-items: start;
 }
 
-.source-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-}
-
-.source-command-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.source-command-copy {
   min-width: 0;
 }
 
-.source-command-kicker span {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(15, 118, 110, .1);
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.source-command-kicker b {
-  min-width: 0;
-  color: #475569;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.source-command-main h2 {
-  margin: 0;
-  color: #101828;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.source-command-main p {
+.source-command-copy p {
   margin: 0;
   max-width: 720px;
-  color: #526079;
-  font-size: 13px;
-  line-height: 1.65;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.75;
 }
 
 .source-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.source-command-meta span {
-  padding: 6px 10px;
-  border: 1px solid rgba(15, 118, 110, .12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
+  margin-top: 14px;
 }
 
 .source-command-panel {
@@ -1268,66 +1260,14 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.source-metric-rail {
+.source-notice {
+  border-radius: 8px;
+}
+
+.source-metric-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
-}
-
-.source-metric-card {
-  position: relative;
-  min-width: 0;
-  padding: 16px;
-  display: grid;
-  gap: 8px;
-  border: 1px solid #e5eaf0;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
-  overflow: hidden;
-}
-
-.source-metric-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 14px 0 14px;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: #dbeafe;
-}
-
-.source-metric-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.source-metric-card.tone-blue .source-metric-icon { background: #eff6ff; color: #2563eb; }
-.source-metric-card.tone-cyan .source-metric-icon { background: #ecfeff; color: #0891b2; }
-.source-metric-card.tone-green .source-metric-icon { background: #ecfdf5; color: #059669; }
-.source-metric-card.tone-purple .source-metric-icon { background: #f5f3ff; color: #7c3aed; }
-.source-metric-card.tone-orange .source-metric-icon { background: #fff7ed; color: #ea580c; }
-
-.source-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.source-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.source-metric-card small {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.4;
 }
 
 .source-panel {
@@ -1526,13 +1466,11 @@ onBeforeUnmount(() => {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .source-panel,
-  .source-metric-card {
+  .source-panel {
     transition: border-color 180ms var(--source-ease), box-shadow 180ms var(--source-ease);
   }
 
-  .source-panel:hover,
-  .source-metric-card:hover {
+  .source-panel:hover {
     border-color: rgba(29, 78, 216, .22);
     box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
   }
@@ -1544,19 +1482,14 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 
-  .source-command-center,
   .source-panel {
     padding: 14px;
     border-radius: 8px;
   }
 
-  .source-command-main h2 {
-    font-size: 24px;
-  }
-
-  .source-command-center,
+  .source-command-layout,
   .source-command-buttons,
-  .source-metric-rail {
+  .source-metric-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
