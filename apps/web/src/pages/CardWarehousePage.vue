@@ -6,44 +6,48 @@
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <section class="warehouse-command-center">
-      <div class="warehouse-command-main">
-        <div class="warehouse-command-kicker">
-          <span>卡密库存</span>
-          <b>{{ selected?.groupName || '未选择分组' }}</b>
+    <BusinessSection class="warehouse-command-section" title="卡密库存" eyebrow="卡密库存">
+      <template #extra>
+        <n-tag :type="groupsAvailable === false ? 'error' : (groupsLoading ? 'warning' : 'success')" size="small" :bordered="false">
+          {{ groupsAvailable === false ? '分组不可用' : (groupsLoading ? '刷新中' : '可操作') }}
+        </n-tag>
+      </template>
+      <div class="warehouse-command-layout">
+        <div class="warehouse-command-copy">
+          <p>集中管理卡密分组、库存明细、使用记录、导入和导出，自动发货会从这里领取库存。</p>
+          <n-space class="warehouse-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ selected?.groupName || '未选择分组' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ groupsLoading ? '库存刷新中' : `当前 ${groupsMetric(groups.length)} 个分组` }}</n-tag>
+            <n-tag size="small" :bordered="false" round>可用 {{ groupsMetric(stockStats.remain) }}</n-tag>
+            <n-tag size="small" :bordered="false" round>低库存 {{ groupsMetric(lowStockCount) }}</n-tag>
+          </n-space>
         </div>
-        <h2>卡密库存</h2>
-        <p>集中管理卡密分组、库存明细、使用记录、导入和导出，自动发货会从这里领取库存。</p>
-        <div class="warehouse-command-meta">
-          <span>{{ groupsLoading ? '库存刷新中' : `当前 ${groupsMetric(groups.length)} 个分组` }}</span>
-          <span>可用 {{ groupsMetric(stockStats.remain) }}</span>
-          <span>低库存 {{ groupsMetric(lowStockCount) }}</span>
+        <div class="warehouse-command-panel">
+          <div class="warehouse-command-panel-head">
+            <span>库存动作</span>
+            <strong>{{ selected ? '分组已选' : '全局操作' }}</strong>
+          </div>
+          <div class="warehouse-command-buttons">
+            <n-button :title="warehouseActionHint" :loading="groupsLoading" @click="load">刷新库存</n-button>
+            <n-button type="primary" :title="warehouseActionHint" :disabled="saving || importing" @click="openCreateDialog">新建卡密组</n-button>
+          </div>
+          <p class="warehouse-action-hint">{{ warehouseActionHint }}</p>
         </div>
       </div>
-      <div class="warehouse-command-panel">
-        <div class="warehouse-command-panel-head">
-          <span>库存动作</span>
-          <strong>{{ selected ? '分组已选' : '全局操作' }}</strong>
-        </div>
-        <div class="warehouse-command-buttons">
-          <n-button :title="warehouseActionHint" :loading="groupsLoading" @click="load">刷新库存</n-button>
-          <n-button type="primary" :title="warehouseActionHint" :disabled="saving || importing" @click="openCreateDialog">新建卡密组</n-button>
-        </div>
-        <p class="warehouse-action-hint">{{ warehouseActionHint }}</p>
-      </div>
-    </section>
+    </BusinessSection>
 
-    <section class="warehouse-metric-rail">
-      <article
+    <BusinessStatusStrip :items="warehouseStatusItems" />
+
+    <section class="warehouse-metric-grid">
+      <BusinessMetricCard
         v-for="item in warehouseStatCards"
         :key="item.key"
-        class="warehouse-metric-card"
-        :class="item.tone"
-      >
-        <span class="warehouse-metric-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </article>
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </section>
 
     <div class="card-warehouse-workspace">
@@ -341,7 +345,18 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NStatistic } from 'naive-ui'
+import { NButton, NInput, NSpace, NTag } from 'naive-ui'
+import {
+  AlertCircleOutline,
+  CheckmarkDoneCircleOutline,
+  KeyOutline,
+  LayersOutline,
+  PulseOutline,
+  SparklesOutline,
+} from '@vicons/ionicons5'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -510,12 +525,19 @@ function groupsMetric(value) {
 }
 
 const warehouseStatCards = computed(() => [
-  { key: 'groups', title: '卡密组', value: groupsMetric(groups.value.length), change: '总分组数', symbol: '组', tone: 'tone-blue' },
-  { key: 'total', title: '卡密总量', value: groupsMetric(stockStats.value.total), change: '全部卡密', symbol: '总', tone: 'tone-cyan' },
-  { key: 'remain', title: '未使用', value: groupsMetric(stockStats.value.remain), change: '可用库存', symbol: '余', tone: 'tone-green' },
-  { key: 'used', title: '已使用', value: groupsMetric(stockStats.value.used), change: '已消耗', symbol: '用', tone: 'tone-gray' },
-  { key: 'invalid', title: '异常/作废', value: groupsMetric(stockStats.value.invalid), change: '需关注', symbol: '异', tone: 'tone-orange' },
-  { key: 'low', title: '低库存', value: groupsMetric(lowStockCount.value), change: '低于预警阈值', symbol: '低', tone: 'tone-red' }
+  { key: 'groups', title: '卡密组', value: groupsMetric(groups.value.length), change: '总分组数', tone: 'blue', icon: LayersOutline },
+  { key: 'total', title: '卡密总量', value: groupsMetric(stockStats.value.total), change: '全部卡密', tone: 'cyan', icon: KeyOutline },
+  { key: 'remain', title: '未使用', value: groupsMetric(stockStats.value.remain), change: '可用库存', tone: 'green', icon: CheckmarkDoneCircleOutline },
+  { key: 'used', title: '已使用', value: groupsMetric(stockStats.value.used), change: '已消耗', tone: 'neutral', icon: PulseOutline },
+  { key: 'invalid', title: '异常/作废', value: groupsMetric(stockStats.value.invalid), change: '需关注', tone: 'orange', icon: AlertCircleOutline },
+  { key: 'low', title: '低库存', value: groupsMetric(lowStockCount.value), change: '低于预警阈值', tone: 'red', icon: SparklesOutline }
+])
+
+const warehouseStatusItems = computed(() => [
+  { key: 'groups', label: '分组加载', value: groupsAvailable.value === true ? '已加载' : (groupsAvailable.value === false ? '不可用' : '加载中'), tone: groupsAvailable.value === false ? 'red' : (groupsAvailable.value === true ? 'green' : 'orange') },
+  { key: 'selected', label: '当前分组', value: selected.value?.groupName ? `已选 ${selected.value.groupName}` : '未选择', tone: selected.value ? 'blue' : 'orange' },
+  { key: 'stock', label: '可用库存', value: `${groupsMetric(stockStats.value.remain)} 条`, tone: stockStats.value.remain ? 'green' : 'red' },
+  { key: 'low', label: '低库存分组', value: `${groupsMetric(lowStockCount.value)} 个`, tone: lowStockCount.value ? 'orange' : 'green' }
 ])
 
 const bulkCount = computed(() => {
@@ -1041,16 +1063,6 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.warehouse-command-kicker span,
-.warehouse-command-kicker b {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(15, 118, 110, .1);
-}
-
 .warehouse-command-kicker b {
   max-width: min(420px, 100%);
   overflow: hidden;
@@ -1147,68 +1159,20 @@ onBeforeUnmount(() => {
   line-height: 1.55;
 }
 
-.warehouse-metric-rail {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.warehouse-metric-card {
-  min-width: 0;
-  min-height: 136px;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid #e4ebf5;
-  border-top: 3px solid #64748b;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
-}
-
-.warehouse-metric-icon {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: #fff;
-  background: #64748b;
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.warehouse-metric-card.tone-blue { border-top-color: #2563eb; }
-.warehouse-metric-card.tone-blue .warehouse-metric-icon { background: #2563eb; }
-.warehouse-metric-card.tone-cyan { border-top-color: #0891b2; }
-.warehouse-metric-card.tone-cyan .warehouse-metric-icon { background: #0891b2; }
-.warehouse-metric-card.tone-green { border-top-color: #059669; }
-.warehouse-metric-card.tone-green .warehouse-metric-icon { background: #059669; }
-.warehouse-metric-card.tone-gray { border-top-color: #64748b; }
-.warehouse-metric-card.tone-gray .warehouse-metric-icon { background: #64748b; }
-.warehouse-metric-card.tone-orange { border-top-color: #ea580c; }
-.warehouse-metric-card.tone-orange .warehouse-metric-icon { background: #ea580c; }
-.warehouse-metric-card.tone-red { border-top-color: #dc2626; }
-.warehouse-metric-card.tone-red .warehouse-metric-icon { background: #dc2626; }
-
-.warehouse-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.warehouse-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 760;
-}
-
 .warehouse-metric-card small {
   color: #64748b;
   font-size: 12px;
   line-height: 1.45;
 }
+
+.warehouse-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.warehouse-command-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.warehouse-command-copy { min-width: 0; }
+.warehouse-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.warehouse-command-meta { margin-top: 12px; }
+.warehouse-metric-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1500px) { .warehouse-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .warehouse-command-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) { .warehouse-metric-grid, .warehouse-command-layout { grid-template-columns: minmax(0, 1fr); } }
 
 .card-warehouse-workspace {
   display: grid;
