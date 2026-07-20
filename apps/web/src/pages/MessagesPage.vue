@@ -1,44 +1,47 @@
 <template>
   <div class="xya-msg-page messages-v15-shell">
-    <section class="messages-command-center">
-      <div class="messages-command-main">
-        <div class="messages-command-kicker">
-          <span>实时接待</span>
-          <b>{{ accountLabel || '未选择账号' }}</b>
+    <BusinessSection class="messages-command-section" title="客服接待" eyebrow="实时接待">
+      <template #extra>
+        <n-tag :type="realtimeMode.key === 'realtime' ? 'success' : (realtimeMode.key === 'polling' ? 'warning' : 'error')" size="small" :bordered="false">
+          {{ realtimeMode.label }}
+        </n-tag>
+      </template>
+      <div class="messages-command-layout">
+        <div class="messages-command-copy">
+          <p>聚合买家咨询、AI 接待状态、快捷回复模板和商品上下文，围绕当前账号处理实时会话。</p>
+          <n-space class="messages-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ accountLabel || '未选择账号' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ loading || conversationRefreshing ? '会话刷新中' : `当前 ${displayList.length} 条会话` }}</n-tag>
+            <n-tag size="small" :bordered="false" round>未回复 {{ unrepliedCount }}</n-tag>
+          </n-space>
         </div>
-        <h2>客服接待</h2>
-        <p>聚合买家咨询、AI 接待状态、快捷回复模板和商品上下文，围绕当前账号处理实时会话。</p>
-        <div class="messages-command-meta">
-          <span>{{ loading || conversationRefreshing ? '会话刷新中' : `当前 ${displayList.length} 条会话` }}</span>
-          <span>未回复 {{ unrepliedCount }}</span>
-          <span>{{ realtimeMode.label }}</span>
+        <div class="messages-command-panel">
+          <div class="messages-command-panel-head">
+            <span>接待动作</span>
+            <strong>{{ query.xianyuAccountId ? '账号范围' : '等待选择账号' }}</strong>
+          </div>
+          <div class="messages-command-buttons">
+            <n-button :title="messageActionHint" :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
+            <n-button :title="messageActionHint" :disabled="!query.xianyuAccountId || loading" @click="startCurrentConnection">启动连接</n-button>
+            <n-button type="primary" :title="messageActionHint" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
+          </div>
+          <p class="messages-action-hint">{{ messageActionHint }}</p>
         </div>
       </div>
-      <div class="messages-command-panel">
-        <div class="messages-command-panel-head">
-          <span>接待动作</span>
-          <strong>{{ query.xianyuAccountId ? '账号范围' : '等待选择账号' }}</strong>
-        </div>
-        <div class="messages-command-buttons">
-          <n-button :title="messageActionHint" :loading="loading || conversationRefreshing" @click="reload">刷新会话</n-button>
-          <n-button :title="messageActionHint" :disabled="!query.xianyuAccountId || loading" @click="startCurrentConnection">启动连接</n-button>
-          <n-button type="primary" :title="messageActionHint" @click="emit('navigate', 'settings-ai-cs')">AI 客服配置</n-button>
-        </div>
-        <p class="messages-action-hint">{{ messageActionHint }}</p>
-      </div>
-    </section>
+    </BusinessSection>
 
-    <section class="messages-metric-rail">
-      <article
+    <BusinessStatusStrip :items="messagesStatusItems" />
+
+    <section class="messages-metric-grid">
+      <BusinessMetricCard
         v-for="item in messageStatCards"
         :key="item.key"
-        class="messages-metric-card"
-        :class="item.tone"
-      >
-        <span class="messages-metric-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </article>
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </section>
 
     <div class="xya-msg-layout">
@@ -440,7 +443,17 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { NButton, NStatistic } from 'naive-ui'
+import { NButton, NSpace, NTag } from 'naive-ui'
+import {
+  CheckmarkDoneCircleOutline,
+  ChatbubblesOutline,
+  FlashOutline,
+  NotificationsOutline,
+  SparklesOutline,
+} from '@vicons/ionicons5'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import { openExternalUrl } from '../utils/externalUrl.js'
 import { getAccounts } from '../api/accounts.js'
 import { onlineConversations, messageContext, updateConversationStatus, markConversationRead } from '../api/messages.js'
@@ -704,7 +717,6 @@ async function deleteTemplate(id) {
   }
 }
 
-
 // 查看闲鱼官方商品页面
 function viewGoofishItem(itemId) {
   if (!itemId) return
@@ -909,7 +921,6 @@ function resolveReceiverId(conv) {
   )
 }
 
-
 function stableHash(value) {
   const text = String(value || '')
   let hash = 2166136261
@@ -1056,11 +1067,17 @@ const inProgressCount = computed(() => conversations.value.filter(item => isConv
 const completedCount = computed(() => conversations.value.filter(item => isConversationCompleted(item)).length)
 const robotCount = computed(() => conversations.value.filter(item => item.botEnabled).length)
 const messageStatCards = computed(() => [
-  { key: 'total', title: '会话总数', value: displayList.value.length, change: `${accountLabel.value || '当前账号'} · 当前筛选`, symbol: '会', tone: 'tone-blue' },
-  { key: 'unreplied', title: '未回复', value: unrepliedCount.value, change: '含未读买家消息', symbol: '未', tone: 'tone-orange' },
-  { key: 'progress', title: '进行中', value: inProgressCount.value, change: '仍需跟进的会话', symbol: '进', tone: 'tone-green' },
-  { key: 'robot', title: '机器人接待', value: robotCount.value, change: aiSettingsAvailable.value ? (aiGlobalEnabled.value ? '全局开关已开启' : '全局开关已关闭') : 'AI 状态未知', symbol: 'AI', tone: 'tone-cyan' },
-  { key: 'done', title: '已完成', value: completedCount.value, change: realtimeMode.value.label, symbol: '完', tone: 'tone-gray' }
+  { key: 'total', title: '会话总数', value: displayList.value.length, change: `${accountLabel.value || '当前账号'} · 当前筛选`, icon: ChatbubblesOutline, tone: 'blue' },
+  { key: 'unreplied', title: '未回复', value: unrepliedCount.value, change: '含未读买家消息', icon: NotificationsOutline, tone: unrepliedCount.value ? 'orange' : 'green' },
+  { key: 'progress', title: '进行中', value: inProgressCount.value, change: '仍需跟进的会话', icon: FlashOutline, tone: 'green' },
+  { key: 'robot', title: '机器人接待', value: robotCount.value, change: aiSettingsAvailable.value ? (aiGlobalEnabled.value ? '全局开关已开启' : '全局开关已关闭') : 'AI 状态未知', icon: SparklesOutline, tone: aiGlobalEnabled.value ? 'cyan' : 'gray' },
+  { key: 'done', title: '已完成', value: completedCount.value, change: realtimeMode.value.label, icon: CheckmarkDoneCircleOutline, tone: 'gray' }
+])
+const messagesStatusItems = computed(() => [
+  { key: 'realtime', label: '实时连接', value: realtimeMode.value.label, tone: realtimeMode.value.key === 'realtime' ? 'green' : (realtimeMode.value.key === 'polling' ? 'orange' : 'red') },
+  { key: 'account', label: '当前账号', value: accountLabel.value || '未选择账号', tone: query.xianyuAccountId ? 'blue' : 'orange' },
+  { key: 'ai', label: 'AI 全局', value: aiSettingsAvailable.value === true ? (aiGlobalEnabled.value ? '已开启' : '已关闭') : '状态未知', tone: aiSettingsAvailable.value !== true ? 'orange' : (aiGlobalEnabled.value ? 'green' : 'red') },
+  { key: 'unreplied', label: '未回复', value: `${unrepliedCount.value} 条`, tone: unrepliedCount.value ? 'orange' : 'green' }
 ])
 watch(debouncedKeyword, () => {
   visibleConversationCount.value = DEFAULT_VISIBLE_CONVERSATIONS
@@ -2974,52 +2991,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   min-width: 0;
 }
 
-.messages-command-center {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dfe6f1;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(239, 253, 246, .95) 48%, rgba(255, 250, 245, .94)),
-    #fff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
-}
-
-.messages-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-}
-
-.messages-command-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.messages-command-kicker span {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, .1);
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.messages-command-kicker b {
-  min-width: 0;
-  color: #475569;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.messages-command-main h2 {
+.messages-command-copy h2 {
   margin: 0;
   color: #101828;
   font-size: 28px;
@@ -3027,7 +2999,7 @@ watch(() => selected.value?.xyGoodsId, () => {
   line-height: 1.25;
 }
 
-.messages-command-main p {
+.messages-command-copy p {
   margin: 0;
   max-width: 720px;
   color: #526079;
@@ -3041,16 +3013,6 @@ watch(() => selected.value?.xyGoodsId, () => {
   gap: 8px;
 }
 
-.messages-command-meta span {
-  padding: 6px 10px;
-  border: 1px solid rgba(37, 99, 235, .12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
-}
-
 .messages-command-panel {
   display: grid;
   gap: 12px;
@@ -3060,14 +3022,6 @@ watch(() => selected.value?.xyGoodsId, () => {
   border-radius: 8px;
   background: rgba(255, 255, 255, .82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
-}
-
-.messages-command-panel-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  color: #64748b;
-  font-size: 12px;
 }
 
 .messages-command-panel-head strong {
@@ -3101,67 +3055,6 @@ watch(() => selected.value?.xyGoodsId, () => {
   line-height: 1.55;
 }
 
-.messages-metric-rail {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.messages-metric-card {
-  position: relative;
-  min-width: 0;
-  padding: 16px;
-  display: grid;
-  gap: 8px;
-  border: 1px solid #e5eaf0;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
-  overflow: hidden;
-}
-
-.messages-metric-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 14px 0 14px;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: #dbeafe;
-}
-
-.messages-metric-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.messages-metric-card.tone-blue .messages-metric-icon { background: #eff6ff; color: #2563eb; }
-.messages-metric-card.tone-orange .messages-metric-icon { background: #fff7ed; color: #ea580c; }
-.messages-metric-card.tone-green .messages-metric-icon { background: #ecfdf5; color: #059669; }
-.messages-metric-card.tone-cyan .messages-metric-icon { background: #ecfeff; color: #0891b2; }
-.messages-metric-card.tone-gray .messages-metric-icon { background: #f1f5f9; color: #475569; }
-
-.messages-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.messages-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.messages-metric-card small {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.4;
-}
 
 .xya-msg-layout {
   height: calc(100vh - 370px);
@@ -4102,12 +3995,37 @@ watch(() => selected.value?.xyGoodsId, () => {
   padding: 14px 4px;
 }
 
+.messages-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.messages-command-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+.messages-command-copy { min-width: 0; }
+.messages-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.messages-command-meta { margin-top: 12px; }
+.messages-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
 @media (max-width: 1440px) {
-  .messages-metric-rail {
+  .messages-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .messages-command-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .messages-metric-grid,
+  .messages-command-layout { grid-template-columns: minmax(0, 1fr); }
+  .messages-command-copy h2 { font-size: 24px; }
+}
+
+@media (max-width: 1440px) {
+  .messages-metric-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .messages-command-center {
+  .messages-command-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -4343,17 +4261,17 @@ watch(() => selected.value?.xyGoodsId, () => {
     gap: 12px;
   }
 
-  .messages-command-center {
+  .messages-command-layout {
     padding: 14px;
     border-radius: 8px;
   }
 
-  .messages-command-main h2 {
+  .messages-command-copy h2 {
     font-size: 24px;
   }
 
   .messages-command-buttons,
-  .messages-metric-rail {
+  .messages-metric-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
