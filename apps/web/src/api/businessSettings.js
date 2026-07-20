@@ -1,7 +1,5 @@
 import request from '../utils/request.js'
 
-const CATEGORIES = ['ai-customer-service', 'message-settings', 'delivery-settings', 'product-op-settings']
-
 /**
  * 读取指定分类的业务配置
  * @param {string} category  ai-customer-service | message-settings | delivery-settings | product-op-settings
@@ -23,24 +21,6 @@ export function saveBusinessSettings(category, data) {
 export function testAiCustomerService(message) {
   return request.post('/business-settings/ai-customer-service/test', { message })
 }
-
-/**
- * 一次性读取所有分类（并发）
- */
-export function getAllBusinessSettings() {
-  return Promise.all(CATEGORIES.map(c => getBusinessSettings(c).catch(() => null)))
-    .then(results => {
-      const map = {}
-      CATEGORIES.forEach((c, i) => {
-        const res = results[i]
-        const data = res?.data ?? res
-        map[c] = data && typeof data === 'object' ? data : {}
-      })
-      return map
-    })
-}
-
-export const BUSINESS_SETTING_CATEGORIES = CATEGORIES
 
 /**
  * 获取 AI 客服配置的默认值（用于"恢复默认"按钮）。

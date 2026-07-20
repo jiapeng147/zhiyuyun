@@ -1,6 +1,5 @@
 import request from '../utils/request.js'
 
-export const listMessages = data => request.post('/msg/list', data)
 export const messageContext = (data, requestConfig = {}) => request.post('/msg/context', data, requestConfig)
 
 /**

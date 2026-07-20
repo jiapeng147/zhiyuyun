@@ -3,7 +3,6 @@ import request from '../utils/request.js'
 // 知识库 CRUD
 export const listKnowledgeBases = (params, config = {}) => request.get('/rag/knowledge-bases', { ...config, params })
 export const createKnowledgeBase = (data) => request.post('/rag/knowledge-bases', data)
-export const getKnowledgeBase = (id) => request.get(`/rag/knowledge-bases/${id}`)
 export const updateKnowledgeBase = (id, data) => request.put(`/rag/knowledge-bases/${id}`, data)
 export const deleteKnowledgeBase = (id) => request.delete(`/rag/knowledge-bases/${id}`)
 
@@ -35,4 +34,3 @@ export const listChunks = (kbId, docId) =>
 // 检索 / 对话
 export const searchKnowledge = (kbId, data) =>
   request.post(`/rag/knowledge-bases/${kbId}/search`, data)
-export const ragChat = (data) => request.post('/rag/chat', data)

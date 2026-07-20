@@ -33,10 +33,6 @@ export function reduceAdPaymentOrder(current, incoming, identity = {}) {
   return incoming
 }
 
-export function getTextAds() {
-  return request.get('/ads/text', { suppressGlobalError: true })
-}
-
 export function getAdPlans() {
   return request.get('/ads/plans', { suppressGlobalError: true })
 }

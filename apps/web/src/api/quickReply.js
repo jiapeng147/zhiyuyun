@@ -16,16 +16,3 @@ export function saveQuickReplyTemplate(data) {
 export function deleteQuickReplyTemplate(id) {
   return request({ url: `/quick-reply/templates/${id}`, method: 'delete' })
 }
-
-// AI 客服设置，读取 user_business_setting 中的 ai-customer-service
-export function getAiCsSetting() {
-  return request({ url: '/business-settings/ai-customer-service', method: 'get' })
-}
-
-export function saveAiCsSetting(data) {
-  return request({
-    url: '/business-settings/ai-customer-service',
-    method: 'post',
-    data
-  })
-}
