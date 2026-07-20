@@ -7,19 +7,21 @@
         <div v-if="success" class="global-notice success" role="status">{{ success }}</div>
       </div>
 
-      <section class="orders-command-center">
-        <div class="orders-command-main">
-          <div class="orders-command-kicker">
-            <span>订单履约</span>
-            <b>{{ selectedAccountName }}</b>
-          </div>
-          <h2>订单履约</h2>
+      <BusinessSection class="orders-command-section" title="订单履约" eyebrow="订单履约">
+        <template #extra>
+          <n-tag :type="ordersAvailable === false ? 'error' : (ordersLoading || syncingList ? 'warning' : 'success')" size="small" :bordered="false">
+            {{ ordersAvailable === false ? '订单不可用' : (ordersLoading || syncingList ? '处理中' : '可操作') }}
+          </n-tag>
+        </template>
+        <div class="orders-command-layout">
+        <div class="orders-command-copy">
           <p>集中同步闲鱼真实订单，跟进买家、商品、付款状态、发货进度与手动履约结果。</p>
-          <div class="orders-command-meta">
-            <span>{{ ordersLoading ? '订单刷新中' : `当前 ${total} 笔订单` }}</span>
-            <span>本页 {{ rows.length }} 笔</span>
-            <span>待发货 {{ pendingDeliveryCount }} 笔</span>
-          </div>
+          <n-space class="orders-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ selectedAccountName }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ ordersLoading ? '订单刷新中' : `当前 ${total} 笔订单` }}</n-tag>
+            <n-tag size="small" :bordered="false" round>本页 {{ rows.length }} 笔</n-tag>
+            <n-tag size="small" :bordered="false" round>待发货 {{ pendingDeliveryCount }} 笔</n-tag>
+          </n-space>
         </div>
         <div class="orders-command-panel">
           <div class="orders-command-panel-head">
@@ -39,19 +41,21 @@
           </div>
           <p class="orders-action-hint">{{ orderActionHint }}</p>
         </div>
-      </section>
+        </div>
+      </BusinessSection>
 
-      <section class="orders-metric-rail">
-        <article
+      <BusinessStatusStrip :items="ordersStatusItems" />
+
+      <section class="orders-metric-grid">
+        <BusinessMetricCard
           v-for="item in orderStatCards"
           :key="item.key"
-          class="orders-metric-card"
-          :class="item.tone"
-        >
-          <span class="orders-metric-icon">{{ item.symbol }}</span>
-          <n-statistic :label="item.title" :value="item.value" />
-          <small>{{ item.change }}</small>
-        </article>
+          :label="item.title"
+          :value="item.value"
+          :hint="item.change"
+          :tone="item.tone"
+          :icon="item.icon"
+        />
       </section>
 
       <section class="orders-workspace">
@@ -292,10 +296,19 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NSelect, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NTag } from 'naive-ui'
+import {
+  CheckmarkDoneCircleOutline,
+  LayersOutline,
+  ReceiptOutline,
+  RocketOutline,
+} from '@vicons/ionicons5'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import EmptyState from '../components/EmptyState.vue'
 import Pagination from '../components/Pagination.vue'
 import Icon from '../components/Icon.vue'
@@ -399,33 +412,39 @@ const orderStatCards = computed(() => [
     title: '订单总量',
     value: total.value,
     change: `${selectedAccountName.value} · 平台分页总数`,
-    symbol: '总',
-    tone: 'tone-blue'
+    tone: 'blue',
+    icon: ReceiptOutline
   },
   {
     key: 'page',
     title: '当前页',
     value: rows.value.length,
     change: `每页 ${query.size} 条 · 第 ${query.current} 页`,
-    symbol: '页',
-    tone: 'tone-green'
+    tone: 'green',
+    icon: LayersOutline
   },
   {
     key: 'pending',
     title: '待发货',
     value: pendingDeliveryCount.value,
     change: '当前页付款后待履约订单',
-    symbol: '发',
-    tone: 'tone-orange'
+    tone: 'orange',
+    icon: RocketOutline
   },
   {
     key: 'delivery',
     title: '履约中',
     value: activeDeliveryCount.value,
     change: `已完成 ${completedOrderCount.value} 单`,
-    symbol: '履',
-    tone: 'tone-cyan'
+    tone: 'cyan',
+    icon: CheckmarkDoneCircleOutline
   }
+])
+const ordersStatusItems = computed(() => [
+  { key: 'orders', label: '订单列表', value: ordersAvailable.value === true ? '已加载' : (ordersAvailable.value === false ? '不可用' : '加载中'), tone: ordersAvailable.value === false ? 'red' : (ordersAvailable.value === true ? 'green' : 'orange') },
+  { key: 'accounts', label: '账号筛选', value: accountsAvailable.value === true ? '已加载' : (accountsAvailable.value === false ? '不可用' : '加载中'), tone: accountsAvailable.value === false ? 'red' : (accountsAvailable.value === true ? 'green' : 'orange') },
+  { key: 'sync', label: '同步任务', value: syncingList.value ? '同步中' : '空闲', tone: syncingList.value ? 'orange' : 'green' },
+  { key: 'pending', label: '待发货', value: `${pendingDeliveryCount.value} 笔`, tone: pendingDeliveryCount.value ? 'orange' : 'green' },
 ])
 const manualBusy = computed(() => manualConfirming.value || manualSubmitting.value)
 const manualFieldsLocked = computed(() => manualOutcome.value !== null)
@@ -764,81 +783,31 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.orders-command-center {
+.orders-command-section :deep(.n-card-header) {
+  padding-bottom: 8px;
+}
+
+.orders-command-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dfe6f1;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(240, 247, 255, .98), rgba(255, 250, 243, .94) 48%, rgba(247, 249, 252, .98)),
-    #fff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
+  gap: 18px;
+  align-items: start;
 }
 
-.orders-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-}
-
-.orders-command-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.orders-command-copy {
   min-width: 0;
 }
 
-.orders-command-kicker span {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, .1);
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.orders-command-kicker b {
-  min-width: 0;
-  color: #475569;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.orders-command-main h2 {
-  margin: 0;
-  color: #101828;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.orders-command-main p {
+.orders-command-copy p {
   margin: 0;
   max-width: 720px;
-  color: #526079;
-  font-size: 13px;
-  line-height: 1.65;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.75;
 }
 
 .orders-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.orders-command-meta span {
-  padding: 6px 10px;
-  border: 1px solid rgba(37, 99, 235, .12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
+  margin-top: 14px;
 }
 
 .orders-command-panel {
@@ -883,80 +852,10 @@ onBeforeUnmount(() => {
   line-height: 1.55;
 }
 
-.orders-metric-rail {
+.orders-metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-}
-
-.orders-metric-card {
-  position: relative;
-  min-width: 0;
-  padding: 16px;
-  display: grid;
-  gap: 8px;
-  border: 1px solid #e5eaf0;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
-  overflow: hidden;
-}
-
-.orders-metric-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 14px 0 14px;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: #dbeafe;
-}
-
-.orders-metric-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.orders-metric-card.tone-blue .orders-metric-icon {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.orders-metric-card.tone-green .orders-metric-icon {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.orders-metric-card.tone-orange .orders-metric-icon {
-  background: #fff7ed;
-  color: #ea580c;
-}
-
-.orders-metric-card.tone-cyan .orders-metric-icon {
-  background: #ecfeff;
-  color: #0891b2;
-}
-
-.orders-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.orders-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.orders-metric-card small {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.4;
 }
 
 .orders-workspace {
@@ -1405,13 +1304,11 @@ onBeforeUnmount(() => {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .orders-workspace,
-  .orders-metric-card {
+  .orders-workspace {
     transition: border-color 180ms var(--orders-ease), box-shadow 180ms var(--orders-ease);
   }
 
-  .orders-workspace:hover,
-  .orders-metric-card:hover {
+  .orders-workspace:hover {
     border-color: rgba(29, 78, 216, .22);
     box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
   }
@@ -1441,13 +1338,13 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1280px) {
-  .orders-metric-rail {
+  .orders-metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1100px) {
-  .orders-command-center {
+  .orders-command-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1462,21 +1359,16 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 
-  .orders-command-center,
   .orders-workspace {
     padding: 14px;
     border-radius: 8px;
-  }
-
-  .orders-command-main h2 {
-    font-size: 24px;
   }
 
   .orders-command-buttons {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .orders-metric-rail {
+  .orders-metric-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
