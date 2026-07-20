@@ -36,11 +36,6 @@ async def _require_plan_feature(db: AsyncSession, current_user: dict, feature_ke
 delivery_rules_router = APIRouter(tags=["delivery-rules-ext"])
 
 CONFIG_TIMINGS = ("payDelivery", "confirmDelivery", "reviewDelivery")
-# 仅保留有效账号（deleted=0）的商品，已退出账号的旧商品不在前台展示
-VALID_ACCOUNT_FILTER = (
-    "EXISTS (SELECT 1 FROM xianyu_account a "
-    "WHERE a.id = g.account_id AND a.deleted = 0)"
-)
 SOURCE_GOODS_PAGE_MAX_SIZE = 100
 SOURCE_RECOMMEND_PAGE_MAX_SIZE = 30
 SOURCE_RECOMMEND_CANDIDATE_MAX = 200
@@ -121,6 +116,24 @@ def _owner_filter_sql(alias: str, current_user: dict | None, params: dict[str, A
         return "1 = 1"
     params["owner_user_id"] = current_uid(current_user)
     return f"COALESCE({alias}.owner_user_id, 0) = :owner_user_id"
+
+
+def _account_scope_filter_sql(
+    account_id_expr: str,
+    current_user: dict | None,
+    params: dict[str, Any],
+    *,
+    param_name: str = "owner_user_id",
+) -> str:
+    base_sql = (
+        "EXISTS (SELECT 1 FROM xianyu_account scope_a "
+        f"WHERE scope_a.id = {account_id_expr} "
+        "AND scope_a.deleted = 0"
+    )
+    if current_user is None or is_superadmin(current_user):
+        return base_sql + ")"
+    params[param_name] = current_uid(current_user)
+    return base_sql + f" AND COALESCE(scope_a.owner_user_id, 0) = :{param_name})"
 
 
 def _json_loads(raw: Any, default: Any) -> Any:
@@ -688,37 +701,53 @@ async def _fetch_card_group_row(
     return dict(row) if row else None
 
 
-async def _load_goods_config(db: AsyncSession, goods_id: int) -> dict[str, Any]:
+async def _load_goods_config(
+    db: AsyncSession,
+    goods_id: int,
+    current_user: dict | None = None,
+) -> dict[str, Any]:
+    params: dict[str, Any] = {"goods_id": goods_id}
+    account_scope = _account_scope_filter_sql("g.account_id", current_user, params)
     row = (
         await db.execute(
             text(
-                """
-                SELECT config_json
-                FROM delivery_goods_config
-                WHERE goods_id = :goods_id
-                  AND deleted = 0
+                f"""
+                SELECT c.config_json
+                FROM delivery_goods_config c
+                JOIN xianyu_goods g
+                  ON g.id = c.goods_id
+                 AND g.deleted = 0
+                WHERE c.goods_id = :goods_id
+                  AND c.deleted = 0
+                  AND {account_scope}
                 LIMIT 1
                 """
             ),
-            {"goods_id": goods_id},
+            params,
         )
     ).mappings().first()
     if row:
         return _parse_delivery_config(row.get("config_json"), goods_id)
 
+    legacy_params = {"goods_id": goods_id}
+    legacy_account_scope = _account_scope_filter_sql("g.account_id", current_user, legacy_params)
     legacy_rule = (
         await db.execute(
             text(
-                """
-                SELECT goods_id, account_id, delivery_mode, card_group_id, delivery_content, status
-                FROM delivery_rule
-                WHERE goods_id = :goods_id
-                  AND deleted = 0
-                ORDER BY status DESC, updated_time DESC, id DESC
+                f"""
+                SELECT r.goods_id, r.account_id, r.delivery_mode, r.card_group_id, r.delivery_content, r.status
+                FROM delivery_rule r
+                JOIN xianyu_goods g
+                  ON g.id = r.goods_id
+                 AND g.deleted = 0
+                WHERE r.goods_id = :goods_id
+                  AND r.deleted = 0
+                  AND {legacy_account_scope}
+                ORDER BY r.status DESC, r.updated_time DESC, r.id DESC
                 LIMIT 1
                 """
             ),
-            {"goods_id": goods_id},
+            legacy_params,
         )
     ).mappings().first()
     if not legacy_rule:
@@ -747,23 +776,28 @@ async def _load_goods_config(db: AsyncSession, goods_id: int) -> dict[str, Any]:
 async def _load_all_goods_configs(
     db: AsyncSession,
     goods_ids: list[int] | None = None,
+    current_user: dict | None = None,
 ) -> dict[int, dict[str, Any]]:
     if goods_ids is not None and not goods_ids:
         return {}
-    config_where = "deleted = 0"
-    legacy_where = "goods_id IS NOT NULL AND deleted = 0"
     query_params: dict[str, Any] = {}
+    account_scope = _account_scope_filter_sql("g.account_id", current_user, query_params)
+    config_where = ["c.deleted = 0", "g.deleted = 0", account_scope]
+    legacy_where = ["r.goods_id IS NOT NULL", "r.deleted = 0", "g.deleted = 0", account_scope]
     if goods_ids is not None:
-        in_clause, query_params = _build_in_clause("config_goods_id", goods_ids)
-        config_where += f" AND goods_id IN ({in_clause})"
-        legacy_where += f" AND goods_id IN ({in_clause})"
+        in_clause, in_params = _build_in_clause("config_goods_id", goods_ids)
+        query_params.update(in_params)
+        config_where.append(f"c.goods_id IN ({in_clause})")
+        legacy_where.append(f"r.goods_id IN ({in_clause})")
     rows = (
         await db.execute(
             text(
                 f"""
-                SELECT goods_id, config_json
-                FROM delivery_goods_config
-                WHERE {config_where}
+                SELECT c.goods_id, c.config_json
+                FROM delivery_goods_config c
+                JOIN xianyu_goods g
+                  ON g.id = c.goods_id
+                WHERE {' AND '.join(config_where)}
                 """
             ),
             query_params,
@@ -779,10 +813,12 @@ async def _load_all_goods_configs(
         await db.execute(
             text(
                 f"""
-                SELECT goods_id, account_id, delivery_mode, card_group_id, delivery_content, status
-                FROM delivery_rule
-                WHERE {legacy_where}
-                ORDER BY goods_id ASC, status DESC, updated_time DESC, id DESC
+                SELECT r.goods_id, r.account_id, r.delivery_mode, r.card_group_id, r.delivery_content, r.status
+                FROM delivery_rule r
+                JOIN xianyu_goods g
+                  ON g.id = r.goods_id
+                WHERE {' AND '.join(legacy_where)}
+                ORDER BY r.goods_id ASC, r.status DESC, r.updated_time DESC, r.id DESC
                 """
             ),
             query_params,
@@ -872,10 +908,15 @@ def _normalize_goods_ids(raw_values: Any, *, maximum: int = 500) -> list[int]:
     return result
 
 
-async def _missing_goods_ids(db: AsyncSession, goods_ids: list[int]) -> list[int]:
+async def _missing_goods_ids(
+    db: AsyncSession,
+    goods_ids: list[int],
+    current_user: dict | None = None,
+) -> list[int]:
     if not goods_ids:
         return []
     in_clause, params = _build_in_clause("existing_goods_id", goods_ids)
+    account_scope = _account_scope_filter_sql("g.account_id", current_user, params)
     rows = (
         await db.execute(
             text(
@@ -883,7 +924,7 @@ async def _missing_goods_ids(db: AsyncSession, goods_ids: list[int]) -> list[int
                 SELECT id
                 FROM xianyu_goods g
                 WHERE deleted = 0
-                  AND {VALID_ACCOUNT_FILTER}
+                  AND {account_scope}
                   AND id IN ({in_clause})
                 """
             ),
@@ -894,8 +935,12 @@ async def _missing_goods_ids(db: AsyncSession, goods_ids: list[int]) -> list[int
     return [goods_id for goods_id in goods_ids if goods_id not in existing]
 
 
-async def _require_goods(db: AsyncSession, goods_ids: list[int]) -> ResultObject | None:
-    missing = await _missing_goods_ids(db, goods_ids)
+async def _require_goods(
+    db: AsyncSession,
+    goods_ids: list[int],
+    current_user: dict | None = None,
+) -> ResultObject | None:
+    missing = await _missing_goods_ids(db, goods_ids, current_user)
     if not missing:
         return None
     return ResultObject.failed(
@@ -907,24 +952,28 @@ async def _require_goods(db: AsyncSession, goods_ids: list[int]) -> ResultObject
 async def _load_delivery_source_row(
     db: AsyncSession,
     source_id: int,
+    current_user: dict | None = None,
     *,
     for_update: bool = False,
 ) -> dict[str, Any] | None:
     """Load one active source, optionally holding its row through the transaction."""
 
     lock_clause = " FOR UPDATE" if for_update else ""
+    params: dict[str, Any] = {"source_id": source_id}
+    owner_filter = _owner_filter_sql("s", current_user, params)
     row = (
         await db.execute(
             text(
                 f"""
-                SELECT id, title, content, remark, created_time, updated_time
-                FROM delivery_text_source
-                WHERE id = :source_id
-                  AND deleted = 0
+                SELECT s.id, s.title, s.content, s.remark, s.created_time, s.updated_time
+                FROM delivery_text_source s
+                WHERE s.id = :source_id
+                  AND s.deleted = 0
+                  AND {owner_filter}
                 LIMIT 1{lock_clause}
                 """
             ),
-            {"source_id": source_id},
+            params,
         )
     ).mappings().first()
     return dict(row) if row else None
@@ -959,9 +1008,16 @@ def _delivery_source_fields(body: dict[str, Any]) -> tuple[str, str, str]:
     return title, content, remark
 
 
-async def _list_goods_rows(db: AsyncSession, goods_ids: list[int] | None = None) -> list[dict[str, Any]]:
-    where_sql = ["g.deleted = 0", VALID_ACCOUNT_FILTER]
+async def _list_goods_rows(
+    db: AsyncSession,
+    goods_ids: list[int] | None = None,
+    current_user: dict | None = None,
+) -> list[dict[str, Any]]:
     params: dict[str, Any] = {}
+    where_sql = [
+        "g.deleted = 0",
+        _account_scope_filter_sql("g.account_id", current_user, params),
+    ]
     if goods_ids:
         in_clause, in_params = _build_in_clause("goods_id", goods_ids)
         where_sql.append(f"g.id IN ({in_clause})")
@@ -1112,6 +1168,7 @@ def _source_goods_select_sql(binding_predicate: str, where_sql: str) -> str:
 async def _list_source_goods_page(
     db: AsyncSession,
     source_id: int,
+    current_user: dict | None,
     *,
     current: int,
     size: int,
@@ -1122,7 +1179,10 @@ async def _list_source_goods_page(
 
     binding_predicate = _source_binding_predicate()
     params: dict[str, Any] = {"source_id": source_id}
-    where_parts = ["g.deleted = 0", VALID_ACCOUNT_FILTER]
+    where_parts = [
+        "g.deleted = 0",
+        _account_scope_filter_sql("g.account_id", current_user, params),
+    ]
     if configured_only:
         where_parts.append(binding_predicate)
     search_clause = _goods_search_clause(keyword, params)
@@ -1152,24 +1212,33 @@ async def _list_source_goods_page(
     return _page_payload(records, _to_int(total), current, size)
 
 
-async def _count_source_goods(db: AsyncSession, source_id: int) -> int:
+async def _count_source_goods(
+    db: AsyncSession,
+    source_id: int,
+    current_user: dict | None = None,
+) -> int:
     binding_predicate = _source_binding_predicate()
+    params: dict[str, Any] = {"source_id": source_id}
+    account_scope = _account_scope_filter_sql("g.account_id", current_user, params)
     total = (
         await db.execute(
             text(
                 "SELECT COUNT(*) FROM xianyu_goods g "
-                f"WHERE g.deleted = 0 AND {VALID_ACCOUNT_FILTER} AND {binding_predicate}"
+                f"WHERE g.deleted = 0 AND {account_scope} AND {binding_predicate}"
             ),
-            {"source_id": source_id},
+            params,
         )
     ).scalar() or 0
     return _to_int(total)
 
 
-async def _count_goods_rows(db: AsyncSession) -> int:
+async def _count_goods_rows(db: AsyncSession, current_user: dict | None = None) -> int:
+    params: dict[str, Any] = {}
+    account_scope = _account_scope_filter_sql("g.account_id", current_user, params)
     total = (
         await db.execute(
-            text(f"SELECT COUNT(*) FROM xianyu_goods g WHERE g.deleted = 0 AND {VALID_ACCOUNT_FILTER}")
+            text(f"SELECT COUNT(*) FROM xianyu_goods g WHERE g.deleted = 0 AND {account_scope}"),
+            params,
         )
     ).scalar() or 0
     return _to_int(total)
@@ -1178,6 +1247,7 @@ async def _count_goods_rows(db: AsyncSession) -> int:
 async def _list_recommendation_candidate_rows(
     db: AsyncSession,
     source_id: int,
+    current_user: dict | None,
     *,
     limit: int,
     source_keyword: str = "",
@@ -1206,10 +1276,12 @@ async def _list_recommendation_candidate_rows(
     evaluate goods the user could find via search.
     """
 
-    base_where = f"g.deleted = 0 AND {VALID_ACCOUNT_FILTER}"
+    base_params: dict[str, Any] = {}
+    base_where = "g.deleted = 0 AND " + _account_scope_filter_sql("g.account_id", current_user, base_params)
     total = (
         await db.execute(
-            text(f"SELECT COUNT(*) FROM xianyu_goods g WHERE {base_where}")
+            text(f"SELECT COUNT(*) FROM xianyu_goods g WHERE {base_where}"),
+            base_params,
         )
     ).scalar() or 0
     binding_predicate = _source_binding_predicate()
@@ -1221,7 +1293,11 @@ async def _list_recommendation_candidate_rows(
     # separately — a single LIKE '%庄园领主steam%' would miss goods whose CJK
     # and Latin parts are separated by other text (e.g. "庄园领主终极版Steam").
     keywords = _extract_source_keywords(source_keyword)
-    keyword_params: dict[str, Any] = {"source_id": source_id, "candidate_limit": limit}
+    keyword_params: dict[str, Any] = {
+        **base_params,
+        "source_id": source_id,
+        "candidate_limit": limit,
+    }
     keyword_clause = _multi_keyword_search_clause(keywords, keyword_params)
     keyword_rows: list[dict[str, Any]] = []
     if keyword_clause:
@@ -1247,7 +1323,7 @@ async def _list_recommendation_candidate_rows(
                     select_sql
                     + " ORDER BY g.id DESC LIMIT :candidate_limit"
                 ),
-                {"source_id": source_id, "candidate_limit": limit},
+                {**base_params, "source_id": source_id, "candidate_limit": limit},
             )
         ).mappings().all()
     ]
@@ -1968,13 +2044,16 @@ async def get_delivery_stats(
     current_user: dict = Depends(get_current_user),
 ):
     start_time, end_time = _current_date_range()
+    success_params: dict[str, Any] = {"start_time": start_time, "end_time": end_time}
+    success_account_scope = _account_scope_filter_sql("delivery_record.account_id", current_user, success_params)
     today_success = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT COUNT(*)
                 FROM delivery_record
                 WHERE deleted = 0
+                  AND {success_account_scope}
                   AND created_time BETWEEN :start_time AND :end_time
                   AND (
                     COALESCE(delivery_status, '') = 'success'
@@ -1982,16 +2061,19 @@ async def get_delivery_stats(
                   )
                 """
             ),
-            {"start_time": start_time, "end_time": end_time},
+            success_params,
         )
     ).scalar() or 0
+    fail_params: dict[str, Any] = {"start_time": start_time, "end_time": end_time}
+    fail_account_scope = _account_scope_filter_sql("delivery_record.account_id", current_user, fail_params)
     today_fail = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT COUNT(*)
                 FROM delivery_record
                 WHERE deleted = 0
+                  AND {fail_account_scope}
                   AND created_time BETWEEN :start_time AND :end_time
                   AND (
                     COALESCE(delivery_status, '') = 'failed'
@@ -1999,39 +2081,46 @@ async def get_delivery_stats(
                   )
                 """
             ),
-            {"start_time": start_time, "end_time": end_time},
+            fail_params,
         )
     ).scalar() or 0
+    pending_params: dict[str, Any] = {}
+    pending_account_scope = _account_scope_filter_sql("delivery_record.account_id", current_user, pending_params)
     pending_orders = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT COUNT(*)
                 FROM delivery_record
                 WHERE deleted = 0
+                  AND {pending_account_scope}
                   AND (
                     COALESCE(delivery_status, '') = 'pending'
                     OR COALESCE(status, 0) IN (0, 1, 5)
                   )
                 """
-            )
+            ),
+            pending_params,
         )
     ).scalar() or 0
 
+    goods_params: dict[str, Any] = {}
+    goods_account_scope = _account_scope_filter_sql("g.account_id", current_user, goods_params)
     goods_rows = (
         await db.execute(
             text(
                 f"""
                 SELECT id
                 FROM xianyu_goods g
-                WHERE deleted = 0 AND {VALID_ACCOUNT_FILTER}
+                WHERE deleted = 0 AND {goods_account_scope}
                 """
-            )
+            ),
+            goods_params,
         )
     ).mappings().all()
     existing_goods_ids = {_to_int(row.get("id")) for row in goods_rows if _to_int(row.get("id"))}
 
-    configs = await _load_all_goods_configs(db)
+    configs = await _load_all_goods_configs(db, current_user=current_user)
     enabled_goods = 0
     low_stock_goods = 0
     group_params: dict[str, Any] = {}
@@ -2089,10 +2178,10 @@ async def get_goods_delivery_config(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    missing_result = await _require_goods(db, [goods_id])
+    missing_result = await _require_goods(db, [goods_id], current_user)
     if missing_result:
         return missing_result
-    return ResultObject.success(await _load_goods_config(db, goods_id))
+    return ResultObject.success(await _load_goods_config(db, goods_id, current_user))
 
 
 @router.post("/auto-delivery/goods/configs/query", response_model=ResultObject)
@@ -2123,10 +2212,10 @@ async def query_goods_delivery_configs(
             seen.add(goods_id)
             goods_ids.append(goods_id)
 
-    goods_rows = await _list_goods_rows(db, goods_ids)
+    goods_rows = await _list_goods_rows(db, goods_ids, current_user)
     existing_goods_ids = {_to_int(row.get("id")) for row in goods_rows}
     valid_goods_ids = [goods_id for goods_id in goods_ids if goods_id in existing_goods_ids]
-    configs = await _load_all_goods_configs(db, valid_goods_ids)
+    configs = await _load_all_goods_configs(db, valid_goods_ids, current_user)
     records = [
         {"goodsId": goods_id, "config": configs.get(goods_id, {})}
         for goods_id in valid_goods_ids
@@ -2149,7 +2238,7 @@ async def save_goods_delivery_config(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "auto_delivery")
-    missing_result = await _require_goods(db, [goods_id])
+    missing_result = await _require_goods(db, [goods_id], current_user)
     if missing_result:
         return missing_result
     timing = str(body.get("timing") or "payDelivery").strip()
@@ -2162,12 +2251,12 @@ async def save_goods_delivery_config(
             source_id = _positive_source_id(body.get("sourceId"))
         except ValueError as exc:
             return ResultObject.validate_failed(str(exc))
-        source_row = await _load_delivery_source_row(db, source_id, for_update=True)
+        source_row = await _load_delivery_source_row(db, source_id, current_user, for_update=True)
         if not source_row:
             await db.rollback()
             return ResultObject.failed("货源不存在或已删除", code=404)
 
-    config = await _load_goods_config(db, goods_id)
+    config = await _load_goods_config(db, goods_id, current_user)
     timing_config = dict(config.get(timing) or {})
     for key in (
         "enabled",
@@ -2215,12 +2304,12 @@ async def toggle_goods_delivery_config(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "auto_delivery")
-    missing_result = await _require_goods(db, [goods_id])
+    missing_result = await _require_goods(db, [goods_id], current_user)
     if missing_result:
         return missing_result
     if timing not in CONFIG_TIMINGS:
         return ResultObject.validate_failed("未知的发货时机")
-    config = await _load_goods_config(db, goods_id)
+    config = await _load_goods_config(db, goods_id, current_user)
     timing_config = dict(config.get(timing) or {})
     timing_config["enabled"] = 1 if _truthy(body.get("enabled")) else 0
     config[timing] = timing_config
@@ -2243,7 +2332,7 @@ async def batch_set_delivery_rules(
     if timing not in CONFIG_TIMINGS:
         return ResultObject.validate_failed("未知的发货时机")
 
-    missing_result = await _require_goods(db, goods_ids)
+    missing_result = await _require_goods(db, goods_ids, current_user)
     if missing_result:
         return missing_result
 
@@ -2253,13 +2342,13 @@ async def batch_set_delivery_rules(
             source_id = _positive_source_id(body.get("sourceId"))
         except ValueError as exc:
             return ResultObject.validate_failed(str(exc))
-        source_row = await _load_delivery_source_row(db, source_id, for_update=True)
+        source_row = await _load_delivery_source_row(db, source_id, current_user, for_update=True)
         if not source_row:
             await db.rollback()
             return ResultObject.failed("货源不存在或已删除", code=404)
 
     for goods_id in goods_ids:
-        config = await _load_goods_config(db, goods_id)
+        config = await _load_goods_config(db, goods_id, current_user)
         timing_config = dict(config.get(timing) or {})
         timing_config["enabled"] = 1 if _truthy(body.get("enabled", 1)) else 0
         if body.get("mode"):
@@ -2286,7 +2375,7 @@ async def batch_delete_delivery_rules(
         goods_ids = _normalize_goods_ids(body.get("goodsIds"))
     except ValueError as exc:
         return ResultObject.validate_failed(str(exc))
-    missing_result = await _require_goods(db, goods_ids)
+    missing_result = await _require_goods(db, goods_ids, current_user)
     if missing_result:
         return missing_result
     for goods_id in goods_ids:
@@ -2309,23 +2398,27 @@ async def apply_delivery_rules_to_all(
         source_goods_id = _normalize_goods_ids([source_goods_id], maximum=1)[0]
     except ValueError as exc:
         return ResultObject.validate_failed(str(exc))
-    missing_result = await _require_goods(db, [source_goods_id])
+    missing_result = await _require_goods(db, [source_goods_id], current_user)
     if missing_result:
         return missing_result
-    source_row = (
-        await db.execute(
-            text(
-                "SELECT config_json FROM delivery_goods_config WHERE goods_id = :gid AND deleted = 0 LIMIT 1"
-            ),
-            {"gid": source_goods_id},
-        )
-    ).first()
-    if not source_row or not source_row[0]:
+    source_config_obj = await _load_goods_config(db, source_goods_id, current_user)
+    if not source_config_obj:
         return ResultObject.failed("源商品发货配置不存在")
-    source_config = source_row[0]
+    source_config = json.dumps(source_config_obj, ensure_ascii=False)
+    target_params: dict[str, Any] = {"gid": source_goods_id}
+    target_account_scope = _account_scope_filter_sql("g.account_id", current_user, target_params)
     target_result = await db.execute(
-        text(f"SELECT id FROM xianyu_goods g WHERE deleted = 0 AND {VALID_ACCOUNT_FILTER} AND status = 1 AND id != :gid"),
-        {"gid": source_goods_id},
+        text(
+            f"""
+            SELECT id
+            FROM xianyu_goods g
+            WHERE deleted = 0
+              AND {target_account_scope}
+              AND status = 1
+              AND id != :gid
+            """
+        ),
+        target_params,
     )
     target_ids = [row[0] for row in target_result.fetchall()]
     applied_count = 0
@@ -2351,17 +2444,21 @@ async def get_delivery_statement(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    params: dict[str, Any] = {}
+    owner_filter = _owner_filter_sql("s", current_user, params)
     row = (
         await db.execute(
             text(
-                """
-                SELECT enabled, content, scope
-                FROM delivery_statement
-                WHERE deleted = 0
-                ORDER BY id DESC
+                f"""
+                SELECT s.enabled, s.content, s.scope
+                FROM delivery_statement s
+                WHERE s.deleted = 0
+                  AND {owner_filter}
+                ORDER BY s.id DESC
                 LIMIT 1
                 """
-            )
+            ),
+            params,
         )
     ).mappings().first()
     if not row:
@@ -2384,17 +2481,21 @@ async def save_delivery_statement(
     enabled = 1 if _truthy(body.get("enabled")) else 0
     content = str(body.get("content") or STATEMENT_DEFAULT_CONTENT)
     scope = str(body.get("scope") or "all")
+    params: dict[str, Any] = {}
+    owner_filter = _owner_filter_sql("s", current_user, params)
     existing = (
         await db.execute(
             text(
-                """
-                SELECT id
-                FROM delivery_statement
-                WHERE deleted = 0
-                ORDER BY id DESC
+                f"""
+                SELECT s.id
+                FROM delivery_statement s
+                WHERE s.deleted = 0
+                  AND {owner_filter}
+                ORDER BY s.id DESC
                 LIMIT 1
                 """
-            )
+            ),
+            params,
         )
     ).mappings().first()
     if existing:
@@ -2420,11 +2521,16 @@ async def save_delivery_statement(
         await db.execute(
             text(
                 """
-                INSERT INTO delivery_statement(enabled, content, scope, deleted, created_time, updated_time)
-                VALUES(:enabled, :content, :scope, 0, NOW(), NOW())
+                INSERT INTO delivery_statement(owner_user_id, enabled, content, scope, deleted, created_time, updated_time)
+                VALUES(:owner_user_id, :enabled, :content, :scope, 0, NOW(), NOW())
                 """
             ),
-            {"enabled": enabled, "content": content, "scope": scope},
+            {
+                "owner_user_id": current_uid(current_user),
+                "enabled": enabled,
+                "content": content,
+                "scope": scope,
+            },
         )
     await db.commit()
     return ResultObject.success(None, "发货声明已保存")
@@ -2437,17 +2543,21 @@ async def toggle_delivery_statement(
     current_user: dict = Depends(get_current_user),
 ):
     enabled = 1 if _truthy(body.get("enabled")) else 0
+    params: dict[str, Any] = {}
+    owner_filter = _owner_filter_sql("s", current_user, params)
     existing = (
         await db.execute(
             text(
-                """
-                SELECT id, content, scope
-                FROM delivery_statement
-                WHERE deleted = 0
-                ORDER BY id DESC
+                f"""
+                SELECT s.id, s.content, s.scope
+                FROM delivery_statement s
+                WHERE s.deleted = 0
+                  AND {owner_filter}
+                ORDER BY s.id DESC
                 LIMIT 1
                 """
-            )
+            ),
+            params,
         )
     ).mappings().first()
     if existing:
@@ -2466,11 +2576,16 @@ async def toggle_delivery_statement(
         await db.execute(
             text(
                 """
-                INSERT INTO delivery_statement(enabled, content, scope, deleted, created_time, updated_time)
-                VALUES(:enabled, :content, :scope, 0, NOW(), NOW())
+                INSERT INTO delivery_statement(owner_user_id, enabled, content, scope, deleted, created_time, updated_time)
+                VALUES(:owner_user_id, :enabled, :content, :scope, 0, NOW(), NOW())
                 """
             ),
-            {"enabled": enabled, "content": STATEMENT_DEFAULT_CONTENT, "scope": "all"},
+            {
+                "owner_user_id": current_uid(current_user),
+                "enabled": enabled,
+                "content": STATEMENT_DEFAULT_CONTENT,
+                "scope": "all",
+            },
         )
     await db.commit()
     return ResultObject.success(None, "发货声明状态已更新")
@@ -2501,14 +2616,14 @@ async def get_delivery_sources(
     safe_size = min(max(size, 1), 200)
     offset = (safe_current - 1) * safe_size
     params: dict[str, Any] = {}
-    where_sql = ["deleted = 0"]
+    where_sql = ["s.deleted = 0", _owner_filter_sql("s", current_user, params)]
     if keyword.strip():
-        where_sql.append("(title LIKE :keyword OR content LIKE :keyword OR remark LIKE :keyword)")
+        where_sql.append("(s.title LIKE :keyword OR s.content LIKE :keyword OR s.remark LIKE :keyword)")
         params["keyword"] = f"%{keyword.strip()}%"
 
     total = (
         await db.execute(
-            text(f"SELECT COUNT(*) FROM delivery_text_source WHERE {' AND '.join(where_sql)}"),
+            text(f"SELECT COUNT(*) FROM delivery_text_source s WHERE {' AND '.join(where_sql)}"),
             params,
         )
     ).scalar() or 0
@@ -2517,10 +2632,10 @@ async def get_delivery_sources(
         await db.execute(
             text(
                 f"""
-                SELECT id, title, content, remark, created_time, updated_time
-                FROM delivery_text_source
+                SELECT s.id, s.title, s.content, s.remark, s.created_time, s.updated_time
+                FROM delivery_text_source s
                 WHERE {' AND '.join(where_sql)}
-                ORDER BY updated_time DESC, id DESC
+                ORDER BY s.updated_time DESC, s.id DESC
                 LIMIT :offset, :limit
                 """
             ),
@@ -2528,7 +2643,7 @@ async def get_delivery_sources(
         )
     ).mappings().all()
 
-    configs = await _load_all_goods_configs(db)
+    configs = await _load_all_goods_configs(db, current_user=current_user)
     usage_map: dict[int, int] = {}
     for config in configs.values():
         for source_id in _matching_source_ids(config):
@@ -2544,23 +2659,10 @@ async def get_delivery_source_detail(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    row = (
-        await db.execute(
-            text(
-                """
-                SELECT id, title, content, remark, created_time, updated_time
-                FROM delivery_text_source
-                WHERE id = :source_id
-                  AND deleted = 0
-                LIMIT 1
-                """
-            ),
-            {"source_id": source_id},
-        )
-    ).mappings().first()
+    row = await _load_delivery_source_row(db, source_id, current_user)
     if not row:
         return ResultObject.failed("货源不存在", code=404)
-    configs = await _load_all_goods_configs(db)
+    configs = await _load_all_goods_configs(db, current_user=current_user)
     usage_count = sum(1 for config in configs.values() if _goods_uses_source(config, source_id))
     return ResultObject.success(_source_record(dict(row), usage_count))
 
@@ -2579,11 +2681,12 @@ async def create_delivery_source(
     await db.execute(
         text(
             """
-            INSERT INTO delivery_text_source(title, content, remark, deleted, created_time, updated_time)
-            VALUES(:title, :content, :remark, 0, NOW(), NOW())
+            INSERT INTO delivery_text_source(owner_user_id, title, content, remark, deleted, created_time, updated_time)
+            VALUES(:owner_user_id, :title, :content, :remark, 0, NOW(), NOW())
             """
         ),
         {
+            "owner_user_id": current_uid(current_user),
             "title": title or content[:50] or "未命名货源",
             "content": content or None,
             "remark": remark or None,
@@ -2605,7 +2708,7 @@ async def update_delivery_source(
         title, content, remark = _delivery_source_fields(body)
     except ValueError as exc:
         return ResultObject.validate_failed(str(exc))
-    existing = await _load_delivery_source_row(db, source_id, for_update=True)
+    existing = await _load_delivery_source_row(db, source_id, current_user, for_update=True)
     if not existing:
         await db.rollback()
         return ResultObject.failed("货源不存在或已删除", code=404)
@@ -2643,11 +2746,11 @@ async def delete_delivery_source(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "source_library")
-    existing = await _load_delivery_source_row(db, source_id, for_update=True)
+    existing = await _load_delivery_source_row(db, source_id, current_user, for_update=True)
     if not existing:
         await db.rollback()
         return ResultObject.failed("货源不存在或已删除", code=404)
-    configs = await _load_all_goods_configs(db)
+    configs = await _load_all_goods_configs(db, current_user=current_user)
     usage_count = sum(1 for config in configs.values() if _goods_uses_source(config, source_id))
     if usage_count:
         await db.rollback()
@@ -2712,13 +2815,14 @@ async def get_delivery_source_goods(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    source_row = await _load_delivery_source_row(db, source_id)
+    source_row = await _load_delivery_source_row(db, source_id, current_user)
     if not source_row:
         return ResultObject.failed("货源不存在", code=404)
 
     configured_page = await _list_source_goods_page(
         db,
         source_id,
+        current_user,
         current=configured_current,
         size=configured_size,
         keyword=configured_keyword,
@@ -2727,6 +2831,7 @@ async def get_delivery_source_goods(
     candidate_page = await _list_source_goods_page(
         db,
         source_id,
+        current_user,
         current=candidate_current,
         size=candidate_size,
         keyword=candidate_keyword,
@@ -2735,12 +2840,12 @@ async def get_delivery_source_goods(
     usage_count = (
         configured_page["total"]
         if not configured_keyword.strip()
-        else await _count_source_goods(db, source_id)
+        else await _count_source_goods(db, source_id, current_user)
     )
     all_goods_total = (
         candidate_page["total"]
         if not candidate_keyword.strip()
-        else await _count_goods_rows(db)
+        else await _count_goods_rows(db, current_user)
     )
     return ResultObject.success(
         {
@@ -2768,17 +2873,18 @@ async def recommend_delivery_source_goods(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "source_library")
-    source_row = await _load_delivery_source_row(db, source_id)
+    source_row = await _load_delivery_source_row(db, source_id, current_user)
     if not source_row:
         return ResultObject.failed("货源不存在", code=404)
 
     all_goods, candidate_pool_total, keyword_matched_ids = await _list_recommendation_candidate_rows(
         db,
         source_id,
+        current_user,
         limit=candidate_limit,
         source_keyword=str(source_row.get("title") or ""),
     )
-    usage_count = await _count_source_goods(db, source_id)
+    usage_count = await _count_source_goods(db, source_id, current_user)
     source_payload = dict(source_row)
     source_features = _source_recommend_features(source_payload)
     ranked_candidates = [
@@ -2936,20 +3042,20 @@ async def apply_delivery_source_to_goods(
     timing = str(body.get("timing") or "payDelivery").strip()
     if timing not in CONFIG_TIMINGS:
         return ResultObject.validate_failed("未知的发货时机")
-    missing_result = await _require_goods(db, goods_ids)
+    missing_result = await _require_goods(db, goods_ids, current_user)
     if missing_result:
         return missing_result
 
     # Serialize binding with source deletion. Delete locks the same row before
     # scanning configs, so either this binding commits first and blocks delete,
     # or delete commits first and this lookup fails closed.
-    source_row = await _load_delivery_source_row(db, source_id, for_update=True)
+    source_row = await _load_delivery_source_row(db, source_id, current_user, for_update=True)
     if not source_row:
         await db.rollback()
         return ResultObject.failed("货源不存在", code=404)
 
     for goods_id in goods_ids:
-        config = await _load_goods_config(db, goods_id)
+        config = await _load_goods_config(db, goods_id, current_user)
         timing_config = dict(config.get(timing) or {})
         timing_config.update(
             {
@@ -2980,15 +3086,15 @@ async def remove_delivery_source_from_goods(
     （sourceId、sourceTitle、content）并停用该时机，使商品不再使用此货源发货，
     从而从该货源的"已配置商品"列表中移除。
     """
-    source_row = await _load_delivery_source_row(db, source_id, for_update=True)
+    source_row = await _load_delivery_source_row(db, source_id, current_user, for_update=True)
     if not source_row:
         await db.rollback()
         return ResultObject.failed("货源不存在或已删除", code=404)
-    missing_result = await _require_goods(db, [goods_id])
+    missing_result = await _require_goods(db, [goods_id], current_user)
     if missing_result:
         return missing_result
 
-    config = await _load_goods_config(db, goods_id)
+    config = await _load_goods_config(db, goods_id, current_user)
     touched = False
     for timing in CONFIG_TIMINGS:
         timing_config = config.get(timing)
@@ -3091,6 +3197,7 @@ async def get_delivery_records(
     offset = (safe_current - 1) * safe_size
     params: dict[str, Any] = {"offset": offset, "limit": safe_size}
     where_sql = ["dr.deleted = 0"]
+    where_sql.append(_account_scope_filter_sql("dr.account_id", current_user, params))
     if accountId is not None:
         where_sql.append("dr.account_id = :account_id")
         params["account_id"] = accountId
@@ -3179,10 +3286,12 @@ async def get_delivery_record_detail(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    params: dict[str, Any] = {"record_id": record_id}
+    account_scope = _account_scope_filter_sql("dr.account_id", current_user, params)
     row = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT
                     dr.id,
                     dr.account_id,
@@ -3219,10 +3328,11 @@ async def get_delivery_record_detail(
                  )
                 WHERE dr.id = :record_id
                   AND dr.deleted = 0
+                  AND {account_scope}
                 LIMIT 1
                 """
             ),
-            {"record_id": record_id},
+            params,
         )
     ).mappings().first()
     if not row:
@@ -3236,18 +3346,21 @@ async def retry_delivery_record(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    params: dict[str, Any] = {"record_id": record_id}
+    account_scope = _account_scope_filter_sql("delivery_record.account_id", current_user, params)
     exists = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT id
                 FROM delivery_record
                 WHERE id = :record_id
                   AND deleted = 0
+                  AND {account_scope}
                 LIMIT 1
                 """
             ),
-            {"record_id": record_id},
+            params,
         )
     ).scalar_one_or_none()
     if exists is None:
@@ -3287,18 +3400,21 @@ async def trigger_delivery(
     if order_id in (None, ""):
         return ResultObject.validate_failed("orderId 不能为空")
     timing = str(body.get("timing") or "after_payment").strip()
+    order_params: dict[str, Any] = {"order_id": order_id}
+    order_account_scope = _account_scope_filter_sql("xianyu_trade_order.account_id", current_user, order_params)
     order_row = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT id, account_id
                 FROM xianyu_trade_order
                 WHERE id = :order_id
                   AND deleted = 0
+                  AND {order_account_scope}
                 LIMIT 1
                 """
             ),
-            {"order_id": order_id},
+            order_params,
         )
     ).mappings().first()
     if not order_row:
@@ -3332,19 +3448,22 @@ async def scan_pending_orders(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "auto_delivery")
-    configs = await _load_all_goods_configs(db)
+    configs = await _load_all_goods_configs(db, current_user=current_user)
     if not configs:
         return ResultObject.success({"scanned": 0, "created": 0, "message": "暂无已配置的自动发货商品"})
 
+    goods_params: dict[str, Any] = {}
+    goods_account_scope = _account_scope_filter_sql("g.account_id", current_user, goods_params)
     goods_rows = (
         await db.execute(
             text(
                 f"""
                 SELECT id, account_id, external_goods_id, goods_id
                 FROM xianyu_goods g
-                WHERE deleted = 0 AND {VALID_ACCOUNT_FILTER}
+                WHERE deleted = 0 AND {goods_account_scope}
                 """
-            )
+            ),
+            goods_params,
         )
     ).mappings().all()
     goods_by_external: dict[str, dict[str, Any]] = {}
@@ -3360,18 +3479,22 @@ async def scan_pending_orders(
             if key:
                 goods_by_external[key] = dict(row)
 
+    order_params: dict[str, Any] = {}
+    order_account_scope = _account_scope_filter_sql("xianyu_trade_order.account_id", current_user, order_params)
     orders = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT id, account_id, item_id
                 FROM xianyu_trade_order
                 WHERE deleted = 0
+                  AND {order_account_scope}
                   AND order_status IN (1, 2)
                 ORDER BY updated_time DESC, id DESC
                 LIMIT 100
                 """
-            )
+            ),
+            order_params,
         )
     ).mappings().all()
 
@@ -3455,16 +3578,15 @@ async def list_delivery_rules(
         # 查询所有商品配置
         offset = (current - 1) * size
         # 联表查询商品信息 + 配置
-        sql = text(
-            f"""
+        params: dict[str, Any] = {}
+        account_scope = _account_scope_filter_sql("g.account_id", current_user, params)
+        sql = f"""
             SELECT g.id AS goods_id, g.account_id, g.title AS goods_title,
                    gc.config_json
             FROM xianyu_goods g
             LEFT JOIN delivery_goods_config gc ON gc.goods_id = g.id AND gc.deleted = 0
-            WHERE g.deleted = 0 AND {VALID_ACCOUNT_FILTER}
+            WHERE g.deleted = 0 AND {account_scope}
             """
-        )
-        params = {}
         if accountId:
             sql += " AND g.account_id = :account_id"
             params["account_id"] = accountId
@@ -3527,10 +3649,23 @@ async def get_delivery_global_config(
     表为空时返回空 Map。开源版同样实现。
     """
     try:
-        sql = text(
-            "SELECT config_json FROM delivery_global_config WHERE deleted = 0 LIMIT 1"
-        )
-        row = (await db.execute(sql)).mappings().first()
+        params: dict[str, Any] = {}
+        owner_filter = _owner_filter_sql("c", current_user, params)
+        row = (
+            await db.execute(
+                text(
+                    f"""
+                    SELECT c.config_json
+                    FROM delivery_global_config c
+                    WHERE c.deleted = 0
+                      AND {owner_filter}
+                    ORDER BY c.id DESC
+                    LIMIT 1
+                    """
+                ),
+                params,
+            )
+        ).mappings().first()
         if not row:
             return ResultObject.success({})
         config_json = row.get("config_json")
@@ -3558,9 +3693,23 @@ async def save_delivery_global_config(
     try:
         config_json = json.dumps(body, ensure_ascii=False)
         # 先查询是否存在
-        existing = (await db.execute(
-            text("SELECT id FROM delivery_global_config WHERE deleted = 0 LIMIT 1")
-        )).mappings().first()
+        params: dict[str, Any] = {}
+        owner_filter = _owner_filter_sql("c", current_user, params)
+        existing = (
+            await db.execute(
+                text(
+                    f"""
+                    SELECT c.id
+                    FROM delivery_global_config c
+                    WHERE c.deleted = 0
+                      AND {owner_filter}
+                    ORDER BY c.id DESC
+                    LIMIT 1
+                    """
+                ),
+                params,
+            )
+        ).mappings().first()
         if existing:
             await db.execute(
                 text("UPDATE delivery_global_config SET config_json = :cfg, updated_time = NOW() WHERE id = :id"),
@@ -3569,10 +3718,10 @@ async def save_delivery_global_config(
         else:
             await db.execute(
                 text(
-                    "INSERT INTO delivery_global_config (config_json, created_time, updated_time, deleted) "
-                    "VALUES (:cfg, NOW(), NOW(), 0)"
+                    "INSERT INTO delivery_global_config (owner_user_id, config_json, created_time, updated_time, deleted) "
+                    "VALUES (:owner_user_id, :cfg, NOW(), NOW(), 0)"
                 ),
-                {"cfg": config_json},
+                {"owner_user_id": current_uid(current_user), "cfg": config_json},
             )
         await db.commit()
         return ResultObject.success(body)
