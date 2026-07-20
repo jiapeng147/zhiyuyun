@@ -3,45 +3,49 @@
     <div v-if="error" class="global-notice error">{{ error }}</div>
     <div v-if="success" class="global-notice success">{{ success }}</div>
 
-    <section class="delivery-command-center">
-      <div class="delivery-command-main">
-        <div class="delivery-command-kicker">
-          <span>自动发货</span>
-          <b>{{ activeAccountLabel }}</b>
+    <BusinessSection class="delivery-command-section" title="发货运营" eyebrow="自动发货">
+      <template #extra>
+        <n-tag :type="filteredConfigUnknownCount > 0 ? 'warning' : (goodsAvailable ? 'success' : 'error')" size="small" :bordered="false">
+          {{ filteredConfigUnknownCount > 0 ? '存在未知配置' : (goodsAvailable ? '可操作' : '配置读取中') }}
+        </n-tag>
+      </template>
+      <div class="delivery-command-layout">
+        <div class="delivery-command-copy">
+          <p>按商品配置付款后、确认收货后和好评后的发货策略，支持文本、卡密和货源库引用。</p>
+          <n-space class="delivery-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ activeAccountLabel }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ goodsAvailable ? `当前 ${filteredGoods.length} 个商品` : '商品配置读取中' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>启用 {{ statsMetric(stats.enabledGoods) }}</n-tag>
+            <n-tag size="small" :bordered="false" round>待处理 {{ statsMetric(stats.pendingOrders) }}</n-tag>
+          </n-space>
         </div>
-        <h2>发货运营</h2>
-        <p>按商品配置付款后、确认收货后和好评后的发货策略，支持文本、卡密和货源库引用。</p>
-        <div class="delivery-command-meta">
-          <span>{{ goodsAvailable ? `当前 ${filteredGoods.length} 个商品` : '商品配置读取中' }}</span>
-          <span>启用 {{ statsMetric(stats.enabledGoods) }}</span>
-          <span>待处理 {{ statsMetric(stats.pendingOrders) }}</span>
+        <div class="delivery-command-panel">
+          <div class="delivery-command-panel-head">
+            <span>发货动作</span>
+            <strong>{{ filteredConfigUnknownCount > 0 ? '存在未知配置' : '可操作' }}</strong>
+          </div>
+          <div class="delivery-command-buttons">
+            <n-button :title="deliveryActionHint" @click="goSourceLibrary">管理货源库</n-button>
+            <n-button type="primary" :title="deliveryActionHint" :disabled="!goodsAvailable || filteredConfigUnknownCount > 0 || filteredGoods.length === 0" @click="showBatchDialog = true">批量配置</n-button>
+            <n-button :title="deliveryActionHint" :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
+          </div>
+          <p class="delivery-action-hint">{{ deliveryActionHint }}</p>
         </div>
       </div>
-      <div class="delivery-command-panel">
-        <div class="delivery-command-panel-head">
-          <span>发货动作</span>
-          <strong>{{ filteredConfigUnknownCount > 0 ? '存在未知配置' : '可操作' }}</strong>
-        </div>
-        <div class="delivery-command-buttons">
-          <n-button :title="deliveryActionHint" @click="goSourceLibrary">管理货源库</n-button>
-          <n-button type="primary" :title="deliveryActionHint" :disabled="!goodsAvailable || filteredConfigUnknownCount > 0 || filteredGoods.length === 0" @click="showBatchDialog = true">批量配置</n-button>
-          <n-button :title="deliveryActionHint" :loading="!goodsAvailable" @click="loadAll">刷新数据</n-button>
-        </div>
-        <p class="delivery-action-hint">{{ deliveryActionHint }}</p>
-      </div>
-    </section>
+    </BusinessSection>
 
-    <section class="delivery-metric-rail">
-      <article
+    <BusinessStatusStrip :items="deliveryStatusItems" />
+
+    <section class="delivery-metric-grid">
+      <BusinessMetricCard
         v-for="item in deliveryStatCards"
         :key="item.key"
-        class="delivery-metric-card"
-        :class="item.tone"
-      >
-        <span class="delivery-metric-icon">{{ item.symbol }}</span>
-        <n-statistic :label="item.title" :value="item.value" />
-        <small>{{ item.change }}</small>
-      </article>
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </section>
 
     <div class="delivery-body">
@@ -343,7 +347,16 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { NButton, NInput, NSelect, NStatistic } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NTag } from 'naive-ui'
+import {
+  AlertCircleOutline,
+  CheckmarkDoneCircleOutline,
+  HourglassOutline,
+  RocketOutline,
+} from '@vicons/ionicons5'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
 import BaseTable from '../components/BaseTable.vue'
@@ -469,11 +482,17 @@ const goodsStatusOptions = [
   { label: '下架', value: '1' }
 ]
 const deliveryStatCards = computed(() => [
-  { key: 'success', title: '今日发货成功', value: statsMetric(stats.todaySuccess), change: '今日实际记录', symbol: '成', tone: 'tone-green' },
-  { key: 'fail', title: '今日失败', value: statsMetric(stats.todayFail), change: '今日实际记录', symbol: '败', tone: 'tone-orange' },
-  { key: 'pending', title: '待处理发货', value: statsMetric(stats.pendingOrders), change: '待处理记录', symbol: '待', tone: 'tone-blue' },
-  { key: 'low', title: '库存不足', value: statsMetric(stats.lowStockGoods), change: '需关注', symbol: '低', tone: 'tone-red' },
-  { key: 'enabled', title: '已启用自动发货', value: statsMetric(stats.enabledGoods), change: '已确认配置', symbol: '启', tone: 'tone-cyan' }
+  { key: 'success', title: '今日发货成功', value: statsMetric(stats.todaySuccess), change: '今日实际记录', icon: CheckmarkDoneCircleOutline, tone: 'green' },
+  { key: 'fail', title: '今日失败', value: statsMetric(stats.todayFail), change: '今日实际记录', icon: AlertCircleOutline, tone: stats.todayFail ? 'red' : 'gray' },
+  { key: 'pending', title: '待处理发货', value: statsMetric(stats.pendingOrders), change: '待处理记录', icon: HourglassOutline, tone: 'blue' },
+  { key: 'low', title: '库存不足', value: statsMetric(stats.lowStockGoods), change: '需关注', icon: AlertCircleOutline, tone: stats.lowStockGoods ? 'red' : 'green' },
+  { key: 'enabled', title: '已启用自动发货', value: statsMetric(stats.enabledGoods), change: '已确认配置', icon: RocketOutline, tone: 'cyan' }
+])
+const deliveryStatusItems = computed(() => [
+  { key: 'goods', label: '商品配置', value: goodsAvailable.value ? '已加载' : '加载中', tone: goodsAvailable.value ? 'green' : 'orange' },
+  { key: 'unknown', label: '未知配置', value: filteredConfigUnknownCount.value > 0 ? `${filteredConfigUnknownCount.value} 个待处理` : '无', tone: filteredConfigUnknownCount.value > 0 ? 'red' : 'green' },
+  { key: 'enabled', label: '已启用', value: `${statsMetric(stats.enabledGoods)} 个商品`, tone: 'blue' },
+  { key: 'pending', label: '待处理', value: `${statsMetric(stats.pendingOrders)} 条`, tone: stats.pendingOrders ? 'orange' : 'green' }
 ])
 
 const cardKeyCount = computed(() => {
@@ -957,113 +976,6 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.delivery-command-center {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dfe8e4;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(255, 250, 245, .94) 48%, rgba(246, 248, 252, .98)),
-    #fff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
-}
-
-.delivery-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-}
-
-.delivery-command-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.delivery-command-kicker span {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(15, 118, 110, .1);
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.delivery-command-kicker b {
-  min-width: 0;
-  color: #475569;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.delivery-command-main h2 {
-  margin: 0;
-  color: #101828;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.delivery-command-main p {
-  margin: 0;
-  max-width: 720px;
-  color: #526079;
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.delivery-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.delivery-command-meta span {
-  padding: 6px 10px;
-  border: 1px solid rgba(15, 118, 110, .12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.delivery-command-panel {
-  display: grid;
-  gap: 12px;
-  align-content: center;
-  padding: 14px;
-  border: 1px solid rgba(148, 163, 184, .24);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .82);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
-}
-
-.delivery-command-panel-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.delivery-command-panel-head strong {
-  color: #101828;
-  font-size: 13px;
-}
-
-.delivery-command-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
 .delivery-command-buttons :deep(.n-button) {
   min-width: 0;
   transition:
@@ -1077,74 +989,7 @@ onBeforeUnmount(() => {
   transform: scale(.97);
 }
 
-.delivery-action-hint {
-  margin: 0;
-  color: var(--delivery-muted);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.delivery-metric-rail {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.delivery-metric-card {
-  position: relative;
-  min-width: 0;
-  padding: 16px;
-  display: grid;
-  gap: 8px;
-  border: 1px solid #e5eaf0;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
-  overflow: hidden;
-}
-
-.delivery-metric-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 14px 0 14px;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: #dbeafe;
-}
-
-.delivery-metric-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.delivery-metric-card.tone-green .delivery-metric-icon { background: #ecfdf5; color: #059669; }
-.delivery-metric-card.tone-orange .delivery-metric-icon { background: #fff7ed; color: #ea580c; }
-.delivery-metric-card.tone-blue .delivery-metric-icon { background: #eff6ff; color: #2563eb; }
-.delivery-metric-card.tone-red .delivery-metric-icon { background: #fef2f2; color: #dc2626; }
-.delivery-metric-card.tone-cyan .delivery-metric-icon { background: #ecfeff; color: #0891b2; }
-
-.delivery-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.delivery-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.delivery-metric-card small {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.4;
-}
+.delivery-metric-card.tone-green .delivery-metric-card.tone-orange .delivery-metric-card.tone-blue .delivery-metric-card.tone-red .delivery-metric-card.tone-cyan 
 
 .page-head {
   margin-bottom: 10px;
@@ -1165,6 +1010,55 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   margin: 14px 0 18px;
+}
+
+.delivery-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.delivery-command-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+.delivery-command-copy { min-width: 0; }
+.delivery-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.delivery-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1500px) {
+  .delivery-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .delivery-command-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .delivery-metric-grid,
+  .delivery-command-layout { grid-template-columns: minmax(0, 1fr); }
+  .delivery-command-copy h2 { font-size: 24px; }
+}
+
+.delivery-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.delivery-command-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+.delivery-command-copy { min-width: 0; }
+.delivery-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.delivery-command-meta { margin-top: 12px; }
+.delivery-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1500px) {
+  .delivery-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .delivery-command-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .delivery-metric-grid,
+  .delivery-command-layout { grid-template-columns: minmax(0, 1fr); }
+  .delivery-command-copy h2 { font-size: 24px; }
 }
 
 .delivery-body {
@@ -1565,14 +1459,6 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .delivery-metric-rail {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .delivery-command-center {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .delivery-body {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1588,22 +1474,15 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 
-  .delivery-command-center,
+  .delivery-command-layout,
   .delivery-filter-card,
   .delivery-table-panel {
     padding: 14px;
     border-radius: 8px;
   }
 
-  .delivery-command-main h2 {
-    font-size: 24px;
-  }
-
   .delivery-command-buttons,
-  .delivery-metric-rail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+  
   /* 页头大字号收敛 */
   .page-head h1 {
     font-size: 20px;
