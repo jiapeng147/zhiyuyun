@@ -25,6 +25,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip v-if="aiCsStatusItems.length" :items="aiCsStatusItems" />
+
     <div v-if="loading" class="aics-loading">配置加载中...</div>
     <div v-else-if="configAvailable === false" class="aics-unavailable" role="alert">
       <strong>AI 客服配置状态未知</strong>
@@ -392,6 +394,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import {
   getAiCsDefaults,
   getBusinessSettings,
@@ -409,6 +412,14 @@ const saving = ref(false)
 const testing = ref(false)
 const success = ref('')
 const error = ref('')
+const aiCsStatusItems = computed(() => [
+  { key: 'config', label: '配置', value: configAvailable.value === true ? '已加载' : (configAvailable.value === false ? '加载失败' : '加载中'), tone: configAvailable.value === true ? 'green' : (configAvailable.value === false ? 'red' : 'orange') },
+  { key: 'enabled', label: 'AI 自动回复', value: form.enabled ? '已启用' : '未启用', tone: form.enabled ? 'green' : 'gray' },
+  { key: 'reception', label: '接待模式', value: aiReceptionActive.value ? '自动接待中' : '已停止', tone: aiReceptionActive.value ? 'green' : 'gray' },
+  { key: 'knowledge', label: '知识库', value: form.knowledgeBases && form.knowledgeBases.length ? form.knowledgeBases.length + ' 份' : '未配置', tone: form.knowledgeBases && form.knowledgeBases.length ? 'blue' : 'orange' }
+])
+
+
 
 const testMessage = ref('你好，这个商品还能再优惠点吗？')
 const testReply = ref('')
