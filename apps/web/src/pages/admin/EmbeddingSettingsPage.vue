@@ -25,6 +25,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip :items="embeddingStatusItems" />
+
     <section class="embedding-summary-grid" aria-label="向量检索摘要">
       <article class="embedding-summary-card">
         <span class="embedding-summary-icon blue">01</span>
@@ -166,6 +168,8 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { computed } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import OpsConfigField from '../../components/OpsConfigField.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
@@ -188,6 +192,14 @@ const {
   refreshRuntimeStatus,
   saveConfig,
 } = useOpenSourceSettings()
+const embeddingStatusItems = computed(() => [
+  { key: 'config', label: '配置', value: configAvailable.value === true ? '已加载' : (configAvailable.value === false ? '加载失败' : '加载中'), tone: configAvailable.value === true ? 'green' : (configAvailable.value === false ? 'red' : 'orange') },
+  { key: 'embedding', label: '向量模型', value: runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? '已配置' : '未设置', tone: runtimeStatusAvailable && runtimeStatus.embeddingModelConfigured ? 'green' : 'gray' },
+  { key: 'save', label: '保存', value: saving.value ? '保存中' : (configAvailable.value ? '可保存' : '不可保存'), tone: saving.value ? 'orange' : (configAvailable.value ? 'green' : 'gray') },
+  { key: 'runtime', label: '运行状态', value: runtimeStatusAvailable ? '已同步' : '待检测', tone: runtimeStatusAvailable ? 'green' : 'orange' }
+])
+
+
 
 const form = reactive({
   embeddingModel: {
