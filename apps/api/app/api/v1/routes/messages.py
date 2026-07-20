@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
 from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import assert_account_owned, current_uid, is_superadmin
 from ....models.entities import XianyuMessage, XianyuChatMessage
 from ....schemas.common import MsgListReqDTO, MsgDTO
 from ....services.ws_storage import (
@@ -18,6 +19,27 @@ from ..deps import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/msg")
+
+
+async def _require_owned_account(
+    db: AsyncSession,
+    current_user: dict,
+    account_id: int,
+) -> None:
+    if not await assert_account_owned(db, current_user, account_id):
+        raise HTTPException(status_code=400, detail="账号不存在或无权操作。")
+
+
+def _account_scope_sql(current_user: dict, params: dict, column: str = "account_id") -> str:
+    if is_superadmin(current_user):
+        return f"{column} IN (SELECT id FROM xianyu_account WHERE deleted = 0)"
+    params["scope_owner_user_id"] = current_uid(current_user)
+    return (
+        f"{column} IN ("
+        "SELECT id FROM xianyu_account "
+        "WHERE deleted = 0 AND owner_user_id = :scope_owner_user_id"
+        ")"
+    )
 
 
 def normalize_context_params(s_id=None, peer_user_id=None, peer_key=None):
@@ -82,8 +104,13 @@ async def list_messages(
         where_sql = ["deleted = 0"]
         params = {}
         if account_id is not None:
+            if int(account_id) <= 0:
+                raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+            await _require_owned_account(db, current_user, int(account_id))
             where_sql.append("account_id = :account_id")
-            params["account_id"] = account_id
+            params["account_id"] = int(account_id)
+        else:
+            where_sql.append(_account_scope_sql(current_user, params))
         if s_id:
             where_sql.append("s_id = :s_id")
             params["s_id"] = str(s_id)
@@ -185,6 +212,7 @@ async def message_context(
                 status_code=422,
                 detail="limit 必须在 1 到 200 之间，offset 不能小于 0。",
             )
+        await _require_owned_account(db, current_user, normalized_account_id)
 
         messages, total = await get_context_messages(
             db,
@@ -229,6 +257,7 @@ async def online_conversations(
                      xianyu_account_id, cursor, page_size, limit,
     )
     try:
+        await _require_owned_account(db, current_user, xianyu_account_id)
         # 兼容旧参数 limit：如果传了 limit 且没传 cursor，用旧逻辑（DB 聚合）
         if limit is not None and cursor is None:
             conversations = await get_online_conversations(
@@ -243,6 +272,8 @@ async def online_conversations(
             cursor=cursor, page_size=page_size, user_id=user_id,
         )
         return ResultObject.success(result)
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error(
             "Online conversations unavailable accountId=%d errorType=%s",
@@ -281,6 +312,7 @@ async def batch_query_avatars(
         raise HTTPException(status_code=422, detail="accountId 格式无效。") from exc
     if normalized_account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+    await _require_owned_account(db, current_user, normalized_account_id)
     if queries is None or not isinstance(queries, list):
         raise HTTPException(status_code=422, detail="queries 必须为数组。")
     if not queries:
