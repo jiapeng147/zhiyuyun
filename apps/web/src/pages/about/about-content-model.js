@@ -16,22 +16,9 @@ function resolveSourceList(source, fallback) {
   return Array.isArray(source) && source.length ? source : fallback
 }
 
-const NON_AD_PAYMENT_MARKERS = /赞助|捐赠|打赏|sponsor|donat(?:e|ion)|tip\s*jar/i
-
 function isFakeLocalEmail(value) {
   const text = String(value || '').trim().toLowerCase()
   return text.includes('@') && text.split('@').at(-1)?.endsWith('.local')
-}
-
-function isNonAdPaymentCard(item) {
-  return NON_AD_PAYMENT_MARKERS.test([
-    item?.label,
-    item?.title,
-    item?.desc,
-    item?.placeholderText,
-    item?.actionText,
-    item?.actionValue,
-  ].map(value => String(value || '')).join(' '))
 }
 
 function sanitizeCommunityCards(cards) {
