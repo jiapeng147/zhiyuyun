@@ -9,7 +9,6 @@
   },
   "packageManager": "npm@10.9.8",
   "scripts": {
-    "assets:prune": "node ./scripts/prune-public-source-assets.mjs",
     "dev": "node ./node_modules/vite/bin/vite.js",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview --host 0.0.0.0",
