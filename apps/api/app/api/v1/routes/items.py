@@ -23,7 +23,7 @@ from ....schemas.common import (
 )
 from .internal import verify_internal_or_current_user as verify_internal_token
 from .internal import resolve_internal_or_current_user
-from ....core.tenancy import owned_account_id_subquery
+from ....core.tenancy import assert_account_owned, owned_account_id_subquery
 from ..deps import get_current_user
 from ....services.xianyu_goods_sync import XianyuItemOperator
 from ....services.remote_goods_delete import (
@@ -58,6 +58,18 @@ _item_sync_tasks: set[asyncio.Task[None]] = set()
 
 # 擦亮任务扩展 router（与 router 同 prefix="/item"，但独立注册以便管理）
 polish_router = APIRouter(prefix="/item", tags=["item-polish"])
+
+
+async def _account_access_error(
+    db: AsyncSession,
+    current_user: Optional[dict],
+    account_id: int,
+) -> ResultObject | None:
+    if not account_id:
+        return ResultObject.failed("缺少账号ID")
+    if current_user is not None and not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在或无权操作")
+    return None
 
 
 class ItemPolishRequest(BaseModel):
@@ -302,7 +314,7 @@ async def get_item_detail(
 async def refresh_items(
     req: dict = {},
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
     同步商品：从闲鱼拉取商品列表并入库。
@@ -315,6 +327,9 @@ async def refresh_items(
             return ResultObject.failed("缺少参数 xianyu_account_id")
 
         account_id = int(account_id)
+        invalid = await _account_access_error(db, current_user, account_id)
+        if invalid:
+            return invalid
         # 检查是否已有运行中的同步任务：优先返回已有任务，避免重复创建。
         from ....services.xianyu_goods_sync import is_account_syncing
         running_result = await db.execute(
@@ -425,7 +440,7 @@ async def refresh_items(
 async def publish_item(
     req: dict = {},
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
     发布商品到闲鱼。
@@ -447,6 +462,9 @@ async def publish_item(
         if not account_id:
             return ResultObject.failed("缺少参数 xianyuAccountId")
         account_id = int(account_id)
+        invalid = await _account_access_error(db, current_user, account_id)
+        if invalid:
+            return invalid
         title = req.get("title", "").strip()
         if not title:
             return ResultObject.failed("宝贝标题不能为空")
@@ -682,7 +700,7 @@ async def publish_item(
 async def delete_item(
     req: ItemOperateReqDTO,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
     本地删除商品（标记 deleted=1）。
@@ -691,18 +709,29 @@ async def delete_item(
         xy_goods_id = req.xy_goods_id
         if not xy_goods_id:
             return ResultObject.failed("缺少商品 ID")
+        account_id = int(req.xianyu_account_id or 0)
+        if account_id:
+            invalid = await _account_access_error(db, current_user, account_id)
+            if invalid:
+                return invalid
 
+        conditions = [
+            XianyuGoods.external_goods_id == xy_goods_id,
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
+        ]
+        if account_id:
+            conditions.append(XianyuGoods.account_id == account_id)
         stmt = (
             sql_update(XianyuGoods)
             .where(
-                and_(
-                    XianyuGoods.external_goods_id == xy_goods_id,
-                )
+                and_(*conditions)
             )
             .values(deleted=1, updated_time=datetime.datetime.now())
         )
-        await db.execute(stmt)
+        result = await db.execute(stmt)
         await db.commit()
+        if result.rowcount == 0:
+            return ResultObject.failed("商品不存在或无权操作")
 
         logger.info("本地删除商品: goods_id=%s", xy_goods_id)
         return ResultObject.success({"message": "删除成功"})
@@ -714,13 +743,18 @@ async def delete_item(
 @router.post("/offShelf")
 async def off_shelf_item(
     req: ItemOperateReqDTO,
+    db: AsyncSession = Depends(get_db),
     coordinator: GoodsOffShelfCoordinator = Depends(get_goods_off_shelf_coordinator),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """Execute platform off-shelf once and durably finalize local status."""
     try:
+        account_id = int(req.xianyu_account_id or 0)
+        invalid = await _account_access_error(db, current_user, account_id)
+        if invalid:
+            return invalid
         outcome = await coordinator.execute(
-            account_id=int(req.xianyu_account_id or 0),
+            account_id=account_id,
             external_goods_id=str(req.xy_goods_id or ""),
             idempotency_key=req.idempotency_key,
         )
@@ -767,13 +801,18 @@ async def off_shelf_item(
 @router.post("/remoteDelete")
 async def remote_delete_item(
     req: ItemOperateReqDTO,
+    db: AsyncSession = Depends(get_db),
     coordinator: RemoteGoodsDeleteCoordinator = Depends(get_remote_goods_delete_coordinator),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """Delete once remotely, then atomically finalize the local soft delete."""
     try:
+        account_id = int(req.xianyu_account_id or 0)
+        invalid = await _account_access_error(db, current_user, account_id)
+        if invalid:
+            return invalid
         outcome = await coordinator.execute(
-            account_id=int(req.xianyu_account_id or 0),
+            account_id=account_id,
             external_goods_id=str(req.xy_goods_id or ""),
             idempotency_key=req.idempotency_key,
         )
@@ -819,7 +858,7 @@ async def remote_delete_item(
 async def batch_delete_items(
     req: ItemBatchOperateReqDTO,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
     批量本地删除商品。
@@ -829,6 +868,9 @@ async def batch_delete_items(
         item_ids = req.item_ids
         if not account_id or not item_ids:
             return ResultObject.failed("缺少必要参数")
+        invalid = await _account_access_error(db, current_user, int(account_id))
+        if invalid:
+            return invalid
 
         stmt = (
             sql_update(XianyuGoods)
@@ -854,7 +896,7 @@ async def batch_delete_items(
 async def batch_remote_delete_items(
     req: ItemBatchOperateReqDTO,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
     批量远程删除商品：逐个调用闲鱼 API 删除。
@@ -864,6 +906,9 @@ async def batch_remote_delete_items(
         item_ids = req.item_ids
         if not account_id or not item_ids:
             return ResultObject.failed("缺少必要参数")
+        invalid = await _account_access_error(db, current_user, int(account_id))
+        if invalid:
+            return invalid
 
         # 获取账号 Cookie
         auth = await _get_account_auth(db, account_id)
@@ -912,7 +957,7 @@ async def batch_remote_delete_items(
 async def update_item_price(
     req: UpdateItemPriceReqDTO,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
     修改闲鱼商品价格。
@@ -937,6 +982,9 @@ async def update_item_price(
             return ResultObject.failed("缺少商品ID")
         if not price:
             return ResultObject.failed("缺少价格参数")
+        invalid = await _account_access_error(db, current_user, int(account_id))
+        if invalid:
+            return invalid
 
         # 2. 加载商品信息
         goods_result = await db.execute(
@@ -944,6 +992,7 @@ async def update_item_price(
                 and_(
                     XianyuGoods.account_id == account_id,
                     XianyuGoods.external_goods_id == xy_goods_id,
+                    XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
                 )
             )
         )
@@ -1062,17 +1111,23 @@ async def update_auto_reply_status(
 async def get_sync_progress(
     sync_id: str,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     from ....services.xianyu_goods_sync import get_sync_progress as _get_progress
     progress = _get_progress(sync_id)
     if progress:
+        invalid = await _account_access_error(db, current_user, int(progress.get("account_id") or 0))
+        if invalid:
+            return invalid
         return ResultObject.success(progress)
 
     result = await db.execute(select(XianyuGoodsSyncTask).where(XianyuGoodsSyncTask.sync_id == sync_id, XianyuGoodsSyncTask.deleted == 0))
     task = result.scalar_one_or_none()
     if not task:
         return ResultObject.success({"progress": 0, "status": "not_found"})
+    invalid = await _account_access_error(db, current_user, int(task.account_id or 0))
+    if invalid:
+        return invalid
     return ResultObject.success({
         "sync_id": task.sync_id,
         "account_id": task.account_id,
@@ -1096,9 +1151,12 @@ async def get_sync_progress(
 async def is_syncing(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     from ....services.xianyu_goods_sync import is_account_syncing as _is_syncing
+    invalid = await _account_access_error(db, current_user, account_id)
+    if invalid:
+        return invalid
     if _is_syncing(account_id):
         return ResultObject.success(True)
     query = select(func.count()).select_from(XianyuGoodsSyncTask).where(
