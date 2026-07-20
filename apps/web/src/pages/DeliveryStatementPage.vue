@@ -1,32 +1,36 @@
 <template>
   <div class="statement-console-page statement-v22-shell">
-    <section class="statement-command-center">
-      <div class="statement-command-main">
-        <div class="statement-command-kicker">
-          <span>发货声明</span>
-          <b>{{ enabled ? '声明已启用' : '声明未启用' }}</b>
+    <BusinessSection class="statement-command-section" title="发货声明" eyebrow="发货声明">
+      <template #extra>
+        <n-tag :type="enabled ? 'success' : 'warning'" size="small" :bordered="false">
+          {{ enabled ? '声明已启用' : '声明未启用' }}
+        </n-tag>
+      </template>
+      <div class="statement-command-layout">
+        <div class="statement-command-copy">
+          <p>配置虚拟商品交付前的确认声明、变量内容和生效范围，降低售后争议并保持发货流程可控。</p>
+          <n-space class="statement-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ statementLoading ? '配置读取中' : (statementAvailable === true ? '配置可编辑' : '配置不可用') }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ scope === 'all' ? '全店生效' : '指定商品生效' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ previewText ? '预览已生成' : '等待预览' }}</n-tag>
+          </n-space>
         </div>
-        <h2>发货声明</h2>
-        <p>配置虚拟商品交付前的确认声明、变量内容和生效范围，降低售后争议并保持发货流程可控。</p>
-        <div class="statement-command-meta">
-          <span>{{ statementLoading ? '配置读取中' : (statementAvailable === true ? '配置可编辑' : '配置不可用') }}</span>
-          <span>{{ scope === 'all' ? '全店生效' : '指定商品生效' }}</span>
-          <span>{{ previewText ? '预览已生成' : '等待预览' }}</span>
+        <div class="statement-command-panel">
+          <div class="statement-command-panel-head">
+            <span>运营动作</span>
+            <strong>{{ saving ? '保存中' : '可操作' }}</strong>
+          </div>
+          <div class="statement-command-buttons">
+            <AppButton :title="statementActionHint" :disabled="statementLoading" @click="load">重新加载</AppButton>
+            <AppButton :title="previewActionHint" :loading="previewing" :disabled="previewing || !enabled || statementAvailable !== true" @click="refreshPreview">预览声明</AppButton>
+            <AppButton type="primary" :title="saveActionHint" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
+          </div>
+          <p class="statement-action-hint">{{ statementActionHint }}</p>
         </div>
       </div>
-      <div class="statement-command-panel">
-        <div class="statement-command-panel-head">
-          <span>运营动作</span>
-          <strong>{{ saving ? '保存中' : '可操作' }}</strong>
-        </div>
-        <div class="statement-command-buttons">
-          <AppButton :title="statementActionHint" :disabled="statementLoading" @click="load">重新加载</AppButton>
-          <AppButton :title="previewActionHint" :loading="previewing" :disabled="previewing || !enabled || statementAvailable !== true" @click="refreshPreview">预览声明</AppButton>
-          <AppButton type="primary" :title="saveActionHint" :loading="saving" :disabled="statementAvailable !== true" @click="save">保存配置</AppButton>
-        </div>
-        <p class="statement-action-hint">{{ statementActionHint }}</p>
-      </div>
-    </section>
+    </BusinessSection>
+
+    <BusinessStatusStrip :items="statementStatusItems" />
 
     <div v-if="error || success" class="statement-notices">
       <div v-if="error" class="global-notice error">{{ error }}</div>
@@ -152,6 +156,9 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { NSpace, NTag } from 'naive-ui'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -162,6 +169,13 @@ const success = ref('')
 const saving = ref(false)
 const previewing = ref(false)
 const statementLoading = ref(true)
+const statementStatusItems = computed(() => [
+  { key: 'config', label: '配置状态', value: statementLoading.value ? '读取中' : (statementAvailable.value === true ? '可编辑' : '不可用'), tone: statementAvailable.value === false ? 'red' : (statementAvailable.value === true ? 'green' : 'orange') },
+  { key: 'scope', label: '生效范围', value: scope.value === 'all' ? '全店' : '指定商品', tone: 'blue' },
+  { key: 'preview', label: '预览', value: previewing.value ? '生成中' : (previewText.value ? '已生成' : '等待预览'), tone: previewing.value ? 'orange' : (previewText.value ? 'green' : 'gray') },
+  { key: 'save', label: '保存', value: saving.value ? '保存中' : '可保存', tone: saving.value ? 'orange' : 'green' }
+])
+
 const statementAvailable = ref(null)
 const textareaRef = ref(null)
 const previewText = ref('')
@@ -355,118 +369,9 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-.statement-command-center {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-  gap: 16px;
-  min-width: 0;
-  padding: 18px;
-  border: 1px solid #dbe4ef;
-  border-left: 5px solid #2563eb;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(15, 118, 110, .05) 48%, rgba(255, 255, 255, .96)),
-    #fff;
-  box-shadow: 0 16px 42px rgba(15, 23, 42, .08);
-}
-
-.statement-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: start;
-  gap: 10px;
-}
-
-.statement-command-kicker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 740;
-}
-
-.statement-command-kicker span,
-.statement-command-kicker b {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, .1);
-}
-
 .statement-command-kicker b {
   color: #0f766e;
   background: rgba(15, 118, 110, .1);
-}
-
-.statement-command-main h2 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 26px;
-  font-weight: 760;
-  line-height: 1.2;
-}
-
-.statement-command-main p {
-  max-width: 760px;
-  margin: 0;
-  color: #526079;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.statement-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.statement-command-meta span {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 10px;
-  border: 1px solid rgba(148, 163, 184, .28);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, .82);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.statement-command-panel {
-  align-self: stretch;
-  min-width: 0;
-  display: grid;
-  gap: 14px;
-  padding: 14px;
-  border: 1px solid rgba(148, 163, 184, .25);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .92);
-}
-
-.statement-command-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.statement-command-panel-head strong {
-  color: #2563eb;
-  font-size: 13px;
-}
-
-.statement-command-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
 }
 
 .statement-action-hint {
@@ -474,6 +379,20 @@ onBeforeUnmount(() => {
   color: #64748b;
   font-size: 12px;
   line-height: 1.55;
+}
+
+.statement-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.statement-command-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: start;
+}
+.statement-command-copy { min-width: 0; }
+.statement-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.statement-command-meta { margin-top: 12px; }
+@media (max-width: 1280px) {
+  .statement-command-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
 .statement-notices {
@@ -751,22 +670,14 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 
-  .statement-command-center,
+  .statement-command-layout,
   .statement-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .statement-command-center,
+  .statement-command-layout,
   .statement-panel {
     padding: 14px;
-  }
-
-  .statement-command-main h2 {
-    font-size: 22px;
-  }
-
-  .statement-command-buttons {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .statement-panel-head {
