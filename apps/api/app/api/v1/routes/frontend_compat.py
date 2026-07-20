@@ -3372,7 +3372,11 @@ async def compat_business_settings_ai_cs(
 ):
     """Compat: GET /business-settings/ai-customer-service"""
     from ....services.business_settings import load_business_setting, AI_CS_SETTING_KEY, build_default_business_setting
-    config = await load_business_setting(db, AI_CS_SETTING_KEY)
+    config = await load_business_setting(
+        db,
+        AI_CS_SETTING_KEY,
+        user_id=current_uid(current_user),
+    )
     if not config:
         config = build_default_business_setting(AI_CS_SETTING_KEY)
     return ResultObject.success(config)
@@ -3391,7 +3395,12 @@ async def compat_business_settings_save_ai_cs(
         save_business_setting,
     )
     try:
-        await save_business_setting(db, AI_CS_SETTING_KEY, payload)
+        await save_business_setting(
+            db,
+            AI_CS_SETTING_KEY,
+            payload,
+            user_id=current_uid(current_user),
+        )
     except BusinessSettingValidationError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     await db.commit()

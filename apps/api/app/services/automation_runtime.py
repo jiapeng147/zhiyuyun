@@ -42,7 +42,7 @@ from .business_settings import (
 )
 from .ws_client import ws_manager
 from .ws_storage import save_chat_message
-from ..models.entities import AiAutoReplyAttempt
+from ..models.entities import AiAutoReplyAttempt, XianyuAccount
 
 logger = logging.getLogger(__name__)
 
@@ -174,9 +174,13 @@ async def process_incoming_message(db: AsyncSession, payload: dict[str, Any]) ->
     )
     goods_id = str(goods_context.get("goodsId") or goods_id).strip()
     item_title = str(goods_context.get("title") or item_title).strip()
+    owner_user_id = await _load_account_owner_user_id(db, account_id)
+    if not owner_user_id:
+        logger.warning("AI 自动回复跳过：账号未绑定归属用户 accountId=%d", account_id)
+        return
 
     # Step 1: 检查自动回复作用域（全局 > 账号 > 商品）
-    should_reply = await _check_auto_reply_scope(db, account_id, goods_id)
+    should_reply = await _check_auto_reply_scope(db, account_id, goods_id, owner_user_id)
     if not should_reply:
         logger.info(
             "AI 自动回复跳过：作用域未开启 accountId=%d goodsPresent=%s",
@@ -186,7 +190,7 @@ async def process_incoming_message(db: AsyncSession, payload: dict[str, Any]) ->
         return
 
     # Step 2: 加载 AI 客服配置（含 systemPrompt / 知识库 / 聊天规则 / 人设）
-    ai_config = await load_business_setting(db, AI_CS_SETTING_KEY)
+    ai_config = await load_business_setting(db, AI_CS_SETTING_KEY, user_id=owner_user_id)
     if not ai_config.get("enabled"):
         logger.info("AI 自动回复跳过：AI 客服主开关未开启 accountId=%d", account_id)
         return
@@ -493,13 +497,14 @@ async def _check_auto_reply_scope(
     db: AsyncSession,
     account_id: int,
     goods_id: str,
+    owner_user_id: int,
 ) -> bool:
     """检查自动回复作用域是否启用。
 
     优先级：商品级 > 账号级 > 全局（NULL 不继承全局，默认关闭）。
     """
     # 全局开关关闭 → 一律不回复
-    global_enabled = await _load_global_enabled(db)
+    global_enabled = await _load_global_enabled(db, owner_user_id)
     if not global_enabled:
         return False
 
@@ -510,24 +515,45 @@ async def _check_auto_reply_scope(
             return goods_enabled
 
     # 商品级 NULL → 按账号级
-    account_scopes = await _load_account_scopes(db)
+    account_scopes = await _load_account_scopes(db, owner_user_id)
     accounts = account_scopes.get("accounts", {}) if isinstance(account_scopes, dict) else {}
     return bool(accounts.get(str(account_id), False))
 
 
-async def _load_global_enabled(db: AsyncSession) -> bool:
+async def _load_account_owner_user_id(db: AsyncSession, account_id: int) -> int:
+    row = (
+        await db.execute(
+            select(XianyuAccount.owner_user_id).where(
+                XianyuAccount.id == account_id,
+                XianyuAccount.deleted == 0,
+            )
+        )
+    ).first()
+    if not row or row[0] is None:
+        return 0
+    try:
+        return int(row[0])
+    except (TypeError, ValueError):
+        return 0
+
+
+async def _load_global_enabled(db: AsyncSession, owner_user_id: int) -> bool:
     """读取 ai-customer-service.enabled 主开关。
 
     使用 load_business_setting 确保与前端配置页一致的读取路径，
     自动合并默认值（enabled 默认 False）。
     """
-    config = await load_business_setting(db, AI_CS_SETTING_KEY)
+    config = await load_business_setting(db, AI_CS_SETTING_KEY, user_id=owner_user_id)
     return bool(config.get("enabled", False))
 
 
-async def _load_account_scopes(db: AsyncSession) -> dict:
+async def _load_account_scopes(db: AsyncSession, owner_user_id: int) -> dict:
     """读取 auto-reply-account-scopes 配置。"""
-    config = await load_raw_business_setting(db, "auto-reply-account-scopes")
+    config = await load_raw_business_setting(
+        db,
+        "auto-reply-account-scopes",
+        user_id=owner_user_id,
+    )
     return config if isinstance(config, dict) else {"accounts": {}}
 
 

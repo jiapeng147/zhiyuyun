@@ -348,6 +348,7 @@ async def load_raw_business_setting(
         FROM user_business_setting
         WHERE setting_key = :key
           AND deleted = 0
+          AND user_id IN (:user_id, 0)
         ORDER BY CASE WHEN user_id = :user_id THEN 0 ELSE 1 END, id DESC
         LIMIT 1
         """

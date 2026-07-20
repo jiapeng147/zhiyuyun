@@ -137,7 +137,11 @@ async def test_ai_customer_service(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "ai_customer_service")
-    config = await load_business_setting(db, AI_CS_SETTING_KEY)
+    config = await load_business_setting(
+        db,
+        AI_CS_SETTING_KEY,
+        user_id=current_uid(current_user),
+    )
     system_prompt = str(config.get("systemPrompt") or "").strip()[:6_000]
     raw_message = body.get("message")
     user_message = (
@@ -249,7 +253,9 @@ async def get_business_settings(
         await _require_plan_feature(db, current_user, "ai_customer_service")
     if category not in ALLOWED_BUSINESS_SETTING_CATEGORIES:
         return ResultObject.failed(f"不支持的配置分类: {category}", code=400)
-    return ResultObject.success(await load_business_setting(db, category))
+    return ResultObject.success(
+        await load_business_setting(db, category, user_id=current_uid(current_user))
+    )
 
 
 @router.post("/business-settings/{category}", response_model=ResultObject)
@@ -262,7 +268,12 @@ async def save_business_settings(
     if category not in ALLOWED_BUSINESS_SETTING_CATEGORIES:
         return ResultObject.failed(f"不支持的配置分类: {category}", code=400)
     try:
-        saved = await save_business_setting(db, category, dict(body or {}))
+        saved = await save_business_setting(
+            db,
+            category,
+            dict(body or {}),
+            user_id=current_uid(current_user),
+        )
     except BusinessSettingValidationError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     return ResultObject.success(saved)
