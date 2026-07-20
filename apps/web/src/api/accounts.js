@@ -5,20 +5,8 @@ export function getAccounts(params = {}, config = {}) {
   return request({ ...config, url: '/xianyu/accounts', method: 'get', params: pageParams(params) })
 }
 
-export function createAccount(data) {
-  return request({ url: '/xianyu/accounts', method: 'post', data })
-}
-
 export function createAccountByCookie(data) {
   return request({ url: '/xianyu/accounts/manual-cookie', method: 'post', data })
-}
-
-export function getAccountDetail(id, params) {
-  return request({ url: `/xianyu/accounts/${id}`, method: 'get', params })
-}
-
-export function updateAccount(id, data) {
-  return request({ url: `/xianyu/accounts/${id}`, method: 'put', data })
 }
 
 export function updateAccountCookie(accountId, cookie, extracted) {
