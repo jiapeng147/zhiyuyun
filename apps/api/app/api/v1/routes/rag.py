@@ -279,6 +279,42 @@ def _chunk_to_dto(c: RagChunk) -> ChunkDTO:
     )
 
 
+async def _load_owned_kb(
+    db: AsyncSession,
+    kb_id: int,
+    current_user: dict,
+) -> Optional[RagKnowledgeBase]:
+    result = await db.execute(
+        scope_by_owner(
+            select(RagKnowledgeBase).where(
+                RagKnowledgeBase.id == kb_id,
+                RagKnowledgeBase.deleted == 0,
+            ),
+            RagKnowledgeBase.owner_user_id,
+            current_user,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def _visible_kb_ids(
+    db: AsyncSession,
+    current_user: dict,
+    kb_ids: Optional[list[int]] = None,
+) -> list[int]:
+    stmt = scope_by_owner(
+        select(RagKnowledgeBase.id).where(RagKnowledgeBase.deleted == 0),
+        RagKnowledgeBase.owner_user_id,
+        current_user,
+    )
+    if kb_ids is not None:
+        if not kb_ids:
+            return []
+        stmt = stmt.where(RagKnowledgeBase.id.in_(kb_ids))
+    rows = (await db.execute(stmt)).scalars().all()
+    return [int(row) for row in rows]
+
+
 def _cosine_similarity(a: List[float], b: List[float]) -> float:
     if not a or not b or len(a) != len(b):
         return 0.0
@@ -558,6 +594,8 @@ async def list_documents(
     current_user: dict = Depends(get_current_user),
 ):
     try:
+        if not await _load_owned_kb(db, kb_id, current_user):
+            return ResultObject.failed("知识库不存在")
         result = await db.execute(
             select(RagDocument).where(
                 RagDocument.kb_id == kb_id,
@@ -691,6 +729,8 @@ async def delete_document(
     current_user: dict = Depends(get_current_user),
 ):
     try:
+        if not await _load_owned_kb(db, kb_id, current_user):
+            return ResultObject.failed("知识库不存在")
         result = await db.execute(
             select(RagDocument).where(
                 RagDocument.id == doc_id,
@@ -723,6 +763,9 @@ async def reindex_document(
 ):
     """重新索引文档（需要文档存在 content 字段；当前简化版仅清理 chunks，不重新解析原文件）。"""
     try:
+        kb = await _load_owned_kb(db, kb_id, current_user)
+        if not kb:
+            return ResultObject.failed("知识库不存在")
         result = await db.execute(
             select(RagDocument).where(
                 RagDocument.id == doc_id,
@@ -743,13 +786,6 @@ async def reindex_document(
             return ResultObject.failed("文档无可重新索引的内容（原始内容未持久化）")
 
         content = "\n\n".join((c.content or "") for c in existing)
-        kb_result = await db.execute(
-            select(RagKnowledgeBase).where(RagKnowledgeBase.id == kb_id)
-        )
-        kb = kb_result.scalar_one_or_none()
-        if not kb:
-            return ResultObject.failed("知识库不存在")
-
         count = await _index_document_content(db, kb, doc, content)
         await _refresh_kb_counts(db, kb_id)
         await db.refresh(doc)
@@ -770,6 +806,8 @@ async def list_chunks(
     current_user: dict = Depends(get_current_user),
 ):
     try:
+        if not await _load_owned_kb(db, kb_id, current_user):
+            return ResultObject.failed("知识库不存在")
         result = await db.execute(
             select(RagChunk).where(
                 RagChunk.kb_id == kb_id,
@@ -799,6 +837,8 @@ async def search_knowledge_base(
             return ResultObject.failed("rag_service 不可用，无法生成查询向量")
         if not req.query or not req.query.strip():
             return ResultObject.validate_failed("query 不能为空")
+        if not await _load_owned_kb(db, kb_id, current_user):
+            return ResultObject.failed("知识库不存在")
 
         try:
             query_emb = await _generate_embedding(req.query)
@@ -850,7 +890,26 @@ async def rag_chat(
         if not req.query or not req.query.strip():
             return ResultObject.validate_failed("query 不能为空")
 
-        # 生成查询向量
+        # 跨知识库检索仅限当前用户可见知识库；未指定时也不能退化为全站检索。
+        requested_kb_ids: list[int] = []
+        try:
+            for item in req.knowledge_base_ids or []:
+                parsed_id = int(item)
+                if parsed_id > 0:
+                    requested_kb_ids.append(parsed_id)
+        except (TypeError, ValueError):
+            return ResultObject.validate_failed("knowledgeBaseIds 必须为正整数数组")
+        visible_kb_ids = await _visible_kb_ids(
+            db,
+            current_user,
+            requested_kb_ids if requested_kb_ids else None,
+        )
+        if requested_kb_ids and set(visible_kb_ids) != set(requested_kb_ids):
+            return ResultObject.failed("知识库不存在")
+        if not visible_kb_ids:
+            return ResultObject.success(ChatRespDTO(answer="", hits=[], hit_count=0))
+
+        # 生成查询向量。权限校验必须在外部 embedding 调用之前完成。
         try:
             query_emb = await _generate_embedding(req.query)
         except Exception as e:
@@ -858,11 +917,8 @@ async def rag_chat(
         if not query_emb:
             return ResultObject.failed("查询向量化返回空")
 
-        # 跨知识库检索
-        kb_ids = req.knowledge_base_ids or []
         stmt = select(RagChunk)
-        if kb_ids:
-            stmt = stmt.where(RagChunk.kb_id.in_(kb_ids))
+        stmt = stmt.where(RagChunk.kb_id.in_(visible_kb_ids or [-1]))
         result = await db.execute(stmt)
         chunks = result.scalars().all()
 
