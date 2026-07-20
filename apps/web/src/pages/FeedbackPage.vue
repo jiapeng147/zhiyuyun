@@ -83,6 +83,8 @@
       </div>
     </section>
 
+    <BusinessStatusStrip :items="feedbackStatusItems" />
+
     <div class="fbk-main-grid">
       <section class="fbk-board">
         <div class="fbk-board-head">
@@ -436,6 +438,7 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import EmptyState from '../components/EmptyState.vue'
 import Pagination from '../components/Pagination.vue'
 import { submitFeedback, listMyFeedback, getFeedbackDetail, appendFeedbackReply, getFeedbackStats } from '../api/feedback.js'
@@ -443,6 +446,14 @@ import { withBrowserIntentLock } from '../utils/browserIntentLock.js'
 
 const notice = ref({ text: '', type: 'info' })
 const feedbackStorageMode = ref('local')
+const feedbackStatusItems = computed(() => [
+  { key: 'storage', label: '存储模式', value: feedbackStorageMode.value === 'bridge' ? '协作队列' : (feedbackStorageMode.value === 'local' ? '本地记录' : '待确认'), tone: feedbackStorageMode.value === 'bridge' ? 'blue' : (feedbackStorageMode.value === 'local' ? 'orange' : 'red') },
+  { key: 'view', label: '当前视图', value: activeStatusLabel.value, tone: 'blue' },
+  { key: 'records', label: '列表记录', value: listAvailable.value === true ? String(feedbackList.value.length) : '—', tone: listAvailable.value === true ? 'green' : 'orange' },
+  { key: 'submit', label: '提交入口', value: feedbackStorageMode.value === 'unknown' ? '暂不可用' : '可提交', tone: feedbackStorageMode.value === 'unknown' ? 'red' : 'green' },
+])
+
+
 const listAvailable = ref(null)
 const statsAvailable = ref(false)
 const detailAvailable = ref(null)
