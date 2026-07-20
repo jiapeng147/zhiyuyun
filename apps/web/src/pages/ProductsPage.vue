@@ -69,19 +69,21 @@
         @refresh="refreshActivePolishConflict"
       />
 
-      <section class="products-command-center">
-        <div class="products-command-main">
-          <div class="products-command-kicker">
-            <span>商品资产</span>
-            <b>{{ selectedAccountName }}</b>
-          </div>
-          <h2>商品资产工作台</h2>
+      <BusinessSection class="products-command-section" title="商品资产工作台" eyebrow="商品资产">
+        <template #extra>
+          <n-tag :type="listAvailable === false ? 'error' : (autoSyncState.active ? 'warning' : 'success')" size="small" :bordered="false">
+            {{ listAvailable === false ? '列表不可用' : (autoSyncState.active ? '同步中' : '可操作') }}
+          </n-tag>
+        </template>
+        <div class="products-command-layout">
+        <div class="products-command-copy">
           <p>集中管理闲鱼商品资产，按账号同步数据，处理上下架、自动发货、自动回复、批量删除与安全擦亮。</p>
-          <div class="products-command-meta">
-            <span>{{ loading ? '列表刷新中' : `当前 ${totalCount} 件商品` }}</span>
-            <span>已选 {{ selectedKeys.length }} 件</span>
-            <span>{{ autoSyncState.active ? '同步运行中' : '同步待命' }}</span>
-          </div>
+          <n-space class="products-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ selectedAccountName }}</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ loading ? '列表刷新中' : `当前 ${totalCount} 件商品` }}</n-tag>
+            <n-tag size="small" :bordered="false" round>已选 {{ selectedKeys.length }} 件</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ autoSyncState.active ? '同步运行中' : '同步待命' }}</n-tag>
+          </n-space>
         </div>
         <div class="products-command-panel">
           <div class="products-command-panel-head">
@@ -102,19 +104,22 @@
           </div>
           <p class="products-action-hint">{{ productActionHint }}</p>
         </div>
-      </section>
+        </div>
+      </BusinessSection>
 
-      <section class="products-metric-rail">
-        <article
+      <BusinessStatusStrip :items="productsStatusItems" />
+
+      <section class="products-metric-grid">
+        <BusinessMetricCard
           v-for="item in productStatCards"
           :key="item.key"
-          class="products-metric-card"
-          :class="item.tone"
-        >
-          <span class="products-metric-icon">{{ item.symbol }}</span>
-          <n-statistic :label="item.title" :value="item.value" />
-          <small>{{ item.change }}</small>
-        </article>
+          :label="item.title"
+          :value="item.value"
+          :hint="item.change"
+          :tone="item.tone"
+          :icon="item.icon"
+          :compact-value="item.compactValue"
+        />
       </section>
 
       <section class="products-workspace">
@@ -427,8 +432,19 @@ export function createItemPolishPageSingleFlight({ onPhaseChange = () => {} } = 
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NSelect, NSpace, NStatistic, NTag } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpace, NTag } from 'naive-ui'
+import {
+  AlertCircleOutline,
+  ChatbubbleEllipsesOutline,
+  CheckmarkCircleOutline,
+  CubeOutline,
+  FlashOutline,
+  PersonCircleOutline,
+} from '@vicons/ionicons5'
 import BaseTable from '../components/BaseTable.vue';import Badge from '../components/Badge.vue';import ToggleSwitch from '../components/ToggleSwitch.vue';import AppButton from '../components/AppButton.vue';import EmptyState from '../components/EmptyState.vue'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import { confirmAction } from '../utils/confirmAction.js'
 import { globalConfirm } from '../composables/confirmState.js'
 import { getAccounts } from '../api/accounts.js'
@@ -676,12 +692,18 @@ const productActionHint = computed(() => {
   return `当前范围：${selectedAccountName.value}，可同步商品、刷新列表或执行账号级运营动作。`
 })
 const productStatCards = computed(() => [
-  { key: 'total', title: '商品总数', value: statsAvailable.value === true ? goodsStats.value.total : '—', change: statsAvailable.value === false ? '统计暂不可用' : '全部商品', symbol: '总', tone: 'tone-blue' },
-  { key: 'onSale', title: '在售商品', value: statsAvailable.value === true ? goodsStats.value.onSale : '—', change: statsAvailable.value === false ? '统计暂不可用' : '正在售卖', symbol: '售', tone: 'tone-green' },
-  { key: 'offShelfOrDraft', title: '下架/草稿', value: statsAvailable.value === true ? goodsStats.value.offShelfOrDraft : '—', change: statsAvailable.value === false ? '统计暂不可用' : '未上架', symbol: '稿', tone: 'tone-orange' },
-  { key: 'autoDeliveryOn', title: '自动发货', value: statsAvailable.value === true ? goodsStats.value.autoDeliveryOn : '—', change: statsAvailable.value === false ? '统计暂不可用' : '已开启商品数', symbol: '发', tone: 'tone-purple' },
-  { key: 'autoReplyAccounts', title: '自动回复', value: statsAvailable.value === true ? goodsStats.value.autoReplyAccounts : '—', change: statsAvailable.value === false ? '统计暂不可用' : '已开启账号数', symbol: '聊', tone: 'tone-cyan' },
-  { key: 'account', title: '当前账号', value: selectedAccountName.value, change: '可切换账号', symbol: '号', tone: 'tone-gray' },
+  { key: 'total', title: '商品总数', value: statsAvailable.value === true ? goodsStats.value.total : '—', change: statsAvailable.value === false ? '统计暂不可用' : '全部商品', tone: 'blue', icon: CubeOutline },
+  { key: 'onSale', title: '在售商品', value: statsAvailable.value === true ? goodsStats.value.onSale : '—', change: statsAvailable.value === false ? '统计暂不可用' : '正在售卖', tone: 'green', icon: CheckmarkCircleOutline },
+  { key: 'offShelfOrDraft', title: '下架/草稿', value: statsAvailable.value === true ? goodsStats.value.offShelfOrDraft : '—', change: statsAvailable.value === false ? '统计暂不可用' : '未上架', tone: 'orange', icon: AlertCircleOutline },
+  { key: 'autoDeliveryOn', title: '自动发货', value: statsAvailable.value === true ? goodsStats.value.autoDeliveryOn : '—', change: statsAvailable.value === false ? '统计暂不可用' : '已开启商品数', tone: 'purple', icon: FlashOutline },
+  { key: 'autoReplyAccounts', title: '自动回复', value: statsAvailable.value === true ? goodsStats.value.autoReplyAccounts : '—', change: statsAvailable.value === false ? '统计暂不可用' : '已开启账号数', tone: 'cyan', icon: ChatbubbleEllipsesOutline },
+  { key: 'account', title: '当前账号', value: selectedAccountName.value, change: '可切换账号', tone: 'neutral', icon: PersonCircleOutline, compactValue: true },
+])
+const productsStatusItems = computed(() => [
+  { key: 'list', label: '商品列表', value: listAvailable.value === true ? '已加载' : (listAvailable.value === false ? '不可用' : '加载中'), tone: listAvailable.value === false ? 'red' : (listAvailable.value === true ? 'green' : 'orange') },
+  { key: 'stats', label: '统计口径', value: statsAvailable.value === true ? '已同步' : (statsAvailable.value === false ? '不可用' : '加载中'), tone: statsAvailable.value === false ? 'red' : (statsAvailable.value === true ? 'green' : 'orange') },
+  { key: 'sync', label: '同步任务', value: autoSyncState.active ? `运行中 ${autoSyncState.progress || 0}%` : (syncing.value ? '提交中' : '空闲'), tone: autoSyncState.active || syncing.value ? 'orange' : 'green' },
+  { key: 'selection', label: '当前选择', value: selectedKeys.value.length ? `${selectedKeys.value.length} 件商品` : '未选择', tone: selectedKeys.value.length ? 'blue' : 'green' },
 ])
 // AI 客服主开关与读取可用性分开保存；读取失败绝不能等同于“已关闭”。
 const aiCsEnabledCache = ref(null)
@@ -2057,84 +2079,31 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   gap: 16px;
 }
 
-.products-command-center {
+.products-command-section :deep(.n-card-header) {
+  padding-bottom: 8px;
+}
+
+.products-command-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dfe8e4;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(239, 253, 246, .96), rgba(255, 250, 245, .94) 48%, rgba(246, 248, 252, .98)),
-    #fff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
+  gap: 18px;
+  align-items: start;
 }
 
-.products-command-main {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-}
-
-.products-command-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.products-command-copy {
   min-width: 0;
 }
 
-.products-command-kicker span {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(15, 118, 110, .1);
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.products-command-kicker b {
-  min-width: 0;
-  color: #475569;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.products-command-main h2 {
-  margin: 0;
-  color: #101828;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.18;
-}
-
-.products-command-main p {
+.products-command-copy p {
   max-width: 760px;
   margin: 0;
-  color: #526071;
+  color: #4b5563;
   font-size: 14px;
   line-height: 1.75;
 }
 
 .products-command-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.products-command-meta span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 10px;
-  border: 1px solid rgba(15, 118, 110, .14);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .68);
-  color: #344054;
-  font-size: 12px;
-  font-weight: 650;
+  margin-top: 14px;
 }
 
 .products-command-panel {
@@ -2209,58 +2178,10 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   background: linear-gradient(90deg, transparent, rgba(29, 78, 216, .42), transparent);
 }
 
-.products-metric-rail {
+.products-metric-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.products-metric-card {
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid #e5eaf2;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
-  display: grid;
-  gap: 8px;
-}
-
-.products-metric-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #0f766e;
-  background: #eefaf5;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.products-metric-card.tone-blue .products-metric-icon { background: #eff6ff; color: #2563eb; }
-.products-metric-card.tone-green .products-metric-icon { background: #ecfdf5; color: #059669; }
-.products-metric-card.tone-orange .products-metric-icon { background: #fff7ed; color: #ea580c; }
-.products-metric-card.tone-purple .products-metric-icon { background: #f5f3ff; color: #7c3aed; }
-.products-metric-card.tone-cyan .products-metric-icon { background: #ecfeff; color: #0891b2; }
-.products-metric-card.tone-gray .products-metric-icon { background: #f1f5f9; color: #475569; }
-
-.products-metric-card :deep(.n-statistic .n-statistic-label) {
-  color: #667085;
-  font-size: 12px;
-}
-
-.products-metric-card :deep(.n-statistic .n-statistic-value) {
-  color: #101828;
-  font-size: 23px;
-  font-weight: 800;
-}
-
-.products-metric-card small {
-  color: #667085;
-  font-size: 12px;
-  line-height: 1.4;
+  gap: 12px;
 }
 
 .products-workspace,
@@ -2873,7 +2794,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
 }
 
 @media (max-width: 1280px) {
-  .products-metric-rail {
+  .products-metric-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -2888,7 +2809,7 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
   }
 }
 @media (max-width: 1100px) {
-  .products-command-center {
+  .products-command-layout {
     grid-template-columns: 1fr;
   }
 
@@ -2920,17 +2841,10 @@ onBeforeUnmount(()=>{ syncPollCanceled = true; window.removeEventListener('xya-h
     padding-right: 0;
     gap: 12px;
   }
-  .products-command-center {
-    padding: 14px;
-    gap: 12px;
-  }
-  .products-command-main h2 {
-    font-size: 22px;
-  }
   .products-command-buttons {
     grid-template-columns: 1fr;
   }
-  .products-metric-rail {
+  .products-metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
