@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,12 @@ from ..deps import get_current_user
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["admin-data-compat"])
+
+
+async def require_superadmin(current_user: dict = Depends(get_current_user)) -> dict:
+    if (current_user or {}).get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="需要平台负责人权限")
+    return current_user
 
 
 def _dt_text(value: Any) -> str | None:
@@ -128,7 +134,7 @@ def _sensitive_row_to_payload(row: dict[str, Any]) -> dict[str, Any]:
 async def list_model_configs(
     scene: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     params: dict[str, Any] = {}
     where_sql = ["1 = 1"]
@@ -154,7 +160,7 @@ async def list_model_configs(
 async def create_model_config(
     payload: dict = Body(default={}),
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     model_name = str(payload.get("modelName") or "").strip()
     if not model_name:
@@ -203,7 +209,7 @@ async def update_model_config(
     model_id: int,
     payload: dict = Body(default={}),
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     params_json = payload.get("paramsJson") if isinstance(payload.get("paramsJson"), dict) else {}
     existing_result = await db.execute(
@@ -268,7 +274,7 @@ async def update_model_config(
 async def delete_model_config(
     model_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     await db.execute(text("DELETE FROM model_config WHERE id = :id"), {"id": model_id})
     await db.commit()
@@ -279,7 +285,7 @@ async def delete_model_config(
 async def test_model_config(
     model_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     result = await db.execute(
         text(
