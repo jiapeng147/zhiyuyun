@@ -13,20 +13,12 @@ export function getGoodsStats(params = {}) {
   return request({ url: '/goods/stats', method: 'get', params: p })
 }
 
-export function createGoods(data) {
-  return request({ url: '/goods', method: 'post', data })
-}
-
 export function getGoodsDetail(id, params) {
   return request({ url: `/goods/${id}`, method: 'get', params })
 }
 
 export function updateGoods(id, data) {
   return request({ url: `/goods/${id}`, method: 'put', data })
-}
-
-export function deleteGoods(id) {
-  return deleteGoodsLocal(id)
 }
 
 export function deleteGoodsLocal(id) {
