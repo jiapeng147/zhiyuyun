@@ -5,31 +5,48 @@
       <div v-if="success" class="global-notice success">{{ success }}</div>
     </div>
 
-    <section class="logs-command-center">
-      <div class="logs-command-main">
-        <div class="logs-command-kicker">
-          <span>操作记录</span>
-          <b>{{ dataAvailable === true ? '记录已同步' : '记录待确认' }}</b>
+    <BusinessSection class="logs-command-section" title="审计日志工作台" eyebrow="操作记录">
+        <template #extra>
+          <n-tag :type="dataAvailable === false ? 'error' : (loading ? 'warning' : 'success')" size="small" :bordered="false">
+            {{ dataAvailable === false ? '列表不可用' : (loading ? '刷新中' : '可操作') }}
+          </n-tag>
+        </template>
+        <div class="logs-command-layout">
+          <div class="logs-command-copy">
+            <p>按操作类型、关键词和结果状态追踪关键写操作；结果未知的记录会被标记出来，便于人工核对。</p>
+            <n-space class="logs-command-meta" :size="[8, 8]">
+              <n-tag size="small" :bordered="false" round>{{ dataAvailable === true ? '记录已同步' : '记录待确认' }}</n-tag>
+              <n-tag size="small" :bordered="false" round>{{ loading ? '正在查询' : '查询就绪' }}</n-tag>
+              <n-tag size="small" :bordered="false" round>第 {{ current }} 页</n-tag>
+              <n-tag size="small" :bordered="false" round>{{ detail ? `已选记录 ${detail.id || '-'}` : '未选择详情' }}</n-tag>
+            </n-space>
+          </div>
+          <div class="logs-command-panel">
+            <div class="logs-command-panel-head">
+              <span>审计动作</span>
+              <strong>{{ exporting ? '导出中' : '可操作' }}</strong>
+            </div>
+            <div class="logs-command-actions">
+              <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新记录' }}</AppButton>
+              <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
+            </div>
+          </div>
         </div>
-        <h2>审计日志工作台</h2>
-        <p>按操作类型、关键词和结果状态追踪关键写操作；结果未知的记录会被标记出来，便于人工核对。</p>
-        <div class="logs-command-meta">
-          <span>{{ loading ? '正在查询' : '查询就绪' }}</span>
-          <span>第 {{ current }} 页</span>
-          <span>{{ detail ? `已选记录 ${detail.id || '-'}` : '未选择详情' }}</span>
-        </div>
-      </div>
-      <div class="logs-command-panel">
-        <div class="logs-command-panel-head">
-          <span>审计动作</span>
-          <strong>{{ exporting ? '导出中' : '可操作' }}</strong>
-        </div>
-        <div class="logs-command-actions">
-          <AppButton :disabled="loading" @click="load">{{ loading ? '刷新中...' : '刷新记录' }}</AppButton>
-          <AppButton :loading="exporting" :disabled="loading || exporting || dataAvailable !== true" @click="exportCsv">{{ exporting ? '导出中...' : '导出CSV' }}</AppButton>
-        </div>
-      </div>
-    </section>
+      </BusinessSection>
+
+      <BusinessStatusStrip :items="logsStatusItems" />
+
+      <section class="logs-metric-grid">
+        <BusinessMetricCard
+          v-for="item in logStatCards"
+          :key="item.key"
+          :label="item.title"
+          :value="item.value"
+          :hint="item.change"
+          :tone="item.tone"
+          :icon="item.icon"
+        />
+      </section>
 
     <section class="logs-metric-rail">
       <article
@@ -136,6 +153,11 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { ReceiptOutline, CheckmarkDoneCircleOutline, AlertCircleOutline, HelpCircleOutline } from '@vicons/ionicons5'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
+
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -266,25 +288,27 @@ const cols = [
   { key: 'op', title: '操作' }
 ]
 
-const operationTypeCount = computed(() => new Set(rows.value.map(row => row.operationType).filter(Boolean)).size)
-const operatorCount = computed(() => new Set(rows.value.map(row => row.operator).filter(Boolean)).size)
-const reconciliationCount = computed(() => rows.value.filter(row => row.requiresReconciliation).length)
 const logStatCards = computed(() => [
-  { key: 'total', title: '总操作数', value: metricValue(total.value), change: '操作记录', symbol: '总', tone: 'tone-blue' },
-  { key: 'page', title: '当前页条数', value: metricValue(rows.value.length), change: '本页统计', symbol: '页', tone: 'tone-green' },
-  { key: 'types', title: '操作类型', value: metricValue(operationTypeCount.value), change: '本页去重', symbol: '类', tone: 'tone-cyan' },
-  { key: 'operators', title: '操作人', value: metricValue(operatorCount.value), change: '本页去重', symbol: '人', tone: 'tone-purple' },
-  { key: 'reconcile', title: '待人工核对', value: metricValue(reconciliationCount.value), change: '结果未知或未完成', symbol: '核', tone: 'tone-orange' }
+  { key: 'total', title: '操作记录总数', value: dataAvailable.value === true ? total.value : '—', change: '当前分页记录', icon: ReceiptOutline, tone: 'blue' },
+  { key: 'success', title: '成功记录', value: successCount.value, change: '当前页成功/已确认', icon: CheckmarkDoneCircleOutline, tone: 'green' },
+  { key: 'fail', title: '失败记录', value: failedCount.value, change: '当前页失败/异常', icon: AlertCircleOutline, tone: 'red' },
+  { key: 'unknown', title: '结果未知', value: unknownCount.value, change: '需人工核对', icon: HelpCircleOutline, tone: 'orange' }
+])
+const successCount = computed(() => rows.value.filter(row => String(row.status || '').includes('成功') || row.status === 'OK').length)
+const failedCount = computed(() => rows.value.filter(row => String(row.status || '').includes('失败')).length)
+const unknownCount = computed(() => rows.value.filter(row => row.requiresReconciliation || !row.status).length)
+
+const logsStatusItems = computed(() => [
+  { key: 'data', label: '审计数据', value: dataAvailable.value === true ? '已加载' : (dataAvailable.value === false ? '加载失败' : '加载中'), tone: dataAvailable.value === true ? 'green' : (dataAvailable.value === false ? 'red' : 'orange') },
+  { key: 'export', label: '导出', value: exporting.value ? '导出中' : (dataAvailable.value === true ? '可导出' : '不可导出'), tone: exporting.value ? 'orange' : (dataAvailable.value === true ? 'green' : 'gray') },
+  { key: 'success', label: '成功/已确认', value: `${successCount.value} 条`, tone: successCount.value ? 'green' : 'gray' },
+  { key: 'risk', label: '失败/异常', value: `${failedCount.value} 条`, tone: failedCount.value ? 'red' : 'green' }
 ])
 
 function auditStatusType(row) {
   if (row?.requiresReconciliation) return 'orange'
   if (String(row?.operationType || '').toUpperCase() === 'HTTP_MUTATION_REJECTED') return 'red'
   return 'gray'
-}
-
-function metricValue(value) {
-  return dataAvailable.value === true ? value : '—'
 }
 
 async function load() {
