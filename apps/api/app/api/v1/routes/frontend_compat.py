@@ -2468,7 +2468,10 @@ async def compat_xianyu_accounts_list(
         .outerjoin(XianyuAccountAuth, XianyuAccountAuth.id == latest_auth.c.latest_id)
         .outerjoin(latest_runtime, latest_runtime.c.account_id == XianyuAccount.id)
         .outerjoin(XianyuAccountRuntime, XianyuAccountRuntime.id == latest_runtime.c.latest_id)
-        .where(XianyuAccount.deleted == 0)
+        .where(
+            XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+        )
         .order_by(XianyuAccount.id.desc())
     )
     accounts = result.all()
@@ -2625,7 +2628,6 @@ async def compat_xianyu_accounts_summary(
     current_user: dict = Depends(get_current_user),
 ):
     """Summarize observed account, authentication and WS runtime states."""
-    del current_user
     from sqlalchemy import func
     from ....models.entities import XianyuAccount, XianyuAccountAuth, XianyuAccountRuntime
 
@@ -2662,7 +2664,10 @@ async def compat_xianyu_accounts_summary(
             .outerjoin(XianyuAccountAuth, XianyuAccountAuth.id == latest_auth.c.latest_id)
             .outerjoin(latest_runtime, latest_runtime.c.account_id == XianyuAccount.id)
             .outerjoin(XianyuAccountRuntime, XianyuAccountRuntime.id == latest_runtime.c.latest_id)
-            .where(XianyuAccount.deleted == 0)
+            .where(
+                XianyuAccount.deleted == 0,
+                XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+            )
         )
         rows = result.all()
     except Exception as exc:
@@ -3453,7 +3458,14 @@ async def compat_dashboard_account_health(
     from ....models.entities import XianyuAccount
     from sqlalchemy import func, select
 
-    result = await db.execute(select(func.count()).select_from(XianyuAccount))
+    result = await db.execute(
+        select(func.count())
+        .select_from(XianyuAccount)
+        .where(
+            XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
     total = int(result.scalar() or 0)
 
     return ResultObject.success({
