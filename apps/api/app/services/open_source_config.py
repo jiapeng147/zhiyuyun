@@ -124,7 +124,7 @@ def default_open_source_config() -> dict[str, Any]:
     return {
         "siteName": "智鱼云",
         "icp": "",
-        "logoUrl": "/xya/brand/brand_004.png",
+        "logoUrl": "/xya/brand/zhiyuyun-mark.svg",
         "crawlerBaseUrl": settings.crawler_base_url,
         "amapApiKey": settings.amap_api_key,
         "generalModel": {
