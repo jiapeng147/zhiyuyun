@@ -143,8 +143,6 @@ include_router_excluding(
     api_router,
     business_settings_compat.router,
     excluded={
-        ("GET", "/auto-reply/rules/logs"),
-        ("GET", "/auto-reply/rules/stats"),
     },
 )
 

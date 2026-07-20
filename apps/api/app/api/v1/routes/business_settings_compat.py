@@ -7,7 +7,12 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
-from ....core.tenancy import current_uid, owned_account_id_subquery
+from ....core.tenancy import (
+    assert_account_owned,
+    current_uid,
+    is_superadmin,
+    owned_account_id_subquery,
+)
 from ....core.response import ResultObject
 from ....models.entities import AutoReplyRule, QuickReplyTemplate
 from ....services.billing import BillingLimitError, ensure_feature_available
@@ -24,6 +29,44 @@ from ..deps import get_current_user
 
 router = APIRouter(tags=["businessSettingsCompat"])
 AI_SETTINGS_HINT = "未配置通用模型，请先前往系统设置中的“模型配置”填写 baseUrl、apiKey 与模型名称。"
+
+
+def _parse_account_id(value: Any) -> Optional[int]:
+    if value in (None, ""):
+        return None
+    try:
+        account_id = int(value)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="accountId 必须为正整数") from exc
+    if account_id <= 0:
+        return None
+    return account_id
+
+
+async def _require_owned_account(
+    db: AsyncSession,
+    current_user: dict,
+    account_id: Optional[int],
+) -> Optional[int]:
+    if account_id is None:
+        if is_superadmin(current_user):
+            return None
+        raise HTTPException(status_code=422, detail="accountId 不能为空")
+    if not await assert_account_owned(db, current_user, account_id):
+        raise HTTPException(status_code=400, detail="账号不存在或无权操作")
+    return account_id
+
+
+def _scope_template_query(query, current_user: dict):
+    if is_superadmin(current_user):
+        return query
+    return query.where(QuickReplyTemplate.account_id.in_(owned_account_id_subquery(current_user)))
+
+
+def _scope_rule_query(query, current_user: dict):
+    if is_superadmin(current_user):
+        return query
+    return query.where(AutoReplyRule.account_id.in_(owned_account_id_subquery(current_user)))
 
 
 async def _require_plan_feature(db: AsyncSession, current_user: dict, feature_key: str) -> None:
@@ -286,7 +329,12 @@ async def list_quick_reply_templates(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    query = select(QuickReplyTemplate).where(QuickReplyTemplate.deleted == 0, QuickReplyTemplate.account_id.in_(owned_account_id_subquery(current_user)))
+    if account_id is not None:
+        await _require_owned_account(db, current_user, _parse_account_id(account_id))
+    query = _scope_template_query(
+        select(QuickReplyTemplate).where(QuickReplyTemplate.deleted == 0),
+        current_user,
+    )
     if account_id is None:
         query = query.where(
             or_(QuickReplyTemplate.account_id.is_(None), QuickReplyTemplate.account_id == 0)
@@ -316,13 +364,20 @@ async def save_quick_reply_template(
         return ResultObject.failed("模板标题和内容不能为空", code=400)
 
     template_id = body.get("id")
-    account_id = body.get("accountId")
+    raw_account_id = body.get("accountId")
+    account_id = _parse_account_id(raw_account_id)
     sort_order = int(body.get("sortOrder") or body.get("sort_order") or 0)
     if template_id:
+        if "accountId" in body:
+            if account_id is not None or not is_superadmin(current_user):
+                await _require_owned_account(db, current_user, account_id)
         result = await db.execute(
-            select(QuickReplyTemplate).where(
-                QuickReplyTemplate.id == int(template_id),
-                QuickReplyTemplate.deleted == 0,
+            _scope_template_query(
+                select(QuickReplyTemplate).where(
+                    QuickReplyTemplate.id == int(template_id),
+                    QuickReplyTemplate.deleted == 0,
+                ),
+                current_user,
             )
         )
         template = result.scalar_one_or_none()
@@ -332,13 +387,15 @@ async def save_quick_reply_template(
         template.content = content
         template.sort_order = sort_order
         if account_id is not None:
-            template.account_id = int(account_id)
+            template.account_id = account_id
         await db.commit()
         await db.refresh(template)
         return ResultObject.success(_template_to_record(template), "模板已更新")
 
+    if account_id is not None or not is_superadmin(current_user):
+        await _require_owned_account(db, current_user, account_id)
     template = QuickReplyTemplate(
-        account_id=int(account_id) if account_id is not None else None,
+        account_id=account_id,
         title=title,
         content=content,
         sort_order=sort_order,
@@ -359,9 +416,12 @@ async def delete_quick_reply_template(
 ):
     await _require_plan_feature(db, current_user, "auto_reply")
     result = await db.execute(
-        select(QuickReplyTemplate).where(
-            QuickReplyTemplate.id == template_id,
-            QuickReplyTemplate.deleted == 0,
+        _scope_template_query(
+            select(QuickReplyTemplate).where(
+                QuickReplyTemplate.id == template_id,
+                QuickReplyTemplate.deleted == 0,
+            ),
+            current_user,
         )
     )
     template = result.scalar_one_or_none()
@@ -380,7 +440,12 @@ async def list_auto_reply_rules(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    query = select(AutoReplyRule).where(AutoReplyRule.deleted == 0, AutoReplyRule.account_id.in_(owned_account_id_subquery(current_user)))
+    if account_id is not None:
+        await _require_owned_account(db, current_user, _parse_account_id(account_id))
+    query = _scope_rule_query(
+        select(AutoReplyRule).where(AutoReplyRule.deleted == 0),
+        current_user,
+    )
     if account_id is not None:
         query = query.where(AutoReplyRule.account_id == account_id)
 
@@ -406,8 +471,13 @@ async def create_auto_reply_rule(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "auto_reply")
+    account_id = await _require_owned_account(
+        db,
+        current_user,
+        _parse_account_id(body.get("accountId") or body.get("xianyuAccountId")),
+    )
     rule = AutoReplyRule(
-        account_id=body.get("accountId") or body.get("xianyuAccountId"),
+        account_id=account_id,
         rule_name=str(body.get("ruleName") or body.get("rule_name") or "").strip() or "自动回复规则",
         match_type=str(body.get("matchType") or body.get("match_type") or "keyword").strip() or "keyword",
         match_keywords=str(body.get("matchKeywords") or body.get("match_keywords") or "").strip() or None,
@@ -423,6 +493,59 @@ async def create_auto_reply_rule(
     return ResultObject.success(_rule_to_record(rule), "规则已创建")
 
 
+@router.get("/auto-reply/rules/logs", response_model=ResultObject)
+async def get_auto_reply_logs(
+    current: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=500),
+    current_user: dict = Depends(get_current_user),
+):
+    return ResultObject.success({
+        "records": [],
+        "total": 0,
+        "current": current,
+        "size": size,
+    })
+
+
+@router.get("/auto-reply/rules/stats", response_model=ResultObject)
+async def get_auto_reply_stats(
+    days: int = Query(7, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    total = (
+        await db.execute(
+            select(func.count()).select_from(
+                _scope_rule_query(
+                    select(AutoReplyRule).where(AutoReplyRule.deleted == 0),
+                    current_user,
+                ).subquery()
+            )
+        )
+    ).scalar() or 0
+    enabled = (
+        await db.execute(
+            select(func.count()).select_from(
+                _scope_rule_query(
+                    select(AutoReplyRule).where(
+                        AutoReplyRule.deleted == 0,
+                        AutoReplyRule.status == 1,
+                    ),
+                    current_user,
+                ).subquery()
+            )
+        )
+    ).scalar() or 0
+    return ResultObject.success({
+        "days": days,
+        "totalRules": total,
+        "enabledRules": enabled,
+        "disabledRules": max(total - enabled, 0),
+        "matchedCount": 0,
+        "replyCount": 0,
+    })
+
+
 @router.put("/auto-reply/rules/{rule_id}", response_model=ResultObject)
 async def update_auto_reply_rule(
     rule_id: int,
@@ -432,14 +555,21 @@ async def update_auto_reply_rule(
 ):
     await _require_plan_feature(db, current_user, "auto_reply")
     result = await db.execute(
-        select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0)
+        _scope_rule_query(
+            select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0),
+            current_user,
+        )
     )
     rule = result.scalar_one_or_none()
     if not rule:
         return ResultObject.failed("规则不存在", code=404)
 
     if "accountId" in body or "xianyuAccountId" in body:
-        rule.account_id = body.get("accountId") or body.get("xianyuAccountId")
+        rule.account_id = await _require_owned_account(
+            db,
+            current_user,
+            _parse_account_id(body.get("accountId") or body.get("xianyuAccountId")),
+        )
     if "ruleName" in body or "rule_name" in body:
         rule.rule_name = str(body.get("ruleName") or body.get("rule_name") or "").strip() or rule.rule_name
     if "matchType" in body or "match_type" in body:
@@ -468,7 +598,10 @@ async def delete_auto_reply_rule(
 ):
     await _require_plan_feature(db, current_user, "auto_reply")
     result = await db.execute(
-        select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0)
+        _scope_rule_query(
+            select(AutoReplyRule).where(AutoReplyRule.id == rule_id, AutoReplyRule.deleted == 0),
+            current_user,
+        )
     )
     rule = result.scalar_one_or_none()
     if not rule:
@@ -485,11 +618,16 @@ async def preview_auto_reply_rule(
     current_user: dict = Depends(get_current_user),
 ):
     await _require_plan_feature(db, current_user, "auto_reply")
-    account_id = body.get("accountId") or body.get("xianyuAccountId")
+    account_id = _parse_account_id(body.get("accountId") or body.get("xianyuAccountId"))
+    if account_id is not None:
+        await _require_owned_account(db, current_user, account_id)
     message = str(body.get("message") or "").strip()
-    query = select(AutoReplyRule).where(
-        AutoReplyRule.deleted == 0,
-        AutoReplyRule.status == 1,
+    query = _scope_rule_query(
+        select(AutoReplyRule).where(
+            AutoReplyRule.deleted == 0,
+            AutoReplyRule.status == 1,
+        ),
+        current_user,
     )
     if account_id is not None:
         query = query.where(or_(AutoReplyRule.account_id == int(account_id), AutoReplyRule.account_id.is_(None)))
@@ -517,47 +655,4 @@ async def preview_auto_reply_rule(
         "matched": True,
         "replyContent": matched_rule.reply_content or "",
         "rule": _rule_to_record(matched_rule),
-    })
-
-
-@router.get("/auto-reply/rules/logs", response_model=ResultObject)
-async def get_auto_reply_logs(
-    current: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=500),
-    current_user: dict = Depends(get_current_user),
-):
-    return ResultObject.success({
-        "records": [],
-        "total": 0,
-        "current": current,
-        "size": size,
-    })
-
-
-@router.get("/auto-reply/rules/stats", response_model=ResultObject)
-async def get_auto_reply_stats(
-    days: int = Query(7, ge=1, le=365),
-    db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
-    total = (
-        await db.execute(
-            select(func.count()).select_from(AutoReplyRule).where(AutoReplyRule.deleted == 0)
-        )
-    ).scalar() or 0
-    enabled = (
-        await db.execute(
-            select(func.count()).select_from(AutoReplyRule).where(
-                AutoReplyRule.deleted == 0,
-                AutoReplyRule.status == 1,
-            )
-        )
-    ).scalar() or 0
-    return ResultObject.success({
-        "days": days,
-        "totalRules": total,
-        "enabledRules": enabled,
-        "disabledRules": max(total - enabled, 0),
-        "matchedCount": 0,
-        "replyCount": 0,
     })
