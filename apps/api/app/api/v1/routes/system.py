@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,6 +52,12 @@ notification_router = APIRouter(prefix="/notification")
 system_info_router = APIRouter(prefix="/system")
 
 
+async def require_superadmin(current_user: dict = Depends(get_current_user)) -> dict:
+    if (current_user or {}).get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="需要平台负责人权限")
+    return current_user
+
+
 def build_public_ai_provider(provider: XianyuAiProvider) -> AiProviderRespDTO:
     """Serialize legacy rows without ever exposing the stored credential."""
 
@@ -97,7 +103,7 @@ def get_client_ip(request: Request) -> str:
 async def get_setting(
     req: GetSettingReqDTO,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     result = await db.execute(
         select(XianyuSysSetting).where(XianyuSysSetting.setting_key == req.setting_key)
@@ -119,7 +125,7 @@ async def get_setting(
 async def save_setting(
     req: SaveSettingReqDTO,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     if is_sensitive_setting_key(req.setting_key):
         return ResultObject.failed(
@@ -141,7 +147,7 @@ async def save_setting(
 @router.post("/list")
 async def list_settings(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     result = await db.execute(select(XianyuSysSetting).order_by(XianyuSysSetting.setting_key.asc()))
     settings_rows = result.scalars().all()
@@ -166,7 +172,7 @@ async def list_settings(
 async def delete_setting(
     req: dict = {},
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     setting_key = req.get("setting_key") or req.get("settingKey")
     if is_sensitive_setting_key(setting_key):
@@ -188,7 +194,7 @@ async def delete_setting(
 @operation_log_router.get("/list", response_model=ResultObject[list])
 async def list_operation_logs(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     result = await db.execute(
         select(XianyuOperationLog)
@@ -215,7 +221,7 @@ async def list_operation_logs(
 async def list_operation_logs_post(
     req: dict = {},
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     """POST /api/operationLog/list - 前端 operationLogs.js 使用 POST 调用"""
     page = int(req.get("page") or req.get("current") or 1)
@@ -247,7 +253,7 @@ async def list_operation_logs_post(
 @notification_router.get("/list", response_model=ResultObject[list])
 async def list_notifications(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     result = await db.execute(
         select(Notification).order_by(Notification.id.desc()).limit(50)
@@ -312,7 +318,7 @@ async def update_open_source_config(
     payload: dict | None = None,
     request: Request = None,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     try:
         config = await save_open_source_config(db, payload or {})
@@ -343,7 +349,7 @@ async def update_open_source_config(
 @system_info_router.get("/runtime-status", response_model=ResultObject[dict])
 async def get_runtime_status(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_superadmin),
 ):
     config = await load_open_source_config(db)
     del current_user
