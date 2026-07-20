@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
 from ....core.response import ResultObject
-from ....core.tenancy import current_uid
+from ....core.tenancy import current_uid, is_superadmin
 from ....services.ai_provider import generate_text
 from ....services.billing import BillingLimitError, ensure_feature_available
 from ..deps import get_current_user
@@ -114,6 +114,13 @@ def _truthy(value: Any) -> bool:
     if isinstance(value, (int, float)):
         return value != 0
     return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _owner_filter_sql(alias: str, current_user: dict | None, params: dict[str, Any]) -> str:
+    if current_user is None or is_superadmin(current_user):
+        return "1 = 1"
+    params["owner_user_id"] = current_uid(current_user)
+    return f"COALESCE({alias}.owner_user_id, 0) = :owner_user_id"
 
 
 def _json_loads(raw: Any, default: Any) -> Any:
@@ -633,11 +640,17 @@ async def _refresh_card_group_counts(db: AsyncSession, group_id: int) -> None:
     )
 
 
-async def _fetch_card_group_row(db: AsyncSession, group_id: int) -> dict[str, Any] | None:
+async def _fetch_card_group_row(
+    db: AsyncSession,
+    group_id: int,
+    current_user: dict | None = None,
+) -> dict[str, Any] | None:
+    params: dict[str, Any] = {"group_id": group_id}
+    owner_filter = _owner_filter_sql("g", current_user, params)
     row = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT
                     g.id,
                     g.group_name,
@@ -662,13 +675,14 @@ async def _fetch_card_group_row(db: AsyncSession, group_id: int) -> dict[str, An
                  AND i.deleted = 0
                 WHERE g.id = :group_id
                   AND g.deleted = 0
+                  AND {owner_filter}
                 GROUP BY
                     g.id, g.group_name, g.group_type, g.card_prefix, g.password_prefix,
                     g.cost_price, g.suggested_price, g.alert_threshold, g.remark, g.status,
                     g.created_time, g.updated_time
                 """
             ),
-            {"group_id": group_id},
+            params,
         )
     ).mappings().first()
     return dict(row) if row else None
@@ -1282,10 +1296,12 @@ async def get_card_alerts(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    params: dict[str, Any] = {}
+    owner_filter = _owner_filter_sql("g", current_user, params)
     rows = (
         await db.execute(
             text(
-                """
+                f"""
                 SELECT
                     g.id,
                     g.group_name,
@@ -1296,11 +1312,13 @@ async def get_card_alerts(
                   ON i.group_id = g.id
                  AND i.deleted = 0
                 WHERE g.deleted = 0
+                  AND {owner_filter}
                 GROUP BY g.id, g.group_name, g.alert_threshold
                 HAVING available_count < COALESCE(g.alert_threshold, 10)
                 ORDER BY available_count ASC, g.id DESC
                 """
-            )
+            ),
+            params,
         )
     ).mappings().all()
     data = [
@@ -1342,6 +1360,7 @@ async def get_cards(
     offset = (safe_current - 1) * safe_size
     params: dict[str, Any] = {}
     where_sql = ["g.deleted = 0"]
+    where_sql.append(_owner_filter_sql("g", current_user, params))
     if keyword.strip():
         where_sql.append("g.group_name LIKE :keyword")
         params["keyword"] = f"%{keyword.strip()}%"
@@ -1411,15 +1430,16 @@ async def create_card_group(
         text(
             """
             INSERT INTO card_group(
-                group_name, group_type, card_prefix, password_prefix, cost_price, suggested_price,
+                owner_user_id, group_name, group_type, card_prefix, password_prefix, cost_price, suggested_price,
                 alert_threshold, total_count, used_count, available_count, remark, status, deleted, created_time, updated_time
             ) VALUES(
-                :group_name, :group_type, :card_prefix, :password_prefix, :cost_price, :suggested_price,
+                :owner_user_id, :group_name, :group_type, :card_prefix, :password_prefix, :cost_price, :suggested_price,
                 :alert_threshold, 0, 0, 0, :remark, :status, 0, NOW(), NOW()
             )
             """
         ),
         {
+            "owner_user_id": current_uid(current_user),
             "group_name": group_name,
             "group_type": _normalize_card_type(body.get("cardType")),
             "card_prefix": str(body.get("cardPrefix") or "").strip() or None,
@@ -1445,6 +1465,8 @@ async def update_card_group(
     group_name = str(body.get("groupName") or "").strip()
     if not group_name:
         return ResultObject.validate_failed("分组名称不能为空")
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
 
     await db.execute(
         text(
@@ -1487,6 +1509,9 @@ async def delete_card_group(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     await db.execute(
         text(
             """
@@ -1517,7 +1542,7 @@ async def get_card_group_detail(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    row = await _fetch_card_group_row(db, group_id)
+    row = await _fetch_card_group_row(db, group_id, current_user)
     if not row:
         return ResultObject.failed("卡密分组不存在", code=404)
     return ResultObject.success(_card_group_record(row))
@@ -1532,6 +1557,9 @@ async def get_card_items(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
     offset = (safe_current - 1) * safe_size
@@ -1579,6 +1607,9 @@ async def create_card_item(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     content = str(body.get("content") or "").strip()
     card_key = str(body.get("cardContent") or "").strip()
     card_value = str(body.get("password") or "").strip()
@@ -1618,6 +1649,9 @@ async def batch_create_card_items(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     items = body.get("items")
     if not isinstance(items, list) or not items:
         return ResultObject.validate_failed("导入列表不能为空")
@@ -1702,6 +1736,9 @@ async def delete_card_item(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     await db.execute(
         text(
             """
@@ -1725,6 +1762,9 @@ async def reset_card_item(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     await db.execute(
         text(
             """
@@ -1754,6 +1794,9 @@ async def lock_card_item(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     await db.execute(
         text(
             """
@@ -1779,6 +1822,9 @@ async def invalid_card_item(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     await db.execute(
         text(
             """
@@ -1803,6 +1849,9 @@ async def get_card_stock_stats(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     row = (
         await db.execute(
             text(
@@ -1843,6 +1892,9 @@ async def get_card_usage_records(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        return ResultObject.failed("卡密分组不存在", code=404)
+
     safe_current = max(current, 1)
     safe_size = min(max(size, 1), 200)
     offset = (safe_current - 1) * safe_size
@@ -1885,6 +1937,9 @@ async def export_card_items(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    if not await _fetch_card_group_row(db, group_id, current_user):
+        raise HTTPException(status_code=404, detail="卡密分组不存在")
+
     rows = (
         await db.execute(
             text(
@@ -1979,9 +2034,19 @@ async def get_delivery_stats(
     configs = await _load_all_goods_configs(db)
     enabled_goods = 0
     low_stock_goods = 0
+    group_params: dict[str, Any] = {}
+    group_owner_filter = _owner_filter_sql("g", current_user, group_params)
     group_rows = (
         await db.execute(
-            text("SELECT id, COALESCE(available_count, 0) AS available_count, COALESCE(alert_threshold, 10) AS alert_threshold FROM card_group WHERE deleted = 0")
+            text(
+                f"""
+                SELECT id, COALESCE(available_count, 0) AS available_count, COALESCE(alert_threshold, 10) AS alert_threshold
+                FROM card_group g
+                WHERE g.deleted = 0
+                  AND {group_owner_filter}
+                """
+            ),
+            group_params,
         )
     ).mappings().all()
     group_map = {row["id"]: {"available": _to_int(row.get("available_count")), "threshold": _to_int(row.get("alert_threshold"), 10)} for row in group_rows}
