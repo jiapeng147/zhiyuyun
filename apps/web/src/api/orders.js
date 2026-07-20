@@ -17,14 +17,6 @@ export function getOrderDetail(id, params) {
   })
 }
 
-export function updateOrder(id, data) {
-  return request({
-    url: `/orders/${id}`,
-    method: 'put',
-    data
-  })
-}
-
 export function manualDeliverOrder(id, data) {
   const payload = {
     deliveryMode: data?.deliveryMode,
