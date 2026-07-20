@@ -6,12 +6,9 @@ import { clearAuth } from '../utils/auth.js'
 // assistive technology.
 export const login = data => request.post('/auth/login', data, { suppressGlobalError: true })
 
-export const getProfile = () => request.get('/auth/profile')
-
 // 智鱼云: 自助注册
 export const sendRegisterCode = data => request.post('/auth/register/send-code', data, { suppressGlobalError: true })
 export const register = data => request.post('/auth/register', data, { suppressGlobalError: true })
-export const getPlans = () => request.get('/auth/plans', { suppressGlobalError: true })
 
 export async function logout() {
   try {
