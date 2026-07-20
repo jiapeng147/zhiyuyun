@@ -18,6 +18,7 @@ from ....core.database import get_db
 from ....core.response import ResultObject
 from ....core.config import settings
 from ....core.cookie_crypto import decrypt_cookie_if_needed, encrypt_cookie_for_storage
+from ....core.tenancy import assert_account_owned
 from ....core.upload_security import (
     UnsafePathError,
     UnsafeRemoteURLError,
@@ -125,6 +126,15 @@ def _parse_account_id(value: object) -> Optional[int]:
         return int(text_value)
     except Exception:
         return None
+
+
+async def _require_owned_account(
+    db: AsyncSession,
+    current_user: dict,
+    account_id: int,
+) -> None:
+    if not await assert_account_owned(db, current_user, account_id):
+        raise HTTPException(status_code=400, detail="账号不存在或无权操作。")
 
 
 def _is_ws_auth_failure(status: dict) -> bool:
@@ -1275,7 +1285,6 @@ async def websocket_send_message(
     current_user: dict = Depends(get_current_user),
     runtime: ManualMessageRuntime = Depends(get_manual_message_runtime),
 ):
-    del current_user
     try:
         raw_account_id = data.get("xianyuAccountId") or data.get("accountId")
         account_id = _parse_account_id(raw_account_id)
@@ -1289,6 +1298,7 @@ async def websocket_send_message(
             raise HTTPException(status_code=422, detail="消息不能超过 1000 字。")
         if not idempotency_key:
             raise HTTPException(status_code=422, detail="idempotencyKey 不能为空。")
+        await _require_owned_account(db, current_user, account_id)
 
         command = ManualMessageCommand(
             idempotency_key=idempotency_key,
@@ -1398,7 +1408,6 @@ async def websocket_send_image_message(
     current_user: dict = Depends(get_current_user),
     runtime: ManualMessageRuntime = Depends(get_manual_message_runtime),
 ):
-    del current_user
     try:
         raw_account_id = data.get("xianyuAccountId") or data.get("accountId")
         account_id = _parse_account_id(raw_account_id)
@@ -1410,6 +1419,7 @@ async def websocket_send_image_message(
             raise HTTPException(status_code=422, detail="accountId、cid 和 imageUrl 不能为空。")
         if not idempotency_key:
             raise HTTPException(status_code=422, detail="idempotencyKey 不能为空。")
+        await _require_owned_account(db, current_user, account_id)
         command = ManualMessageCommand(
             idempotency_key=idempotency_key,
             account_id=account_id,
@@ -1544,6 +1554,7 @@ async def websocket_start(
     account_id = _parse_account_id(data.get("xianyuAccountId") or data.get("accountId"))
     if account_id is None or account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+    await _require_owned_account(db, current_user, account_id)
     current = ws_manager.get_client(account_id)
     if current and getattr(current, "is_connected", False):
         status = ws_manager.get_status(account_id)
@@ -1659,12 +1670,14 @@ async def websocket_start(
 @websocket_router.post("/stop")
 async def websocket_stop(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     """停止 WebSocket 连接。"""
     account_id = _parse_account_id(data.get("xianyuAccountId") or data.get("accountId"))
     if account_id is None or account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+    await _require_owned_account(db, current_user, account_id)
     client = ws_manager.get_client(account_id)
     if not client:
         return ResultObject.success({"connected": False, "status": "not_found"})
@@ -1675,12 +1688,14 @@ async def websocket_stop(
 @websocket_router.post("/status")
 async def websocket_status(
     data: dict = {},
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     """获取 WebSocket 连接状态。"""
     account_id = _parse_account_id(data.get("xianyuAccountId") or data.get("accountId"))
     if account_id is None or account_id <= 0:
         raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+    await _require_owned_account(db, current_user, account_id)
     client = ws_manager.get_client(account_id)
     if not client:
         return ResultObject.success({
@@ -2156,9 +2171,11 @@ async def media_delete(
 async def image_upload(
     accountId: int = Form(..., gt=0),
     file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        await _require_owned_account(db, current_user, accountId)
         raw = await read_upload_limited(file)
         content, extension, _ = await asyncio.to_thread(
             normalize_image_bytes,
@@ -2199,6 +2216,7 @@ async def image_upload_from_url(
         account_id = _parse_account_id(data.get("accountId"))
         if account_id is None or account_id <= 0:
             raise HTTPException(status_code=422, detail="accountId 必须为正整数。")
+        await _require_owned_account(db, current_user, account_id)
         raw = await download_public_image(str(image_url))
         content, extension, _ = await asyncio.to_thread(
             normalize_image_bytes,
