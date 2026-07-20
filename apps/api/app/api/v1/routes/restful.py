@@ -250,6 +250,7 @@ async def restful_get_account_detail(
             select(XianyuAccount).where(
                 XianyuAccount.id == account_id,
                 XianyuAccount.deleted == 0,
+                XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
             )
         )
         account = result.scalar_one_or_none()
@@ -272,6 +273,7 @@ async def restful_update_account(
             select(XianyuAccount).where(
                 XianyuAccount.id == account_id,
                 XianyuAccount.deleted == 0,
+                XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
             )
         )
         account = result.scalar_one_or_none()
@@ -298,6 +300,7 @@ async def restful_delete_account(
             select(XianyuAccount).where(
                 XianyuAccount.id == account_id,
                 XianyuAccount.deleted == 0,
+                XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
             )
         )
         account = result.scalar_one_or_none()
@@ -326,6 +329,7 @@ async def restful_refresh_account_profile(
             select(XianyuAccount).where(
                 XianyuAccount.id == account_id,
                 XianyuAccount.deleted == 0,
+                XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
             )
         )
         account = result.scalar_one_or_none()
@@ -572,6 +576,8 @@ async def restful_get_goods_detail(
         result = await db.execute(
             select(XianyuGoods).where(
                 XianyuGoods.id == goods_id,
+                XianyuGoods.deleted == 0,
+                XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
             )
         )
         goods = result.scalar_one_or_none()
@@ -607,7 +613,10 @@ async def restful_get_orders(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        query = select(XianyuTradeOrder)
+        query = select(XianyuTradeOrder).where(
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
         if account_id is not None:
             query = query.where(XianyuTradeOrder.account_id == account_id)
         if order_status is not None:
@@ -635,6 +644,8 @@ async def restful_get_order_detail(
         result = await db.execute(
             select(XianyuTradeOrder).where(
                 XianyuTradeOrder.id == order_id,
+                XianyuTradeOrder.deleted == 0,
+                XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
             )
         )
         order = result.scalar_one_or_none()
@@ -751,12 +762,16 @@ async def restful_get_dashboard(
         # Account counts
         acct_query = select(XianyuAccount).where(
             XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
         )
         total_accts = (await db.execute(
             select(func.count()).select_from(acct_query.subquery())
         )).scalar() or 0
         # Order counts
-        order_query = select(XianyuTradeOrder)
+        order_query = select(XianyuTradeOrder).where(
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
         total_orders = (await db.execute(
             select(func.count()).select_from(order_query.subquery())
         )).scalar() or 0

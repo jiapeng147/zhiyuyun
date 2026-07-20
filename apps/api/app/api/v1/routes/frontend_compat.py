@@ -17,7 +17,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.config import settings
-from ....core.tenancy import current_uid, owned_account_id_subquery
+from ....core.tenancy import assert_account_owned, current_uid, owned_account_id_subquery
 from ....core.database import get_db
 from ....core.logging_security import redact_sensitive_text
 from ....core.response import ResultObject
@@ -2720,7 +2720,11 @@ async def compat_xianyu_accounts_detail(
     """Compat: GET /xianyu/accounts/{id} -> forward to /account/detail (POST)"""
     from ....models.entities import XianyuAccount, XianyuAccountAuth
     result = await db.execute(
-        select(XianyuAccount).where(XianyuAccount.id == account_id)
+        select(XianyuAccount).where(
+            XianyuAccount.id == account_id,
+            XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     account = result.scalar_one_or_none()
     if not account:
@@ -2781,7 +2785,13 @@ async def compat_xianyu_accounts_update(
 ):
     """Compat: PUT /xianyu/accounts/{id} -> forward to /account/update (POST)"""
     from ....models.entities import XianyuAccount
-    result = await db.execute(select(XianyuAccount).where(XianyuAccount.id == account_id))
+    result = await db.execute(
+        select(XianyuAccount).where(
+            XianyuAccount.id == account_id,
+            XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
     account = result.scalar_one_or_none()
     if not account:
         return ResultObject.failed("账号不存在", code=404)
@@ -2802,7 +2812,13 @@ async def compat_xianyu_accounts_delete(
 ):
     """Compat: DELETE /xianyu/accounts/{id} -> forward to /account/delete (POST)"""
     from ....models.entities import XianyuAccount, XianyuAccountAuth
-    result = await db.execute(select(XianyuAccount).where(XianyuAccount.id == account_id))
+    result = await db.execute(
+        select(XianyuAccount).where(
+            XianyuAccount.id == account_id,
+            XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
     account = result.scalar_one_or_none()
     if not account:
         return ResultObject.failed("账号不存在", code=404)
@@ -2825,7 +2841,13 @@ async def compat_xianyu_accounts_refresh_profile(
 ):
     """Compat: POST /xianyu/accounts/{id}/refresh-profile -> forward to /account/refreshProfile (POST)"""
     from ....models.entities import XianyuAccount
-    result = await db.execute(select(XianyuAccount).where(XianyuAccount.id == account_id))
+    result = await db.execute(
+        select(XianyuAccount).where(
+            XianyuAccount.id == account_id,
+            XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
     account = result.scalar_one_or_none()
     if not account:
         return ResultObject.failed("账号不存在", code=404)
@@ -2851,7 +2873,8 @@ async def compat_xianyu_accounts_check_auth(
     current_user: dict = Depends(get_current_user),
 ):
     """Perform a live platform login check for one account."""
-    del db, current_user
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
     from ....services.cookie_token_refresher import check_cookie_login
     from ....services.ws_client import ws_manager
 
@@ -2917,6 +2940,8 @@ async def compat_xianyu_accounts_auto_rate_config(
     current_user: dict = Depends(get_current_user),
 ):
     """读取账号自动评价配置"""
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
     config = await _load_account_config(db, account_id, "auto_rate_config")
     return ResultObject.success({
         "enabled": config.get("enabled", False),
@@ -2934,6 +2959,8 @@ async def compat_xianyu_accounts_save_auto_rate_config(
     current_user: dict = Depends(get_current_user),
 ):
     """保存账号自动评价配置"""
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
     enabled = bool(payload.get("enabled", False))
     rate_type = payload.get("rateType", "text")
     if rate_type not in ("text", "api"):
@@ -2961,6 +2988,8 @@ async def compat_xianyu_accounts_strategy_config(
     current_user: dict = Depends(get_current_user),
 ):
     """读取账号消息等待策略配置"""
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
     config = await _load_account_config(db, account_id, "strategy_config")
     message_expire_time = config.get("messageExpireTime", 3600)
     try:
@@ -2983,6 +3012,8 @@ async def compat_xianyu_accounts_save_strategy_config(
     current_user: dict = Depends(get_current_user),
 ):
     """保存账号消息等待策略配置"""
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
     message_expire_time = payload.get("messageExpireTime", 3600)
     try:
         message_expire_time = int(message_expire_time)
@@ -3036,6 +3067,8 @@ async def compat_xianyu_accounts_update_cookie(
 ):
     """Compat: POST /xianyu/accounts/{id}/cookie -> forward to /account/updateCookie (POST)"""
     from ....core.cookie_crypto import encrypt_cookie_for_storage
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
     cookie = payload.get("cookie") or ""
     if not cookie:
         return ResultObject.validate_failed("accountId 和 cookie 不能为空")

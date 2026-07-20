@@ -9,7 +9,7 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
-from ....core.tenancy import owned_account_id_subquery
+from ....core.tenancy import assert_account_owned, owned_account_id_subquery
 from ....core.response import ResultObject
 from ....schemas.order import ManualDeliveryReqDTO
 from ....services.manual_delivery import (
@@ -615,8 +615,11 @@ async def create_goods(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    account_id = body.get("accountId") or body.get("xianyuAccountId")
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", 404)
     goods = XianyuGoods(
-        account_id=body.get("accountId") or body.get("xianyuAccountId"),
+        account_id=account_id,
         goods_id=body.get("goodsId"),
         external_goods_id=body.get("externalGoodsId") or body.get("xyGoodsId"),
         title=body.get("title"),
@@ -649,7 +652,11 @@ async def goods_detail(
     current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
+        select(XianyuGoods).where(
+            XianyuGoods.id == goods_id,
+            XianyuGoods.deleted == 0,
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     goods = result.scalar_one_or_none()
     if not goods:
@@ -675,14 +682,21 @@ async def update_goods(
     current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
+        select(XianyuGoods).where(
+            XianyuGoods.id == goods_id,
+            XianyuGoods.deleted == 0,
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     goods = result.scalar_one_or_none()
     if not goods:
         return ResultObject.failed("商品不存在", 404)
 
     if "accountId" in body or "xianyuAccountId" in body:
-        goods.account_id = body.get("accountId") or body.get("xianyuAccountId")
+        next_account_id = body.get("accountId") or body.get("xianyuAccountId")
+        if not await assert_account_owned(db, current_user, next_account_id):
+            return ResultObject.failed("账号不存在", 404)
+        goods.account_id = next_account_id
     if "goodsId" in body:
         goods.goods_id = body.get("goodsId")
     if "externalGoodsId" in body or "xyGoodsId" in body:
@@ -739,7 +753,7 @@ async def update_goods(
 
 @router.delete("/goods/{goods_id}", response_model=ResultObject)
 async def delete_goods(goods_id: int, db: AsyncSession = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    return await delete_goods_local(goods_id, db, _)
+    return await delete_goods_local(goods_id, db, current_user)
 
 
 @router.delete("/goods/{goods_id}/local", response_model=ResultObject)
@@ -749,7 +763,11 @@ async def delete_goods_local(
     current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
+        select(XianyuGoods).where(
+            XianyuGoods.id == goods_id,
+            XianyuGoods.deleted == 0,
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     goods = result.scalar_one_or_none()
     if not goods:
@@ -768,7 +786,11 @@ async def delete_goods_remote(
 ):
     """远程删除商品：标记为已从闲鱼删除（status=3），本地记录保留。"""
     result = await db.execute(
-        select(XianyuGoods).where(XianyuGoods.id == goods_id, XianyuGoods.deleted == 0)
+        select(XianyuGoods).where(
+            XianyuGoods.id == goods_id,
+            XianyuGoods.deleted == 0,
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     goods = result.scalar_one_or_none()
     if not goods:
@@ -792,6 +814,8 @@ async def list_orders(
 ):
     # sync=true 时先从闲鱼拉取最新订单入库，再返回本地查询结果
     if sync and account_id is not None:
+        if not await assert_account_owned(db, current_user, account_id):
+            return ResultObject.failed("账号不存在", 404)
         from ....services.xianyu_order_sync import sync_orders_for_account
         try:
             await sync_orders_for_account(account_id=int(account_id))
@@ -799,7 +823,10 @@ async def list_orders(
             import logging
             logging.getLogger(__name__).warning("list_orders 同步失败: accountId=%s error=%s", account_id, exc)
 
-    query = select(XianyuTradeOrder).where(XianyuTradeOrder.deleted == 0)
+    query = select(XianyuTradeOrder).where(
+        XianyuTradeOrder.deleted == 0,
+        XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+    )
     if account_id is not None:
         query = query.where(XianyuTradeOrder.account_id == account_id)
     if status is not None:
@@ -871,7 +898,11 @@ async def order_detail(
     current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(XianyuTradeOrder).where(XianyuTradeOrder.id == order_id, XianyuTradeOrder.deleted == 0)
+        select(XianyuTradeOrder).where(
+            XianyuTradeOrder.id == order_id,
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     order = result.scalar_one_or_none()
     if not order:
@@ -915,7 +946,11 @@ async def update_order(
     current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(XianyuTradeOrder).where(XianyuTradeOrder.id == order_id, XianyuTradeOrder.deleted == 0)
+        select(XianyuTradeOrder).where(
+            XianyuTradeOrder.id == order_id,
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     order = result.scalar_one_or_none()
     if not order:
@@ -933,9 +968,19 @@ async def update_order(
 async def manual_delivery(
     order_id: int,
     body: ManualDeliveryReqDTO,
+    db: AsyncSession = Depends(get_db),
     coordinator: ManualDeliveryCoordinator = Depends(get_manual_delivery_coordinator),
     current_user: dict = Depends(get_current_user),
 ):
+    order_result = await db.execute(
+        select(XianyuTradeOrder.id).where(
+            XianyuTradeOrder.id == order_id,
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
+    if order_result.scalar_one_or_none() is None:
+        return ResultObject.failed("订单不存在", 404)
     command = ManualDeliveryCommand(
         delivery_mode=body.delivery_mode,
         delivery_content=body.delivery_content,
@@ -985,7 +1030,11 @@ async def sync_order(
     current_user: dict = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(XianyuTradeOrder).where(XianyuTradeOrder.id == order_id, XianyuTradeOrder.deleted == 0)
+        select(XianyuTradeOrder).where(
+            XianyuTradeOrder.id == order_id,
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
     )
     order = result.scalar_one_or_none()
     if not order:
@@ -1013,6 +1062,8 @@ async def sync_orders(
     if account_id is None:
         return ResultObject.validate_failed("缺少 accountId 参数")
     account_id = int(account_id)
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", 404)
     # 调用闲鱼 API 同步该账号的已售订单
     from ....services.xianyu_order_sync import sync_orders_for_account
     sync_result = await sync_orders_for_account(account_id=account_id)
@@ -1044,7 +1095,10 @@ async def list_goods_sync_tasks(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    query = select(XianyuGoodsSyncTask).where(XianyuGoodsSyncTask.deleted == 0)
+    query = select(XianyuGoodsSyncTask).where(
+        XianyuGoodsSyncTask.deleted == 0,
+        XianyuGoodsSyncTask.account_id.in_(owned_account_id_subquery(current_user)),
+    )
     if account_id is not None:
         query = query.where(XianyuGoodsSyncTask.account_id == account_id)
     if status:
