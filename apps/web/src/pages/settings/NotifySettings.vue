@@ -75,6 +75,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip :items="notifyStatusItems" />
+
     <section class="notify-summary-grid">
       <article
         v-for="card in summaryCards"
@@ -698,6 +700,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import AppButton from '../../components/AppButton.vue'
 import Badge from '../../components/Badge.vue'
 import EmptyState from '../../components/EmptyState.vue'
@@ -1137,6 +1140,14 @@ const healthWidthClass = computed(() => {
   const bucket = Math.max(0, Math.min(100, Math.round(healthPercent.value / 10) * 10))
   return `w${bucket}`
 })
+
+
+const notifyStatusItems = computed(() => [
+  { key: 'health', label: '投递健康', value: heroHealthLabel.value || '待同步', tone: heroHealthLabel.value.includes('%') && Number(heroHealthLabel.value.replace('%','')) >= 80 ? 'green' : 'orange' },
+  { key: 'pending', label: '待处理提醒', value: '0 项', tone: 'green' },
+  { key: 'saving', label: '保存', value: '可保存', tone: 'green' },
+  { key: 'delivery', label: '投递', value: '空闲', tone: 'gray' }
+])
 
 const heroHealthLabel = computed(() => {
   if (!logsLoaded.value) return '状态不可用'
