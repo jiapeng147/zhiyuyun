@@ -7,7 +7,7 @@
             <span>账号资产</span>
             <b>{{ selected ? accountTitle(selected) : '未选择账号' }}</b>
           </div>
-          <h2>账号资产控制台</h2>
+          <h2>账号资产</h2>
           <p>统一管理闲鱼账号、登录凭证、资料刷新、实时连接、账号策略与商品擦亮任务。</p>
           <div class="accounts-command-meta">
             <span>{{ loading ? '账号刷新中' : `当前 ${accountMetric(stats.total)} 个账号` }}</span>

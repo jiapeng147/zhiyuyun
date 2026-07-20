@@ -13,7 +13,7 @@
             <span>订单履约</span>
             <b>{{ selectedAccountName }}</b>
           </div>
-          <h2>订单履约控制台</h2>
+          <h2>订单履约</h2>
           <p>集中同步闲鱼真实订单，跟进买家、商品、付款状态、发货进度与手动履约结果。</p>
           <div class="orders-command-meta">
             <span>{{ ordersLoading ? '订单刷新中' : `当前 ${total} 笔订单` }}</span>

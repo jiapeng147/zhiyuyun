@@ -6,7 +6,7 @@
           <span>发货声明</span>
           <b>{{ enabled ? '声明已启用' : '声明未启用' }}</b>
         </div>
-        <h2>发货声明控制台</h2>
+        <h2>发货声明</h2>
         <p>配置虚拟商品交付前的确认声明、变量内容和生效范围，降低售后争议并保持发货流程可控。</p>
         <div class="statement-command-meta">
           <span>{{ statementLoading ? '配置读取中' : (statementAvailable === true ? '配置可编辑' : '配置不可用') }}</span>

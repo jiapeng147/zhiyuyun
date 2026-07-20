@@ -9,7 +9,7 @@
           <span>自动发货</span>
           <b>{{ activeAccountLabel }}</b>
         </div>
-        <h2>发货运营控制台</h2>
+        <h2>发货运营</h2>
         <p>按商品配置付款后、确认收货后和好评后的发货策略，支持文本、卡密和货源库引用。</p>
         <div class="delivery-command-meta">
           <span>{{ goodsAvailable ? `当前 ${filteredGoods.length} 个商品` : '商品配置读取中' }}</span>

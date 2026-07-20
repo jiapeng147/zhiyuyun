@@ -11,7 +11,7 @@
           <span>任务调度</span>
           <b>{{ tasksAvailable === true ? `共 ${total} 条` : '任务未确认' }}</b>
         </div>
-        <h2>定时任务控制台</h2>
+        <h2>定时任务</h2>
         <p>统一配置商品同步、订单同步和手动触发执行，旧任务类型会被明确标记为不可用。</p>
         <div class="scheduled-command-meta">
           <span>{{ tasksAvailable === null ? '任务读取中' : (tasksAvailable === true ? '任务可管理' : '任务不可用') }}</span>

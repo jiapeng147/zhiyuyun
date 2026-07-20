@@ -12,7 +12,7 @@
           <span>发货审计</span>
           <b>{{ recordsAvailable === true ? `共 ${total} 条` : '记录未确认' }}</b>
         </div>
-        <h2>发货记录控制台</h2>
+        <h2>发货记录</h2>
         <p>集中查看真实发货执行结果、失败原因、卡密/文本方式和订单闭环状态。</p>
         <div class="delivery-records-command-meta">
           <span>{{ recordsLoading ? '记录刷新中' : '记录已就绪' }}</span>

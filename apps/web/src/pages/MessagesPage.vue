@@ -6,7 +6,7 @@
           <span>实时接待</span>
           <b>{{ accountLabel || '未选择账号' }}</b>
         </div>
-        <h2>客服接待控制台</h2>
+        <h2>客服接待</h2>
         <p>聚合买家咨询、AI 接待状态、快捷回复模板和商品上下文，围绕当前账号处理实时会话。</p>
         <div class="messages-command-meta">
           <span>{{ loading || conversationRefreshing ? '会话刷新中' : `当前 ${displayList.length} 条会话` }}</span>

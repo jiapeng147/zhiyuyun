@@ -6,7 +6,7 @@
     <section class="amap-hero">
       <div class="amap-hero-copy">
         <span class="amap-kicker">Map Gateway</span>
-        <h1>地图服务控制台</h1>
+        <h1>地图服务</h1>
         <p>独立维护高德地图 API Key，用于商品发布地址搜索、POI 选择和工作流地址联想。授权轮换、服务校验和异常定位都在这里完成。</p>
 
         <div class="amap-hero-actions">

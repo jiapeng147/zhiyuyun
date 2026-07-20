@@ -8,7 +8,7 @@
           <span>套餐订阅</span>
           <b>{{ state?.plan?.expired ? '套餐已过期' : '服务生效中' }}</b>
         </div>
-        <h2>订阅与账单控制台</h2>
+        <h2>订阅与账单</h2>
         <p>查看当前套餐、账号配额、AI 调用额度、订阅订单和付款凭证状态。</p>
         <div class="billing-command-meta">
           <span>当前套餐 {{ state?.plan?.name || '—' }}</span>

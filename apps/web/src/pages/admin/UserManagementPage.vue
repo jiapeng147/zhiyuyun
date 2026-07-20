@@ -5,7 +5,7 @@
     <section class="user-v9-hero">
       <div class="user-hero-copy">
         <span class="user-kicker">User Operations</span>
-        <h1>用户运营控制台</h1>
+        <h1>用户运营</h1>
         <p>集中处理平台概览、套餐、手动建用户、自助注册、邮件服务与账号状态。</p>
       </div>
       <div class="user-hero-actions">
@@ -161,7 +161,7 @@
     <section class="user-v9-card">
       <div class="user-card-head">
         <div>
-          <span>Billing Console</span>
+          <span>账单运营</span>
           <h3>订阅与账单</h3>
         </div>
         <p>查看用户订阅和待确认订单，支持人工确认生效。</p>

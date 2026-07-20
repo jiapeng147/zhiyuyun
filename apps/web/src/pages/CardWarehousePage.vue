@@ -12,7 +12,7 @@
           <span>卡密库存</span>
           <b>{{ selected?.groupName || '未选择分组' }}</b>
         </div>
-        <h2>卡密库存控制台</h2>
+        <h2>卡密库存</h2>
         <p>集中管理卡密分组、库存明细、使用记录、导入和导出，自动发货会从这里领取库存。</p>
         <div class="warehouse-command-meta">
           <span>{{ groupsLoading ? '库存刷新中' : `当前 ${groupsMetric(groups.length)} 个分组` }}</span>
