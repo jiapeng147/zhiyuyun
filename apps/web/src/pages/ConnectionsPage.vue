@@ -5,49 +5,49 @@
       <div v-if="notice" class="global-notice success">{{ notice }}</div>
     </div>
 
-    <section class="connections-command-center">
-      <div class="connections-command-main">
-        <div class="connections-command-kicker">
-          <span>连接中心</span>
-          <b>{{ dataAvailable === true ? '状态已同步' : '状态待确认' }}</b>
+    <BusinessSection class="connections-command-section" title="账号连接运维台" eyebrow="连接中心">
+      <template #extra>
+        <n-tag :type="dataAvailable === true ? 'success' : 'warning'" size="small" :bordered="false">
+          {{ dataAvailable === true ? '状态已同步' : '状态待确认' }}
+        </n-tag>
+      </template>
+      <div class="connections-command-layout">
+        <div class="connections-command-copy">
+          <p>统一监控闲鱼账号登录凭证、消息通道和实时连接状态，异常账号可从右侧详情完成刷新、检查和断开处理。</p>
+          <n-space class="connections-command-meta" :size="[8, 8]">
+            <n-tag size="small" :bordered="false" round>{{ loading ? '正在刷新连接' : '连接刷新就绪' }}</n-tag>
+            <n-tag size="small" :bordered="false" round>当前页 {{ rows.length }} 个账号</n-tag>
+            <n-tag size="small" :bordered="false" round>{{ selected ? `已选 ${selected.name}` : '未选择账号' }}</n-tag>
+          </n-space>
         </div>
-        <h2>账号连接运维台</h2>
-        <p>统一监控闲鱼账号登录凭证、消息通道和实时连接状态，异常账号可从右侧详情完成刷新、检查和断开处理。</p>
-        <div class="connections-command-meta">
-          <span>{{ loading ? '正在刷新连接' : '连接刷新就绪' }}</span>
-          <span>当前页 {{ rows.length }} 个账号</span>
-          <span>{{ selected ? `已选 ${selected.name}` : '未选择账号' }}</span>
+        <div class="connections-command-panel">
+          <div class="connections-command-panel-head">
+            <span>批量操作</span>
+            <strong>{{ filteredRows.length }} 个可见账号</strong>
+          </div>
+          <div class="connections-command-buttons">
+            <button class="connections-action-btn" type="button" :disabled="loading" @click="load">
+              {{ loading ? '刷新中...' : '刷新连接' }}
+            </button>
+            <button class="connections-action-btn primary" type="button" @click="batchStart">批量启动</button>
+            <button class="connections-action-btn warn" type="button" @click="batchStop">批量断开</button>
+          </div>
         </div>
       </div>
-      <div class="connections-command-panel">
-        <div class="connections-command-panel-head">
-          <span>批量操作</span>
-          <strong>{{ filteredRows.length }} 个可见账号</strong>
-        </div>
-        <div class="connections-command-buttons">
-          <button class="connections-action-btn" type="button" :disabled="loading" @click="load">
-            {{ loading ? '刷新中...' : '刷新连接' }}
-          </button>
-          <button class="connections-action-btn primary" type="button" @click="batchStart">批量启动</button>
-          <button class="connections-action-btn warn" type="button" @click="batchStop">批量断开</button>
-        </div>
-      </div>
-    </section>
+    </BusinessSection>
 
-    <section class="connections-metric-rail">
-      <article
+    <BusinessStatusStrip :items="connectionsStatusItems" />
+
+    <section class="connections-metric-grid">
+      <BusinessMetricCard
         v-for="item in connectionStatCards"
         :key="item.key"
-        class="connections-metric-card"
-        :class="item.tone"
-      >
-        <span class="connections-metric-icon">{{ item.symbol }}</span>
-        <div>
-          <p>{{ item.title }}</p>
-          <strong>{{ item.value }}</strong>
-          <small>{{ item.change }}</small>
-        </div>
-      </article>
+        :label="item.title"
+        :value="item.value"
+        :hint="item.change"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </section>
 
     <section class="connections-workbench">
@@ -227,6 +227,18 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { NSpace, NTag } from 'naive-ui'
+import {
+  AlertCircleOutline,
+  CloudOfflineOutline,
+  CloudUploadOutline,
+  HelpCircleOutline,
+  KeyOutline,
+  LinkOutline,
+} from '@vicons/ionicons5'
+import BusinessMetricCard from '../components/business/BusinessMetricCard.vue'
+import BusinessSection from '../components/business/BusinessSection.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import BaseTable from '../components/BaseTable.vue'
 import Badge from '../components/Badge.vue'
 import AppButton from '../components/AppButton.vue'
@@ -322,12 +334,18 @@ const unknownCount = computed(() => rows.value.filter(r => r.connected == null).
 const cookieOkCount = computed(() => accounts.value.filter(a => accountAuthState(a) === true).length)
 const errorCount = computed(() => accounts.value.filter(a => accountAuthState(a) === false).length)
 const connectionStatCards = computed(() => [
-  { key: 'total', title: '账号总数', value: connectionMetric(total.value), change: '全部记录', symbol: '账', tone: 'tone-blue' },
-  { key: 'online', title: '在线连接数', value: connectionMetric(onlineCount.value), change: '当前页已确认', symbol: '连', tone: 'tone-green' },
-  { key: 'offline', title: '离线连接数', value: connectionMetric(offlineCount.value), change: '当前页已确认', symbol: '断', tone: 'tone-orange' },
-  { key: 'unknown', title: '状态未知', value: connectionMetric(unknownCount.value), change: '当前页需刷新', symbol: '未', tone: 'tone-purple' },
-  { key: 'cookie', title: '凭证正常', value: connectionMetric(cookieOkCount.value), change: '当前页实际状态', symbol: '凭', tone: 'tone-cyan' },
-  { key: 'error', title: '认证异常', value: connectionMetric(errorCount.value), change: '当前页实际状态', symbol: '异', tone: 'tone-red' }
+  { key: 'total', title: '账号总数', value: connectionMetric(total.value), change: '全部记录', icon: LinkOutline, tone: 'blue' },
+  { key: 'online', title: '在线连接数', value: connectionMetric(onlineCount.value), change: '当前页已确认', icon: CloudUploadOutline, tone: onlineCount.value ? 'green' : 'gray' },
+  { key: 'offline', title: '离线连接数', value: connectionMetric(offlineCount.value), change: '当前页已确认', icon: CloudOfflineOutline, tone: offlineCount.value ? 'orange' : 'gray' },
+  { key: 'unknown', title: '状态未知', value: connectionMetric(unknownCount.value), change: '当前页需刷新', icon: HelpCircleOutline, tone: 'purple' },
+  { key: 'cookie', title: '凭证正常', value: connectionMetric(cookieOkCount.value), change: '当前页实际状态', icon: KeyOutline, tone: 'cyan' },
+  { key: 'error', title: '认证异常', value: connectionMetric(errorCount.value), change: '当前页实际状态', icon: AlertCircleOutline, tone: errorCount.value ? 'red' : 'green' }
+])
+const connectionsStatusItems = computed(() => [
+  { key: 'list', label: '账号列表', value: dataAvailable.value === true ? '已加载' : (dataAvailable.value === false ? '不可用' : '加载中'), tone: dataAvailable.value === false ? 'red' : (dataAvailable.value === true ? 'green' : 'orange') },
+  { key: 'online', label: '在线连接', value: connectionMetric(onlineCount.value), tone: onlineCount.value ? 'green' : 'gray' },
+  { key: 'auth', label: '凭证异常', value: connectionMetric(errorCount.value), tone: errorCount.value ? 'red' : 'green' },
+  { key: 'selected', label: '当前账号', value: selected.value ? selected.value.name : '未选择', tone: selected.value ? 'blue' : 'orange' }
 ])
 const alerts = computed(() => rows.value
   .filter(r => (r.connected === false && !r.operationPending) || r.authState === false)
@@ -597,111 +615,6 @@ onBeforeUnmount(()=>{ window.removeEventListener('xya-header-action', onHeader);
   gap: 10px;
 }
 
-.connections-command-center {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 18px;
-  padding: 22px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(29, 78, 216, .08), rgba(14, 165, 233, .05) 45%, rgba(16, 185, 129, .08)),
-    #ffffff;
-  box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
-}
-
-.connections-command-main {
-  min-width: 0;
-}
-
-.connections-command-kicker,
-.connections-command-meta,
-.connections-command-panel-head,
-.connections-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.connections-command-kicker {
-  justify-content: flex-start;
-}
-
-.connections-command-kicker span,
-.connections-command-panel-head span,
-.connections-panel-head span {
-  color: #0369a1;
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.connections-command-kicker b,
-.connections-command-panel-head strong,
-.connections-panel-head b {
-  color: #475569;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.connections-command-main h2 {
-  margin: 12px 0 8px;
-  color: #0f172a;
-  font-size: 26px;
-  font-weight: 780;
-  line-height: 1.2;
-}
-
-.connections-command-main p {
-  max-width: 760px;
-  margin: 0;
-  color: #475569;
-  font-size: 14px;
-  line-height: 1.8;
-}
-
-.connections-command-meta {
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-
-.connections-command-meta span,
-.connections-command-panel {
-  border: 1px solid rgba(148, 163, 184, .32);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .78);
-}
-
-.connections-command-meta span {
-  padding: 7px 10px;
-  color: #334155;
-  font-size: 12px;
-}
-
-.connections-command-panel {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 16px;
-}
-
-.connections-command-buttons {
-  display: grid;
-  gap: 10px;
-}
-
-.connections-action-btn {
-  min-height: 38px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 13px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
 .connections-action-btn.primary {
   border-color: #2563eb;
   background: #2563eb;
@@ -719,64 +632,30 @@ onBeforeUnmount(()=>{ window.removeEventListener('xya-header-action', onHeader);
   opacity: .65;
 }
 
-.connections-metric-rail {
+.connections-command-section :deep(.n-card-header) { padding-bottom: 8px; }
+.connections-command-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+.connections-command-copy { min-width: 0; }
+.connections-command-copy p { margin: 0; max-width: 720px; color: #4b5563; font-size: 14px; line-height: 1.75; }
+.connections-command-meta { margin-top: 12px; }
+.connections-metric-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
-
-.connections-metric-card {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 12px;
-  min-width: 0;
-  padding: 15px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+@media (max-width: 1500px) {
+  .connections-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .connections-command-layout { grid-template-columns: minmax(0, 1fr); }
 }
-
-.connections-metric-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
+@media (max-width: 900px) {
+  .connections-metric-grid,
+  .connections-command-layout { grid-template-columns: minmax(0, 1fr); }
+  .connections-command-copy h2 { font-size: 24px; }
 }
-
-.connections-metric-card p {
-  margin: 0;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.connections-metric-card strong {
-  display: block;
-  margin-top: 3px;
-  color: #0f172a;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.connections-metric-card small {
-  display: block;
-  margin-top: 6px;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.connections-metric-card.tone-blue .connections-metric-icon { background: #dbeafe; color: #1d4ed8; }
-.connections-metric-card.tone-green .connections-metric-icon { background: #dcfce7; color: #15803d; }
-.connections-metric-card.tone-orange .connections-metric-icon { background: #ffedd5; color: #c2410c; }
-.connections-metric-card.tone-purple .connections-metric-icon { background: #ede9fe; color: #6d28d9; }
-.connections-metric-card.tone-cyan .connections-metric-icon { background: #ccfbf1; color: #0f766e; }
-.connections-metric-card.tone-red .connections-metric-icon { background: #fee2e2; color: #dc2626; }
 
 .connections-workbench {
   display: grid;
@@ -1095,18 +974,11 @@ onBeforeUnmount(()=>{ window.removeEventListener('xya-header-action', onHeader);
     gap: 12px;
   }
 
-  .connections-command-center,
+  .connections-command-layout,
   .connections-workbench,
   .connections-filter-bar,
   .connections-secondary-grid,
   .connection-detail-actions,
-  .connections-metric-rail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .connections-command-center {
-    padding: 16px;
-  }
 
   .connection-detail-panel {
     position: static;
