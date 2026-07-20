@@ -14,6 +14,8 @@
       </div>
     </section>
 
+    <BusinessStatusStrip :items="userStatusItems" />
+
     <!-- 平台概览 -->
     <section class="user-v9-card">
       <div class="user-card-head">
@@ -914,6 +916,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import ToggleSwitch from '../../components/ToggleSwitch.vue'
 import { friendlyError } from '../../utils/friendlyError.js'
 import {
@@ -970,6 +973,16 @@ const editingPlan = ref(null)
 const editingCoupon = ref(null)
 
 const notice = ref('')
+const userStatusItems = computed(() => {
+  const items = []
+  items.push({ key: 'overview', label: '平台概览', value: overview.value ? '已加载' : '加载中', tone: overview.value ? 'green' : 'orange' })
+  items.push({ key: 'users', label: '用户总数', value: overview.value ? `${overview.value.user.total}` : '—', tone: 'blue' })
+  items.push({ key: 'accounts', label: '店铺账号', value: overview.value ? `${overview.value.account.total}` : '—', tone: 'blue' })
+  items.push({ key: 'orders', label: '今日订单', value: overview.value ? `+${overview.value.order.new_today}` : '—', tone: overview.value && overview.value.order.new_today ? 'orange' : 'green' })
+  return items
+})
+
+
 const noticeType = ref('success')
 const featureCatalog = [
   { key: 'accounts', label: '闲鱼账号' },
