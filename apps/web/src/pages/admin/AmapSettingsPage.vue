@@ -25,6 +25,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip :items="amapStatusItems" />
+
     <section class="amap-summary-grid" aria-label="地图服务摘要">
       <article class="amap-summary-card">
         <span class="amap-summary-icon blue">01</span>
@@ -152,6 +154,8 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { computed } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import OpsConfigField from '../../components/OpsConfigField.vue'
 import SecretInput from '../../components/SecretInput.vue'
 import {
@@ -174,6 +178,14 @@ const {
   refreshRuntimeStatus,
   saveConfig,
 } = useOpenSourceSettings()
+const amapStatusItems = computed(() => [
+  { key: 'config', label: '配置', value: configAvailable.value === true ? '已加载' : (configAvailable.value === false ? '加载失败' : '加载中'), tone: configAvailable.value === true ? 'green' : (configAvailable.value === false ? 'red' : 'orange') },
+  { key: 'map', label: '地图服务', value: runtimeStatus && runtimeStatus.amapConfigured ? '已配置' : '未配置', tone: runtimeStatus && runtimeStatus.amapConfigured ? 'green' : 'orange' },
+  { key: 'save', label: '保存', value: saving ? '保存中' : '可保存', tone: saving ? 'orange' : 'gray' },
+  { key: 'runtime', label: '运行状态', value: runtimeStatusAvailable ? '已同步' : '待同步', tone: runtimeStatusAvailable ? 'green' : 'gray' }
+])
+
+
 
 const form = reactive({
   amapApiKey: '',
