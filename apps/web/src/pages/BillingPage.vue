@@ -2,6 +2,8 @@
   <div class="billing-page billing-quota-v25-shell">
     <div v-if="notice" :class="['billing-notice', noticeType]" role="status">{{ notice }}</div>
 
+    <BusinessStatusStrip :items="billingStatusItems" />
+
     <section class="billing-command-center">
       <div class="billing-command-main">
         <div class="billing-command-kicker">
@@ -422,6 +424,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import { friendlyError } from '../utils/friendlyError.js'
 import {
   closeBillingOrder,
@@ -460,6 +463,17 @@ const paymentProofForm = reactive({
   remark: '',
 })
 const notice = ref('')
+const billingStatusItems = computed(() => {
+  const plan = state.value?.plan || {}
+  const isExpired = plan.expired === true
+  return [
+    { key: 'plan', label: '当前套餐', value: plan.name || '免费版', tone: isExpired ? 'red' : 'green' },
+    { key: 'expire', label: '到期时间', value: plan.expireTime ? new Date(plan.expireTime).toLocaleDateString('zh-CN') : '长期有效', tone: isExpired ? 'red' : 'blue' },
+    { key: 'usage', label: '账号用量', value: `${usage.value.accounts.used} / ${usage.value.accounts.limit === -1 ? '不限' : usage.value.accounts.limit}`, tone: usage.value.accounts.remaining > 0 ? 'green' : 'orange' },
+    { key: 'pending', label: '待确认订单', value: `${pendingOrders.value.length} 个`, tone: pendingOrders.value.length ? 'orange' : 'green' }
+  ]
+})
+
 const noticeType = ref('success')
 
 const emptyUsage = { used: 0, limit: 0, remaining: 0 }
