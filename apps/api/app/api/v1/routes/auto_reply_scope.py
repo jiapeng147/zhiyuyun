@@ -11,17 +11,18 @@ import logging
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select, text, update
+from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
 from ....core.response import ResultObject
+from ....core.tenancy import current_uid, is_superadmin, owned_account_id_subquery
 from ....models.entities import XianyuGoods
 from ....services.business_settings import (
     load_raw_business_setting,
     save_raw_business_setting,
 )
-from .internal import verify_internal_or_current_user as verify_internal_token
+from .internal import resolve_internal_or_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +36,14 @@ async def list_products_with_scope(
     request: Request,
     accountId: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """返回商品列表及每个商品的 effective auto_reply 状态。"""
     try:
-        goods_list = await _load_goods_rows(db, accountId)
+        goods_list = await _load_goods_rows(db, accountId, current_user)
 
-        account_scopes = await _load_account_scopes(db)
-        global_enabled = await _load_global_enabled(db)
+        account_scopes = await _load_account_scopes(db, current_user)
+        global_enabled = await _load_global_enabled(db, current_user)
 
         items = []
         for g in goods_list:
@@ -68,7 +69,7 @@ async def update_product_scope(
     request: Request,
     req: Dict[str, Any] = None,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """更新单个商品的 auto_reply_enabled。"""
     try:
@@ -81,6 +82,8 @@ async def update_product_scope(
         value = 1 if bool(enabled) else 0
         stmt = update(XianyuGoods).where(
             XianyuGoods.id == int(item_id),
+            XianyuGoods.deleted == 0,
+            XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
         ).values(auto_reply_enabled=value)
         result = await db.execute(stmt)
         await db.commit()
@@ -98,7 +101,7 @@ async def update_account_scope(
     request: Request,
     req: Dict[str, Any] = None,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """更新账号级 auto_reply 启用状态（存储在 user_business_setting 的 auto-reply-account-scopes 配置中）。"""
     try:
@@ -108,12 +111,15 @@ async def update_account_scope(
         enabled = req.get("enabled")
         if account_id is None or enabled is None:
             return ResultObject.failed("缺少 accountId 或 enabled 参数")
-        scopes = await _load_account_scopes(db)
+        account_id = int(account_id)
+        if not await _account_exists_or_owned(db, account_id, current_user):
+            return ResultObject.failed("账号不存在或无权操作")
+        scopes = await _load_account_scopes(db, current_user)
         accounts = scopes.setdefault("accounts", {})
-        accounts[str(int(account_id))] = bool(enabled)
-        await _save_account_scopes(db, scopes)
+        accounts[str(account_id)] = bool(enabled)
+        await _save_account_scopes(db, scopes, current_user)
         logger.info("更新账号作用域 accountId=%s enabled=%s", account_id, enabled)
-        return ResultObject.success({"ok": True, "accountId": int(account_id), "enabled": bool(enabled)})
+        return ResultObject.success({"ok": True, "accountId": account_id, "enabled": bool(enabled)})
     except Exception as e:
         logger.exception("更新账号作用域失败 accountId=%s", req.get("accountId") if req else None)
         return ResultObject.internal_error()
@@ -124,7 +130,7 @@ async def batch_update_scope(
     request: Request,
     req: Dict[str, Any] = None,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """批量更新商品或账号的 auto_reply 状态。
 
@@ -148,6 +154,8 @@ async def batch_update_scope(
             if int_ids:
                 stmt = update(XianyuGoods).where(
                     XianyuGoods.id.in_(int_ids),
+                    XianyuGoods.deleted == 0,
+                    XianyuGoods.account_id.in_(owned_account_id_subquery(current_user)),
                 ).values(auto_reply_enabled=1 if value else 0)
                 result = await db.execute(stmt)
                 await db.commit()
@@ -157,11 +165,14 @@ async def batch_update_scope(
         if account_ids:
             int_ids = [int(i) for i in account_ids if i is not None]
             if int_ids:
-                scopes = await _load_account_scopes(db)
+                visible_ids = await _visible_account_ids(db, int_ids, current_user)
+                if visible_ids != set(int_ids):
+                    return ResultObject.failed("账号不存在或无权操作")
+                scopes = await _load_account_scopes(db, current_user)
                 accounts = scopes.setdefault("accounts", {})
                 for aid in int_ids:
                     accounts[str(aid)] = value
-                await _save_account_scopes(db, scopes)
+                await _save_account_scopes(db, scopes, current_user)
                 logger.info("批量更新账号作用域 count=%s enabled=%s", len(int_ids), value)
                 return ResultObject.success({"ok": True, "affected": len(int_ids), "type": "account"})
 
@@ -175,15 +186,16 @@ async def batch_update_scope(
 async def get_scope_status(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """返回全局开关、账号级作用域配置。"""
     try:
-        account_scopes = await _load_account_scopes(db)
-        global_enabled = await _load_global_enabled(db)
+        account_scopes = await _load_account_scopes(db, current_user)
+        visible_accounts = await _visible_account_ids(db, None, current_user)
+        global_enabled = await _load_global_enabled(db, current_user)
         return ResultObject.success({
             "global_enabled": global_enabled,
-            "account_scopes": account_scopes.get("accounts", {}),
+            "account_scopes": _filter_scope_accounts(account_scopes, visible_accounts).get("accounts", {}),
         })
     except Exception as e:
         logger.exception("查询作用域状态失败")
@@ -192,24 +204,118 @@ async def get_scope_status(
 
 # ===== 内部辅助方法 =====
 
-async def _load_account_scopes(db: AsyncSession) -> Dict[str, Any]:
+def _settings_user_id(current_user: Optional[dict]) -> int:
+    return current_uid(current_user) if current_user is not None else 0
+
+
+def _account_scope_subquery(current_user: Optional[dict], params: Dict[str, Any]) -> str:
+    sql = "SELECT id FROM xianyu_account WHERE deleted = 0"
+    if current_user is not None and not is_superadmin(current_user):
+        params["owner_user_id"] = current_uid(current_user)
+        sql += " AND owner_user_id = :owner_user_id"
+    return sql
+
+
+async def _account_exists_or_owned(
+    db: AsyncSession,
+    account_id: int,
+    current_user: Optional[dict],
+) -> bool:
+    return account_id in await _visible_account_ids(db, [account_id], current_user)
+
+
+async def _visible_account_ids(
+    db: AsyncSession,
+    account_ids: Optional[list[int]],
+    current_user: Optional[dict],
+) -> set[int]:
+    params: Dict[str, Any] = {}
+    where_sql = ["deleted = 0"]
+    if current_user is not None and not is_superadmin(current_user):
+        where_sql.append("owner_user_id = :owner_user_id")
+        params["owner_user_id"] = current_uid(current_user)
+    if account_ids is not None:
+        if not account_ids:
+            return set()
+        placeholders: list[str] = []
+        for index, account_id in enumerate(account_ids):
+            key = f"account_id_{index}"
+            params[key] = int(account_id)
+            placeholders.append(f":{key}")
+        where_sql.append(f"id IN ({', '.join(placeholders)})")
+    rows = (
+        await db.execute(
+            text(f"SELECT id FROM xianyu_account WHERE {' AND '.join(where_sql)}"),
+            params,
+        )
+    ).all()
+    return {_to_int(row[0]) for row in rows if _to_int(row[0])}
+
+
+def _to_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _filter_scope_accounts(scopes: Dict[str, Any], visible_accounts: set[int]) -> Dict[str, Any]:
+    if not visible_accounts:
+        return {"accounts": {}}
+    accounts = scopes.get("accounts", {}) if isinstance(scopes, dict) else {}
+    if not isinstance(accounts, dict):
+        return {"accounts": {}}
+    return {
+        "accounts": {
+            str(account_id): value
+            for account_id, value in accounts.items()
+            if _to_int(account_id) in visible_accounts
+        }
+    }
+
+
+async def _load_account_scopes(
+    db: AsyncSession,
+    current_user: Optional[dict],
+) -> Dict[str, Any]:
     """从 user_business_setting 表读取 auto-reply-account-scopes 配置。"""
-    config = await load_raw_business_setting(db, ACCOUNT_SCOPES_KEY)
+    config = await load_raw_business_setting(
+        db,
+        ACCOUNT_SCOPES_KEY,
+        user_id=_settings_user_id(current_user),
+    )
     return config if isinstance(config, dict) else {"accounts": {}}
 
 
-async def _save_account_scopes(db: AsyncSession, scopes: Dict[str, Any]):
+async def _save_account_scopes(
+    db: AsyncSession,
+    scopes: Dict[str, Any],
+    current_user: Optional[dict],
+):
     """保存 auto-reply-account-scopes 配置到 user_business_setting 表。"""
-    await save_raw_business_setting(db, ACCOUNT_SCOPES_KEY, scopes)
+    await save_raw_business_setting(
+        db,
+        ACCOUNT_SCOPES_KEY,
+        scopes,
+        user_id=_settings_user_id(current_user),
+    )
 
 
-async def _load_global_enabled(db: AsyncSession) -> bool:
+async def _load_global_enabled(db: AsyncSession, current_user: Optional[dict]) -> bool:
     """读取 ai-customer-service.enabled 主开关状态。"""
-    config = await load_raw_business_setting(db, "ai-customer-service")
+    config = await load_raw_business_setting(
+        db,
+        "ai-customer-service",
+        user_id=_settings_user_id(current_user),
+    )
     return bool(config.get("enabled", False)) if isinstance(config, dict) else False
 
 
-async def _load_goods_rows(db: AsyncSession, account_id: Optional[int]) -> list[Dict[str, Any]]:
+async def _load_goods_rows(
+    db: AsyncSession,
+    account_id: Optional[int],
+    current_user: Optional[dict],
+) -> list[Dict[str, Any]]:
     """兼容旧表结构的商品查询。
 
     某些旧版部署数据库缺少 xianyu_goods.raw_payload 等新列。
@@ -222,9 +328,9 @@ async def _load_goods_rows(db: AsyncSession, account_id: Optional[int]) -> list[
         SELECT id, account_id, goods_id, external_goods_id, title, auto_reply_enabled, created_time
         FROM xianyu_goods
         WHERE deleted = 0
-          AND account_id IN (SELECT id FROM xianyu_account WHERE deleted = 0)
     """
     params: Dict[str, Any] = {}
+    sql += f" AND account_id IN ({_account_scope_subquery(current_user, params)})"
     if account_id is not None:
         sql += " AND account_id = :account_id"
         params["account_id"] = account_id

@@ -1051,11 +1051,11 @@ async def update_auto_reply_status(
     request: Request,
     req: dict = {},
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_internal_token),
+    current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """更新商品自动回复状态（兼容旧接口，实际委派给 auto_reply_scope 模块）。"""
     from app.api.v1.routes.auto_reply_scope import update_product_scope
-    return await update_product_scope(request, req, db, _)
+    return await update_product_scope(request, req, db, current_user)
 
 
 @router.get("/syncProgress/{sync_id}")
