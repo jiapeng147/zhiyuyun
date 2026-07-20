@@ -20,6 +20,8 @@
       上次广告申请结果尚未确认。当前页面已锁定原申请内容；再次提交只会复用同一安全凭证，禁止创建新任务。
     </div>
 
+    <BusinessStatusStrip :items="adsStatusItems" />
+
     <section class="ads-hero">
       <div class="ads-hero-copy">
         <span class="ads-hero-badge">商业投放</span>
@@ -485,6 +487,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import EmptyState from '../components/EmptyState.vue'
 import {
   closeAdPaymentOrder,
@@ -1400,6 +1403,13 @@ onBeforeUnmount(() => {
   stopPaymentPolling()
   window.clearTimeout(showNotice.timer)
 })
+
+const adsStatusItems = computed(() => [
+  { key: 'plans', label: '可投放档位', value: plans.value.length ? plans.value.length + ' 档' : '暂无', tone: plans.value.length ? 'blue' : 'orange' },
+  { key: 'commercial', label: '商业服务', value: commercialState.available === true ? '已配置' : (commercialState.available === false ? '未配置' : '检测中'), tone: commercialState.available === true ? 'green' : (commercialState.available === false ? 'red' : 'orange') },
+  { key: 'payment', label: '支付能力', value: paymentState.available === true ? '已验证' : (paymentState.available === false ? '未验证' : '检测中'), tone: paymentState.available === true ? 'green' : (paymentState.available === false ? 'red' : 'orange') },
+  { key: 'applications', label: '我的申请', value: applications.value.length + ' 条', tone: applications.value.length ? 'blue' : 'gray' }
+])
 </script>
 
 <style scoped>
