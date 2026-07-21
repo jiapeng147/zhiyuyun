@@ -82,12 +82,14 @@
       </template>
     </main>
 
-    <nav v-if="!subPage" class="m-tabbar">
+    <nav v-if="!subPage" class="m-tabbar" aria-label="移动端主导航">
       <button
         v-for="tab in tabs"
         :key="tab.key"
+        type="button"
         class="m-tab"
         :class="{ active: activeTab === tab.key }"
+        :aria-current="activeTab === tab.key ? 'page' : undefined"
         @click="switchTab(tab.key)"
       >
         <MIcon :name="tab.icon" :size="24" />
@@ -206,11 +208,13 @@ onMounted(() => {
   width: 100%;
   max-width: 100vw;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f6f7f9;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 .mobile-shell > header,
 .mobile-shell > main,
@@ -359,9 +363,11 @@ onMounted(() => {
   flex: 1;
   width: 100%;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   padding-bottom: calc(76px + env(safe-area-inset-bottom));
 }
 
