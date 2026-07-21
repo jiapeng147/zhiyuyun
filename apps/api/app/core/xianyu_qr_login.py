@@ -264,36 +264,100 @@ def _get_m_h5_tk(session: requests.Session) -> str:
 
 def _get_login_params(session: requests.Session) -> dict:
     """Step 2: 从登录页面提取 loginFormData。"""
-    params = {
-        "lang": "zh_cn", "appName": "xianyu", "appEntrance": "web",
-        "styleType": "vertical", "bizParams": "", "notLoadSsoView": "false",
-        "notKeepLogin": "false", "isMobile": "false", "qrCodeFirst": "false",
-        "stie": "77", "rnd": str(random.random())
-    }
-    resp = session.get(LOGIN_PAGE, headers=H_PAGE, params=params, timeout=20)
+    params = _fallback_login_form()
+    try:
+        resp = session.get(LOGIN_PAGE, headers=H_PAGE, params=params, timeout=12)
+    except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "闲鱼登录页参数获取降级 errorType=%s",
+            type(exc).__name__,
+        )
+        return params
 
     match = re.search(r"window\.viewData\s*=\s*(\{.*?\});", resp.text, re.DOTALL)
     if not match:
         match = re.search(r"var\s+viewData\s*=\s*(\{.*?\});", resp.text, re.DOTALL)
     if not match:
-        raise RuntimeError("无法从登录页面提取 viewData")
+        logger.warning("闲鱼登录页未提取到 viewData，使用最小二维码参数")
+        return params
 
-    login_form = json.loads(match.group(1))["loginFormData"]
+    try:
+        login_form = json.loads(match.group(1))["loginFormData"]
+    except Exception as exc:
+        logger.warning(
+            "闲鱼登录页 viewData 解析失败，使用最小二维码参数 errorType=%s",
+            type(exc).__name__,
+        )
+        return params
     login_form["umidTag"] = "SERVER"
     return login_form
 
 
+def _fallback_login_form() -> dict:
+    """Smallest known-good QR form for the passport QR endpoint."""
+
+    params = {
+        "lang": "zh_cn",
+        "appName": "xianyu",
+        "appEntrance": "web",
+        "styleType": "vertical",
+        "bizParams": "",
+        "notLoadSsoView": "false",
+        "notKeepLogin": "false",
+        "isMobile": "false",
+        "qrCodeFirst": "false",
+        "stie": "77",
+        "_input_charset": "utf-8",
+        "_tb_token_": secrets.token_hex(6),
+        "umidTag": "SERVER",
+        "rnd": str(random.random()),
+    }
+    return params
+
+
 def _generate_qrcode(session: requests.Session, login_form: dict) -> str:
     """Step 3: 生成二维码，返回 Base64 图片。"""
-    resp = session.get(QR_GENERATE, headers=H_API, params=login_form, timeout=20)
-    result = _json_or_raise(resp, "生成二维码")
-    qr_data = result.get("content", {}).get("data") or {}
-
-    code_content = qr_data.get("codeContent")
-    if not code_content:
-        raise RuntimeError(f"二维码内容为空，返回内容: {json.dumps(result, ensure_ascii=False)[:300]}")
+    last_error: Exception | None = None
+    candidates = [login_form]
+    fallback = _fallback_login_form()
+    if fallback != login_form:
+        candidates.append(fallback)
+    for attempt in range(1, 4):
+        params = candidates[min(attempt - 1, len(candidates) - 1)]
+        try:
+            resp = session.get(QR_GENERATE, headers=H_API, params=params, timeout=12)
+            result = _json_or_raise(resp, "生成二维码")
+            qr_data = result.get("content", {}).get("data") or {}
+            code_content = qr_data.get("codeContent")
+            if code_content:
+                selected_params = dict(params)
+                login_form.clear()
+                login_form.update(selected_params)
+                break
+            logger.warning(
+                "闲鱼二维码生成返回空内容 attempt=%d errorCode=%s",
+                attempt,
+                qr_data.get("errorCode") or "",
+            )
+            last_error = RuntimeError(
+                f"二维码内容为空，返回内容: {json.dumps(result, ensure_ascii=False)[:300]}"
+            )
+        except Exception as exc:
+            logger.warning(
+                "闲鱼二维码生成请求重试 attempt=%d errorType=%s",
+                attempt,
+                type(exc).__name__,
+            )
+            last_error = exc
+        time.sleep(0.35 * attempt)
+    else:
+        raise RuntimeError("生成闲鱼登录二维码失败，请稍后重试") from last_error
 
     # 更新 login_form，补充 t 和 ck 用于后续轮询
+    token_match = re.search(r"(?:^|[?&])lgToken=([^&]+)", code_content)
+    if token_match:
+        login_form["lgToken"] = token_match.group(1)
+    login_form["defaultCheck"] = "1"
     login_form["t"] = qr_data.get("t", "")
     login_form["ck"] = qr_data.get("ck", "")
 
@@ -336,9 +400,106 @@ def _qr_status_result(status: str, message: str, raw_status: str, **extra) -> di
     return result
 
 
-def _confirmed_cookie_result(session: requests.Session, raw_status: str) -> dict | None:
+def _safe_cookie_keys(session: requests.Session) -> list[str]:
+    try:
+        return sorted(
+            {
+                str(getattr(cookie, "name", "") or "").strip()
+                for cookie in session.cookies
+                if str(getattr(cookie, "name", "") or "").strip()
+            }
+        )
+    except Exception:
+        return []
+
+
+def _extract_external_uid_from_payload(payload: dict) -> str:
+    """Extract a seller/user uid from a confirmed QR payload.
+
+    Recent passport responses do not always set ``unb`` as a cookie during
+    the immediate qrcode query. Some variants expose the uid in the JSON
+    payload. Only explicit uid-looking fields are trusted here.
+    """
+
+    uid_keys = {
+        "unb",
+        "userId",
+        "user_id",
+        "userNumId",
+        "user_num_id",
+        "externalUid",
+        "external_uid",
+        "sellerId",
+        "seller_id",
+        "hid",
+        "id",
+    }
+
+    def _walk(value) -> str:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                key_text = str(key or "")
+                if key_text in uid_keys:
+                    text = str(item or "").strip()
+                    if re.fullmatch(r"\d{5,30}", text):
+                        return text
+                nested = _walk(item)
+                if nested:
+                    return nested
+        elif isinstance(value, list):
+            for item in value:
+                nested = _walk(item)
+                if nested:
+                    return nested
+        return ""
+
+    return _walk(payload if isinstance(payload, dict) else {})
+
+
+def _extract_external_uid_from_text(text: str) -> str:
+    body = str(text or "")
+    for pattern in (
+        r'"(?:unb|userId|userNumId|externalUid|sellerId|hid)"\s*:\s*"(\d{5,30})"',
+        r'"(?:unb|userId|userNumId|externalUid|sellerId|hid)"\s*:\s*(\d{5,30})',
+        r"(?:^|[?&;])(?:unb|userId|userNumId|externalUid|sellerId|hid)=(\d{5,30})(?:[&;]|$)",
+    ):
+        match = re.search(pattern, body)
+        if match:
+            return match.group(1)
+    return ""
+
+
+def _ensure_unb_cookie(session: requests.Session, uid: str) -> bool:
+    text = str(uid or "").strip()
+    if not re.fullmatch(r"\d{5,30}", text):
+        return False
+    if session.cookies.get("unb"):
+        return True
+    if hasattr(session.cookies, "set"):
+        session.cookies.set("unb", text, domain=".goofish.com", path="/")
+    else:
+        session.cookies["unb"] = text
+    return True
+
+
+def _confirmed_cookie_result(
+    session: requests.Session,
+    raw_status: str,
+    payload: dict | None = None,
+) -> dict | None:
+    uid = session.cookies.get("unb") or ""
+    if not uid and payload:
+        uid = _extract_external_uid_from_payload(payload)
+        if uid:
+            _ensure_unb_cookie(session, uid)
     cookies = {k: v for k, v in session.cookies.items()}
     if not cookies.get("unb"):
+        logger.warning(
+            "闲鱼扫码已确认但未拿到 unb cookie rawStatus=%s cookieKeys=%s payloadKeys=%s",
+            raw_status,
+            ",".join(_safe_cookie_keys(session))[:300],
+            ",".join(sorted(payload.keys()))[:300] if isinstance(payload, dict) else "",
+        )
         return None
     return _qr_status_result(
         "confirmed",
@@ -380,6 +541,9 @@ def _try_complete_verification_redirect(
             timeout=12,
             allow_redirects=True,
         )
+        uid = _extract_external_uid_from_text(getattr(resp, "text", "") or "")
+        if uid:
+            _ensure_unb_cookie(session, uid)
         logger.info(
             "闲鱼扫码安全验证跳转已访问 statusCode=%s finalHost=%s hasUnb=%s",
             getattr(resp, "status_code", ""),
@@ -410,6 +574,9 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 )
                 if confirmed:
                     return confirmed
+                confirmed = _confirmed_cookie_result(session, status, data)
+                if confirmed:
+                    return confirmed
                 logger.info(
                     "闲鱼扫码登录需要额外安全验证 iframeRedirect=%s hasUrl=%s",
                     bool(data.get("iframeRedirect")),
@@ -421,7 +588,7 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                     status,
                     iframe_redirect_url=data.get("iframeRedirectUrl"),
                 )
-            return _confirmed_cookie_result(session, status) or _qr_status_result(
+            return _confirmed_cookie_result(session, status, data) or _qr_status_result(
                 "failed",
                 "扫码已确认，但未获取到账号登录凭证，请刷新二维码后重试。",
                 status,
@@ -439,7 +606,7 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 status,
             )
         if status == "EXPIRED":
-            confirmed = _confirmed_cookie_result(session, status)
+            confirmed = _confirmed_cookie_result(session, status, data)
             if confirmed:
                 return confirmed
             return _qr_status_result(
