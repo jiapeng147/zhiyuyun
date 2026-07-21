@@ -41,6 +41,8 @@
       </div>
     </section>
 
+    <BusinessStatusStrip :items="publishStatusItems" />
+
     <section class="publish-workbench">
       <main class="publish-main">
         <section class="publish-panel publish-basic-panel">
@@ -408,6 +410,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import AppButton from '../components/AppButton.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 import { getAccounts } from '../api/accounts.js'
 import { publishItem, autoCategory } from '../api/items.js'
 import { uploadImage, amapInputTips } from '../api/misc.js'
@@ -1092,6 +1095,22 @@ const checks = computed(() => [
   { text: '价格已填写', ok: Number(form.price) > 0 },
   { text: '库存数大于 0', ok: totalStock.value > 0 },
 ])
+
+const publishStatusItems = computed(() => {
+  const passed = checks.value.filter(item => item.ok).length
+  const accountValue = accountsAvailable.value === true
+    ? `${accounts.value.length} 个可用`
+    : accountsAvailable.value === false
+      ? '不可用'
+      : '检查中'
+  const outcome = publishOutcome.value?.status
+  return [
+    { key: 'account', label: '发布账号', value: accountValue, tone: accountsAvailable.value === true ? 'green' : 'orange' },
+    { key: 'progress', label: '资料核验', value: `${passed}/${checks.value.length} 项通过`, tone: passed === checks.value.length ? 'green' : 'blue' },
+    { key: 'media', label: '商品图片', value: `${form.imageUrls.length}/10 张`, tone: form.imageUrls.length ? 'green' : 'orange' },
+    { key: 'state', label: '任务状态', value: submitting.value ? '提交中' : outcome === 'unknown' ? '结果待核对' : '可编辑', tone: outcome === 'unknown' ? 'red' : submitting.value ? 'orange' : 'blue' },
+  ]
+})
 
 const publishActionHint = computed(() => {
   const failedCheck = checks.value.find(item => !item.ok)
