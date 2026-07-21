@@ -2,45 +2,55 @@
 
 ## 当前状态
 
-当前项目已完成原计划的 UI 阶段 175-180：
+最近一次硬化批次（`1116a1a`）已落地 P0 核心面：
 
-- 阶段 175：商品操作、平台信息
-- 阶段 176：发布商品
-- 阶段 177：个人中心
-- 阶段 178：移动端 Lite
-- 阶段 179：旧 CSS 收尾
-- 阶段 180：全量回归
+- 自动发货：运行时通配规则优先级、规则按 owner_user_id 过滤、规则内空关键字拒绝、卡密 CardItem→CardGroup→Account 归属链路。
+- 订单同步：状态 0/未知不再静默回落为 1=已付款，改为 6=待确认；多规格订单项解析；(account_id, external_order_id) 唯一 upsert；行锁防并发。
+- 商品同步：在售/下架状态需正向证据，不能仅凭 deleted=1 反推。
+- 自动回复：消息 fingerprint 必须包含方向/receiver/platform_seq/time 至少一项，缺失时禁用纯文本语义去重，避免相同文本被误判为重复。
+- 租户隔离：scheduled_task_runtime / frontend_compat / items / order / restful / delivery_workflow_compat 全量走 owner_user_id + owned_account_id_subquery。
+- 契约测试：21 个 unittest 用例覆盖订单状态、多规格、商在售证据、自动发货幂等、卡密并发、消息失败回滚、跨租户 SQL 编译等。
+- 迁移：`036_order_delivery_rule_guards.sql` 已应用，给 `xianyu_trade_order(account_id, external_order_id)` 加唯一键、`delivery_rule` 加 `owner_user_id` 列+索引并回填存量。
 
-当前 HEAD：
+## 当前 HEAD
 
 ```text
-46fa634 阶段180: 全量桌面移动端与登录回归验收通过
+1116a1a P0 硬化批次: 自动发货/订单/商品/AI 重复消息/多租户契约与代码同步
 ```
 
-工作树干净，容器已健康。
+工作树干净。所有 Docker 服务健康：API、Worker、Web、MySQL、Redis、Crawler。
 
 ## 下一次接手先做什么
 
-如果用户继续说“继续”，不要再创建 181 这种纯 UI 阶段，先和用户确认或按商业逻辑进入功能成熟度阶段。推荐顺序：
+按你的优先顺序，建议：
 
-1. 真实闲鱼二维码登录闭环验证。
-2. 商品状态映射真实数据验证。
-3. 发布、下架、删除和改价的并发/幂等回归。
-4. 自动回复重复消息和 RAG account_id 隔离回归。
-5. 自动发货通配规则、多规格订单和卡密消耗回归。
-6. AI 中转站 Responses/Chat Completions 两种模式的真实兼容测试。
-7. 商业版功能：商品搜索、店铺爬取、AI 搬运、生图和批量工作流。
-8. 闲鱼风控：账号级代理、SPM/UA 池、指数退避、失败隔离。
+1. **真实闲鱼 App 二维码扫码联调**（不可自动验证）：
+   - 在 admin 个人中心 -> 账号管理 -> 扫码登录。
+   - 开启 API 日志 `tail -f /var/lib/docker/volumes/xianyu-assistant_api-logs/_data/api.log | grep -E 'qrcode|qr_session|cookie_store'`。
+   - 观察从 `init → scanned → confirmed → cookie_persisted` 的状态迁移，验证加密 cookie 落库。
+2. **真实订单接入回归**（不可自动验证）：
+   - 找一个有历史订单的闲鱼账号，确保商品/订单/发货流程跑完一次。
+   - 主要看订单状态 6=待确认 是否真的出现在状态映射表上。
+3. **P1 商业桥 mock 契约**：
+   - `apps/api/app/services/commercial_bridge.py` 已有未配置 503 降级，需要补一份 mock 契约测试覆盖 套餐列表/创建支付/回调/订单关闭/到期处理。
+4. **P3 生产 preflight**：
+   - 当前因为 `.env` 不可读所以 `scripts/production-readiness.sh` 走 fail-closed。可以补一份不读 `.env` 的纯配置契约测试。
 
-## 不能误判的状态
+## 已自动验证（最近批次）
 
-- 广告 `/api/ads/*` 返回 503 时，先看页面是否显示“广告商业服务未配置”。这是预期降级。
-- 页面存在 SSE 时，Playwright 不要等待 `networkidle`。
-- 看到 `admin` 只先确认它是当前登录用户名还是旧品牌遗留，不能直接改 API 返回。
-- 移动端 Lite 只覆盖固定页面，复杂页面的桌面切换是当前设计。
-- API 的 HTTP 状态码优先于顶层 `code/msg/data` 信封。
+- 21 个 unittest 全绿（11 业务契约 + 5 自动发货契约 + 5 跨租户 SQL 契约）。
+- API 容器健康，`POST /api/dashboard/stats`、`POST /api/item/list`、`POST /api/order/list`、`GET /api/profile/overview`、`GET /api/navigation/overview` 用 tester token 调用返回 200。
+- `deliver_rule.owner_user_id` 已存在并索引，`xianyu_trade_order.uk_trade_order_account_external` 已生效，DB schema_migration 036 落到顶部。
 
-## 当前主要代码入口
+## 仍待真实业务验证
+
+1. 闲鱼二维码 App 端扫码闭环（无法自动验证，UI 端 QR 状态更新不等于登录链路完全成功）。
+2. 闲鱼订单的状态枚举真实映射（闲鱼平台私有枚举可能变动，需要真实订单再确认 6=待确认 的边界）。
+3. 自动发货通配规则的优先级排序在生产订单下表现。
+4. AI 中转站 Responses/Chat Completions 双模式真实联调（中转站 URL 不固定）。
+5. 支付和商业桥的真实回调。
+
+## 主要代码入口
 
 ```text
 apps/web/src/App.vue
@@ -49,10 +59,18 @@ apps/web/src/pages/ProfileCenterPage.vue
 apps/web/src/components/MobileLite.vue
 apps/web/src/components/business/
 apps/api/app/services/ai_provider.py
+apps/api/app/services/ai_reply_batcher.py
 apps/api/app/core/tenancy.py
-apps/api/app/services/commercial_bridge.py
+apps/api/app/services/ws_delivery_handler.py
+apps/api/app/services/realtime_delivery.py
 apps/api/app/services/xianyu_goods_sync.py
+apps/api/app/services/xianyu_order_sync.py
+apps/api/app/services/commercial_bridge.py
 apps/api/app/services/external_operation.py
+apps/api/migrations/036_order_delivery_rule_guards.sql
+apps/api/tests/test_business_contracts.py
+apps/api/tests/test_delivery_contracts.py
+apps/api/tests/test_tenant_scope_sql_contract.py
 ```
 
 ## 安全提醒
