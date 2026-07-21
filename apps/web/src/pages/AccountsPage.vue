@@ -347,6 +347,7 @@
               <div v-if="qr.accountId"><span>目标账号：</span><b>{{ selected?.nickname || selected?.displayName || selected?.externalUid || qr.accountId }}</b></div>
               <div><span>会话 ID：</span><b>{{ qr.sessionId || '-' }}</b></div>
               <div><span>当前状态：</span><b>{{ qrStatusText(qr.status) }}</b><button class="inline-link" @click="startQrLogin"><Icon name="refresh" /> 生成/刷新二维码</button></div>
+              <div v-if="qr.verificationUrl"><span>安全验证：</span><b>待完成</b><a class="inline-link" :href="qr.verificationUrl" target="_blank" rel="noopener noreferrer"><Icon name="link" /> 打开验证页</a></div>
               <div><span>监听次数：</span><b>{{ qr.checkCount || 0 }}</b></div>
               <div><span>上次检测：</span><b>{{ qr.lastCheckedAt || '-' }}</b></div>
             </div>
@@ -747,6 +748,7 @@ const qr = reactive({
   message: '',
   mode: 'create',
   accountId: null,
+  verificationUrl: '',
   checkCount: 0,
   lastCheckedAt: ''
 })
@@ -755,8 +757,8 @@ const qrGenerationFailed = computed(() => qr.status === 'error')
 const qrStatusTone = computed(() => {
   const status = normalizeQrStatus(qr.status)
   if (status === 'confirmed') return 'success'
-  if (status === 'scanned') return 'active'
-  if (['expired', 'failed', 'cancelled', 'error', 'verification_required'].includes(status)) return 'danger'
+  if (['scanned', 'verification_required'].includes(status)) return 'active'
+  if (['expired', 'failed', 'cancelled', 'error'].includes(status)) return 'danger'
   if (qr.loading || qr.polling || status === 'new') return 'pending'
   return 'idle'
 })
@@ -766,7 +768,7 @@ const qrFlowHint = computed(() => {
   if (status === 'scanned') return '已检测到扫码，请在闲鱼 App 内点击确认登录。'
   if (status === 'confirmed') return 'App 已确认，系统正在同步账号登录凭证。'
   if (['expired', 'failed', 'cancelled', 'error'].includes(status)) return '本次扫码会话不可继续，请刷新二维码后重试。'
-  if (status === 'verification_required') return '闲鱼要求额外安全验证，请先在 App 完成验证。'
+  if (status === 'verification_required') return '闲鱼要求额外安全验证，请继续在 App 完成验证，网页会自动同步结果。'
   if (qr.polling) return '网页正在监听扫码状态；如果 App 已确认但长时间无变化，请刷新二维码重新拉起会话。'
   return qrReady.value ? '二维码已生成，等待闲鱼 App 扫码。' : '打开弹窗后会自动生成二维码。'
 })
@@ -1091,6 +1093,7 @@ function resetQrState() {
   qr.message = ''
   qr.mode = 'create'
   qr.accountId = null
+  qr.verificationUrl = ''
   qr.checkCount = 0
   qr.lastCheckedAt = ''
 }
@@ -1139,8 +1142,16 @@ function qrStatusMessage(status, fallback = '') {
     cancelled: '本次扫码登录已取消，请刷新二维码后重试。',
     failed: '扫码登录失败，请刷新二维码后重试。',
     error: '扫码登录状态异常，请刷新二维码后重试。',
-    verification_required: '闲鱼要求完成额外安全验证，请在 App 完成验证后重新扫码。'
+    verification_required: '扫码已确认，闲鱼要求额外安全验证。请继续在闲鱼 App 内完成验证，网页会自动同步结果。'
   })[normalizeQrStatus(status)] || '正在确认扫码登录状态...'
+}
+
+function normalizeQrVerificationUrl(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  const url = raw.startsWith('//') ? `https:${raw}` : raw
+  if (/^https:\/\/(passport\.goofish\.com|login\.taobao\.com|passport\.taobao\.com)\//i.test(url)) return url
+  return ''
 }
 
 function openModal(type){
@@ -1763,6 +1774,7 @@ async function startQrLogin() {
   qr.sessionId = ''
   qr.qrUrl = ''
   qr.status = ''
+  qr.verificationUrl = ''
   qr.checkCount = 0
   qr.lastCheckedAt = ''
   stopQrPolling()
@@ -1812,6 +1824,7 @@ async function checkQrStatus() {
     const prevStatus = normalizeQrStatus(qr.status)
     const nextStatus = normalizeQrStatus(data.status || qr.status)
     qr.status = nextStatus || qr.status
+    qr.verificationUrl = normalizeQrVerificationUrl(data.iframe_redirect_url || data.iframeRedirectUrl || data.verificationUrl)
     qr.message = data.message || (nextStatus !== prevStatus ? qrStatusMessage(qr.status) : (qr.message || qrStatusMessage(qr.status)))
 
     if (qr.status === 'confirmed') {
@@ -1856,7 +1869,6 @@ async function checkQrStatus() {
       }
     }
     if (qr.status === 'verification_required') {
-      stopQrPolling()
       qr.message = qrStatusMessage(qr.status, data.message)
     }
     if (qr.status === 'error') {

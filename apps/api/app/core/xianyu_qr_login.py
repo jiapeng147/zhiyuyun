@@ -115,7 +115,6 @@ def _is_terminal_session(session_data: dict) -> bool:
         "expired",
         "cancelled",
         "failed",
-        "verification_required",
     }
 
 
@@ -345,9 +344,14 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
 
         if status == "CONFIRMED":
             if data.get("iframeRedirect"):
+                logger.info(
+                    "闲鱼扫码登录需要额外安全验证 iframeRedirect=%s hasUrl=%s",
+                    bool(data.get("iframeRedirect")),
+                    bool(data.get("iframeRedirectUrl")),
+                )
                 return _qr_status_result(
                     "verification_required",
-                    "扫码已确认，但闲鱼要求完成额外安全验证。请在 App 或验证页面完成后重新扫码。",
+                    "扫码已确认，闲鱼要求额外安全验证。请继续在闲鱼 App 内完成验证，网页会自动同步结果。",
                     status,
                     iframe_redirect_url=data.get("iframeRedirectUrl"),
                 )
@@ -572,7 +576,6 @@ def get_session_status(session_id: str) -> dict:
             "expired",
             "cancelled",
             "failed",
-            "verification_required",
         }:
             sdata["terminal_result"] = dict(result)
 
@@ -637,7 +640,6 @@ def get_session_cookies(session_id: str) -> Optional[dict]:
                     "expired",
                     "cancelled",
                     "failed",
-                    "verification_required",
                 }:
                     sdata["terminal_result"] = {
                         key: value

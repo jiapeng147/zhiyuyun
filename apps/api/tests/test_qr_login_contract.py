@@ -45,6 +45,16 @@ def _raise_timeout(*_args, **_kwargs):
 
 
 class GetMH5TkContractTests(unittest.TestCase):
+    def test_verification_required_remains_recoverable(self) -> None:
+        self.assertFalse(
+            xianyu_qr_login._is_terminal_session(
+                {"status": "verification_required"}
+            )
+        )
+        self.assertTrue(
+            xianyu_qr_login._is_terminal_session({"status": "expired"})
+        )
+
     def test_returns_empty_on_timeout_without_raising(self) -> None:
         fake = _FakeSession()
         with patch.object(xianyu_qr_login.requests, "get", _raise_timeout), patch.object(
