@@ -790,9 +790,23 @@ function openDoc(title) {
 }
 
 .auth-v8-shell :deep(.auth-text-link) {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  line-height: inherit;
+  text-decoration: none;
   color: #2563eb;
   font-size: 14px;
   font-weight: 700;
+}
+
+.auth-v8-shell :deep(.auth-text-link:focus-visible) {
+  outline: 2px solid rgba(37, 99, 235, .5);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .auth-v8-shell :deep(.auth-text-link:hover:not(:disabled)) {
