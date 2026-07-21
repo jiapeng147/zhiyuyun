@@ -21,6 +21,7 @@ import time
 import base64
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from urllib.parse import urlparse
 
 import qrcode
 import requests
@@ -335,6 +336,65 @@ def _qr_status_result(status: str, message: str, raw_status: str, **extra) -> di
     return result
 
 
+def _confirmed_cookie_result(session: requests.Session, raw_status: str) -> dict | None:
+    cookies = {k: v for k, v in session.cookies.items()}
+    if not cookies.get("unb"):
+        return None
+    return _qr_status_result(
+        "confirmed",
+        "扫码已确认，正在同步账号登录凭证。",
+        raw_status,
+        cookies=cookies,
+    )
+
+
+def _safe_verification_redirect_url(url: str | None) -> str:
+    raw = str(url or "").strip()
+    if raw.startswith("//"):
+        raw = f"https:{raw}"
+    if not raw:
+        return ""
+    parsed = urlparse(raw)
+    if parsed.scheme != "https":
+        return ""
+    if parsed.hostname not in {
+        "passport.goofish.com",
+        "login.taobao.com",
+        "passport.taobao.com",
+    }:
+        return ""
+    return raw
+
+
+def _try_complete_verification_redirect(
+    session: requests.Session,
+    redirect_url: str | None,
+) -> dict | None:
+    safe_url = _safe_verification_redirect_url(redirect_url)
+    if not safe_url:
+        return None
+    try:
+        resp = session.get(
+            safe_url,
+            headers=H_PAGE,
+            timeout=12,
+            allow_redirects=True,
+        )
+        logger.info(
+            "闲鱼扫码安全验证跳转已访问 statusCode=%s finalHost=%s hasUnb=%s",
+            getattr(resp, "status_code", ""),
+            urlparse(getattr(resp, "url", "") or safe_url).hostname or "",
+            bool(session.cookies.get("unb")),
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "闲鱼扫码安全验证跳转访问失败 errorType=%s",
+            type(exc).__name__,
+        )
+        return None
+    return _confirmed_cookie_result(session, "CONFIRMED")
+
+
 def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
     """单次轮询，非阻塞。"""
     try:
@@ -344,6 +404,12 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
 
         if status == "CONFIRMED":
             if data.get("iframeRedirect"):
+                confirmed = _try_complete_verification_redirect(
+                    session,
+                    data.get("iframeRedirectUrl"),
+                )
+                if confirmed:
+                    return confirmed
                 logger.info(
                     "闲鱼扫码登录需要额外安全验证 iframeRedirect=%s hasUrl=%s",
                     bool(data.get("iframeRedirect")),
@@ -355,12 +421,10 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                     status,
                     iframe_redirect_url=data.get("iframeRedirectUrl"),
                 )
-            cookies = {k: v for k, v in session.cookies.items()}
-            return _qr_status_result(
-                "confirmed",
-                "扫码已确认，正在同步账号登录凭证。",
+            return _confirmed_cookie_result(session, status) or _qr_status_result(
+                "failed",
+                "扫码已确认，但未获取到账号登录凭证，请刷新二维码后重试。",
                 status,
-                cookies=cookies,
             )
         if status == "NEW":
             return _qr_status_result(
@@ -375,6 +439,9 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 status,
             )
         if status == "EXPIRED":
+            confirmed = _confirmed_cookie_result(session, status)
+            if confirmed:
+                return confirmed
             return _qr_status_result(
                 "expired",
                 "二维码已过期，请刷新二维码后重新扫码。",

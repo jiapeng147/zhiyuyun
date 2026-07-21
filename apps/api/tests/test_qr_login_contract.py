@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import unittest
 from unittest.mock import patch
+import json
 
 import requests
 
@@ -16,10 +17,19 @@ from app.core import xianyu_qr_login
 
 
 class _FakeResponse:
-    def __init__(self, status_code: int = 200, text: str = "{}") -> None:
+    def __init__(
+        self,
+        status_code: int = 200,
+        text: str = "{}",
+        url: str = "https://passport.goofish.com/",
+    ) -> None:
         self.status_code = status_code
         self.text = text
-        self.headers: dict = {}
+        self.url = url
+        self.headers: dict = {"content-type": "application/json"}
+
+    def json(self) -> dict:
+        return json.loads(self.text or "{}")
 
 
 class _FakeSession:
@@ -40,6 +50,29 @@ class _FakeSession:
         return None
 
 
+class _FakeQrQuerySession:
+    def __init__(self, payload: dict) -> None:
+        self.cookies: dict = {}
+        self.payload = payload
+        self.redirect_visited = False
+
+    def post(self, *_args, **_kwargs):
+        text = json.dumps(
+            {"content": {"data": self.payload}},
+            ensure_ascii=False,
+        )
+        return _FakeResponse(200, text=text)
+
+    def get(self, *_args, **_kwargs):
+        self.redirect_visited = True
+        self.cookies["unb"] = "fixture-unb"
+        return _FakeResponse(
+            200,
+            text="ok",
+            url="https://passport.goofish.com/callback",
+        )
+
+
 def _raise_timeout(*_args, **_kwargs):
     raise requests.exceptions.ReadTimeout("h5api.m.goofish.com read timed out")
 
@@ -54,6 +87,26 @@ class GetMH5TkContractTests(unittest.TestCase):
         self.assertTrue(
             xianyu_qr_login._is_terminal_session({"status": "expired"})
         )
+
+    def test_confirmed_verification_redirect_can_persist_cookies(self) -> None:
+        session = _FakeQrQuerySession(
+            {
+                "qrCodeStatus": "CONFIRMED",
+                "iframeRedirect": True,
+                "iframeRedirectUrl": "https://passport.goofish.com/verify",
+            }
+        )
+        result = xianyu_qr_login._poll_status_once(session, {})
+        self.assertTrue(session.redirect_visited)
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["cookies"]["unb"], "fixture-unb")
+
+    def test_expired_after_confirm_uses_existing_cookies(self) -> None:
+        session = _FakeQrQuerySession({"qrCodeStatus": "EXPIRED"})
+        session.cookies["unb"] = "fixture-unb"
+        result = xianyu_qr_login._poll_status_once(session, {})
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["rawStatus"], "EXPIRED")
 
     def test_returns_empty_on_timeout_without_raising(self) -> None:
         fake = _FakeSession()
