@@ -21,6 +21,8 @@
       </aside>
     </section>
 
+    <BusinessStatusStrip :items="poStatusItems" />
+
     <section class="po-summary-grid" aria-label="商品运营能力概览">
       <article class="po-summary-card">
         <span class="po-summary-icon blue">01</span>
@@ -102,6 +104,13 @@
 </template>
 
 <script setup>
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
+const poStatusItems = [
+  { key: 'capability', label: '能力', value: '待开放', tone: 'orange' },
+  { key: 'inventory', label: '库存联动', value: '未启用', tone: 'gray' },
+  { key: 'audit', label: '审计', value: '待配置', tone: 'gray' },
+  { key: 'readonly', label: '可编辑', value: '否', tone: 'red' }
+]
 const readinessItems = [
   { title: '库存核验链路', desc: '确认库存变动、商品状态和平台返回结果一致。', tone: 'blue' },
   { title: '异常复核机制', desc: '高风险商品进入人工确认，不由自动策略直接处理。', tone: 'green' },

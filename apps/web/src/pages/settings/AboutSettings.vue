@@ -29,6 +29,8 @@
           </div>
         </section>
 
+        <BusinessStatusStrip :items="aboutStatusItems" />
+
         <div class="metric-row">
           <div class="metric-tile metric-tile-blue">
             <div class="metric-icon">
@@ -189,6 +191,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import BusinessStatusStrip from '../../components/business/BusinessStatusStrip.vue'
 import { openExternalUrl } from '../../utils/externalUrl.js'
 import { showLegalNotice } from '../../utils/legalNotice.js'
 import Badge from '../../components/Badge.vue'
@@ -211,6 +214,12 @@ const releaseLabel = formatReleaseLabel(APP_BUILD_DATE)
 defineProps({ active: String })
 
 const aboutContent = ref(createDefaultAboutContent())
+const aboutStatusItems = computed(() => [
+  { key: 'status', label: '服务状态', value: aboutContent.value.serviceStatusText || '未知', tone: 'blue' },
+  { key: 'release', label: '当前版本', value: APP_VERSION, tone: 'blue' },
+  { key: 'remote', label: '平台信息', value: '已加载', tone: 'green' },
+  { key: 'build', label: '构建日期', value: buildDateText, tone: 'blue' }
+])
 
 const logs = computed(() => {
   return getAboutLogs(aboutContent.value)
