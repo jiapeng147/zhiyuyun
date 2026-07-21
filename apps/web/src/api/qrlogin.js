@@ -1,5 +1,16 @@
 import request from '../utils/request.js'
 
-export const generateQrLogin = (data = {}) => request.post('/qrlogin/generate', data)
-export const getQrLoginStatus = (sessionId, data = {}) => request.post(`/qrlogin/status/${encodeURIComponent(sessionId)}`, data)
-export const cleanupQrLogin = () => request.post('/qrlogin/cleanup', {})
+const qrRequestOptions = {
+  uiMode: 'silent',
+  suppressGlobalError: true,
+}
+
+export const generateQrLogin = (data = {}) => request.post('/qrlogin/generate', data, {
+  ...qrRequestOptions,
+  timeout: 70000,
+})
+export const getQrLoginStatus = (sessionId, data = {}) => request.post(`/qrlogin/status/${encodeURIComponent(sessionId)}`, data, {
+  ...qrRequestOptions,
+  timeout: 20000,
+})
+export const cleanupQrLogin = () => request.post('/qrlogin/cleanup', {}, qrRequestOptions)

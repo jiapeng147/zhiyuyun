@@ -76,13 +76,26 @@ class _FakeQrGenerateSession:
 
 
 class _FakeQrQuerySession:
-    def __init__(self, payload: dict, *, redirect_uid: str = "fixture-unb") -> None:
+    def __init__(
+        self,
+        payload: dict,
+        *,
+        redirect_uid: str = "fixture-unb",
+        has_login_uid: str = "",
+    ) -> None:
         self.cookies: dict = {}
         self.payload = payload
         self.redirect_visited = False
         self.redirect_uid = redirect_uid
+        self.has_login_uid = has_login_uid
 
-    def post(self, *_args, **_kwargs):
+    def post(self, url="", *_args, **_kwargs):
+        if "hasLogin.do" in str(url):
+            text = json.dumps(
+                {"success": True, "userId": self.has_login_uid},
+                ensure_ascii=False,
+            )
+            return _FakeResponse(200, text=text)
         text = json.dumps(
             {"content": {"data": self.payload}},
             ensure_ascii=False,
@@ -161,6 +174,16 @@ class GetMH5TkContractTests(unittest.TestCase):
         )
         result = xianyu_qr_login._poll_status_once(session, {})
         self.assertTrue(session.redirect_visited)
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
+    def test_confirmed_has_login_user_id_is_used_when_cookie_lacks_unb(self) -> None:
+        session = _FakeQrQuerySession(
+            {"qrCodeStatus": "CONFIRMED"},
+            redirect_uid="",
+            has_login_uid="2200000012345",
+        )
+        result = xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "2200000012345")
 

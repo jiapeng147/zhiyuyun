@@ -193,15 +193,18 @@ def _get_m_h5_tk(session: requests.Session) -> str:
     def _budget_left() -> float:
         return _MTOP_FALLBACK_DEADLINE_S - (time.monotonic() - start)
 
-    try:
-        if _budget_left() <= 0:
-            raise requests.exceptions.Timeout("mtop budget exhausted before start")
+    def _mtop_timeout() -> float:
+        left = _budget_left()
+        if left <= 0.25:
+            raise requests.exceptions.Timeout("mtop budget exhausted")
+        return max(0.25, min(_MTOP_PER_REQUEST_TIMEOUT_S, left))
 
+    try:
         # 第一次 GET — 获取初始 Cookie（cookie2）。
         session.get(
             H5_API,
             headers=H_API,
-            timeout=min(_MTOP_PER_REQUEST_TIMEOUT_S, _budget_left()),
+            timeout=_mtop_timeout(),
         )
 
         # 第一次 POST — 用空 token 触发 _m_h5_tk 下发。
@@ -221,7 +224,7 @@ def _get_m_h5_tk(session: requests.Session) -> str:
                 "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
                 "data": data_str,
             },
-            timeout=min(_MTOP_PER_REQUEST_TIMEOUT_S, _budget_left()),
+            timeout=_mtop_timeout(),
         )
 
         m_h5_tk = session.cookies.get("_m_h5_tk")
@@ -244,13 +247,14 @@ def _get_m_h5_tk(session: requests.Session) -> str:
                 "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
                 "data": data_str,
             },
-            timeout=min(_MTOP_PER_REQUEST_TIMEOUT_S, _budget_left()),
+            timeout=_mtop_timeout(),
         )
 
         return session.cookies.get("_m_h5_tk", "")
     except (
         requests.exceptions.RequestException,
         RuntimeError,
+        ValueError,
     ) as exc:
         logger.warning(
             "mtop m_h5_tk 收集降级: "
@@ -469,29 +473,120 @@ def _extract_external_uid_from_text(text: str) -> str:
     return ""
 
 
+def _merge_response_cookies(session: requests.Session, response) -> None:
+    headers = getattr(response, "headers", {}) or {}
+    set_cookies = []
+    if hasattr(headers, "get_all"):
+        set_cookies = headers.get_all("set-cookie") or []
+    elif hasattr(headers, "getlist"):
+        set_cookies = headers.getlist("set-cookie") or []
+    elif hasattr(headers, "get"):
+        raw = headers.get("set-cookie")
+        if raw:
+            set_cookies = [raw]
+    for header in set_cookies:
+        first = str(header or "").split(";", 1)[0].strip()
+        if "=" not in first:
+            continue
+        key, value = first.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if key and value and not session.cookies.get(key):
+            _set_cookie_value(session, key, value)
+
+
+def _set_cookie_value(session: requests.Session, key: str, value: str) -> None:
+    if hasattr(session.cookies, "set"):
+        session.cookies.set(key, value, domain=".goofish.com", path="/")
+    else:
+        session.cookies[key] = value
+
+
 def _ensure_unb_cookie(session: requests.Session, uid: str) -> bool:
     text = str(uid or "").strip()
     if not re.fullmatch(r"\d{5,30}", text):
         return False
     if session.cookies.get("unb"):
         return True
-    if hasattr(session.cookies, "set"):
-        session.cookies.set("unb", text, domain=".goofish.com", path="/")
-    else:
-        session.cookies["unb"] = text
+    _set_cookie_value(session, "unb", text)
     return True
+
+
+def _try_resolve_uid_via_has_login(
+    session: requests.Session,
+    login_form: dict | None,
+) -> str:
+    cookie_dict = {k: v for k, v in session.cookies.items()}
+    form = {
+        "appName": str((login_form or {}).get("appName") or "xianyu"),
+        "fromSite": str((login_form or {}).get("fromSite") or "77"),
+        "hid": str(cookie_dict.get("unb") or ""),
+        "ltl": "true",
+        "appEntrance": str((login_form or {}).get("appEntrance") or "web"),
+        "_csrf_token": str(
+            (login_form or {}).get("_csrf_token")
+            or cookie_dict.get("XSRF-TOKEN")
+            or ""
+        ),
+        "umidToken": str((login_form or {}).get("umidToken") or ""),
+        "hsiz": str((login_form or {}).get("hsiz") or cookie_dict.get("cookie2") or ""),
+        "bizParams": str(
+            (login_form or {}).get("bizParams")
+            or "taobaoBizLoginFrom=web"
+        ),
+        "mainPage": str((login_form or {}).get("mainPage") or "false"),
+        "isMobile": str((login_form or {}).get("isMobile") or "false"),
+        "lang": str((login_form or {}).get("lang") or "zh_CN"),
+        "returnUrl": str((login_form or {}).get("returnUrl") or ""),
+        "isIframe": "true",
+        "documentReferer": "https://www.goofish.com/",
+        "defaultView": "hasLogin",
+        "umidTag": "SERVER",
+        "deviceId": str(cookie_dict.get("cna") or ""),
+    }
+    try:
+        resp = session.post(
+            "https://passport.goofish.com/newlogin/hasLogin.do",
+            headers=H_API,
+            data=form,
+            timeout=12,
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "闲鱼扫码 hasLogin 反查账号失败 errorType=%s",
+            type(exc).__name__,
+        )
+        return ""
+    _merge_response_cookies(session, resp)
+    uid = session.cookies.get("unb") or ""
+    if uid:
+        return str(uid)
+    body = getattr(resp, "text", "") or ""
+    uid = _extract_external_uid_from_text(body)
+    if uid:
+        _ensure_unb_cookie(session, uid)
+    logger.info(
+        "闲鱼扫码 hasLogin 反查完成 statusCode=%s hasUid=%s cookieKeys=%s",
+        getattr(resp, "status_code", ""),
+        bool(uid),
+        ",".join(_safe_cookie_keys(session))[:300],
+    )
+    return uid
 
 
 def _confirmed_cookie_result(
     session: requests.Session,
     raw_status: str,
     payload: dict | None = None,
+    login_form: dict | None = None,
 ) -> dict | None:
     uid = session.cookies.get("unb") or ""
     if not uid and payload:
         uid = _extract_external_uid_from_payload(payload)
         if uid:
             _ensure_unb_cookie(session, uid)
+    if not uid:
+        uid = _try_resolve_uid_via_has_login(session, login_form)
     cookies = {k: v for k, v in session.cookies.items()}
     if not cookies.get("unb"):
         logger.warning(
@@ -571,6 +666,7 @@ def _verification_pending_result(
 def _try_complete_verification_redirect(
     session: requests.Session,
     redirect_url: str | None,
+    login_form: dict | None = None,
 ) -> dict | None:
     safe_url = _set_verification_redirect_state(session, redirect_url)
     safe_url = safe_url or _verification_redirect_url(session)
@@ -598,7 +694,7 @@ def _try_complete_verification_redirect(
             type(exc).__name__,
         )
         return None
-    return _confirmed_cookie_result(session, "CONFIRMED")
+    return _confirmed_cookie_result(session, "CONFIRMED", login_form=login_form)
 
 
 def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
@@ -613,10 +709,11 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 confirmed = _try_complete_verification_redirect(
                     session,
                     data.get("iframeRedirectUrl"),
+                    login_form,
                 )
                 if confirmed:
                     return confirmed
-                confirmed = _confirmed_cookie_result(session, status, data)
+                confirmed = _confirmed_cookie_result(session, status, data, login_form)
                 if confirmed:
                     return confirmed
                 logger.info(
@@ -631,7 +728,7 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 )
                 if pending:
                     return pending
-            return _confirmed_cookie_result(session, status, data) or _qr_status_result(
+            return _confirmed_cookie_result(session, status, data, login_form) or _qr_status_result(
                 "failed",
                 "扫码已确认，但未获取到账号登录凭证，请刷新二维码后重试。",
                 status,
@@ -652,13 +749,14 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
             confirmed = _try_complete_verification_redirect(
                 session,
                 _verification_redirect_url(session),
+                login_form,
             )
             if confirmed:
                 return confirmed
             pending = _verification_pending_result(session, status)
             if pending:
                 return pending
-            confirmed = _confirmed_cookie_result(session, status, data)
+            confirmed = _confirmed_cookie_result(session, status, data, login_form)
             if confirmed:
                 return confirmed
             return _qr_status_result(
