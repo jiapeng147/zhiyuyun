@@ -298,7 +298,9 @@ const mobileDesktopOverride = ref(readMobileDesktopOverride())
 const tabsStorageKey = 'xya_tabs_view'
 let noticeTimer = null
 let requestBusyTimer = null
-const pendingRequestIds = new Set()
+let requestBusyStaleTimer = null
+const REQUEST_BUSY_STALE_MS = 45000
+const pendingRequestIds = new Map()
 
 const routeMetaMap = new Map()
 for (const group of navGroups) {
@@ -325,6 +327,8 @@ function syncRequestBusyState() {
   if (pendingRequests.value === 0) {
     if (requestBusyTimer) clearTimeout(requestBusyTimer)
     requestBusyTimer = null
+    if (requestBusyStaleTimer) clearTimeout(requestBusyStaleTimer)
+    requestBusyStaleTimer = null
     requestBusyVisible.value = false
     return
   }
@@ -334,12 +338,29 @@ function syncRequestBusyState() {
       if (pendingRequestIds.size > 0) requestBusyVisible.value = true
     }, 250)
   }
+  scheduleRequestBusyStaleCleanup()
+}
+
+function scheduleRequestBusyStaleCleanup() {
+  if (requestBusyStaleTimer || pendingRequestIds.size === 0) return
+  requestBusyStaleTimer = setTimeout(() => {
+    requestBusyStaleTimer = null
+    pruneStaleRequestBusyState()
+    syncRequestBusyState()
+  }, REQUEST_BUSY_STALE_MS)
+}
+
+function pruneStaleRequestBusyState() {
+  const threshold = Date.now() - REQUEST_BUSY_STALE_MS
+  for (const [requestId, startedAt] of pendingRequestIds.entries()) {
+    if (startedAt <= threshold) pendingRequestIds.delete(requestId)
+  }
 }
 
 function onRequestStart(event) {
   if (!shouldTrackGlobalBusy(event.detail)) return
   const requestId = event.detail?.requestId
-  if (requestId) pendingRequestIds.add(requestId)
+  if (requestId) pendingRequestIds.set(requestId, Date.now())
   syncRequestBusyState()
 }
 
@@ -696,6 +717,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('xya-request-end', onRequestEnd)
   window.removeEventListener('xya-request-error', onRequestError)
   if (requestBusyTimer) clearTimeout(requestBusyTimer)
+  if (requestBusyStaleTimer) clearTimeout(requestBusyStaleTimer)
   if (noticeTimer) clearTimeout(noticeTimer)
   closeSse()
 })
