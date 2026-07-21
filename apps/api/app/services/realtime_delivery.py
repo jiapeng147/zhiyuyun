@@ -17,8 +17,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.logging_security import redact_sensitive_text
 from ..models.entities import (
     CardItem,
+    CardGroup,
     DeliveryRecord,
     RealtimeDeliveryAttempt,
+    XianyuAccount,
     XianyuTradeOrder,
 )
 
@@ -384,6 +386,32 @@ class SqlRealtimeDeliveryStore:
             return PreparedDeliveryMessage.failed(
                 "card_group_missing",
                 "未绑定卡密分组，未向买家发送消息",
+                retry_safe=False,
+            )
+
+        # CardItem has no owner column. Resolve the group through the account
+        # owner before taking any row lock; a guessed group ID must never let a
+        # realtime event consume another tenant's inventory.
+        group_owned = (
+            await self._db.execute(
+                select(CardGroup.id)
+                .join(
+                    XianyuAccount,
+                    XianyuAccount.owner_user_id == CardGroup.owner_user_id,
+                )
+                .where(
+                    CardGroup.id == int(command.card_group_id),
+                    CardGroup.deleted == 0,
+                    XianyuAccount.id == int(command.account_id),
+                    XianyuAccount.deleted == 0,
+                )
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        if group_owned is None:
+            return PreparedDeliveryMessage.failed(
+                "card_group_not_owned",
+                "卡密分组不存在或不属于当前账号，未认领卡密",
                 retry_safe=False,
             )
 

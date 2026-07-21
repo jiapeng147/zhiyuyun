@@ -35,6 +35,7 @@ TaskSyncAdapter = Callable[..., Awaitable[dict[str, Any]]]
 @dataclass(frozen=True, slots=True)
 class ScheduledTaskRecord:
     id: int
+    owner_user_id: int | None
     task_name: str
     task_type: str
     cron_expression: str
@@ -79,15 +80,27 @@ class TaskValidationError(ScheduledTaskError):
 
 
 class ScheduledTaskStore(Protocol):
-    async def account_is_active(self, account_id: int) -> bool: ...
+    async def account_is_active(
+        self,
+        account_id: int,
+        *,
+        owner_user_id: int | None = None,
+    ) -> bool: ...
 
-    async def list(self, *, current: int, size: int) -> tuple[list[ScheduledTaskRecord], int]: ...
+    async def list(
+        self,
+        *,
+        current: int,
+        size: int,
+        owner_user_id: int | None = None,
+    ) -> tuple[list[ScheduledTaskRecord], int]: ...
 
     async def create(
         self,
         task: ScheduledTaskInput,
         *,
         next_run_time: datetime | None,
+        owner_user_id: int | None = None,
     ) -> ScheduledTaskRecord: ...
 
     async def update(
@@ -96,9 +109,10 @@ class ScheduledTaskStore(Protocol):
         task: ScheduledTaskInput,
         *,
         next_run_time: datetime | None,
+        owner_user_id: int | None = None,
     ) -> ScheduledTaskRecord: ...
 
-    async def delete(self, task_id: int) -> None: ...
+    async def delete(self, task_id: int, *, owner_user_id: int | None = None) -> None: ...
 
     async def claim_manual(
         self,
@@ -108,6 +122,7 @@ class ScheduledTaskStore(Protocol):
         now: datetime,
         lease_until: datetime,
         lease_owner: str,
+        owner_user_id: int | None = None,
     ) -> ScheduledTaskRecord: ...
 
     async def claim_due(
@@ -159,27 +174,71 @@ class ScheduledTaskRuntime:
         *,
         current: int,
         size: int,
+        owner_user_id: int | None = None,
     ) -> tuple[list[ScheduledTaskRecord], int]:
-        return await self.store.list(current=current, size=size)
+        return await self.store.list(
+            current=current,
+            size=size,
+            owner_user_id=owner_user_id,
+        )
 
-    async def create(self, task: ScheduledTaskInput) -> ScheduledTaskRecord:
-        await self._require_active_account(task.account_id)
+    async def create(
+        self,
+        task: ScheduledTaskInput,
+        *,
+        owner_user_id: int | None = None,
+    ) -> ScheduledTaskRecord:
+        await self._require_active_account(
+            task.account_id,
+            owner_user_id=owner_user_id,
+        )
         next_run = next_cron_time(task.cron_expression) if task.enabled else None
-        return await self.store.create(task, next_run_time=next_run)
+        return await self.store.create(
+            task,
+            next_run_time=next_run,
+            owner_user_id=owner_user_id,
+        )
 
-    async def update(self, task_id: int, task: ScheduledTaskInput) -> ScheduledTaskRecord:
-        await self._require_active_account(task.account_id)
+    async def update(
+        self,
+        task_id: int,
+        task: ScheduledTaskInput,
+        *,
+        owner_user_id: int | None = None,
+    ) -> ScheduledTaskRecord:
+        await self._require_active_account(
+            task.account_id,
+            owner_user_id=owner_user_id,
+        )
         next_run = next_cron_time(task.cron_expression) if task.enabled else None
-        return await self.store.update(task_id, task, next_run_time=next_run)
+        return await self.store.update(
+            task_id,
+            task,
+            next_run_time=next_run,
+            owner_user_id=owner_user_id,
+        )
 
-    async def delete(self, task_id: int) -> None:
-        await self.store.delete(task_id)
+    async def delete(self, task_id: int, *, owner_user_id: int | None = None) -> None:
+        await self.store.delete(task_id, owner_user_id=owner_user_id)
 
-    async def _require_active_account(self, account_id: int) -> None:
-        if not await self.store.account_is_active(account_id):
+    async def _require_active_account(
+        self,
+        account_id: int,
+        *,
+        owner_user_id: int | None = None,
+    ) -> None:
+        if not await self.store.account_is_active(
+            account_id,
+            owner_user_id=owner_user_id,
+        ):
             raise TaskValidationError("关联账号不存在或已禁用")
 
-    async def run_manual(self, task_id: int) -> TaskExecutionOutcome:
+    async def run_manual(
+        self,
+        task_id: int,
+        *,
+        owner_user_id: int | None = None,
+    ) -> TaskExecutionOutcome:
         now = datetime.now()
         lease_token = uuid.uuid4().hex
         task = await self.store.claim_manual(
@@ -188,6 +247,7 @@ class ScheduledTaskRuntime:
             now=now,
             lease_until=now + timedelta(seconds=self.lease_seconds),
             lease_owner=self.worker_id,
+            owner_user_id=owner_user_id,
         )
         return await self._execute_claimed(task)
 
@@ -227,7 +287,10 @@ class ScheduledTaskRuntime:
                     status="unsupported",
                     error="该任务类型已不受支持，任务已自动禁用",
                 )
-            elif not await self.store.account_is_active(account_id):
+            elif not await self.store.account_is_active(
+                account_id,
+                owner_user_id=task.owner_user_id,
+            ):
                 disable = True
                 outcome = TaskExecutionOutcome(
                     status="unavailable",
@@ -366,7 +429,7 @@ def _sanitized_outcome(outcome: TaskExecutionOutcome) -> TaskExecutionOutcome:
 
 
 _TASK_COLUMNS = """
-    id, task_name, task_type, cron_expr, config, status,
+    owner_user_id, id, task_name, task_type, cron_expr, config, status,
     last_run_time, next_run_time, last_status, last_result,
     lease_token, lease_until, lease_owner, created_time, updated_time
 """
@@ -387,6 +450,11 @@ def _json_object(value: Any) -> dict[str, Any]:
 def _record_from_row(row: Any) -> ScheduledTaskRecord:
     return ScheduledTaskRecord(
         id=int(row["id"]),
+        owner_user_id=(
+            int(row["owner_user_id"])
+            if row.get("owner_user_id") is not None
+            else None
+        ),
         task_name=str(row["task_name"] or ""),
         task_type=str(row["task_type"] or "").strip().lower(),
         cron_expression=str(row["cron_expr"] or ""),
@@ -429,14 +497,24 @@ class MySQLScheduledTaskStore:
     def __init__(self, session_factory: Callable[[], Any]) -> None:
         self._session_factory = session_factory
 
-    async def account_is_active(self, account_id: int) -> bool:
+    async def account_is_active(
+        self,
+        account_id: int,
+        *,
+        owner_user_id: int | None = None,
+    ) -> bool:
         async with self._session_factory() as db:
+            params: dict[str, Any] = {"account_id": account_id}
+            owner_sql = ""
+            if owner_user_id is not None:
+                owner_sql = " AND owner_user_id = :owner_user_id"
+                params["owner_user_id"] = int(owner_user_id)
             result = await db.execute(
                 text(
                     "SELECT 1 FROM xianyu_account "
-                    "WHERE id = :account_id AND status = 1 AND deleted = 0 LIMIT 1"
+                    f"WHERE id = :account_id AND status = 1 AND deleted = 0{owner_sql} LIMIT 1"
                 ),
-                {"account_id": account_id},
+                params,
             )
             return result.first() is not None
 
@@ -445,19 +523,30 @@ class MySQLScheduledTaskStore:
         *,
         current: int,
         size: int,
+        owner_user_id: int | None = None,
     ) -> tuple[list[ScheduledTaskRecord], int]:
         offset = (current - 1) * size
         async with self._session_factory() as db:
+            params: dict[str, Any] = {"limit": size, "offset": offset}
+            owner_sql = ""
+            if owner_user_id is not None:
+                owner_sql = " AND owner_user_id = :owner_user_id"
+                params["owner_user_id"] = int(owner_user_id)
             total_result = await db.execute(
-                text("SELECT COUNT(*) FROM scheduled_task WHERE deleted = 0")
+                text(
+                    "SELECT COUNT(*) FROM scheduled_task "
+                    f"WHERE deleted = 0{owner_sql}"
+                ),
+                params,
             )
             total = int(total_result.scalar() or 0)
             rows_result = await db.execute(
                 text(
                     f"SELECT {_TASK_COLUMNS} FROM scheduled_task "
-                    "WHERE deleted = 0 ORDER BY id DESC LIMIT :limit OFFSET :offset"
+                    f"WHERE deleted = 0{owner_sql} "
+                    "ORDER BY id DESC LIMIT :limit OFFSET :offset"
                 ),
-                {"limit": size, "offset": offset},
+                params,
             )
             records = [_record_from_row(row) for row in rows_result.mappings().all()]
         return records, total
@@ -467,6 +556,7 @@ class MySQLScheduledTaskStore:
         task: ScheduledTaskInput,
         *,
         next_run_time: datetime | None,
+        owner_user_id: int | None = None,
     ) -> ScheduledTaskRecord:
         now = datetime.now()
         async with self._session_factory() as db:
@@ -474,18 +564,19 @@ class MySQLScheduledTaskStore:
                 text(
                     """
                     INSERT INTO scheduled_task (
-                      task_name, task_type, cron_expr, config, status,
+                      owner_user_id, task_name, task_type, cron_expr, config, status,
                       last_run_time, next_run_time, last_status, last_result,
                       lease_token, lease_until, lease_owner,
                       created_time, updated_time, deleted
                     ) VALUES (
-                      :task_name, :task_type, :cron_expr, :config, :status,
+                      :owner_user_id, :task_name, :task_type, :cron_expr, :config, :status,
                       NULL, :next_run_time, NULL, NULL,
                       NULL, NULL, NULL, :now, :now, 0
                     )
                     """
                 ),
                 {
+                    "owner_user_id": owner_user_id,
                     "task_name": task.task_name,
                     "task_type": task.task_type,
                     "cron_expr": task.cron_expression,
@@ -508,10 +599,16 @@ class MySQLScheduledTaskStore:
         task: ScheduledTaskInput,
         *,
         next_run_time: datetime | None,
+        owner_user_id: int | None = None,
     ) -> ScheduledTaskRecord:
         now = datetime.now()
         async with self._session_factory() as db:
-            existing = await self._load_locked_or_plain(db, task_id, for_update=True)
+            existing = await self._load_locked_or_plain(
+                db,
+                task_id,
+                for_update=True,
+                owner_user_id=owner_user_id,
+            )
             if existing is None:
                 await db.rollback()
                 raise TaskNotFoundError("定时任务不存在")
@@ -535,10 +632,12 @@ class MySQLScheduledTaskStore:
                         lease_owner = NULL,
                         updated_time = :now
                     WHERE id = :id AND deleted = 0
+                      AND (:owner_user_id IS NULL OR owner_user_id = :owner_user_id)
                     """
                 ),
                 {
                     "id": task_id,
+                    "owner_user_id": owner_user_id,
                     "task_name": task.task_name,
                     "task_type": task.task_type,
                     "cron_expr": task.cron_expression,
@@ -548,16 +647,25 @@ class MySQLScheduledTaskStore:
                     "now": now,
                 },
             )
-            row = await self._load_locked_or_plain(db, task_id)
+            row = await self._load_locked_or_plain(
+                db,
+                task_id,
+                owner_user_id=owner_user_id,
+            )
             await db.commit()
         if row is None:
             raise TaskConflictError("定时任务更新后无法读取")
         return _record_from_row(row)
 
-    async def delete(self, task_id: int) -> None:
+    async def delete(self, task_id: int, *, owner_user_id: int | None = None) -> None:
         now = datetime.now()
         async with self._session_factory() as db:
-            existing = await self._load_locked_or_plain(db, task_id, for_update=True)
+            existing = await self._load_locked_or_plain(
+                db,
+                task_id,
+                for_update=True,
+                owner_user_id=owner_user_id,
+            )
             if existing is None:
                 await db.rollback()
                 raise TaskNotFoundError("定时任务不存在")
@@ -572,9 +680,14 @@ class MySQLScheduledTaskStore:
                         lease_token = NULL, lease_until = NULL, lease_owner = NULL,
                         updated_time = :now
                     WHERE id = :id AND deleted = 0
+                      AND (:owner_user_id IS NULL OR owner_user_id = :owner_user_id)
                     """
                 ),
-                {"id": task_id, "now": now},
+                {
+                    "id": task_id,
+                    "now": now,
+                    "owner_user_id": owner_user_id,
+                },
             )
             await db.commit()
 
@@ -586,9 +699,15 @@ class MySQLScheduledTaskStore:
         now: datetime,
         lease_until: datetime,
         lease_owner: str,
+        owner_user_id: int | None = None,
     ) -> ScheduledTaskRecord:
         async with self._session_factory() as db:
-            row = await self._load_locked_or_plain(db, task_id, for_update=True)
+            row = await self._load_locked_or_plain(
+                db,
+                task_id,
+                for_update=True,
+                owner_user_id=owner_user_id,
+            )
             if row is None:
                 await db.rollback()
                 raise TaskNotFoundError("定时任务不存在")
@@ -758,14 +877,20 @@ class MySQLScheduledTaskStore:
         task_id: int,
         *,
         for_update: bool = False,
+        owner_user_id: int | None = None,
     ) -> Any | None:
         suffix = " FOR UPDATE" if for_update else ""
+        owner_sql = ""
+        params: dict[str, Any] = {"id": task_id}
+        if owner_user_id is not None:
+            owner_sql = " AND owner_user_id = :owner_user_id"
+            params["owner_user_id"] = int(owner_user_id)
         result = await db.execute(
             text(
                 f"SELECT {_TASK_COLUMNS} FROM scheduled_task "
-                f"WHERE id = :id AND deleted = 0 LIMIT 1{suffix}"
+                f"WHERE id = :id AND deleted = 0{owner_sql} LIMIT 1{suffix}"
             ),
-            {"id": task_id},
+            params,
         )
         return result.mappings().first()
 

@@ -1900,14 +1900,57 @@ def _generate_message_uid(msg: dict, seller_external_uid: str = "") -> str:
     - 排除 message_time 后，去重能正确命中，由 save_chat_message 的
       去重更新逻辑用服务端时间戳覆盖 message_time。
     """
-    pnm_id = str(msg.get("pnmId") or "")
+    pnm_id = str(
+        msg.get("pnmId")
+        or msg.get("pnm_id")
+        or msg.get("messageUid")
+        or msg.get("message_uid")
+        or ""
+    ).strip()
     if pnm_id:
         return pnm_id
     s_id = str(msg.get("sId") or "")
     sender = str(msg.get("senderUserId") or "")
     receiver = str(msg.get("receiverUserId") or "")
     content = str(msg.get("msgContent") or "")
-    raw = f"{seller_external_uid}|{s_id}|{sender}|{receiver}|{content}"
+    direction = str(msg.get("direction") or "IN").strip().upper() or "IN"
+    platform_sequence = str(
+        msg.get("platformSequence")
+        or msg.get("platform_sequence")
+        or msg.get("messageSequence")
+        or msg.get("message_sequence")
+        or msg.get("serverSequence")
+        or msg.get("server_sequence")
+        or msg.get("sequence")
+        or msg.get("seq")
+        or ""
+    ).strip()
+    try:
+        message_time = int(
+            msg.get("messageTime")
+            or msg.get("message_time")
+            or msg.get("createAt")
+            or msg.get("create_at")
+            or 0
+        )
+    except (TypeError, ValueError):
+        message_time = 0
+    # Outbound local messages are inserted before the platform echo and have
+    # no server timestamp. Keep their legacy identity so the later echo can
+    # update the same row. Inbound messages include platform evidence when
+    # available, so two real repeats at different times are not collapsed.
+    raw = "|".join(
+        [
+            seller_external_uid,
+            s_id,
+            sender,
+            receiver,
+            direction,
+            platform_sequence,
+            str(max(message_time, 0)) if direction != "OUT" else "",
+            content,
+        ]
+    )
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 

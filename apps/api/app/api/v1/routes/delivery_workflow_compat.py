@@ -3226,7 +3226,8 @@ async def get_delivery_records(
     join_sql = (
         " FROM delivery_record dr "
         "LEFT JOIN xianyu_trade_order o ON o.id = dr.order_id AND o.deleted = 0 "
-        "LEFT JOIN xianyu_goods g ON g.deleted = 0 AND ("
+        "LEFT JOIN xianyu_goods g ON g.deleted = 0 "
+        "AND g.account_id = dr.account_id AND ("
         "BINARY COALESCE(o.item_id, '') = BINARY CAST(g.id AS CHAR) "
         "OR BINARY COALESCE(o.item_id, '') = BINARY COALESCE(g.external_goods_id, '') "
         "OR BINARY COALESCE(o.item_id, '') = BINARY COALESCE(g.goods_id, '')"
@@ -3321,6 +3322,7 @@ async def get_delivery_record_detail(
                  AND o.deleted = 0
                 LEFT JOIN xianyu_goods g
                   ON g.deleted = 0
+                 AND g.account_id = dr.account_id
                  AND (
                     BINARY COALESCE(o.item_id, '') = BINARY CAST(g.id AS CHAR)
                     OR BINARY COALESCE(o.item_id, '') = BINARY COALESCE(g.external_goods_id, '')

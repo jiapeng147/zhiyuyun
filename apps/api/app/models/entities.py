@@ -133,7 +133,7 @@ class XianyuTradeOrder(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     account_id = Column(BigInteger, nullable=True)
     external_order_id = Column(String(200), nullable=True, comment="闲鱼订单ID")
-    order_status = Column(SmallInteger, default=0, comment="0待付款 1已付款 2待发货 3已发货 4已完成 5已关闭")
+    order_status = Column(SmallInteger, default=0, comment="0待付款 1已付款 2待发货 3已发货 4已完成 5已关闭 6待确认")
     total_amount = Column(String(50), nullable=True)
     buyer_name = Column(String(200), nullable=True)
     buyer_id = Column(String(200), nullable=True)
@@ -174,6 +174,7 @@ class XianyuTradeOrderItem(Base):
 class DeliveryRule(Base):
     __tablename__ = "delivery_rule"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户(多租户隔离)")
     account_id = Column(BigInteger, nullable=True)
     rule_name = Column(String(200), nullable=True)
     goods_id = Column(BigInteger, nullable=True)

@@ -536,6 +536,61 @@ def _safe_get_nested(d: dict, *keys, default=""):
     return current if current is not None else default
 
 
+def _parse_item_status(card_data: dict) -> tuple[int, str]:
+    """Return DB status and the evidence used to derive it.
+
+    The current web list payload uses ``itemStatus`` (0/1/2). Older seller
+    payloads used ``status`` (1/2/3). Ambiguous or missing values fail closed
+    to 1 (off-shelf / needs review) and remain visible in the raw snapshot.
+    """
+    if not isinstance(card_data, dict):
+        return 1, "invalid_payload"
+
+    text_candidates = (
+        card_data.get("itemStatusText"),
+        card_data.get("itemStatusName"),
+        card_data.get("statusText"),
+        card_data.get("statusName"),
+    )
+    for value in text_candidates:
+        text_value = str(value or "").strip().casefold()
+        if not text_value:
+            continue
+        if any(marker in text_value for marker in ("已售", "sold", "成交")):
+            return 2, "text_sold"
+        if any(marker in text_value for marker in ("下架", "off", "removed")):
+            return 1, "text_off_shelf"
+        if any(marker in text_value for marker in ("在售", "出售中", "on_sale", "onsale")):
+            return 0, "text_on_sale"
+
+    if card_data.get("isSold") is True or card_data.get("soldOut") is True:
+        return 2, "boolean_sold"
+    if card_data.get("isOffShelf") is True or card_data.get("offShelf") is True:
+        return 1, "boolean_off_shelf"
+    if card_data.get("isOnSale") is True or card_data.get("onSale") is True:
+        return 0, "boolean_on_sale"
+
+    raw_key = "itemStatus" if "itemStatus" in card_data else (
+        "status" if "status" in card_data else ""
+    )
+    raw_value = card_data.get(raw_key) if raw_key else None
+    try:
+        raw_value = int(raw_value)
+    except (TypeError, ValueError):
+        pass
+    version = str(
+        card_data.get("itemStatusVersion")
+        or card_data.get("statusVersion")
+        or card_data.get("statusEnumVersion")
+        or ""
+    ).strip().casefold()
+    if version in {"old", "legacy", "v1", "1"} or raw_key == "status":
+        return {1: 0, 2: 1, 3: 2}.get(raw_value, 1), "legacy_numeric"
+    if version in {"new", "current", "v2", "2"} or raw_key == "itemStatus":
+        return {0: 0, 1: 1, 2: 2}.get(raw_value, 1), "current_numeric"
+    return 1, "status_missing_or_unknown"
+
+
 def _parse_card_to_goods(card_data: dict, account_id: int) -> dict:
     """
     将闲鱼 API 返回的 cardData 解析为统一的商品字典。
@@ -556,15 +611,7 @@ def _parse_card_to_goods(card_data: dict, account_id: int) -> dict:
             "wantCount": 10,
         }
     """
-    # 兼容两套状态枚举：
-    # 新版: 0=在售, 1=下架, 2=已售
-    # 旧版: 1=在售, 2=下架, 3=已售
-    raw_item_status = card_data.get("itemStatus", 0)
-    if raw_item_status in (0, 1, 2) and ("priceInfo" in card_data or "picInfo" in card_data or "id" in card_data):
-        status_map = {0: 0, 1: 1, 2: 2}
-    else:
-        status_map = {1: 0, 2: 1, 3: 2}
-    status = status_map.get(raw_item_status, 1)
+    status, status_evidence = _parse_item_status(card_data)
 
     # 商品ID: 顶层 id 字段 / detailParams.itemId / 兼容旧字段 itemId
     item_id = str(card_data.get("id", "") or _safe_get_nested(card_data, "detailParams", "itemId") or card_data.get("itemId", ""))
@@ -601,6 +648,10 @@ def _parse_card_to_goods(card_data: dict, account_id: int) -> dict:
         "category": str(card_data.get("categoryId", "") or card_data.get("category", "") or card_data.get("cateName", "")),
         "sort_order": int(card_data.get("sortOrder", 0) or 0),
         "status": status,
+        "raw_payload": {
+            **card_data,
+            "_statusEvidence": status_evidence,
+        },
         "deleted": 0,
     }
 

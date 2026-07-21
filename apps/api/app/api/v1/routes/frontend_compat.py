@@ -13,11 +13,16 @@ from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
-from sqlalchemy import select, text
+from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.config import settings
-from ....core.tenancy import assert_account_owned, current_uid, owned_account_id_subquery
+from ....core.tenancy import (
+    assert_account_owned,
+    current_uid,
+    is_superadmin,
+    owned_account_id_subquery,
+)
 from ....core.database import get_db
 from ....core.logging_security import redact_sensitive_text
 from ....core.response import ResultObject
@@ -96,6 +101,15 @@ from ....services.sensitive_config import (
 from ..deps import get_current_user
 
 logger = logging.getLogger(__name__)
+
+def _account_scope_sql_inline(current_user: dict) -> str:
+    if is_superadmin(current_user):
+        return "account_id IN (SELECT id FROM xianyu_account WHERE deleted = 0)"
+    uid = current_uid(current_user)
+    return (
+        "account_id IN (SELECT id FROM xianyu_account "
+        f"WHERE deleted = 0 AND owner_user_id = {int(uid)})"
+    )
 
 router = APIRouter(tags=["frontend-compat"])
 
@@ -2146,8 +2160,11 @@ async def list_scheduled_tasks(
     runtime: ScheduledTaskRuntime = Depends(get_scheduled_task_runtime),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
-    records, total = await runtime.list(current=current, size=size)
+    records, total = await runtime.list(
+        current=current,
+        size=size,
+        owner_user_id=(None if is_superadmin(current_user) else current_uid(current_user)),
+    )
     return ResultObject.success({
         "records": [_scheduled_task_response(record) for record in records],
         "total": total,
@@ -2162,9 +2179,11 @@ async def create_scheduled_task(
     runtime: ScheduledTaskRuntime = Depends(get_scheduled_task_runtime),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
     try:
-        record = await runtime.create(payload)
+        record = await runtime.create(
+            payload,
+            owner_user_id=(None if is_superadmin(current_user) else current_uid(current_user)),
+        )
     except ScheduledTaskError as exc:
         _raise_scheduled_task_http_error(exc)
     return ResultObject.success(_scheduled_task_response(record), "定时任务已创建")
@@ -2177,9 +2196,12 @@ async def update_scheduled_task(
     runtime: ScheduledTaskRuntime = Depends(get_scheduled_task_runtime),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
     try:
-        record = await runtime.update(task_id, payload)
+        record = await runtime.update(
+            task_id,
+            payload,
+            owner_user_id=(None if is_superadmin(current_user) else current_uid(current_user)),
+        )
     except ScheduledTaskError as exc:
         _raise_scheduled_task_http_error(exc)
     return ResultObject.success(_scheduled_task_response(record), "定时任务已更新")
@@ -2191,9 +2213,11 @@ async def delete_scheduled_task(
     runtime: ScheduledTaskRuntime = Depends(get_scheduled_task_runtime),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
     try:
-        await runtime.delete(task_id)
+        await runtime.delete(
+            task_id,
+            owner_user_id=(None if is_superadmin(current_user) else current_uid(current_user)),
+        )
     except ScheduledTaskError as exc:
         _raise_scheduled_task_http_error(exc)
     return ResultObject.success({"success": True}, "定时任务已删除")
@@ -2205,9 +2229,11 @@ async def run_scheduled_task(
     runtime: ScheduledTaskRuntime = Depends(get_scheduled_task_runtime),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
     try:
-        outcome = await runtime.run_manual(task_id)
+        outcome = await runtime.run_manual(
+            task_id,
+            owner_user_id=(None if is_superadmin(current_user) else current_uid(current_user)),
+        )
     except ScheduledTaskError as exc:
         _raise_scheduled_task_http_error(exc)
 
@@ -2271,10 +2297,34 @@ _CONVERSATION_STATUS_MAP = {
 }
 
 
-async def _conversation_record_exists(db: AsyncSession, conversation_id: int) -> bool:
+def _conversation_scope_sql(
+    alias: str,
+    current_user: dict,
+    params: dict[str, Any],
+) -> str:
+    if is_superadmin(current_user):
+        return f"{alias}.account_id IN (SELECT id FROM xianyu_account WHERE deleted = 0)"
+    params["conversation_owner_user_id"] = current_uid(current_user)
+    return (
+        f"{alias}.account_id IN ("
+        "SELECT id FROM xianyu_account "
+        "WHERE deleted = 0 AND owner_user_id = :conversation_owner_user_id)"
+    )
+
+
+async def _conversation_record_exists(
+    db: AsyncSession,
+    conversation_id: int,
+    current_user: dict,
+) -> bool:
+    params: dict[str, Any] = {"id": conversation_id}
+    scope_sql = _conversation_scope_sql("c", current_user, params)
     result = await db.execute(
-        text("SELECT id FROM xianyu_conversation WHERE id = :id LIMIT 1"),
-        {"id": conversation_id},
+        text(
+            f"SELECT c.id FROM xianyu_conversation c "
+            f"WHERE c.id = :id AND {scope_sql} LIMIT 1"
+        ),
+        params,
     )
     return result.scalar_one_or_none() is not None
 
@@ -2286,18 +2336,24 @@ async def mark_conversation_read(
     current_user: dict = Depends(get_current_user),
 ):
     """标记会话为已读：清零 unread_count。"""
+    params: dict[str, Any] = {"id": conversation_id}
+    scope_sql = _conversation_scope_sql("c", current_user, params)
     result = await db.execute(
         text(
-            """
-            UPDATE xianyu_conversation
+            f"""
+            UPDATE xianyu_conversation c
             SET unread_count = 0, updated_time = NOW()
-            WHERE id = :id
+            WHERE c.id = :id AND {scope_sql}
             """
         ),
-        {"id": conversation_id},
+        params,
     )
     affected = getattr(result, "rowcount", 0) or 0
-    if affected == 0 and not await _conversation_record_exists(db, conversation_id):
+    if affected == 0 and not await _conversation_record_exists(
+        db,
+        conversation_id,
+        current_user,
+    ):
         raise HTTPException(status_code=404, detail="会话记录不存在。")
     await db.commit()
     return ResultObject.success({"id": conversation_id, "read": True})
@@ -2320,18 +2376,24 @@ async def update_conversation_status(
     if new_status is None:
         return ResultObject.validate_failed(f"不支持的会话状态 action: {action or '(空)'}")
 
+    params: dict[str, Any] = {"status": new_status, "id": conversation_id}
+    scope_sql = _conversation_scope_sql("c", current_user, params)
     result = await db.execute(
         text(
-            """
-            UPDATE xianyu_conversation
+            f"""
+            UPDATE xianyu_conversation c
             SET status = :status, unread_count = 0, updated_time = NOW()
-            WHERE id = :id
+            WHERE c.id = :id AND {scope_sql}
             """
         ),
-        {"status": new_status, "id": conversation_id},
+        params,
     )
     affected = getattr(result, "rowcount", 0) or 0
-    if affected == 0 and not await _conversation_record_exists(db, conversation_id):
+    if affected == 0 and not await _conversation_record_exists(
+        db,
+        conversation_id,
+        current_user,
+    ):
         raise HTTPException(status_code=404, detail="会话记录不存在。")
     await db.commit()
     return ResultObject.success({
@@ -3490,11 +3552,16 @@ async def compat_auto_delivery_rules_list(
     """Compat: GET /auto-delivery/rules"""
     from ....models.entities import DeliveryRule
     from sqlalchemy import select
+    rule_scope = [DeliveryRule.deleted == 0]
+    if not is_superadmin(current_user):
+        rule_scope.append(
+            or_(
+                DeliveryRule.owner_user_id == current_uid(current_user),
+                DeliveryRule.account_id.in_(owned_account_id_subquery(current_user)),
+            )
+        )
     result = await db.execute(
-        select(DeliveryRule).where(
-            DeliveryRule.deleted == 0,
-            DeliveryRule.account_id.in_(owned_account_id_subquery(current_user)),
-        ).order_by(DeliveryRule.id.desc())
+        select(DeliveryRule).where(*rule_scope).order_by(DeliveryRule.id.desc())
     )
     rules = result.scalars().all()
     records = []
@@ -3533,6 +3600,7 @@ async def compat_auto_delivery_rules_create(
     """Compat: POST /auto-delivery/rules"""
     from ....models.entities import DeliveryRule
     rule = DeliveryRule(
+        owner_user_id=current_uid(current_user),
         rule_name=payload.get("ruleName") or "",
         delivery_mode=payload.get("deliveryMode") or "kami",
         card_group_id=payload.get("cardGroupId"),
@@ -3560,7 +3628,17 @@ async def compat_auto_delivery_rules_update(
     result = await db.execute(
         select(DeliveryRule).where(
             DeliveryRule.id == rule_id,
-            DeliveryRule.deleted == 0
+            DeliveryRule.deleted == 0,
+            *(
+                ()
+                if is_superadmin(current_user)
+                else (
+                    or_(
+                        DeliveryRule.owner_user_id == current_uid(current_user),
+                        DeliveryRule.account_id.in_(owned_account_id_subquery(current_user)),
+                    ),
+                )
+            ),
         )
     )
     rule = result.scalar_one_or_none()
@@ -3593,7 +3671,17 @@ async def compat_auto_delivery_rules_delete(
     result = await db.execute(
         select(DeliveryRule).where(
             DeliveryRule.id == rule_id,
-            DeliveryRule.deleted == 0
+            DeliveryRule.deleted == 0,
+            *(
+                ()
+                if is_superadmin(current_user)
+                else (
+                    or_(
+                        DeliveryRule.owner_user_id == current_uid(current_user),
+                        DeliveryRule.account_id.in_(owned_account_id_subquery(current_user)),
+                    ),
+                )
+            ),
         )
     )
     rule = result.scalar_one_or_none()
@@ -3621,11 +3709,18 @@ async def compat_order_list(
     page = payload.get("current") or payload.get("page") or 1
     page_size = payload.get("size") or payload.get("pageSize") or 20
 
-    count_result = await db.execute(select(func.count()).select_from(XianyuTradeOrder))
+    order_scope = [XianyuTradeOrder.deleted == 0]
+    if not is_superadmin(current_user):
+        order_scope.append(
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user))
+        )
+    count_result = await db.execute(
+        select(func.count()).select_from(XianyuTradeOrder).where(*order_scope)
+    )
     total = int(count_result.scalar() or 0)
 
     result = await db.execute(
-        select(XianyuTradeOrder).order_by(XianyuTradeOrder.id.desc()).offset(
+        select(XianyuTradeOrder).where(*order_scope).order_by(XianyuTradeOrder.id.desc()).offset(
             (page - 1) * page_size
         ).limit(page_size)
     )
@@ -3751,11 +3846,20 @@ async def conversations_list(
         # 从 xianyu_conversation 表查询（PATCH 端点已使用此表）
         resolved_page = max(1, int(current or page or 1))
         resolved_size = max(1, min(100, int(size or page_size or 20)))
+        if accountId is not None:
+            if not await assert_account_owned(db, current_user, int(accountId)):
+                return ResultObject.success({
+                    "records": [],
+                    "total": 0,
+                    "current": resolved_page,
+                    "size": resolved_size,
+                })
         sql = (
             "SELECT id, account_id, peer_key, external_buyer_id, peer_external_uid, "
             "buyer_name, buyer_avatar, goods_title, goods_id, goods_cover_pic, last_message_content, "
             "last_message_time, unread_count, status, updated_time "
             "FROM xianyu_conversation WHERE 1 = 1"
+            f" AND {_account_scope_sql_inline(current_user)}"
         )
         params = {}
         if accountId:
@@ -3827,6 +3931,16 @@ async def conversation_messages(
 ):
     """分页查询指定会话的消息列表。"""
     try:
+        convo_sql = text(
+            "SELECT id FROM xianyu_conversation WHERE id = :cid AND deleted = 0"
+            f" AND {_account_scope_sql_inline(current_user)} LIMIT 1"
+        )
+        convo = (await db.execute(convo_sql, {"cid": conversation_id})).first()
+        if convo is None:
+            return ResultObject.success({
+                "records": [], "total": 0,
+                "current": page, "size": page_size,
+            })
         # 从 xianyu_chat_message 表查询（与 messages.py 的 /api/msg/list 同表）
         sql = text(
             "SELECT id, conversation_id, sender_id, receiver_id, content, msg_type, "

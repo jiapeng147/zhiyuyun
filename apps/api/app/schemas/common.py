@@ -66,6 +66,7 @@ class ItemBatchOperateReqDTO(CamelModel):
     tenant_id: Optional[int] = None
     xianyu_account_id: Optional[int] = None
     item_ids: List[str] = []
+    idempotency_key: Optional[str] = None
 
 
 class UpdateItemPriceReqDTO(CamelModel):

@@ -99,7 +99,7 @@ class AiAutoReplyBatcher:
         semantic_fingerprint = self._semantic_fingerprint(message)
         recent_semantic = self._recent_semantic_messages.get(key, {})
         self._prune_recent(recent_semantic, now, self._semantic_dedup_ttl_seconds)
-        if semantic_fingerprint in recent_semantic:
+        if semantic_fingerprint and semantic_fingerprint in recent_semantic:
             self._recent_conversation_touched[key] = now
             logger.warning(
                 "AI 自动回复跳过同内容重放 accountId=%d",
@@ -112,11 +112,12 @@ class AiAutoReplyBatcher:
         self._recent_conversation_touched[key] = now
         recent = self._recent_message_ids.setdefault(key, recent)
         recent[fingerprint] = now
-        recent_semantic = self._recent_semantic_messages.setdefault(
-            key,
-            recent_semantic,
-        )
-        recent_semantic[semantic_fingerprint] = now
+        if semantic_fingerprint:
+            recent_semantic = self._recent_semantic_messages.setdefault(
+                key,
+                recent_semantic,
+            )
+            recent_semantic[semantic_fingerprint] = now
 
         state = self._pending.setdefault(key, _PendingConversation())
         self._prune_recent_conversations(now)
@@ -233,27 +234,66 @@ class AiAutoReplyBatcher:
 
     @staticmethod
     def _message_fingerprint(message: dict) -> str:
-        pnm_id = str(message.get("pnmId") or message.get("pnm_id") or "").strip()
+        pnm_id = _first_message_value(
+            message,
+            "pnmId",
+            "pnm_id",
+            "messageUid",
+            "message_uid",
+            "_sourceMessageUid",
+        )
         if pnm_id:
-            raw = f"pnm:{pnm_id}"
+            raw = f"source:{pnm_id}"
         else:
-            raw = "|".join([
-                str(message.get("sId") or message.get("sid") or "").strip(),
-                str(message.get("senderUserId") or message.get("sender_user_id") or "").strip(),
-                str(message.get("messageTime") or message.get("message_time") or "").strip(),
-                str(message.get("msgContent") or message.get("msg_content") or "").strip(),
-            ])
+            raw = "|".join(
+                [
+                    str(message.get("sId") or message.get("sid") or "").strip(),
+                    str(
+                        message.get("senderUserId")
+                        or message.get("sender_user_id")
+                        or ""
+                    ).strip(),
+                    str(
+                        message.get("receiverUserId")
+                        or message.get("receiver_user_id")
+                        or ""
+                    ).strip(),
+                    _message_direction(message),
+                    _platform_sequence(message),
+                    str(_platform_message_time(message)),
+                    str(
+                        message.get("msgContent")
+                        or message.get("msg_content")
+                        or ""
+                    ).strip(),
+                ]
+            )
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _semantic_fingerprint(message: dict) -> str:
-        """Identify a replay even when the upstream PNM id changes."""
-        content = " ".join(str(
-            message.get("msgContent") or message.get("msg_content") or ""
-        ).split())
+    def _semantic_fingerprint(message: dict) -> str | None:
+        """Identify a platform replay without conflating a real repeat.
+
+        Content alone is not an event identity. A buyer is allowed to send
+        the same text again, so semantic suppression requires a platform
+        timestamp or sequence marker. Replays that receive a different PNM
+        id but retain the same platform evidence still collapse inside the
+        short semantic TTL.
+        """
+        content = " ".join(
+            str(message.get("msgContent") or message.get("msg_content") or "").split()
+        )
+        platform_time = _platform_message_time(message)
+        platform_sequence = _platform_sequence(message)
+        if not content or (platform_time <= 0 and not platform_sequence):
+            return None
         raw = "|".join([
             str(message.get("sId") or message.get("sid") or "").strip(),
             str(message.get("senderUserId") or message.get("sender_user_id") or "").strip(),
+            str(message.get("receiverUserId") or message.get("receiver_user_id") or "").strip(),
+            _message_direction(message),
+            platform_sequence,
+            str(platform_time),
             content,
         ])
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -300,3 +340,44 @@ class AiAutoReplyBatcher:
         self._recent_conversation_touched.pop(key, None)
         self._recent_message_ids.pop(key, None)
         self._recent_semantic_messages.pop(key, None)
+
+
+def _first_message_value(message: dict, *keys: str) -> str:
+    for key in keys:
+        value = str(message.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _message_direction(message: dict) -> str:
+    return str(message.get("direction") or "IN").strip().upper() or "IN"
+
+
+def _platform_sequence(message: dict) -> str:
+    return _first_message_value(
+        message,
+        "platformSequence",
+        "platform_sequence",
+        "messageSequence",
+        "message_sequence",
+        "serverSequence",
+        "server_sequence",
+        "sequence",
+        "seq",
+    )
+
+
+def _platform_message_time(message: dict) -> int:
+    value = (
+        message.get("messageTime")
+        or message.get("message_time")
+        or message.get("createAt")
+        or message.get("create_at")
+        or message.get("createdTime")
+        or message.get("created_time")
+    )
+    try:
+        return max(int(value or 0), 0)
+    except (TypeError, ValueError):
+        return 0

@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
-from ....core.tenancy import owned_account_id_subquery
+from ....core.tenancy import assert_account_owned, owned_account_id_subquery
 from ....core.response import ResultObject
 from ....models.entities import XianyuTradeOrder
 from ....schemas.order import (
@@ -52,6 +52,7 @@ async def list_orders(
         page_num = max(req.page_num or 1, 1)
         page_size = max(min(req.page_size or 20, 100), 1)
         query = select(XianyuTradeOrder).where(
+            XianyuTradeOrder.deleted == 0,
             XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user))
         )
         if req.xianyu_account_id is not None:
@@ -100,6 +101,7 @@ async def confirm_shipment(
                 XianyuTradeOrder.account_id == req.xianyu_account_id,
                 XianyuTradeOrder.external_order_id == req.order_id,
                 XianyuTradeOrder.deleted == 0,
+                XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
             )
         )
         order = result.scalar_one_or_none()
@@ -124,10 +126,23 @@ async def sync_sold_orders(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        return ResultObject.success({
-            "message": "同步成功",
-            "synced_count": 0,
-        })
+        if not await assert_account_owned(
+            db,
+            current_user,
+            req.xianyu_account_id,
+        ):
+            return ResultObject.failed("账号不存在或无权操作", code=404)
+        from ....services.xianyu_order_sync import sync_orders_for_account
+
+        sync_result = await sync_orders_for_account(
+            account_id=int(req.xianyu_account_id)
+        )
+        if not sync_result.get("success"):
+            return ResultObject.failed(
+                sync_result.get("error") or "订单同步失败",
+                code=503,
+            )
+        return ResultObject.success(sync_result)
     except Exception as e:
         logger.error("同步鱼小铺卖家订单列表失败", exc_info=True)
         return ResultObject.internal_error()
@@ -150,7 +165,10 @@ async def batch_refresh_orders(
         order_ids = data.get("orderIds") or []
         account_id = data.get("xianyuAccountId") or data.get("accountId")
 
-        query = select(XianyuTradeOrder)
+        query = select(XianyuTradeOrder).where(
+            XianyuTradeOrder.deleted == 0,
+            XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
+        )
         if account_id:
             query = query.where(XianyuTradeOrder.account_id == int(account_id))
         if order_ids:

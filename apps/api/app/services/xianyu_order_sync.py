@@ -16,13 +16,13 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import async_session
-from ..models.entities import XianyuTradeOrder, XianyuTradeOrderItem
+from ..models.entities import XianyuAccount, XianyuTradeOrder, XianyuTradeOrderItem
 from .xianyu_api_service import fetch_sold_orders_page
 
 logger = logging.getLogger(__name__)
 
 # 闲鱼订单状态文本 → 内部状态码（与商业版 _map_remote_order_status 一致）
-# 0待付款 1已付款 2待发货 3已发货 4已完成 5已关闭
+# 0待付款 1已付款 2待发货 3已发货 4已完成 5已关闭 6待确认
 _ORDER_STATUS_MAP = {
     "待付款": 0,
     "已付款": 1,
@@ -34,7 +34,11 @@ _ORDER_STATUS_MAP = {
     "退款成功": 5,
     "已退款": 5,
     "退款关闭": 5,
+    "待确认": 6,
+    "未知": 6,
+    "unknown": 6,
 }
+ORDER_STATUS_UNKNOWN = 6
 
 
 def _text(value: Any) -> str:
@@ -56,11 +60,53 @@ def _safe_int(value: Any, default: int = 0) -> int:
 
 
 def _map_order_status(raw_status: Any, in_refund: bool = False) -> int:
-    """将闲鱼返回的订单状态文本映射为内部状态码。"""
+    """将闲鱼订单状态映射为内部状态码。
+
+    未知状态进入 6(待确认)，不能默认成已付款，否则会进入自动发货候选。
+    退款成功/关闭是终态，只有退款处理中才按待发货核对处理。
+    """
+    if isinstance(raw_status, dict):
+        raw_status = (
+            raw_status.get("text")
+            or raw_status.get("name")
+            or raw_status.get("status")
+            or raw_status.get("code")
+        )
+    status_text = _text(raw_status)
+    normalized = status_text.casefold().replace("_", "").replace("-", "")
+    numeric_map = {
+        "0": 0,
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "4": 4,
+        "5": 5,
+    }
+    if normalized in numeric_map:
+        return numeric_map[normalized]
+    mapped = _ORDER_STATUS_MAP.get(status_text)
+    if mapped is not None:
+        return mapped
+    aliases = {
+        "unpaid": 0,
+        "waitpay": 0,
+        "paid": 1,
+        "waitsend": 1,
+        "toship": 2,
+        "waitdelivery": 2,
+        "shipped": 3,
+        "shipping": 3,
+        "success": 4,
+        "finished": 4,
+        "closed": 5,
+        "cancelled": 5,
+        "canceled": 5,
+    }
+    if normalized in aliases:
+        return aliases[normalized]
     if in_refund:
         return 2
-    status_text = _text(raw_status)
-    return _ORDER_STATUS_MAP.get(status_text, 1)
+    return ORDER_STATUS_UNKNOWN
 
 
 def _parse_order_time(value: Any) -> Optional[datetime.datetime]:
@@ -93,6 +139,124 @@ def _parse_order_amount(total_price: Any, unit_price: Any, quantity: int) -> str
     return "0.00"
 
 
+def _as_dict_list(value: Any) -> list[dict[str, Any]]:
+    if isinstance(value, dict):
+        return [value]
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    return []
+
+
+def _first_non_empty(source: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        value = source.get(key)
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def _parse_remote_order_lines(
+    item: dict[str, Any],
+    common: dict[str, Any],
+    item_info: dict[str, Any],
+    item_buy_info: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """解析订单项和 SKU，兼容单项、数组项和多种 SKU 字段命名。"""
+    candidates: list[dict[str, Any]] = []
+    item_info_value = item.get("itemInfoVO")
+    for source_name, value in (
+        ("items", item.get("items")),
+        ("itemList", item.get("itemList")),
+        ("orderItems", item.get("orderItems")),
+        ("itemInfoVO", item_info_value),
+        ("common.items", common.get("items")),
+        ("common.itemList", common.get("itemList")),
+    ):
+        # ``itemInfoVO`` may be the parent object that only carries a nested
+        # SKU list. It is not itself an order line in that shape.
+        if source_name == "itemInfoVO" and isinstance(value, dict) and any(
+            isinstance(value.get(key), list)
+            for key in ("skuList", "itemSkuList", "skuInfoList", "skus")
+        ):
+            continue
+        candidates.extend(_as_dict_list(value))
+    for value in (
+        item_info.get("skuList"),
+        item_info.get("itemSkuList"),
+        item_info.get("skuInfoList"),
+        item_info.get("skus"),
+    ):
+        candidates.extend(_as_dict_list(value))
+    if not candidates:
+        candidates = [item_info or item_buy_info or item]
+
+    lines: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, int]] = set()
+    for line in candidates:
+        sku_info = _first_non_empty(line, "skuInfo", "sku", "skuVO", "skuItem")
+        sku_info = sku_info if isinstance(sku_info, dict) else {}
+        sku_id = _text(
+            _first_non_empty(line, "skuId", "skuID", "specId")
+            or _first_non_empty(sku_info, "skuId", "skuID", "id")
+        )
+        sku_name = _text(
+            _first_non_empty(line, "skuName", "skuTitle", "specName", "skuText")
+            or _first_non_empty(sku_info, "skuName", "skuTitle", "name", "text")
+        )
+        goods_id_raw = _text(
+            _first_non_empty(
+                line,
+                "itemId",
+                "goodsId",
+                "goodsID",
+                "externalGoodsId",
+            )
+            or _first_non_empty(item_info, "itemId", "goodsId", "itemIdStr")
+            or _first_non_empty(common, "itemId", "goodsId")
+        )
+        goods_id = _safe_int(goods_id_raw, 0) if goods_id_raw else 0
+        quantity = max(
+            _safe_int(
+                _first_non_empty(line, "quantity", "buyNum", "buyQuantity", "count")
+                or _first_non_empty(item_info, "quantity", "buyNum")
+                or _first_non_empty(common, "quantity", "buyNum"),
+                1,
+            ),
+            1,
+        )
+        title = _text(
+            _first_non_empty(line, "itemTitle", "title", "goodsTitle", "goodsName")
+            or _first_non_empty(item_info, "title", "itemTitle", "goodsTitle")
+            or _first_non_empty(common, "itemTitle", "title")
+        ) or (f"商品 {goods_id}" if goods_id else "订单商品")
+        image = _text(
+            _first_non_empty(line, "itemPic", "goodsImage", "picUrl", "image")
+            or _first_non_empty(item_info, "itemPic", "picUrl")
+            or _first_non_empty(common, "itemMainPic", "picUrl")
+        )
+        price = _text(
+            _first_non_empty(line, "unitPrice", "price", "auctionPrice", "goodsPrice")
+            or _first_non_empty(item_info, "unitPrice", "price")
+        )
+        identity = (goods_id_raw, sku_id, quantity)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        lines.append(
+            {
+                "goods_id": goods_id,
+                "goods_title": title,
+                "goods_image": image,
+                "goods_price": price,
+                "goods_count": quantity,
+                "quantity": quantity,
+                "sku_id": sku_id or None,
+                "sku_name": sku_name or None,
+            }
+        )
+    return lines
+
+
 def _parse_remote_order_item(item: dict[str, Any]) -> Optional[dict[str, Any]]:
     """解析闲鱼 mtop 返回的单条订单数据，参考商业版 _parse_remote_sold_order_item。"""
     if not isinstance(item, dict):
@@ -101,7 +265,12 @@ def _parse_remote_order_item(item: dict[str, Any]) -> Optional[dict[str, Any]]:
     common = item.get("commonData") if isinstance(item.get("commonData"), dict) else {}
     buyer_info = item.get("buyerInfoVO") if isinstance(item.get("buyerInfoVO"), dict) else {}
     price_vo = item.get("priceVO") if isinstance(item.get("priceVO"), dict) else {}
-    item_info = item.get("itemInfoVO") if isinstance(item.get("itemInfoVO"), dict) else {}
+    item_info_value = item.get("itemInfoVO")
+    item_info = (
+        item_info_value
+        if isinstance(item_info_value, dict)
+        else (item_info_value[0] if isinstance(item_info_value, list) and item_info_value and isinstance(item_info_value[0], dict) else {})
+    )
     item_buy_info = common.get("itemBuyInfo") if isinstance(common.get("itemBuyInfo"), dict) else {}
 
     external_order_id = _text(common.get("orderId"))
@@ -131,6 +300,9 @@ def _parse_remote_order_item(item: dict[str, Any]) -> Optional[dict[str, Any]]:
 
     in_refund = bool(common.get("inRefund"))
     order_status = _map_order_status(common.get("orderStatus"), in_refund)
+    lines = _parse_remote_order_lines(item, common, item_info, item_buy_info)
+    if lines:
+        quantity = max(sum(int(line.get("quantity") or 1) for line in lines), 1)
 
     return {
         "external_order_id": external_order_id,
@@ -147,14 +319,16 @@ def _parse_remote_order_item(item: dict[str, Any]) -> Optional[dict[str, Any]]:
         "buyer_message": _text(common.get("buyerMessage") or common.get("leaveMessage")),
         "item_id": goods_id_raw,  # String 列，保留原始字符串
         # 订单项
-        "items": [
+        "items": lines or [
             {
-                "goods_id": goods_id,  # BigInteger 列，已转换为 int
+                "goods_id": goods_id,
                 "goods_title": goods_title,
                 "goods_image": goods_image,
                 "goods_price": goods_price,
                 "goods_count": quantity,
                 "quantity": quantity,
+                "sku_id": None,
+                "sku_name": None,
             }
         ],
     }
@@ -164,12 +338,21 @@ async def _upsert_order(db: AsyncSession, account_id: int, parsed: dict[str, Any
     """按 (account_id, external_order_id) upsert 订单，返回 ("inserted"|"updated", external_order_id)。"""
     external_order_id = parsed["external_order_id"]
 
+    # Lock the account row before probing the order. This serializes two
+    # workers syncing the same account even when the order row does not yet
+    # exist; the migration-level unique key is the final race guard.
+    await db.execute(
+        select(XianyuAccount.id)
+        .where(XianyuAccount.id == account_id, XianyuAccount.deleted == 0)
+        .with_for_update()
+    )
     result = await db.execute(
         select(XianyuTradeOrder).where(
             XianyuTradeOrder.account_id == account_id,
             XianyuTradeOrder.external_order_id == external_order_id,
             XianyuTradeOrder.deleted == 0,
         )
+        .with_for_update()
     )
     order = result.scalar_one_or_none()
 
@@ -236,6 +419,8 @@ async def _upsert_order(db: AsyncSession, account_id: int, parsed: dict[str, Any
             goods_price=item_data.get("goods_price"),
             goods_count=item_data.get("goods_count", 1),
             quantity=item_data.get("quantity", 1),
+            sku_id=item_data.get("sku_id"),
+            sku_name=item_data.get("sku_name"),
             deleted=0,
         ))
 

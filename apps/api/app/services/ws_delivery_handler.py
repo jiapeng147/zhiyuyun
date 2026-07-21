@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from fnmatch import fnmatchcase
 import json
 import logging
 import re
@@ -295,37 +296,102 @@ async def _match_delivery_rule(
             return goods_rule
 
     local_goods_id = int(goods["id"]) if goods and goods.get("id") is not None else 0
+    account_owner = (
+        await db.execute(
+            text(
+                """
+                SELECT owner_user_id
+                FROM xianyu_account
+                WHERE id = :account_id AND deleted = 0
+                LIMIT 1
+                """
+            ),
+            {"account_id": account_id},
+        )
+    ).scalar_one_or_none()
     rows = (
         await db.execute(
             text(
                 """
-                SELECT id, account_id, goods_id, rule_name, delivery_mode,
-                       card_group_id, delivery_content, status
+                SELECT id, owner_user_id, account_id, goods_id, rule_name,
+                       delivery_mode, card_group_id, delivery_content,
+                       trigger_keyword, status
                 FROM delivery_rule
                 WHERE deleted = 0
                   AND status = 1
-                  AND (account_id IS NULL OR account_id = :account_id)
-                  AND (goods_id IS NULL OR goods_id = 0 OR goods_id = :goods_id)
-                ORDER BY
-                  CASE
-                    WHEN account_id = :account_id AND goods_id = :goods_id THEN 0
-                    WHEN account_id = :account_id AND (goods_id IS NULL OR goods_id = 0) THEN 1
-                    WHEN account_id IS NULL AND goods_id = :goods_id THEN 2
-                    ELSE 3
-                  END,
-                  id DESC
-                LIMIT 1
+                  AND (
+                    owner_user_id = :owner_user_id
+                    OR (owner_user_id IS NULL AND account_id = :account_id)
+                  )
                 """
             ),
-            {"account_id": account_id, "goods_id": local_goods_id},
+            {
+                "account_id": account_id,
+                "owner_user_id": int(account_owner or 0),
+            },
         )
     ).mappings().all()
     if not rows:
         return None
-    rule = dict(rows[0])
+    external_id = str((goods or {}).get("external_goods_id") or external_goods_id).strip()
+    goods_title = str((goods or {}).get("title") or "").strip()
+
+    ranked = [
+        (
+            _delivery_rule_match_rank(
+                dict(row),
+                account_id=account_id,
+                local_goods_id=local_goods_id,
+                external_id=external_id,
+                goods_title=goods_title,
+            ),
+            dict(row),
+        )
+        for row in rows
+    ]
+    ranked = [item for item in ranked if item[0] is not None]
+    if not ranked:
+        return None
+    ranked.sort(key=lambda item: item[0])
+    rule = ranked[0][1]
     rule["delivery_mode"] = _normalize_delivery_mode(rule.get("delivery_mode"))
     rule["auto_confirm_shipment"] = 0
     return rule
+
+
+def _delivery_rule_match_rank(
+    row: dict,
+    *,
+    account_id: int,
+    local_goods_id: int,
+    external_id: str,
+    goods_title: str,
+) -> tuple[int, int] | None:
+    """Return precedence for one already tenant-scoped delivery rule."""
+
+    row_account = row.get("account_id")
+    row_goods = row.get("goods_id")
+    trigger = str(row.get("trigger_keyword") or "").strip()
+    trigger_matches = bool(
+        trigger
+        and (
+            fnmatchcase(external_id.casefold(), trigger.casefold())
+            or fnmatchcase(goods_title.casefold(), trigger.casefold())
+        )
+    )
+    if trigger and not trigger_matches:
+        return None
+    if row_account == account_id and row_goods == local_goods_id and local_goods_id:
+        return 0, -int(row.get("id") or 0)
+    if row_account == account_id and row_goods in (None, 0):
+        return 1, -int(row.get("id") or 0)
+    if row_goods == local_goods_id and local_goods_id:
+        return 2, -int(row.get("id") or 0)
+    if trigger_matches:
+        return (3 if row_account == account_id else 4), -int(row.get("id") or 0)
+    if row_account in (None, account_id) and row_goods in (None, 0):
+        return 5, -int(row.get("id") or 0)
+    return None
 
 
 async def _find_goods_for_delivery(

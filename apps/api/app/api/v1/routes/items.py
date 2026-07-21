@@ -602,6 +602,9 @@ async def publish_item(
                     select(XianyuGoods).where(
                         XianyuGoods.id == target_local_id,
                         XianyuGoods.deleted == 0,
+                        XianyuGoods.account_id.in_(
+                            owned_account_id_subquery(current_user)
+                        ),
                     )
                 )
             ).scalar_one_or_none()
@@ -896,47 +899,63 @@ async def batch_delete_items(
 async def batch_remote_delete_items(
     req: ItemBatchOperateReqDTO,
     db: AsyncSession = Depends(get_db),
+    coordinator: RemoteGoodsDeleteCoordinator = Depends(get_remote_goods_delete_coordinator),
     current_user: Optional[dict] = Depends(resolve_internal_or_current_user),
 ):
     """
-    批量远程删除商品：逐个调用闲鱼 API 删除。
+    批量远程删除商品：逐个复用单商品删除状态机。
+
+    每个商品都有独立的 durable attempt 和幂等键；一个商品结果未知或
+    失败不会让批量请求绕过状态机继续重复调用平台。
     """
     try:
         account_id = req.xianyu_account_id
-        item_ids = req.item_ids
+        item_ids = list(dict.fromkeys(str(item_id).strip() for item_id in (req.item_ids or []) if str(item_id).strip()))
         if not account_id or not item_ids:
             return ResultObject.failed("缺少必要参数")
         invalid = await _account_access_error(db, current_user, int(account_id))
         if invalid:
             return invalid
 
-        # 获取账号 Cookie
-        auth = await _get_account_auth(db, account_id)
-        if not auth:
-            return ResultObject.failed("账号未登录或 Cookie 已失效")
+        batch_key = str(req.idempotency_key or "").strip()
+        if batch_key and (len(batch_key) < 8 or len(batch_key) > 128 or not all(
+            char.isalnum() or char in "._:-" for char in batch_key
+        )):
+            return ResultObject.failed("批量幂等键格式无效")
 
-        is_fish_shop = await _is_fish_shop_account(db, account_id)
-        operator = XianyuItemOperator(decrypt_cookie_if_needed(auth.encrypted_cookie), is_fish_shop=is_fish_shop)
-
-        results = operator.delete_batch(item_ids)
-
-        success_ids = [iid for iid, ok in results.items() if ok]
-        failed_ids = [iid for iid, ok in results.items() if not ok]
-
-        # 本地标记已删除成功的
-        if success_ids:
-            stmt = (
-                sql_update(XianyuGoods)
-                .where(
-                    and_(
-                        XianyuGoods.account_id == account_id,
-                        XianyuGoods.external_goods_id.in_(success_ids),
-                    )
+        success_ids: list[str] = []
+        failed_ids: list[str] = []
+        pending_ids: list[str] = []
+        results: list[dict] = []
+        for item_id in item_ids:
+            item_key = None
+            if batch_key:
+                item_key = hashlib.sha256(
+                    f"batch-remote-delete:v1:{batch_key}:{account_id}:{item_id}".encode("utf-8")
+                ).hexdigest()
+            try:
+                outcome = await coordinator.execute(
+                    account_id=int(account_id),
+                    external_goods_id=item_id,
+                    idempotency_key=item_key,
                 )
-                .values(status=3, updated_time=datetime.datetime.now())
-            )
-            await db.execute(stmt)
-            await db.commit()
+                item_result = {"itemId": item_id, **outcome.to_data()}
+                results.append(item_result)
+                if outcome.status == "confirmed":
+                    success_ids.append(item_id)
+                elif outcome.status in {"in_progress", "pending", "remote_confirmed"}:
+                    pending_ids.append(item_id)
+                else:
+                    failed_ids.append(item_id)
+            except RemoteDeleteError as exc:
+                failed_ids.append(item_id)
+                results.append({
+                    "itemId": item_id,
+                    "status": "failed",
+                    "errorCode": exc.error_code,
+                    "message": exc.public_message,
+                    "retrySafe": False,
+                })
 
         logger.info(
             "批量远程删除: account_id=%s, success=%d, failed=%d",
@@ -944,9 +963,14 @@ async def batch_remote_delete_items(
         )
 
         return ResultObject.success({
-            "message": f"删除完成，成功 {len(success_ids)} 条，失败 {len(failed_ids)} 条",
+            "message": (
+                f"删除处理完成，成功 {len(success_ids)} 条，"
+                f"待处理 {len(pending_ids)} 条，失败/待核对 {len(failed_ids)} 条"
+            ),
             "success_ids": success_ids,
             "failed_ids": failed_ids,
+            "pending_ids": pending_ids,
+            "results": results,
         })
     except Exception as exc:
         logger.error("批量远程删除失败 errorType=%s", type(exc).__name__)
@@ -1121,7 +1145,22 @@ async def get_sync_progress(
             return invalid
         return ResultObject.success(progress)
 
-    result = await db.execute(select(XianyuGoodsSyncTask).where(XianyuGoodsSyncTask.sync_id == sync_id, XianyuGoodsSyncTask.deleted == 0))
+    scoped_owner_ids = owned_account_id_subquery(current_user)
+    if scoped_owner_ids is None:
+        owner_clause = ""
+        params_progress: dict[str, Any] = {"sync_id": sync_id}
+    else:
+        owner_clause = " AND account_id IN (SELECT id FROM xianyu_account WHERE deleted = 0 AND id IN (SELECT id FROM xianyu_account WHERE owner_user_id = :owner_scope))"
+        params_progress = {"sync_id": sync_id}
+        if scoped_owner_ids is not None:
+            params_progress["owner_scope"] = current_uid(current_user)
+    result = await db.execute(
+        select(XianyuGoodsSyncTask).where(
+            XianyuGoodsSyncTask.sync_id == sync_id,
+            XianyuGoodsSyncTask.deleted == 0,
+            XianyuGoodsSyncTask.account_id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
     task = result.scalar_one_or_none()
     if not task:
         return ResultObject.success({"progress": 0, "status": "not_found"})

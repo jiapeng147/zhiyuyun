@@ -10,14 +10,26 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
 from ....core.database import get_db
-from ....core.tenancy import current_uid, owned_account_id_subquery
+from ....core.tenancy import (
+    assert_account_owned,
+    current_uid,
+    owned_account_id_subquery,
+)
 from ....core.response import ResultObject
 from ....core.unavailable_features import (
     ACCOUNT_LOGIN_CREDENTIAL_UNAVAILABLE,
     FACE_VERIFICATION_UNAVAILABLE,
     feature_unavailable,
 )
-from ....models.entities import XianyuAccount, XianyuAccountAuth, XianyuGoods, XianyuTradeOrder, XianyuMessage, Notification
+from ....models.entities import (
+    XianyuAccount,
+    XianyuAccountAuth,
+    XianyuGoods,
+    XianyuGoodsSyncTask,
+    XianyuTradeOrder,
+    XianyuMessage,
+    Notification,
+)
 from ....services.billing import BillingLimitError, ensure_account_quota_available
 from ..deps import get_current_user
 from .account import account_to_dto
@@ -203,6 +215,7 @@ async def restful_get_accounts_summary(
     try:
         base = select(XianyuAccount).where(
             XianyuAccount.deleted == 0,
+            XianyuAccount.id.in_(owned_account_id_subquery(current_user)),
         )
         total_result = await db.execute(select(func.count()).select_from(base.subquery()))
         total = total_result.scalar() or 0
@@ -591,16 +604,48 @@ async def restful_get_goods_detail(
 @router.get("/xianyu/goods/syncProgress/{sync_id}", response_model=ResultObject)
 async def restful_goods_sync_progress(
     sync_id: str,
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    return ResultObject.success({"progress": 100, "status": "completed"})
+    result = await db.execute(
+        select(XianyuGoodsSyncTask).where(
+            XianyuGoodsSyncTask.sync_id == sync_id,
+            XianyuGoodsSyncTask.deleted == 0,
+            XianyuGoodsSyncTask.account_id.in_(owned_account_id_subquery(current_user)),
+        )
+    )
+    task = result.scalar_one_or_none()
+    if task is None:
+        return ResultObject.failed("同步任务不存在", code=404)
+    return ResultObject.success(
+        {
+            "progress": int(task.progress or 0),
+            "status": str(task.status or "unknown"),
+            "total": int(task.total_count or 0),
+            "newCount": int(task.new_count or 0),
+            "updatedCount": int(task.updated_count or 0),
+            "skippedCount": int(task.skipped_count or 0),
+            "offShelfCount": int(task.off_shelf_count or 0),
+            "error": task.error_message,
+        }
+    )
 
 @router.get("/xianyu/goods/syncing/{account_id}", response_model=ResultObject)
 async def restful_goods_syncing(
     account_id: int,
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    return ResultObject.success(False)
+    if not await assert_account_owned(db, current_user, account_id):
+        return ResultObject.failed("账号不存在", code=404)
+    result = await db.execute(
+        select(func.count()).select_from(XianyuGoodsSyncTask).where(
+            XianyuGoodsSyncTask.account_id == account_id,
+            XianyuGoodsSyncTask.deleted == 0,
+            XianyuGoodsSyncTask.status.in_(("queued", "running")),
+        )
+    )
+    return ResultObject.success(bool(result.scalar() or 0))
 # ======================== ORDERS ========================
 
 @router.get("/xianyu/orders", response_model=ResultObject)

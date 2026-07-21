@@ -6,7 +6,8 @@ const ORDER_STATUS_META = {
   2: { text: '待发货', badge: 'orange' },
   3: { text: '已发货', badge: 'green' },
   4: { text: '已完成', badge: 'green' },
-  5: { text: '已关闭', badge: 'red' }
+  5: { text: '已关闭', badge: 'red' },
+  6: { text: '待确认', badge: 'orange' }
 }
 
 const DELIVERY_STATUS_META = {

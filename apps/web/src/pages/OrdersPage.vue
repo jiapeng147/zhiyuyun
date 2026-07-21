@@ -397,7 +397,8 @@ const orderStatusOptions = [
   { label: '待发货', value: '2' },
   { label: '已发货', value: '3' },
   { label: '已完成', value: '4' },
-  { label: '已关闭', value: '5' }
+  { label: '已关闭', value: '5' },
+  { label: '待确认', value: '6' }
 ]
 const selectedAccountName = computed(() => (query.accountId ? accountLabel(query.accountId) : '全部账号'))
 const pendingDeliveryCount = computed(() => rows.value.filter(row => Number(row.orderStatus) === 2).length)

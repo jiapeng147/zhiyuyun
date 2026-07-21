@@ -1029,7 +1029,7 @@ function quotaPercent(used, limit) {
   return Math.max(4, Math.min(100, Math.round((Number(used || 0) / max) * 100)))
 }
 function tradeOrderStatus(status) {
-  return ({ 0: '待付款', 1: '已付款', 2: '待发货', 3: '已发货', 4: '已完成', 5: '已关闭' })[Number(status || 0)] || '未知'
+  return ({ 0: '待付款', 1: '已付款', 2: '待发货', 3: '已发货', 4: '已完成', 5: '已关闭', 6: '待确认' })[Number(status || 0)] || '未知'
 }
 function defaultFeatures(source = {}) {
   return Object.fromEntries(featureCatalog.map(item => [item.key, source[item.key] !== false]))
