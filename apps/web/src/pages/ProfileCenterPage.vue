@@ -7,6 +7,8 @@
       个人中心刷新失败，当前保留上次成功加载的数据；统计与安全更新时间可能已变化。
     </div>
 
+    <BusinessStatusStrip :items="profileStatusItems" />
+
     <div class="profile-shell">
       <aside class="profile-side">
         <div class="profile-v9-card profile-side-card">
@@ -358,6 +360,7 @@ import {
   getProfileOverview
 } from '../api/profile.js'
 import EmptyState from '../components/EmptyState.vue'
+import BusinessStatusStrip from '../components/business/BusinessStatusStrip.vue'
 
 const tabs = [
   { key: 'overview', label: '概览' },
@@ -391,6 +394,33 @@ const securityLevel = computed(() => {
   }
   return { score: 1, label: '待维护', tone: 'low', desc: '尚无登录密码更新时间证据，建议尽快轮换并持续使用高强度密码', percent: 33 }
 })
+
+const profileStatusItems = computed(() => [
+  {
+    key: 'account',
+    label: '账户状态',
+    value: overviewAvailable.value === true ? formatUserStatus(overview.status) : '检查中',
+    tone: overviewAvailable.value === true && Number(overview.status) === 1 ? 'green' : 'orange',
+  },
+  {
+    key: 'accounts',
+    label: '闲鱼账号',
+    value: overviewAvailable.value === true ? `${stats.value.xianyuAccountCount ?? 0} 个` : '—',
+    tone: 'blue',
+  },
+  {
+    key: 'assets',
+    label: '运营资产',
+    value: overviewAvailable.value === true ? `${stats.value.goodsCount ?? 0} 商品 / ${stats.value.orderCount ?? 0} 订单` : '—',
+    tone: 'blue',
+  },
+  {
+    key: 'security',
+    label: '安全维护',
+    value: securityLevel.value.label,
+    tone: securityLevel.value.score >= 2 ? 'green' : 'orange',
+  },
+])
 
 const securityPasswordHint = computed(() => {
   const value = overview.lastSecurityUpdateTime || overview.updatedTime
