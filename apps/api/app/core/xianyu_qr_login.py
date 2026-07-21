@@ -172,48 +172,94 @@ def cleanup_expired_sessions() -> int:
 # ==================== 核心函数 ====================
 
 
+# mtop m_h5_tk is optional for the QR generate / query endpoints we use.
+# When egress to h5api.m.goofish.com is slow or blocked at the network layer
+# the mtop cookie handshake stalls beyond the per-request timeout and the
+# whole QR request 502s. We bound the step and degrade: skip mtop collection
+# and let the still-working QR generator proceed.
+_MTOP_FALLBACK_DEADLINE_S = 6.0
+_MTOP_PER_REQUEST_TIMEOUT_S = 4.0
+
+
 def _get_m_h5_tk(session: requests.Session) -> str:
-    """Step 1: 获取签名令牌 _m_h5_tk。
+    """Best-effort: collect the mtop m_h5_tk cookie for downstream APIs.
 
-    闲鱼 API 的 _m_h5_tk cookie 获取流程比较特殊：
-    - 第一次 GET 只返回 cookie2，不返回 _m_h5_tk
-    - 需要做一次带签名的 POST（即使 token 为空），POST 响应会设置 _m_h5_tk
-    - 提取 _m_h5_tk 中的真实 token 后，再用真实 token 做第二次 POST 刷新
+    The QR generate/query endpoints we actually use do not require this
+    cookie, so a slow or unreachable ``h5api.m.goofish.com`` only means we
+    lose the optional token rather than failing the whole QR request.
     """
-    # 第一次 GET — 获取初始 Cookie（cookie2）
-    session.get(H5_API, headers=H_API, timeout=20)
+    start = time.monotonic()
 
-    # 第一次 POST — 用空 token 触发 _m_h5_tk 下发
-    # 此时服务器会返回 "令牌为空" 错误，但会在 Set-Cookie 中设置 _m_h5_tk
-    t_ms = int(time.time() * 1000)
-    data_str = '{"bizScene":"home"}'
-    sign = hashlib.md5(f"&{t_ms}&{APP_KEY}&{data_str}".encode()).hexdigest()
+    def _budget_left() -> float:
+        return _MTOP_FALLBACK_DEADLINE_S - (time.monotonic() - start)
 
-    session.post(H5_API, headers=H_API, data={
-        "jsv": "2.7.2", "appKey": APP_KEY, "t": str(t_ms), "sign": sign,
-        "v": "1.0", "type": "originaljson", "dataType": "json",
-        "timeout": "20000", "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
-        "data": data_str
-    }, timeout=20)
+    try:
+        if _budget_left() <= 0:
+            raise requests.exceptions.Timeout("mtop budget exhausted before start")
 
-    # 从响应 Cookie 中提取 _m_h5_tk
-    m_h5_tk = session.cookies.get("_m_h5_tk")
-    if not m_h5_tk:
-        raise RuntimeError("无法获取 _m_h5_tk Cookie")
+        # 第一次 GET — 获取初始 Cookie（cookie2）。
+        session.get(
+            H5_API,
+            headers=H_API,
+            timeout=min(_MTOP_PER_REQUEST_TIMEOUT_S, _budget_left()),
+        )
 
-    token = m_h5_tk.split("_")[0]
-    t_ms2 = int(time.time() * 1000)
-    sign2 = hashlib.md5(f"{token}&{t_ms2}&{APP_KEY}&{data_str}".encode()).hexdigest()
+        # 第一次 POST — 用空 token 触发 _m_h5_tk 下发。
+        t_ms = int(time.time() * 1000)
+        data_str = '{"bizScene":"home"}'
+        sign = hashlib.md5(
+            f"&{t_ms}&{APP_KEY}&{data_str}".encode()
+        ).hexdigest()
 
-    # 第二次 POST — 用真实 token 刷新，获取完整业务 Cookie
-    session.post(H5_API, headers=H_API, data={
-        "jsv": "2.7.2", "appKey": APP_KEY, "t": str(t_ms2), "sign": sign2,
-        "v": "1.0", "type": "originaljson", "dataType": "json",
-        "timeout": "20000", "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
-        "data": data_str
-    }, timeout=20)
+        session.post(
+            H5_API,
+            headers=H_API,
+            data={
+                "jsv": "2.7.2", "appKey": APP_KEY, "t": str(t_ms),
+                "sign": sign, "v": "1.0", "type": "originaljson",
+                "dataType": "json", "timeout": "20000",
+                "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
+                "data": data_str,
+            },
+            timeout=min(_MTOP_PER_REQUEST_TIMEOUT_S, _budget_left()),
+        )
 
-    return session.cookies.get("_m_h5_tk", "")
+        m_h5_tk = session.cookies.get("_m_h5_tk")
+        if not m_h5_tk:
+            return ""
+
+        token = m_h5_tk.split("_")[0]
+        t_ms2 = int(time.time() * 1000)
+        sign2 = hashlib.md5(
+            f"{token}&{t_ms2}&{APP_KEY}&{data_str}".encode()
+        ).hexdigest()
+
+        session.post(
+            H5_API,
+            headers=H_API,
+            data={
+                "jsv": "2.7.2", "appKey": APP_KEY, "t": str(t_ms2),
+                "sign": sign2, "v": "1.0", "type": "originaljson",
+                "dataType": "json", "timeout": "20000",
+                "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
+                "data": data_str,
+            },
+            timeout=min(_MTOP_PER_REQUEST_TIMEOUT_S, _budget_left()),
+        )
+
+        return session.cookies.get("_m_h5_tk", "")
+    except (
+        requests.exceptions.RequestException,
+        RuntimeError,
+    ) as exc:
+        logger.warning(
+            "mtop m_h5_tk 收集降级: "
+            "type=%s message=%s deadline=%.1fs",
+            type(exc).__name__,
+            str(exc)[:160].replace(chr(10), " "),
+            _MTOP_FALLBACK_DEADLINE_S,
+        )
+        return ""
 
 
 def _get_login_params(session: requests.Session) -> dict:
