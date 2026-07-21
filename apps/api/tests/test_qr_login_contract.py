@@ -82,17 +82,28 @@ class _FakeQrQuerySession:
         *,
         redirect_uid: str = "fixture-unb",
         has_login_uid: str = "",
+        mtop_uid: str = "",
     ) -> None:
         self.cookies: dict = {}
         self.payload = payload
         self.redirect_visited = False
         self.redirect_uid = redirect_uid
         self.has_login_uid = has_login_uid
+        self.mtop_uid = mtop_uid
 
     def post(self, url="", *_args, **_kwargs):
         if "hasLogin.do" in str(url):
             text = json.dumps(
                 {"success": True, "userId": self.has_login_uid},
+                ensure_ascii=False,
+            )
+            return _FakeResponse(200, text=text)
+        if "mtop.taobao.idle.user.hasLogin" in str(url):
+            text = json.dumps(
+                {
+                    "ret": ["SUCCESS::调用成功"],
+                    "data": {"hasLogin": True, "userId": self.mtop_uid},
+                },
                 ensure_ascii=False,
             )
             return _FakeResponse(200, text=text)
@@ -183,6 +194,18 @@ class GetMH5TkContractTests(unittest.TestCase):
             redirect_uid="",
             has_login_uid="2200000012345",
         )
+        result = xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
+    def test_confirmed_mtop_has_login_user_id_is_used_when_passport_lacks_uid(self) -> None:
+        session = _FakeQrQuerySession(
+            {"qrCodeStatus": "CONFIRMED"},
+            redirect_uid="",
+            has_login_uid="",
+            mtop_uid="2200000012345",
+        )
+        session.cookies["_m_h5_tk"] = "token_fixture_123"
         result = xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "2200000012345")

@@ -2,6 +2,14 @@
 
 ## 当前状态
 
+### 2026-07-21 QR 登录专项修复
+
+- 真实扫码现象：闲鱼 App 确认并完成身份校验后，网页仍未绑定账号；日志显示确认态只有基础 cookie key，没有 `unb`。
+- 已补强：`xianyu_qr_login.py` 在确认态无 `unb` 时，依次从确认 payload、passport `hasLogin.do`、MTOP `mtop.taobao.idle.user.hasLogin` 反查 UID；成功后注入 `unb` 并走原有加密 cookie 落库。
+- 已验证：`tests.test_qr_login_contract` 增加 MTOP hasLogin fallback 用例；后端契约套件 34 个 unittest 全绿。
+- 已部署：API 镜像已重建并启动健康；`/api/qrlogin/generate` 冒烟 200，初始状态 `new`。
+- 待用户手动验证：真实闲鱼 App 扫码、确认、身份校验完成后，观察 API 日志是否出现 `passport/mtop hasLogin 反查完成 hasUid=True`，并确认账号列表出现新账号。
+
 最近一次硬化批次（`1116a1a`）已落地 P0 核心面：
 
 - 自动发货：运行时通配规则优先级、规则按 owner_user_id 过滤、规则内空关键字拒绝、卡密 CardItem→CardGroup→Account 归属链路。

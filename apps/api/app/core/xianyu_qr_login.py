@@ -565,10 +565,78 @@ def _try_resolve_uid_via_has_login(
     uid = _extract_external_uid_from_text(body)
     if uid:
         _ensure_unb_cookie(session, uid)
-    logger.info(
-        "闲鱼扫码 hasLogin 反查完成 statusCode=%s hasUid=%s cookieKeys=%s",
+    logger.warning(
+        "闲鱼扫码 passport hasLogin 反查完成 statusCode=%s hasUid=%s cookieKeys=%s",
         getattr(resp, "status_code", ""),
         bool(uid),
+        ",".join(_safe_cookie_keys(session))[:300],
+    )
+    return uid
+
+
+def _try_resolve_uid_via_mtop_has_login(session: requests.Session) -> str:
+    m_h5_tk = str(session.cookies.get("_m_h5_tk") or "")
+    token = m_h5_tk.split("_", 1)[0].strip()
+    if not token:
+        return ""
+    api_name = "mtop.taobao.idle.user.hasLogin"
+    data_json = "{}"
+    t_ms = str(int(time.time() * 1000))
+    sign = hashlib.md5(
+        f"{token}&{t_ms}&{APP_KEY}&{data_json}".encode()
+    ).hexdigest()
+    form = {
+        "jsv": "2.7.2",
+        "appKey": APP_KEY,
+        "t": t_ms,
+        "sign": sign,
+        "v": "1.0",
+        "type": "originaljson",
+        "accountSite": "xianyu",
+        "dataType": "json",
+        "timeout": "20000",
+        "api": api_name,
+        "sessionOption": "AutoLoginOnly",
+        "data": data_json,
+    }
+    try:
+        resp = session.post(
+            f"https://h5api.m.goofish.com/h5/{api_name}/1.0/",
+            headers=H_API,
+            data=form,
+            timeout=12,
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "闲鱼扫码 mtop hasLogin 反查失败 errorType=%s",
+            type(exc).__name__,
+        )
+        return ""
+    _merge_response_cookies(session, resp)
+    uid = str(session.cookies.get("unb") or "").strip()
+    body = getattr(resp, "text", "") or ""
+    top_keys = ""
+    ret = ""
+    if not uid:
+        try:
+            payload = resp.json()
+            if isinstance(payload, dict):
+                top_keys = ",".join(sorted(payload.keys()))[:200]
+                ret_value = payload.get("ret")
+                ret = ",".join(map(str, ret_value))[:200] if isinstance(ret_value, list) else str(ret_value or "")[:200]
+                uid = _extract_external_uid_from_payload(payload)
+        except Exception:
+            payload = None
+        if not uid:
+            uid = _extract_external_uid_from_text(body)
+    if uid:
+        _ensure_unb_cookie(session, uid)
+    logger.warning(
+        "闲鱼扫码 mtop hasLogin 反查完成 statusCode=%s hasUid=%s topKeys=%s ret=%s cookieKeys=%s",
+        getattr(resp, "status_code", ""),
+        bool(uid),
+        top_keys,
+        ret,
         ",".join(_safe_cookie_keys(session))[:300],
     )
     return uid
@@ -587,6 +655,8 @@ def _confirmed_cookie_result(
             _ensure_unb_cookie(session, uid)
     if not uid:
         uid = _try_resolve_uid_via_has_login(session, login_form)
+    if not uid:
+        uid = _try_resolve_uid_via_mtop_has_login(session)
     cookies = {k: v for k, v in session.cookies.items()}
     if not cookies.get("unb"):
         logger.warning(

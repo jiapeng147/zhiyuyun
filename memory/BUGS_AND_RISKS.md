@@ -2,6 +2,24 @@
 
 ## 已修复并验证（最近批次 1116a1a）
 
+### 闲鱼扫码确认后未绑定账号
+
+位置：`apps/api/app/core/xianyu_qr_login.py`、`apps/api/tests/test_qr_login_contract.py`
+
+处理：
+
+- 问题根因不是单纯二维码过期，而是确认态 cookie 中没有 `unb`，导致账号 UID 无法落库。
+- 确认态无 `unb` 时新增 UID 反查链路：确认 payload -> passport `hasLogin.do` -> MTOP `mtop.taobao.idle.user.hasLogin`。
+- 反查成功后仅在内存会话中补齐 `unb`，复用原有 Cookie 加密保存和账号绑定流程。
+- 日志只输出状态码、是否拿到 UID、顶层 key、cookie key 名称，不输出 cookie/token 值。
+
+验证：
+
+- `python3 -m py_compile apps/api/app/core/xianyu_qr_login.py`
+- `sudo docker run --rm -v /www/wwwroot/zhiyuyun.com/apps/api:/host -w /host --entrypoint python zhiyuyun-api:local -m unittest tests.test_business_contracts tests.test_delivery_contracts tests.test_tenant_scope_sql_contract tests.test_qr_login_contract`
+
+仍需真实验收：用户使用闲鱼 App 重新扫码并完成身份校验，确认账号能出现在账号列表。
+
 ### 自动发货规则匹配缺优先级、空关键字、全租户
 
 位置：`apps/api/app/services/ws_delivery_handler.py`、迁移 `036_order_delivery_rule_guards.sql`
