@@ -50,7 +50,6 @@
 * {
   box-sizing: border-box !important;
   letter-spacing: 0 !important;
-  text-shadow: none !important;
 }
 
 html,
@@ -1039,14 +1038,6 @@ table tbody tr:last-child td {
   border-radius: 4px !important;
   background: var(--primary) !important;
   border-color: var(--primary) !important;
-}
-
-/* Mobile */
-.m-appbar {
-  height: 52px !important;
-  border-bottom: 1px solid var(--line) !important;
-  background: #fff !important;
-  box-shadow: var(--shadow-xs) !important;
 }
 
 @media (max-width: 1280px) {
