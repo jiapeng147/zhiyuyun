@@ -171,6 +171,31 @@ class GetMH5TkContractTests(unittest.TestCase):
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["rawStatus"], "EXPIRED")
 
+    def test_expired_during_verification_window_stays_recoverable(self) -> None:
+        session = _FakeQrQuerySession({"qrCodeStatus": "EXPIRED"}, redirect_uid="")
+        xianyu_qr_login._set_verification_redirect_state(
+            session,
+            "https://passport.goofish.com/verify",
+        )
+        result = xianyu_qr_login._poll_status_once(session, {})
+        self.assertTrue(session.redirect_visited)
+        self.assertEqual(result["status"], "verification_required")
+        self.assertEqual(result["rawStatus"], "EXPIRED")
+
+    def test_expired_during_verification_window_can_finish_after_app_auth(self) -> None:
+        session = _FakeQrQuerySession(
+            {"qrCodeStatus": "EXPIRED"},
+            redirect_uid="2200000012345",
+        )
+        xianyu_qr_login._set_verification_redirect_state(
+            session,
+            "https://passport.goofish.com/verify",
+        )
+        result = xianyu_qr_login._poll_status_once(session, {})
+        self.assertTrue(session.redirect_visited)
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
     def test_returns_empty_on_timeout_without_raising(self) -> None:
         fake = _FakeSession()
         with patch.object(xianyu_qr_login.requests, "get", _raise_timeout), patch.object(

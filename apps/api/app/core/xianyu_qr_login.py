@@ -527,11 +527,53 @@ def _safe_verification_redirect_url(url: str | None) -> str:
     return raw
 
 
+def _set_verification_redirect_state(
+    session: requests.Session,
+    redirect_url: str | None,
+) -> str:
+    safe_url = _safe_verification_redirect_url(redirect_url)
+    if not safe_url:
+        return ""
+    if not getattr(session, "_xianyu_verification_redirect_url", ""):
+        setattr(session, "_xianyu_verification_started_at", time.time())
+    setattr(session, "_xianyu_verification_redirect_url", safe_url)
+    return safe_url
+
+
+def _verification_redirect_url(session: requests.Session) -> str:
+    return str(getattr(session, "_xianyu_verification_redirect_url", "") or "")
+
+
+def _verification_window_active(session: requests.Session) -> bool:
+    started_at = float(getattr(session, "_xianyu_verification_started_at", 0) or 0)
+    if started_at <= 0:
+        return False
+    return time.time() - started_at < 120
+
+
+def _verification_pending_result(
+    session: requests.Session,
+    raw_status: str,
+    redirect_url: str | None = None,
+) -> dict | None:
+    safe_url = _set_verification_redirect_state(session, redirect_url)
+    safe_url = safe_url or _verification_redirect_url(session)
+    if not safe_url or not _verification_window_active(session):
+        return None
+    return _qr_status_result(
+        "verification_required",
+        "扫码已确认，闲鱼要求额外安全验证。请继续在闲鱼 App 内完成验证；网页会继续同步账号凭据。",
+        raw_status,
+        iframe_redirect_url=safe_url,
+    )
+
+
 def _try_complete_verification_redirect(
     session: requests.Session,
     redirect_url: str | None,
 ) -> dict | None:
-    safe_url = _safe_verification_redirect_url(redirect_url)
+    safe_url = _set_verification_redirect_state(session, redirect_url)
+    safe_url = safe_url or _verification_redirect_url(session)
     if not safe_url:
         return None
     try:
@@ -582,12 +624,13 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                     bool(data.get("iframeRedirect")),
                     bool(data.get("iframeRedirectUrl")),
                 )
-                return _qr_status_result(
-                    "verification_required",
-                    "扫码已确认，闲鱼要求额外安全验证。请继续在闲鱼 App 内完成验证，网页会自动同步结果。",
+                pending = _verification_pending_result(
+                    session,
                     status,
-                    iframe_redirect_url=data.get("iframeRedirectUrl"),
+                    data.get("iframeRedirectUrl"),
                 )
+                if pending:
+                    return pending
             return _confirmed_cookie_result(session, status, data) or _qr_status_result(
                 "failed",
                 "扫码已确认，但未获取到账号登录凭证，请刷新二维码后重试。",
@@ -606,6 +649,15 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 status,
             )
         if status == "EXPIRED":
+            confirmed = _try_complete_verification_redirect(
+                session,
+                _verification_redirect_url(session),
+            )
+            if confirmed:
+                return confirmed
+            pending = _verification_pending_result(session, status)
+            if pending:
+                return pending
             confirmed = _confirmed_cookie_result(session, status, data)
             if confirmed:
                 return confirmed
