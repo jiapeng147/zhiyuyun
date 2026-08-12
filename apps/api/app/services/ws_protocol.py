@@ -1120,6 +1120,26 @@ def build_heartbeat_message() -> dict:
     }
 
 
+def build_protocol_ack_message(message: dict) -> dict:
+    """Acknowledge one inbound IM protocol frame.
+
+    DingTalk's IM gateway expects a transport-level JSON acknowledgement for
+    every inbound frame. This is separate from the per-message PNM receipt
+    produced by :func:`build_ack_message`.
+    """
+    headers = message.get("headers")
+    if not isinstance(headers, dict):
+        headers = {}
+    ack_headers = {
+        "mid": str(headers.get("mid") or generate_mid()),
+        "sid": str(headers.get("sid") or ""),
+    }
+    for key in ("app-key", "ua", "dt"):
+        if key in headers:
+            ack_headers[key] = headers[key]
+    return {"code": 200, "headers": ack_headers}
+
+
 def build_send_message(
     cid: str,
     to_id: str,

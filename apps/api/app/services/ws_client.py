@@ -34,6 +34,7 @@ from .ws_protocol import (
     build_sync_message,
     build_ack_message,
     build_heartbeat_message,
+    build_protocol_ack_message,
     build_send_message,
     build_send_image_message,
     generate_mid,
@@ -1280,6 +1281,11 @@ class XianyuWebSocketClient:
                 data = json.loads(resp)
                 lwp = data.get("lwp", "")
 
+                # The gateway requires an ACK for the registration response
+                # too. Missing this ACK leaves the socket apparently healthy
+                # before the server closes it after its protocol timeout.
+                await ws.send(json.dumps(build_protocol_ack_message(data), ensure_ascii=False))
+
                 logger.info(
                     "WS 注册等待中收到协议响应 accountId=%d code=%s",
                     self.account_id,
@@ -1406,6 +1412,20 @@ class XianyuWebSocketClient:
         except json.JSONDecodeError:
             logger.warning("WS 消息 JSON 解析失败 payloadLength=%d", len(raw_msg))
             return
+
+        # This protocol-level ACK is required for every inbound frame. It is
+        # independent from the PNM receipt sent for individual chat messages.
+        try:
+            await ws.send(
+                json.dumps(build_protocol_ack_message(data), ensure_ascii=False)
+            )
+        except Exception as exc:
+            logger.warning(
+                "WS 协议 ACK 发送失败 accountId=%d errorType=%s",
+                self.account_id,
+                type(exc).__name__,
+            )
+            raise
 
         lwp = data.get("lwp", "")
 
