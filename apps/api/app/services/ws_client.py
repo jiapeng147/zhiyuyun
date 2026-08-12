@@ -143,8 +143,11 @@ class _ThreadedWebSocketAdapter:
         try:
             assert self._ws_app is not None
             self._ws_app.run_forever(
-                ping_interval=0,
-                ping_timeout=None,
+                # The platform expects both its JSON heartbeat and standard
+                # WebSocket Ping/Pong. Without transport pings the upstream
+                # closes an otherwise registered socket after roughly 40s.
+                ping_interval=20,
+                ping_timeout=10,
                 skip_utf8_validation=False,
                 sslopt={"cert_reqs": ssl.CERT_REQUIRED},
                 origin="https://www.goofish.com",
@@ -1475,14 +1478,23 @@ class XianyuWebSocketClient:
         elif lwp == "/!":
             # 心跳响应（此时 mid 不在 _send_futures 中，是真正的心跳）
             pass
+        elif code == 200 and "body" not in data and isinstance(headers, dict):
+            # Current IM heartbeat acknowledgements omit lwp/body and only
+            # echo a header mid. They are expected protocol traffic.
+            pass
         elif lwp == "/reg":
             # 注册响应（已在 _do_reg 处理）
             pass
         else:
             logger.warning(
-                "WS 未处理的消息类型 accountId=%d topLevelFieldCount=%d",
+                "WS 未处理的消息类型 accountId=%d topLevelKeys=%s lwpPresent=%s code=%s headerKeys=%s",
                 self.account_id,
-                len(data),
+                sorted(str(key) for key in data.keys())[:12],
+                bool(lwp),
+                code,
+                sorted(str(key) for key in headers.keys())[:12]
+                if isinstance(headers, dict)
+                else [],
             )
 
     async def _handle_sync_package(self, data: dict, ws: _ThreadedWebSocketAdapter):

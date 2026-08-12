@@ -15,6 +15,7 @@ from app.services import ai_provider
 from app.services.ai_reply_batcher import AiAutoReplyBatcher
 from app.services.ws_delivery_handler import _delivery_rule_match_rank
 from app.services.ws_storage import stable_chat_message_uid
+from app.services.ws_protocol import build_heartbeat_message
 from app.services.xianyu_goods_sync import _parse_card_to_goods, _parse_item_status
 from app.services.xianyu_order_sync import (
     ORDER_STATUS_UNKNOWN,
@@ -60,6 +61,16 @@ class _FakeQrSession:
 
 
 class BusinessContractTests(unittest.TestCase):
+    def test_websocket_heartbeat_has_correlatable_mid(self) -> None:
+        heartbeat = build_heartbeat_message()
+        self.assertEqual(heartbeat["lwp"], "/!")
+        self.assertNotIn("body", heartbeat)
+        self.assertTrue(heartbeat["headers"]["mid"])
+        self.assertNotEqual(
+            heartbeat["headers"]["mid"],
+            build_heartbeat_message()["headers"]["mid"],
+        )
+
     def test_unknown_order_status_is_quarantined(self) -> None:
         self.assertEqual(_map_order_status("new-platform-state"), ORDER_STATUS_UNKNOWN)
         self.assertEqual(_map_order_status({"code": "future_status"}), ORDER_STATUS_UNKNOWN)

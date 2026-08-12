@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 import time
 import uuid
 from typing import Any, Optional
@@ -789,15 +790,33 @@ def parse_numbered_fields(data: dict) -> Optional[dict]:
     }
 
 
+_mid_lock = threading.Lock()
+_last_mid_ms = 0
+_mid_sequence = 0
+
+
 def generate_mid() -> str:
     """生成消息 ID（用于 WebSocket 消息头中的 mid）。
 
-    与 Java 成功实现对齐：随机数(0-999) + 毫秒时间戳 + " 0"
-    示例：1231741667630548 0
+    保留“3位序号 + 毫秒时间戳 + 空格0”的协议形态，并保证进程内
+    单调唯一，避免同一毫秒内的心跳和业务请求复用同一个关联 ID。
     """
-    ts = int(time.time() * 1000)
-    rand = int(hashlib.md5(str(ts).encode()).hexdigest(), 16) % 1000
-    return f"{rand}{ts} 0"
+    global _last_mid_ms, _mid_sequence
+
+    with _mid_lock:
+        ts = int(time.time() * 1000)
+        if ts <= _last_mid_ms:
+            if _mid_sequence >= 999:
+                ts = _last_mid_ms + 1
+                _mid_sequence = 0
+            else:
+                ts = _last_mid_ms
+                _mid_sequence += 1
+        else:
+            _mid_sequence = 0
+        _last_mid_ms = ts
+        sequence = _mid_sequence
+    return f"{sequence:03d}{ts} 0"
 
 
 # ============================================================
@@ -966,7 +985,7 @@ def validate_parsed_message(msg: dict) -> dict:
     if sender_user_id_normalized and seller_external_uid_normalized and sender_user_id_normalized == seller_external_uid_normalized:
         violations.append("peer_is_self")
         msg["direction"] = "OUT"  # 自己发给别人
-        logger.warning("validate: 发送方为卖家自己，已修正 direction=OUT")
+        logger.debug("validate: 发送方为卖家自己，已修正 direction=OUT")
 
     # 校验4: sender/receiver/pnm 为空并不一定是失败。
     # 闲鱼官方消息列表里经常只给 sId + msgContent（用户截图中的会话正是这种结构），
@@ -1097,7 +1116,7 @@ def build_heartbeat_message() -> dict:
     """构建心跳消息。"""
     return {
         "lwp": "/!",
-        "body": {},
+        "headers": {"mid": generate_mid()},
     }
 
 
