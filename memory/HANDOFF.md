@@ -2,14 +2,14 @@
 
 ## 当前状态
 
-### 2026-07-21 QR 登录专项修复
+### 2026-08-12 QR 登录确认换票与身份验证闭环
 
-- 真实扫码现象：闲鱼 App 确认并完成身份校验后，网页仍未绑定账号；日志显示确认态只有基础 cookie key，没有 `unb`。
-- 已补强：`xianyu_qr_login.py` 在确认态无 `unb` 时，依次从确认 payload、passport `hasLogin.do`、MTOP `mtop.taobao.idle.user.hasLogin` 反查 UID；成功后注入 `unb` 并走原有加密 cookie 落库。
-- 已验证：`tests.test_qr_login_contract` 增加 MTOP hasLogin fallback 用例；后端契约套件 34 个 unittest 全绿。
-- 已部署：API 镜像已重建并启动健康；`/api/qrlogin/generate` 冒烟 200，初始状态 `new`。
-- 前端补丁：App 全局“正在同步数据”增加 45 秒 stale cleanup，避免请求事件丢失时误显示永久同步；扫码接口本身仍为 silent 轮询。
-- 待用户手动验证：真实闲鱼 App 扫码、确认、身份校验完成后，观察 API 日志是否出现 `passport/mtop hasLogin 反查完成 hasUid=True`，并确认账号列表出现新账号。
+- 真实日志已确认根因：二维码状态返回 `CONFIRMED`，但旧代码漏掉确认后的 token 换票步骤，并调用不存在的 `mtop.taobao.idle.user.hasLogin`，上游返回 `FAIL_SYS_API_NOT_FOUNDED`，因此没有 `unb`、账号未落库。
+- `93ac57d` 已补齐当前协议：`CONFIRMED token -> passport login_token/login.do -> mtop.idle.web.user.page.nav -> unb -> 加密 Cookie 落库`。
+- 安全验证分支已补齐：保持同一 HTTP Cookie 会话，解析 `htoken`/验证二维码，轮询 `iv/photoVerify/check.do`，code=3 后访问官方回调收集 `unb`。前端收到二次验证二维码时会在原扫码框直接展示。
+- QR query 使用当前站点参数 `appName=xianyu&fromSite=77`，轮询表单补齐设备、页面、来源和导航字段；官方验证跳转只允许 HTTPS 的 `goofish.com`/`taobao.com` 子域。
+- 已验证：QR 契约 17/17、后端契约 38/38、前端生产构建通过；API/Web 容器 healthy，域名 200，真实上游二维码生成与会话清理冒烟成功。
+- 待用户手动验证：重新生成二维码，用闲鱼 App 扫码并确认；若页面切换到身份验证二维码，再扫一次完成验证。最终确认弹窗自动关闭且账号出现在列表。真实扫码不可由自动测试伪造。
 
 最近一次硬化批次（`1116a1a`）已落地 P0 核心面：
 
@@ -24,10 +24,10 @@
 ## 当前 HEAD
 
 ```text
-1116a1a P0 硬化批次: 自动发货/订单/商品/AI 重复消息/多租户契约与代码同步
+93ac57d 修复闲鱼扫码确认后换票与身份验证闭环
 ```
 
-工作树干净。所有 Docker 服务健康：API、Worker、Web、MySQL、Redis、Crawler。
+API/Web/MySQL/Redis 容器健康。工作树仍有接手前已有的 `misc.py`、`items.py`、`frontend_compat.py` 和 `memory/exports/` 改动，本次未回退、未提交。
 
 ## 下一次接手先做什么
 

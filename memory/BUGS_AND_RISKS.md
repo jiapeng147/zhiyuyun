@@ -1,6 +1,6 @@
 # BUG、风险和未完成事项
 
-## 已修复并验证（最近批次 1116a1a）
+## 已修复并验证（最近批次 93ac57d）
 
 ### 闲鱼扫码确认后未绑定账号
 
@@ -8,15 +8,16 @@
 
 处理：
 
-- 问题根因不是单纯二维码过期，而是确认态 cookie 中没有 `unb`，导致账号 UID 无法落库。
-- 确认态无 `unb` 时新增 UID 反查链路：确认 payload -> passport `hasLogin.do` -> MTOP `mtop.taobao.idle.user.hasLogin`。
-- 反查成功后仅在内存会话中补齐 `unb`，复用原有 Cookie 加密保存和账号绑定流程。
+- 问题根因不是二维码过期，而是确认态漏掉 token 换票，旧 MTOP hasLogin API 又已不存在，导致 `unb` 无法落库。
+- 当前链路为：确认 token -> `login_token/login.do` -> `mtop.idle.web.user.page.nav` -> Cookie 加密保存与账号绑定。
+- 身份验证分支保持同一会话，解析 `htoken` 和二次二维码，轮询 `photoVerify/check.do`，完成后访问官方回调拿 `unb`。
+- 前端会在原二维码区域切换显示身份验证二维码，不再只给一个不明确的小链接。
 - 日志只输出状态码、是否拿到 UID、顶层 key、cookie key 名称，不输出 cookie/token 值。
 
 验证：
 
-- `python3 -m py_compile apps/api/app/core/xianyu_qr_login.py`
-- `sudo docker run --rm -v /www/wwwroot/zhiyuyun.com/apps/api:/host -w /host --entrypoint python zhiyuyun-api:local -m unittest tests.test_business_contracts tests.test_delivery_contracts tests.test_tenant_scope_sql_contract tests.test_qr_login_contract`
+- QR 契约 17/17、完整后端契约 38/38、前端生产构建均通过。
+- API/Web 容器 healthy，域名 200，真实上游二维码生成和测试会话清理成功。
 
 仍需真实验收：用户使用闲鱼 App 重新扫码并完成身份校验，确认账号能出现在账号列表。
 
