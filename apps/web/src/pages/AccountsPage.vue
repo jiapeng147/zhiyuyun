@@ -322,13 +322,14 @@
         </div>
         <div class="scan-steps">
           <div class="scan-step" :class="{ active: qrReady }"><b>1</b><span>{{ qrReady ? '二维码已生成' : '等待生成二维码' }}</span></div>
-          <i></i><div class="scan-step" :class="{active: ['scanned', 'confirmed'].includes(qr.status)}"><b>2</b><span>扫码确认</span></div>
-          <i></i><div class="scan-step" :class="{active: qr.status==='confirmed'}"><b>3</b><span>{{ qr.mode === 'rescan' ? '更新账号凭证' : '自动添加账号' }}</span></div>
+          <i></i><div class="scan-step" :class="{active: ['scanned', 'verification_required', 'confirmed'].includes(qr.status)}"><b>2</b><span>扫码确认</span></div>
+          <i></i><div class="scan-step" :class="{active: ['verification_required', 'confirmed'].includes(qr.status)}"><b>3</b><span>{{ qr.status === 'verification_required' ? '身份验证' : (qr.mode === 'rescan' ? '更新账号凭证' : '自动添加账号') }}</span></div>
         </div>
         <div class="scan-main">
           <div>
             <div class="qr-box" :class="[`is-${qrStatusTone}`, { 'is-polling': qr.polling }]">
-              <img v-if="qr.qrUrl" :src="qr.qrUrl" alt="闲鱼登录二维码">
+              <span v-if="qr.verificationQrActive" class="qr-phase-label">请再次扫码验证身份</span>
+              <img v-if="qr.qrUrl" :src="qr.qrUrl" :alt="qr.verificationQrActive ? '闲鱼身份验证二维码' : '闲鱼登录二维码'">
               <div v-else class="qr-unavailable" role="status">
                 <Icon :name="qrGenerationFailed ? 'warning' : 'refresh'" />
                 <span>{{ qrGenerationFailed ? '二维码生成失败' : '尚未生成可扫码二维码' }}</span>
@@ -749,6 +750,7 @@ const qr = reactive({
   mode: 'create',
   accountId: null,
   verificationUrl: '',
+  verificationQrActive: false,
   checkCount: 0,
   lastCheckedAt: ''
 })
@@ -768,7 +770,9 @@ const qrFlowHint = computed(() => {
   if (status === 'scanned') return '已检测到扫码，请在闲鱼 App 内点击确认登录。'
   if (status === 'confirmed') return 'App 已确认，系统正在同步账号登录凭证。'
   if (['expired', 'failed', 'cancelled', 'error'].includes(status)) return '本次扫码会话不可继续，请刷新二维码后重试。'
-  if (status === 'verification_required') return '闲鱼要求额外安全验证，请继续在 App 完成验证，网页会自动同步结果。'
+  if (status === 'verification_required') return qr.verificationQrActive
+    ? '当前已切换为身份验证二维码，请使用闲鱼 App 再扫描一次并完成验证。'
+    : '闲鱼要求额外安全验证，网页正在准备验证流程。'
   if (qr.polling) return '网页正在监听扫码状态；如果 App 已确认但长时间无变化，请刷新二维码重新拉起会话。'
   return qrReady.value ? '二维码已生成，等待闲鱼 App 扫码。' : '打开弹窗后会自动生成二维码。'
 })
@@ -1142,7 +1146,7 @@ function qrStatusMessage(status, fallback = '') {
     cancelled: '本次扫码登录已取消，请刷新二维码后重试。',
     failed: '扫码登录失败，请刷新二维码后重试。',
     error: '扫码登录状态异常，请刷新二维码后重试。',
-    verification_required: '扫码已确认，闲鱼要求额外安全验证。请继续在闲鱼 App 内完成验证，网页会自动同步结果。'
+    verification_required: '当前是身份验证二维码，请使用闲鱼 App 再扫描一次。'
   })[normalizeQrStatus(status)] || '正在确认扫码登录状态...'
 }
 
@@ -1775,6 +1779,7 @@ async function startQrLogin() {
   qr.qrUrl = ''
   qr.status = ''
   qr.verificationUrl = ''
+  qr.verificationQrActive = false
   qr.checkCount = 0
   qr.lastCheckedAt = ''
   stopQrPolling()
@@ -1828,6 +1833,7 @@ async function checkQrStatus() {
     const faceQrImage = data.faceQrImage || data.face_qr_image || ''
     if (qr.status === 'verification_required' && faceQrImage.startsWith('data:image/')) {
       qr.qrUrl = faceQrImage
+      qr.verificationQrActive = true
     }
     qr.message = data.message || (nextStatus !== prevStatus ? qrStatusMessage(qr.status) : (qr.message || qrStatusMessage(qr.status)))
 

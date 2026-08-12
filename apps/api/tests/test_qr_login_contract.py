@@ -97,12 +97,14 @@ class _FakeQrQuerySession:
         self.verification_code = verification_code
         self.verification_callback_uid = verification_callback_uid
         self.token_login_visited = False
+        self.token_login_calls = 0
         self.nav_visited = False
         self.query_params: dict = {}
 
     def post(self, url="", *_args, **kwargs):
         if "login_token/login.do" in str(url):
             self.token_login_visited = True
+            self.token_login_calls += 1
             if self.token_login_uid:
                 self.cookies["unb"] = self.token_login_uid
             return _FakeResponse(200, text=json.dumps({"content": {"data": {"loginResult": "success"}}}))
@@ -241,6 +243,8 @@ class GetMH5TkContractTests(unittest.TestCase):
         result = xianyu_qr_login._poll_status_once(session, {})
         self.assertEqual(result["status"], "verification_required")
         self.assertTrue(result["faceQrImage"].startswith("data:image/png;base64,"))
+        self.assertFalse(session.token_login_visited)
+        self.assertFalse(session.nav_visited)
 
     def test_confirmed_has_login_user_id_is_used_when_cookie_lacks_unb(self) -> None:
         session = _FakeQrQuerySession(
@@ -263,7 +267,7 @@ class GetMH5TkContractTests(unittest.TestCase):
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "2200000012345")
 
-    def test_generated_lg_token_is_exchanged_when_confirm_payload_omits_token(self) -> None:
+    def test_qr_lg_token_is_not_misused_as_confirmed_login_token(self) -> None:
         session = _FakeQrQuerySession(
             {"qrCodeStatus": "CONFIRMED"},
             redirect_uid="",
@@ -273,9 +277,17 @@ class GetMH5TkContractTests(unittest.TestCase):
             session,
             {"appName": "xianyu", "lgToken": "generated-token"},
         )
-        self.assertTrue(session.token_login_visited)
-        self.assertEqual(result["status"], "confirmed")
-        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+        self.assertFalse(session.token_login_visited)
+        self.assertEqual(result["status"], "failed")
+
+    def test_confirmed_login_token_is_exchanged_only_once(self) -> None:
+        session = _FakeQrQuerySession(
+            {"qrCodeStatus": "CONFIRMED", "token": "confirmed-token"},
+            redirect_uid="",
+        )
+        xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
+        xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
+        self.assertEqual(session.token_login_calls, 1)
 
     def test_confirmed_user_nav_id_is_used_when_token_exchange_lacks_uid(self) -> None:
         session = _FakeQrQuerySession(

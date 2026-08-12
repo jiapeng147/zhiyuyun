@@ -632,14 +632,21 @@ def _try_resolve_uid_via_has_login(
     return uid
 
 
-def _extract_login_token(payload: dict | None, login_form: dict | None) -> str:
-    for source in (payload or {}, login_form or {}):
-        if not isinstance(source, dict):
-            continue
-        for key in ("token", "loginToken", "login_token", "lgToken"):
-            value = str(source.get(key) or "").strip()
-            if value and len(value) <= 4096:
-                return value
+def _extract_login_token(payload: dict | None) -> str:
+    """Return only the one-time token emitted by a CONFIRMED query.
+
+    ``lgToken`` embedded in the QR URL identifies the QR transaction. It is
+    not accepted by ``login_token/login.do`` as a confirmed login token.
+    Treating it as one consumes time on every poll and leaves the MTOP session
+    unauthenticated.
+    """
+
+    if not isinstance(payload, dict):
+        return ""
+    for key in ("token", "loginToken", "login_token"):
+        value = str(payload.get(key) or "").strip()
+        if value and len(value) <= 4096:
+            return value
     return ""
 
 
@@ -650,9 +657,12 @@ def _try_exchange_qr_login_token(
 ) -> str:
     """Exchange the confirmed QR token for the actual web login session."""
 
-    login_token = _extract_login_token(payload, login_form)
+    login_token = _extract_login_token(payload)
     if not login_token:
         return ""
+    token_fingerprint = hashlib.sha256(login_token.encode("utf-8")).hexdigest()
+    if getattr(session, "_xianyu_exchanged_login_token", "") == token_fingerprint:
+        return _get_cookie_value(session, "unb")
     now = time.monotonic()
     last_attempt = float(getattr(session, "_xianyu_token_exchange_at", 0) or 0)
     if last_attempt and now - last_attempt < 4:
@@ -686,11 +696,18 @@ def _try_exchange_qr_login_token(
         )
         return ""
 
+    # The token is one-shot. A completed upstream response must not be replayed
+    # on every browser poll, even when it contains an HTML verification page.
+    setattr(session, "_xianyu_exchanged_login_token", token_fingerprint)
     _merge_response_cookies(session, resp)
     uid = _get_cookie_value(session, "unb")
     body = getattr(resp, "text", "") or ""
     response_keys = ""
     has_verification = False
+    response_content_type = str(
+        (getattr(resp, "headers", {}) or {}).get("content-type") or ""
+    ).split(";", 1)[0][:80]
+    response_host = urlparse(str(getattr(resp, "url", "") or "")).hostname or ""
     try:
         response_payload = resp.json()
     except Exception:
@@ -710,10 +727,12 @@ def _try_exchange_qr_login_token(
     if uid:
         _ensure_unb_cookie(session, uid)
     logger.warning(
-        "闲鱼扫码确认换票完成 statusCode=%s hasUid=%s hasVerification=%s topKeys=%s cookieKeys=%s",
+        "闲鱼扫码确认换票完成 statusCode=%s hasUid=%s hasVerification=%s contentType=%s finalHost=%s topKeys=%s cookieKeys=%s",
         getattr(resp, "status_code", ""),
         bool(uid),
         has_verification,
+        response_content_type,
+        response_host,
         response_keys,
         ",".join(_safe_cookie_keys(session))[:300],
     )
@@ -1087,7 +1106,8 @@ def _try_complete_verification_redirect(
 ) -> dict | None:
     if not _initialize_verification_state(session, redirect_url):
         return None
-    _poll_verification_once(session)
+    if not _poll_verification_once(session):
+        return None
     return _confirmed_cookie_result(session, "CONFIRMED", login_form=login_form)
 
 
@@ -1105,9 +1125,6 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
         status = str(data.get("qrCodeStatus") or "").upper()
 
         if status == "CONFIRMED":
-            confirmed = _confirmed_cookie_result(session, status, data, login_form)
-            if confirmed:
-                return confirmed
             if data.get("iframeRedirect"):
                 confirmed = _try_complete_verification_redirect(
                     session,
@@ -1128,6 +1145,11 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 )
                 if pending:
                     return pending
+                return _qr_status_result(
+                    "failed",
+                    "闲鱼身份验证初始化失败，请刷新二维码后重试。",
+                    status,
+                )
             return _confirmed_cookie_result(session, status, data, login_form) or _qr_status_result(
                 "failed",
                 "扫码已确认，但未获取到账号登录凭证，请刷新二维码后重试。",
@@ -1146,19 +1168,21 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 status,
             )
         if status == "EXPIRED":
-            confirmed = _confirmed_cookie_result(session, status, data, login_form)
-            if confirmed:
-                return confirmed
-            confirmed = _try_complete_verification_redirect(
-                session,
-                _verification_redirect_url(session),
-                login_form,
-            )
-            if confirmed:
-                return confirmed
-            pending = _verification_pending_result(session, status)
-            if pending:
-                return pending
+            if _verification_redirect_url(session):
+                confirmed = _try_complete_verification_redirect(
+                    session,
+                    _verification_redirect_url(session),
+                    login_form,
+                )
+                if confirmed:
+                    return confirmed
+                pending = _verification_pending_result(session, status)
+                if pending:
+                    return pending
+            elif _get_cookie_value(session, "unb"):
+                confirmed = _confirmed_cookie_result(session, status, data, login_form)
+                if confirmed:
+                    return confirmed
             return _qr_status_result(
                 "expired",
                 "二维码已过期，请刷新二维码后重新扫码。",
