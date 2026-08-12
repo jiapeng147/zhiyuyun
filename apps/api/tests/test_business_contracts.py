@@ -19,6 +19,7 @@ from app.services.xianyu_goods_sync import _parse_card_to_goods, _parse_item_sta
 from app.services.xianyu_order_sync import (
     ORDER_STATUS_UNKNOWN,
     _map_order_status,
+    _normalize_item_price,
     _parse_remote_order_item,
 )
 
@@ -104,6 +105,25 @@ class BusinessContractTests(unittest.TestCase):
             [(item["sku_id"], item["sku_name"]) for item in parsed["items"]],
             [("red", "红色"), ("blue", "蓝色")],
         )
+
+    def test_order_fixture_normalizes_missing_decimal_price(self) -> None:
+        parsed = _parse_remote_order_item(
+            {
+                "commonData": {
+                    "orderId": "order-without-unit-price",
+                    "orderStatus": "交易成功",
+                    "itemId": "10002",
+                },
+                "priceVO": {"buyNum": 1, "unitPrice": "", "totalPrice": "8.00"},
+                "itemInfoVO": {"title": "无单价字段商品"},
+            }
+        )
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertIsNone(parsed["items"][0]["goods_price"])
+        self.assertEqual(_normalize_item_price("1,234.5"), "1234.50")
+        self.assertIsNone(_normalize_item_price("not-a-price"))
+        self.assertIsNone(_normalize_item_price("10000000000"))
 
     def test_goods_status_requires_positive_evidence(self) -> None:
         current = _parse_card_to_goods(

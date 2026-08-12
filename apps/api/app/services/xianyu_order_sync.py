@@ -10,6 +10,7 @@
 import asyncio
 import datetime
 import logging
+from decimal import Decimal, InvalidOperation
 from typing import Any, Optional
 
 from sqlalchemy import select, text
@@ -139,6 +140,27 @@ def _parse_order_amount(total_price: Any, unit_price: Any, quantity: int) -> str
     return "0.00"
 
 
+def _normalize_item_price(value: Any) -> str | None:
+    """Normalize a remote item price for MySQL ``DECIMAL(12, 2)``.
+
+    The sold-order API may omit unit prices and represent the omission as an
+    empty string. Passing that value to a strict MySQL DECIMAL column aborts
+    the transaction. Unknown or out-of-range prices remain NULL; the order's
+    total amount is preserved separately.
+    """
+
+    text_value = _text(value).replace(",", "")
+    if not text_value:
+        return None
+    try:
+        price = Decimal(text_value)
+    except (InvalidOperation, ValueError):
+        return None
+    if not price.is_finite() or price < 0 or price > Decimal("9999999999.99"):
+        return None
+    return format(price.quantize(Decimal("0.01")), "f")
+
+
 def _as_dict_list(value: Any) -> list[dict[str, Any]]:
     if isinstance(value, dict):
         return [value]
@@ -234,7 +256,7 @@ def _parse_remote_order_lines(
             or _first_non_empty(item_info, "itemPic", "picUrl")
             or _first_non_empty(common, "itemMainPic", "picUrl")
         )
-        price = _text(
+        price = _normalize_item_price(
             _first_non_empty(line, "unitPrice", "price", "auctionPrice", "goodsPrice")
             or _first_non_empty(item_info, "unitPrice", "price")
         )
@@ -295,7 +317,9 @@ def _parse_remote_order_item(item: dict[str, Any]) -> Optional[dict[str, Any]]:
         or item_buy_info.get("itemPic")
         or item.get("itemMainPic")
     )
-    goods_price = _text(price_vo.get("auctionPrice") or price_vo.get("unitPrice"))
+    goods_price = _normalize_item_price(
+        price_vo.get("auctionPrice") or price_vo.get("unitPrice")
+    )
     total_amount = _parse_order_amount(price_vo.get("totalPrice"), goods_price, quantity)
 
     in_refund = bool(common.get("inRefund"))
@@ -493,7 +517,12 @@ async def sync_orders_for_account(
                         if not parsed:
                             failed += 1
                             continue
-                        action, _ = await _upsert_order(db, account_id, parsed)
+                        # A malformed remote row must not poison the page-level
+                        # transaction and turn every following row into a
+                        # PendingRollbackError.
+                        async with db.begin_nested():
+                            action, _ = await _upsert_order(db, account_id, parsed)
+                            await db.flush()
                         if action == "inserted":
                             inserted += 1
                         else:
