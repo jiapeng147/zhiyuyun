@@ -1008,6 +1008,56 @@ def _delivery_source_fields(body: dict[str, Any]) -> tuple[str, str, str]:
     return title, content, remark
 
 
+def _delivery_template_fields(body: dict[str, Any]) -> tuple[str, int, int, str, int]:
+    """Normalize and validate an auto-delivery template payload."""
+
+    name = str(body.get("name") or body.get("templateName") or "").strip()
+    content = str(body.get("content") or body.get("templateContent") or "").strip()
+    if not name:
+        raise ValueError("模板名称不能为空")
+    if len(name) > 200:
+        raise ValueError("模板名称最多 200 个字符")
+    if not content:
+        raise ValueError("模板内容不能为空")
+    if len(content.encode("utf-8")) > 65_535:
+        raise ValueError("模板内容 UTF-8 编码后不能超过 65535 字节")
+    template_type = _to_int(body.get("type"), 6)
+    if template_type < 0 or template_type > 100:
+        raise ValueError("模板类型必须在 0 到 100 之间")
+    status = 1 if _to_int(body.get("status"), 1) == 1 else 0
+    random_enabled = 1 if _truthy(body.get("randomEnabled") or body.get("random_enabled")) else 0
+    return name, template_type, status, content, random_enabled
+
+
+async def _load_delivery_template_row(
+    db: AsyncSession,
+    template_id: int,
+    current_user: dict | None,
+    *,
+    for_update: bool = False,
+) -> dict[str, Any] | None:
+    lock_clause = " FOR UPDATE" if for_update else ""
+    params: dict[str, Any] = {"template_id": template_id}
+    owner_filter = _owner_filter_sql("t", current_user, params)
+    row = (
+        await db.execute(
+            text(
+                f"""
+                SELECT t.id, t.name, t.type, t.status, t.content, t.random_enabled,
+                       t.created_time, t.updated_time
+                FROM delivery_template t
+                WHERE t.id = :template_id
+                  AND t.deleted = 0
+                  AND {owner_filter}
+                LIMIT 1{lock_clause}
+                """
+            ),
+            params,
+        )
+    ).mappings().first()
+    return dict(row) if row else None
+
+
 async def _list_goods_rows(
     db: AsyncSession,
     goods_ids: list[int] | None = None,
@@ -3122,19 +3172,48 @@ async def remove_delivery_source_from_goods(
 async def get_delivery_template_variables(
     current_user: dict = Depends(get_current_user),
 ):
-    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
+    del current_user
+    return ResultObject.success({"variables": TEMPLATE_VARIABLES, "total": len(TEMPLATE_VARIABLES)})
 
 
 @router.get("/auto-delivery/templates", response_model=ResultObject)
 async def get_delivery_templates(
-    current: int = Query(default=1),
-    size: int = Query(default=20),
-    name: str = Query(default=""),
+    current: int = Query(default=1, ge=1, le=1_000_000),
+    size: int = Query(default=20, ge=1, le=200),
+    name: str = Query(default="", max_length=200),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del current, size, name, db
-    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
+    params: dict[str, Any] = {}
+    where_sql = ["t.deleted = 0", _owner_filter_sql("t", current_user, params)]
+    if name.strip():
+        where_sql.append("t.name LIKE :name")
+        params["name"] = f"%{name.strip()}%"
+    total = (
+        await db.execute(
+            text(f"SELECT COUNT(*) FROM delivery_template t WHERE {' AND '.join(where_sql)}"),
+            params,
+        )
+    ).scalar() or 0
+    params.update({"offset": (current - 1) * size, "limit": size})
+    rows = (
+        await db.execute(
+            text(
+                f"""
+                SELECT t.id, t.name, t.type, t.status, t.content, t.random_enabled,
+                       t.created_time, t.updated_time
+                FROM delivery_template t
+                WHERE {' AND '.join(where_sql)}
+                ORDER BY t.updated_time DESC, t.id DESC
+                LIMIT :offset, :limit
+                """
+            ),
+            params,
+        )
+    ).mappings().all()
+    return ResultObject.success(
+        _page_payload([_template_record(dict(row)) for row in rows], _to_int(total), current, size)
+    )
 
 
 @router.post("/auto-delivery/templates", response_model=ResultObject)
@@ -3143,8 +3222,34 @@ async def create_delivery_template(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del body, db
-    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
+    await _require_plan_feature(db, current_user, "auto_delivery")
+    try:
+        name, template_type, status, content, random_enabled = _delivery_template_fields(body)
+    except ValueError as exc:
+        return ResultObject.validate_failed(str(exc))
+    result = await db.execute(
+        text(
+            """
+            INSERT INTO delivery_template(
+                owner_user_id, name, type, status, content, random_enabled,
+                deleted, created_time, updated_time
+            ) VALUES(
+                :owner_user_id, :name, :type, :status, :content, :random_enabled,
+                0, NOW(), NOW()
+            )
+            """
+        ),
+        {
+            "owner_user_id": current_uid(current_user),
+            "name": name,
+            "type": template_type,
+            "status": status,
+            "content": content,
+            "random_enabled": random_enabled,
+        },
+    )
+    await db.commit()
+    return ResultObject.success({"id": _to_int(result.lastrowid)}, "发货模板已创建")
 
 
 @router.put("/auto-delivery/templates/{template_id}", response_model=ResultObject)
@@ -3154,8 +3259,41 @@ async def update_delivery_template(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del template_id, body, db
-    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
+    await _require_plan_feature(db, current_user, "auto_delivery")
+    try:
+        name, template_type, status, content, random_enabled = _delivery_template_fields(body)
+    except ValueError as exc:
+        return ResultObject.validate_failed(str(exc))
+    existing = await _load_delivery_template_row(
+        db, template_id, current_user, for_update=True
+    )
+    if not existing:
+        await db.rollback()
+        return ResultObject.failed("发货模板不存在或已删除", code=404)
+    await db.execute(
+        text(
+            """
+            UPDATE delivery_template
+            SET name = :name,
+                type = :type,
+                status = :status,
+                content = :content,
+                random_enabled = :random_enabled,
+                updated_time = NOW()
+            WHERE id = :template_id AND deleted = 0
+            """
+        ),
+        {
+            "template_id": template_id,
+            "name": name,
+            "type": template_type,
+            "status": status,
+            "content": content,
+            "random_enabled": random_enabled,
+        },
+    )
+    await db.commit()
+    return ResultObject.success({"id": template_id}, "发货模板已更新")
 
 
 @router.delete("/auto-delivery/templates/{template_id}", response_model=ResultObject)
@@ -3164,8 +3302,25 @@ async def delete_delivery_template(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del template_id, db
-    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
+    await _require_plan_feature(db, current_user, "auto_delivery")
+    existing = await _load_delivery_template_row(
+        db, template_id, current_user, for_update=True
+    )
+    if not existing:
+        await db.rollback()
+        return ResultObject.failed("发货模板不存在或已删除", code=404)
+    await db.execute(
+        text(
+            """
+            UPDATE delivery_template
+            SET deleted = 1, updated_time = NOW()
+            WHERE id = :template_id AND deleted = 0
+            """
+        ),
+        {"template_id": template_id},
+    )
+    await db.commit()
+    return ResultObject.success({"id": template_id}, "发货模板已删除")
 
 
 @router.post("/auto-delivery/templates/{template_id}/copy", response_model=ResultObject)
@@ -3174,8 +3329,39 @@ async def copy_delivery_template(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del template_id, db
-    return ResultObject.failed("当前版本已下线自动发货子类模板管理功能", code=404)
+    await _require_plan_feature(db, current_user, "auto_delivery")
+    existing = await _load_delivery_template_row(
+        db, template_id, current_user, for_update=True
+    )
+    if not existing:
+        await db.rollback()
+        return ResultObject.failed("发货模板不存在或已删除", code=404)
+    copy_name = f"{existing.get('name') or '发货模板'} - 副本"
+    if len(copy_name) > 200:
+        copy_name = f"{copy_name[:195]} - 副本"
+    result = await db.execute(
+        text(
+            """
+            INSERT INTO delivery_template(
+                owner_user_id, name, type, status, content, random_enabled,
+                deleted, created_time, updated_time
+            ) VALUES(
+                :owner_user_id, :name, :type, :status, :content, :random_enabled,
+                0, NOW(), NOW()
+            )
+            """
+        ),
+        {
+            "owner_user_id": current_uid(current_user),
+            "name": copy_name,
+            "type": _to_int(existing.get("type"), 6),
+            "status": _to_int(existing.get("status"), 1),
+            "content": existing.get("content") or "",
+            "random_enabled": _to_int(existing.get("random_enabled")),
+        },
+    )
+    await db.commit()
+    return ResultObject.success({"id": _to_int(result.lastrowid)}, "发货模板已复制")
 
 
 @router.get("/auto-delivery/records", response_model=ResultObject)

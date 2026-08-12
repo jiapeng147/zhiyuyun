@@ -26,6 +26,7 @@ from app.services.xianyu_order_sync import (
     _normalize_item_price,
     _parse_remote_order_item,
 )
+from app.api.v1.routes.delivery_workflow_compat import _delivery_template_fields
 
 
 class _FakeProviderResponse:
@@ -64,6 +65,20 @@ class _FakeQrSession:
 
 
 class BusinessContractTests(unittest.TestCase):
+    def test_delivery_template_payload_supports_frontend_aliases(self) -> None:
+        fields = _delivery_template_fields({
+            "templateName": "付款后发送",
+            "templateContent": "您好，{卡密}",
+            "type": 6,
+            "status": 1,
+            "randomEnabled": True,
+        })
+        self.assertEqual(fields, ("付款后发送", 6, 1, "您好，{卡密}", 1))
+
+    def test_delivery_template_payload_rejects_empty_content(self) -> None:
+        with self.assertRaisesRegex(ValueError, "模板内容不能为空"):
+            _delivery_template_fields({"name": "空模板", "content": ""})
+
     def test_websocket_heartbeat_has_correlatable_mid(self) -> None:
         heartbeat = build_heartbeat_message()
         self.assertEqual(heartbeat["lwp"], "/!")
