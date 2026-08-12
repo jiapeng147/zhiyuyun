@@ -65,7 +65,7 @@ async def get_dashboard_stats(
         sold_item_count = sold_item_count_result.scalar() or 0
 
         # 从 delivery_record 获取发货统计
-        delivery_stats = await _get_delivery_stats(db)
+        delivery_stats = await _get_delivery_stats(db, current_user)
 
         return ResultObject.success(DashboardStatsRespDTO(
             account_count=account_count,
@@ -104,6 +104,7 @@ async def get_dashboard_summary(
         today_order_result = await db.execute(
             select(func.count()).select_from(XianyuTradeOrder).where(
                 XianyuTradeOrder.deleted == 0,
+                XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
                 order_event_time >= day_start,
                 order_event_time < day_end,
             )
@@ -111,13 +112,19 @@ async def get_dashboard_summary(
         today_order_count = today_order_result.scalar() or 0
 
         # 发货统计 — 从 delivery_record 表统计（不要查 xianyu_trade_order.delivery_status）
-        delivery_stats = await _get_delivery_stats(db, start=day_start, end=day_end)
+        delivery_stats = await _get_delivery_stats(
+            db,
+            current_user,
+            start=day_start,
+            end=day_end,
+        )
 
         # AI 自动回复数
         auto_reply_result = await db.execute(
             select(func.count()).select_from(XianyuMessage).where(
                 XianyuMessage.is_auto_reply == 1,
                 XianyuMessage.deleted == 0,
+                XianyuMessage.account_id.in_(owned_account_id_subquery(current_user)),
                 XianyuMessage.created_time >= day_start,
                 XianyuMessage.created_time < day_end,
             )
@@ -168,6 +175,7 @@ async def get_dashboard_sales_trend(
                 func.count().label("c")
             ).where(
                 DeliveryRecord.deleted == 0,
+                DeliveryRecord.account_id.in_(owned_account_id_subquery(current_user)),
                 or_(DeliveryRecord.delivery_status == "success", DeliveryRecord.status == 2),
                 cast(delivery_event_time, Date) >= start_date,
                 cast(delivery_event_time, Date) < range_end,
@@ -182,6 +190,7 @@ async def get_dashboard_sales_trend(
                 func.count().label("c")
             ).where(
                 DeliveryRecord.deleted == 0,
+                DeliveryRecord.account_id.in_(owned_account_id_subquery(current_user)),
                 or_(DeliveryRecord.delivery_status == "failed", DeliveryRecord.status.in_([3, 6, 7])),
                 cast(delivery_event_time, Date) >= start_date,
                 cast(delivery_event_time, Date) < range_end,
@@ -197,6 +206,7 @@ async def get_dashboard_sales_trend(
             ).where(
                 XianyuMessage.is_auto_reply == 1,
                 XianyuMessage.deleted == 0,
+                XianyuMessage.account_id.in_(owned_account_id_subquery(current_user)),
                 cast(XianyuMessage.created_time, Date) >= start_date,
                 cast(XianyuMessage.created_time, Date) < range_end,
             ).group_by(cast(XianyuMessage.created_time, Date))
@@ -216,6 +226,7 @@ async def get_dashboard_sales_trend(
 
 async def _get_delivery_stats(
     db: AsyncSession,
+    current_user: dict,
     *,
     start: datetime | None = None,
     end: datetime | None = None,
@@ -231,6 +242,7 @@ async def _get_delivery_stats(
             }
             conditions = [
                 DeliveryRecord.deleted == 0,
+                DeliveryRecord.account_id.in_(owned_account_id_subquery(current_user)),
                 status_conditions[status],
             ]
             event_time = DeliveryRecord.created_time
