@@ -10,6 +10,7 @@
 """
 
 import hashlib
+import html
 import io
 import json
 import logging
@@ -21,7 +22,7 @@ import time
 import base64
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import qrcode
 import requests
@@ -35,6 +36,9 @@ H5_API = "https://h5api.m.goofish.com/h5/mtop.gaia.nodejs.gaia.idle.data.gw.v2.i
 LOGIN_PAGE = "https://passport.goofish.com/mini_login.htm"
 QR_GENERATE = "https://passport.goofish.com/newlogin/qrcode/generate.do"
 QR_QUERY = "https://passport.goofish.com/newlogin/qrcode/query.do"
+QR_TOKEN_LOGIN = "https://passport.goofish.com/login_token/login.do"
+USER_NAV_API = "mtop.idle.web.user.page.nav"
+FACE_VERIFY_CHECK = "https://passport.goofish.com/iv/photoVerify/check.do"
 
 H_COMMON = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -364,6 +368,40 @@ def _generate_qrcode(session: requests.Session, login_form: dict) -> str:
     login_form["defaultCheck"] = "1"
     login_form["t"] = qr_data.get("t", "")
     login_form["ck"] = qr_data.get("ck", "")
+    # The query endpoint accepts a broader login-page form, but these fields
+    # are required by the current web QR flow to return the one-time login
+    # token after the App confirms the scan.
+    cookie_dict = {k: v for k, v in session.cookies.items()}
+    login_form.update(
+        {
+            "appName": "xianyu",
+            "fromSite": "77",
+            "appEntrance": "web",
+            "_csrf_token": str(
+                login_form.get("_csrf_token")
+                or cookie_dict.get("XSRF-TOKEN")
+                or ""
+            ),
+            "umidToken": str(login_form.get("umidToken") or ""),
+            "hsiz": str(login_form.get("hsiz") or cookie_dict.get("cookie2") or ""),
+            "bizParams": str(
+                login_form.get("bizParams")
+                or "taobaoBizLoginFrom=web&renderRefer=https%3A%2F%2Fwww.goofish.com%2F"
+            ),
+            "mainPage": "false",
+            "isMobile": "false",
+            "lang": "zh_CN",
+            "returnUrl": "",
+            "umidTag": "SERVER",
+            "navlanguage": "zh-CN",
+            "navUserAgent": H_COMMON["User-Agent"],
+            "navPlatform": "Win32",
+            "isIframe": "true",
+            "documentReferer": "https://www.goofish.com/",
+            "defaultView": "sms",
+            "deviceId": str(cookie_dict.get("cna") or ""),
+        }
+    )
 
     # 生成二维码图片
     img = qrcode.make(code_content)
@@ -417,6 +455,27 @@ def _safe_cookie_keys(session: requests.Session) -> list[str]:
         return []
 
 
+def _get_cookie_value(session: requests.Session, name: str) -> str:
+    """Read a cookie without failing when several domains use the same name."""
+
+    values: list[str] = []
+    try:
+        for cookie in session.cookies:
+            if str(getattr(cookie, "name", "") or "") != name:
+                continue
+            value = str(getattr(cookie, "value", "") or "").strip()
+            if value:
+                values.append(value)
+    except Exception:
+        values = []
+    if values:
+        return values[-1]
+    try:
+        return str(session.cookies.get(name) or "").strip()
+    except Exception:
+        return ""
+
+
 def _extract_external_uid_from_payload(payload: dict) -> str:
     """Extract a seller/user uid from a confirmed QR payload.
 
@@ -436,7 +495,6 @@ def _extract_external_uid_from_payload(payload: dict) -> str:
         "sellerId",
         "seller_id",
         "hid",
-        "id",
     }
 
     def _walk(value) -> str:
@@ -506,7 +564,7 @@ def _ensure_unb_cookie(session: requests.Session, uid: str) -> bool:
     text = str(uid or "").strip()
     if not re.fullmatch(r"\d{5,30}", text):
         return False
-    if session.cookies.get("unb"):
+    if _get_cookie_value(session, "unb"):
         return True
     _set_cookie_value(session, "unb", text)
     return True
@@ -558,7 +616,7 @@ def _try_resolve_uid_via_has_login(
         )
         return ""
     _merge_response_cookies(session, resp)
-    uid = session.cookies.get("unb") or ""
+    uid = _get_cookie_value(session, "unb")
     if uid:
         return str(uid)
     body = getattr(resp, "text", "") or ""
@@ -574,17 +632,105 @@ def _try_resolve_uid_via_has_login(
     return uid
 
 
-def _try_resolve_uid_via_mtop_has_login(session: requests.Session) -> str:
-    m_h5_tk = str(session.cookies.get("_m_h5_tk") or "")
-    token = m_h5_tk.split("_", 1)[0].strip()
-    if not token:
+def _extract_login_token(payload: dict | None, login_form: dict | None) -> str:
+    for source in (payload or {}, login_form or {}):
+        if not isinstance(source, dict):
+            continue
+        for key in ("token", "loginToken", "login_token", "lgToken"):
+            value = str(source.get(key) or "").strip()
+            if value and len(value) <= 4096:
+                return value
+    return ""
+
+
+def _try_exchange_qr_login_token(
+    session: requests.Session,
+    payload: dict | None,
+    login_form: dict | None,
+) -> str:
+    """Exchange the confirmed QR token for the actual web login session."""
+
+    login_token = _extract_login_token(payload, login_form)
+    if not login_token:
         return ""
-    api_name = "mtop.taobao.idle.user.hasLogin"
+    now = time.monotonic()
+    last_attempt = float(getattr(session, "_xianyu_token_exchange_at", 0) or 0)
+    if last_attempt and now - last_attempt < 4:
+        return _get_cookie_value(session, "unb")
+    setattr(session, "_xianyu_token_exchange_at", now)
+
+    cookie_dict = {k: v for k, v in session.cookies.items()}
+    headers = {
+        **H_API,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Referer": LOGIN_PAGE,
+    }
+    try:
+        resp = session.post(
+            QR_TOKEN_LOGIN,
+            params={
+                "token": login_token,
+                "subFlow": "DIALOG_CHECK_LOGIN_RPC",
+                "nextCode": "0018",
+                "bizScene": "qrcode",
+                "confirm": "true",
+            },
+            headers=headers,
+            data={"deviceId": str(cookie_dict.get("cna") or "")},
+            timeout=12,
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "闲鱼扫码确认换票失败 errorType=%s",
+            type(exc).__name__,
+        )
+        return ""
+
+    _merge_response_cookies(session, resp)
+    uid = _get_cookie_value(session, "unb")
+    body = getattr(resp, "text", "") or ""
+    response_keys = ""
+    has_verification = False
+    try:
+        response_payload = resp.json()
+    except Exception:
+        response_payload = None
+    if isinstance(response_payload, dict):
+        response_keys = ",".join(sorted(response_payload.keys()))[:200]
+        if not uid:
+            uid = _extract_external_uid_from_payload(response_payload)
+        response_data = ((response_payload.get("content") or {}).get("data") or {})
+        if isinstance(response_data, dict):
+            redirect_url = response_data.get("iframeRedirectUrl")
+            has_verification = bool(response_data.get("iframeRedirect") and redirect_url)
+            if has_verification:
+                _set_verification_redirect_state(session, str(redirect_url))
+    if not uid:
+        uid = _extract_external_uid_from_text(body)
+    if uid:
+        _ensure_unb_cookie(session, uid)
+    logger.warning(
+        "闲鱼扫码确认换票完成 statusCode=%s hasUid=%s hasVerification=%s topKeys=%s cookieKeys=%s",
+        getattr(resp, "status_code", ""),
+        bool(uid),
+        has_verification,
+        response_keys,
+        ",".join(_safe_cookie_keys(session))[:300],
+    )
+    return uid
+
+
+def _try_resolve_uid_via_user_nav(session: requests.Session) -> str:
+    m_h5_tk = _get_cookie_value(session, "_m_h5_tk")
+    token = m_h5_tk.split("_", 1)[0].strip()
+    api_name = USER_NAV_API
     data_json = "{}"
     t_ms = str(int(time.time() * 1000))
-    sign = hashlib.md5(
-        f"{token}&{t_ms}&{APP_KEY}&{data_json}".encode()
-    ).hexdigest()
+    sign = (
+        hashlib.md5(f"{token}&{t_ms}&{APP_KEY}&{data_json}".encode()).hexdigest()
+        if token
+        else ""
+    )
     form = {
         "jsv": "2.7.2",
         "appKey": APP_KEY,
@@ -597,23 +743,30 @@ def _try_resolve_uid_via_mtop_has_login(session: requests.Session) -> str:
         "timeout": "20000",
         "api": api_name,
         "sessionOption": "AutoLoginOnly",
+        "spm_cnt": "a21ybx.home.0.0",
         "data": data_json,
+    }
+    headers = {
+        **H_API,
+        "Origin": "https://www.goofish.com",
+        "Referer": "https://www.goofish.com/",
+        "Content-Type": "application/x-www-form-urlencoded",
     }
     try:
         resp = session.post(
             f"https://h5api.m.goofish.com/h5/{api_name}/1.0/",
-            headers=H_API,
+            headers=headers,
             data=form,
             timeout=12,
         )
     except requests.exceptions.RequestException as exc:
         logger.warning(
-            "闲鱼扫码 mtop hasLogin 反查失败 errorType=%s",
+            "闲鱼扫码用户身份刷新失败 errorType=%s",
             type(exc).__name__,
         )
         return ""
     _merge_response_cookies(session, resp)
-    uid = str(session.cookies.get("unb") or "").strip()
+    uid = _get_cookie_value(session, "unb")
     body = getattr(resp, "text", "") or ""
     top_keys = ""
     ret = ""
@@ -632,7 +785,7 @@ def _try_resolve_uid_via_mtop_has_login(session: requests.Session) -> str:
     if uid:
         _ensure_unb_cookie(session, uid)
     logger.warning(
-        "闲鱼扫码 mtop hasLogin 反查完成 statusCode=%s hasUid=%s topKeys=%s ret=%s cookieKeys=%s",
+        "闲鱼扫码用户身份刷新完成 statusCode=%s hasUid=%s topKeys=%s ret=%s cookieKeys=%s",
         getattr(resp, "status_code", ""),
         bool(uid),
         top_keys,
@@ -648,15 +801,13 @@ def _confirmed_cookie_result(
     payload: dict | None = None,
     login_form: dict | None = None,
 ) -> dict | None:
-    uid = session.cookies.get("unb") or ""
-    if not uid and payload:
-        uid = _extract_external_uid_from_payload(payload)
-        if uid:
-            _ensure_unb_cookie(session, uid)
+    uid = _get_cookie_value(session, "unb")
+    if not uid:
+        uid = _try_exchange_qr_login_token(session, payload, login_form)
+    if not uid:
+        uid = _try_resolve_uid_via_user_nav(session)
     if not uid:
         uid = _try_resolve_uid_via_has_login(session, login_form)
-    if not uid:
-        uid = _try_resolve_uid_via_mtop_has_login(session)
     cookies = {k: v for k, v in session.cookies.items()}
     if not cookies.get("unb"):
         logger.warning(
@@ -681,13 +832,15 @@ def _safe_verification_redirect_url(url: str | None) -> str:
     if not raw:
         return ""
     parsed = urlparse(raw)
-    if parsed.scheme != "https":
+    if parsed.scheme != "https" or parsed.username or parsed.password:
         return ""
-    if parsed.hostname not in {
-        "passport.goofish.com",
-        "login.taobao.com",
-        "passport.taobao.com",
-    }:
+    hostname = str(parsed.hostname or "").casefold()
+    if not (
+        hostname == "goofish.com"
+        or hostname.endswith(".goofish.com")
+        or hostname == "taobao.com"
+        or hostname.endswith(".taobao.com")
+    ):
         return ""
     return raw
 
@@ -725,12 +878,206 @@ def _verification_pending_result(
     safe_url = safe_url or _verification_redirect_url(session)
     if not safe_url or not _verification_window_active(session):
         return None
+    extra = {"iframe_redirect_url": safe_url}
+    face_qr_image = str(getattr(session, "_xianyu_face_qr_image", "") or "")
+    if face_qr_image:
+        extra["faceQrImage"] = face_qr_image
     return _qr_status_result(
         "verification_required",
-        "扫码已确认，闲鱼要求额外安全验证。请继续在闲鱼 App 内完成验证；网页会继续同步账号凭据。",
+        (
+            "请使用闲鱼 App 扫描当前身份验证二维码并完成验证，网页会自动绑定账号。"
+            if face_qr_image
+            else "扫码已确认，正在同步闲鱼身份验证状态，请保持页面打开。"
+        ),
         raw_status,
-        iframe_redirect_url=safe_url,
+        **extra,
     )
+
+
+def _render_qr_data_url(content: str) -> str:
+    image = qrcode.make(content)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+
+def _decode_verification_url(value: str, base_url: str) -> str:
+    raw = html.unescape(str(value or "").strip())
+    raw = raw.replace(r"\/", "/").replace(r"\u002F", "/")
+    if raw.startswith("/"):
+        raw = urljoin(base_url, raw)
+    return _safe_verification_redirect_url(raw)
+
+
+def _initialize_verification_state(
+    session: requests.Session,
+    redirect_url: str | None,
+) -> bool:
+    safe_url = _set_verification_redirect_state(session, redirect_url)
+    safe_url = safe_url or _verification_redirect_url(session)
+    if not safe_url:
+        return False
+    if getattr(session, "_xianyu_verification_initialized", False):
+        return bool(getattr(session, "_xianyu_verification_htoken", ""))
+
+    last_attempt = float(
+        getattr(session, "_xianyu_verification_initialize_at", 0) or 0
+    )
+    now = time.monotonic()
+    if last_attempt and now - last_attempt < 4:
+        return False
+    setattr(session, "_xianyu_verification_initialize_at", now)
+
+    try:
+        response = session.get(
+            safe_url,
+            headers=H_PAGE,
+            timeout=12,
+            allow_redirects=True,
+        )
+        _merge_response_cookies(session, response)
+        response_url = str(getattr(response, "url", "") or safe_url)
+        response_text = html.unescape(str(getattr(response, "text", "") or ""))
+        uid = _extract_external_uid_from_text(response_text)
+        if uid:
+            _ensure_unb_cookie(session, uid)
+
+        token_match = re.search(
+            r"(?:[?&]|\b)htoken=([A-Za-z0-9_-]{6,512})",
+            f"{response_url} {response_text}",
+        )
+        htoken = token_match.group(1) if token_match else ""
+        verify_modes_url = ""
+        for pattern in (
+            r"window\.location\.href\s*=\s*[\"']([^\"']*?/iv/mini/verify_modes\.htm\?[^\"']*)[\"']",
+            r"[\"'](https:[^\"']*?/iv/mini/verify_modes\.htm\?[^\"']*)[\"']",
+        ):
+            match = re.search(pattern, response_text)
+            if match:
+                verify_modes_url = _decode_verification_url(
+                    match.group(1),
+                    response_url,
+                )
+                if verify_modes_url:
+                    break
+        if verify_modes_url:
+            if verify_modes_url.endswith("_umidfg="):
+                verify_modes_url += "1"
+            verify_response = session.get(
+                verify_modes_url,
+                headers=H_PAGE,
+                timeout=12,
+                allow_redirects=True,
+            )
+            _merge_response_cookies(session, verify_response)
+            identity_url = str(
+                getattr(verify_response, "url", "") or verify_modes_url
+            )
+            identity_text = html.unescape(
+                str(getattr(verify_response, "text", "") or "")
+            )
+            if not htoken:
+                token_match = re.search(
+                    r"(?:[?&]|\b)htoken=([A-Za-z0-9_-]{6,512})",
+                    f"{identity_url} {identity_text}",
+                )
+                htoken = token_match.group(1) if token_match else ""
+            qr_match = re.search(
+                r"new\s+Qrcode\s*\(\s*\{.*?\btext\s*:\s*[\"']([^\"']+)[\"']",
+                identity_text,
+                re.DOTALL,
+            )
+            if qr_match:
+                face_qr_content = _decode_verification_url(
+                    qr_match.group(1),
+                    identity_url,
+                )
+                if face_qr_content:
+                    setattr(
+                        session,
+                        "_xianyu_face_qr_image",
+                        _render_qr_data_url(face_qr_content),
+                    )
+        if htoken:
+            setattr(session, "_xianyu_verification_htoken", htoken)
+        setattr(session, "_xianyu_verification_initialized", True)
+        logger.warning(
+            "闲鱼扫码安全验证初始化完成 statusCode=%s finalHost=%s hasHtoken=%s hasFaceQr=%s hasUid=%s cookieKeys=%s",
+            getattr(response, "status_code", ""),
+            urlparse(response_url).hostname or "",
+            bool(htoken),
+            bool(getattr(session, "_xianyu_face_qr_image", "")),
+            bool(_get_cookie_value(session, "unb")),
+            ",".join(_safe_cookie_keys(session))[:300],
+        )
+        return bool(htoken or _get_cookie_value(session, "unb"))
+    except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "闲鱼扫码安全验证初始化失败 errorType=%s",
+            type(exc).__name__,
+        )
+        return False
+
+
+def _poll_verification_once(session: requests.Session) -> bool:
+    htoken = str(getattr(session, "_xianyu_verification_htoken", "") or "")
+    if not htoken:
+        return bool(_get_cookie_value(session, "unb"))
+    now = time.monotonic()
+    last_poll = float(getattr(session, "_xianyu_verification_poll_at", 0) or 0)
+    if last_poll and now - last_poll < 1.5:
+        return bool(_get_cookie_value(session, "unb"))
+    setattr(session, "_xianyu_verification_poll_at", now)
+
+    headers = {
+        **H_API,
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": f"https://passport.goofish.com/iv/mini/identity_verify.htm?htoken={htoken}",
+    }
+    try:
+        response = session.get(
+            FACE_VERIFY_CHECK,
+            params={"htoken": htoken},
+            headers=headers,
+            timeout=12,
+        )
+        _merge_response_cookies(session, response)
+        payload = response.json()
+        content = payload.get("content") or {} if isinstance(payload, dict) else {}
+        code = str(content.get("code") or "") if isinstance(content, dict) else ""
+        callback_url = (
+            _safe_verification_redirect_url(str(content.get("url") or ""))
+            if code == "3" and isinstance(content, dict)
+            else ""
+        )
+        if callback_url:
+            callback = session.get(
+                callback_url,
+                headers=headers,
+                timeout=12,
+                allow_redirects=True,
+            )
+            _merge_response_cookies(session, callback)
+            uid = _extract_external_uid_from_text(
+                str(getattr(callback, "text", "") or "")
+            )
+            if uid:
+                _ensure_unb_cookie(session, uid)
+        logger.warning(
+            "闲鱼扫码安全验证状态 code=%s hasCallback=%s hasUid=%s cookieKeys=%s",
+            code,
+            bool(callback_url),
+            bool(_get_cookie_value(session, "unb")),
+            ",".join(_safe_cookie_keys(session))[:300],
+        )
+        return bool(_get_cookie_value(session, "unb"))
+    except (requests.exceptions.RequestException, ValueError) as exc:
+        logger.warning(
+            "闲鱼扫码安全验证状态查询失败 errorType=%s",
+            type(exc).__name__,
+        )
+        return False
 
 
 def _try_complete_verification_redirect(
@@ -738,52 +1085,35 @@ def _try_complete_verification_redirect(
     redirect_url: str | None,
     login_form: dict | None = None,
 ) -> dict | None:
-    safe_url = _set_verification_redirect_state(session, redirect_url)
-    safe_url = safe_url or _verification_redirect_url(session)
-    if not safe_url:
+    if not _initialize_verification_state(session, redirect_url):
         return None
-    try:
-        resp = session.get(
-            safe_url,
-            headers=H_PAGE,
-            timeout=12,
-            allow_redirects=True,
-        )
-        uid = _extract_external_uid_from_text(getattr(resp, "text", "") or "")
-        if uid:
-            _ensure_unb_cookie(session, uid)
-        logger.info(
-            "闲鱼扫码安全验证跳转已访问 statusCode=%s finalHost=%s hasUnb=%s",
-            getattr(resp, "status_code", ""),
-            urlparse(getattr(resp, "url", "") or safe_url).hostname or "",
-            bool(session.cookies.get("unb")),
-        )
-    except requests.exceptions.RequestException as exc:
-        logger.warning(
-            "闲鱼扫码安全验证跳转访问失败 errorType=%s",
-            type(exc).__name__,
-        )
-        return None
+    _poll_verification_once(session)
     return _confirmed_cookie_result(session, "CONFIRMED", login_form=login_form)
 
 
 def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
     """单次轮询，非阻塞。"""
     try:
-        resp = session.post(QR_QUERY, headers=H_API, data=login_form, timeout=20)
+        resp = session.post(
+            QR_QUERY,
+            params={"appName": "xianyu", "fromSite": "77"},
+            headers=H_API,
+            data=login_form,
+            timeout=20,
+        )
         data = _json_or_raise(resp, "轮询二维码状态").get("content", {}).get("data") or {}
         status = str(data.get("qrCodeStatus") or "").upper()
 
         if status == "CONFIRMED":
+            confirmed = _confirmed_cookie_result(session, status, data, login_form)
+            if confirmed:
+                return confirmed
             if data.get("iframeRedirect"):
                 confirmed = _try_complete_verification_redirect(
                     session,
                     data.get("iframeRedirectUrl"),
                     login_form,
                 )
-                if confirmed:
-                    return confirmed
-                confirmed = _confirmed_cookie_result(session, status, data, login_form)
                 if confirmed:
                     return confirmed
                 logger.info(
@@ -816,6 +1146,9 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
                 status,
             )
         if status == "EXPIRED":
+            confirmed = _confirmed_cookie_result(session, status, data, login_form)
+            if confirmed:
+                return confirmed
             confirmed = _try_complete_verification_redirect(
                 session,
                 _verification_redirect_url(session),
@@ -826,9 +1159,6 @@ def _poll_status_once(session: requests.Session, login_form: dict) -> dict:
             pending = _verification_pending_result(session, status)
             if pending:
                 return pending
-            confirmed = _confirmed_cookie_result(session, status, data, login_form)
-            if confirmed:
-                return confirmed
             return _qr_status_result(
                 "expired",
                 "二维码已过期，请刷新二维码后重新扫码。",

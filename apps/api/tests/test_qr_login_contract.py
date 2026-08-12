@@ -82,44 +82,81 @@ class _FakeQrQuerySession:
         *,
         redirect_uid: str = "fixture-unb",
         has_login_uid: str = "",
-        mtop_uid: str = "",
+        token_login_uid: str = "",
+        nav_uid: str = "",
+        verification_code: str = "0",
+        verification_callback_uid: str = "",
     ) -> None:
         self.cookies: dict = {}
         self.payload = payload
         self.redirect_visited = False
         self.redirect_uid = redirect_uid
         self.has_login_uid = has_login_uid
-        self.mtop_uid = mtop_uid
+        self.token_login_uid = token_login_uid
+        self.nav_uid = nav_uid
+        self.verification_code = verification_code
+        self.verification_callback_uid = verification_callback_uid
+        self.token_login_visited = False
+        self.nav_visited = False
+        self.query_params: dict = {}
 
-    def post(self, url="", *_args, **_kwargs):
+    def post(self, url="", *_args, **kwargs):
+        if "login_token/login.do" in str(url):
+            self.token_login_visited = True
+            if self.token_login_uid:
+                self.cookies["unb"] = self.token_login_uid
+            return _FakeResponse(200, text=json.dumps({"content": {"data": {"loginResult": "success"}}}))
         if "hasLogin.do" in str(url):
             text = json.dumps(
                 {"success": True, "userId": self.has_login_uid},
                 ensure_ascii=False,
             )
             return _FakeResponse(200, text=text)
-        if "mtop.taobao.idle.user.hasLogin" in str(url):
+        if "mtop.idle.web.user.page.nav" in str(url):
+            self.nav_visited = True
             text = json.dumps(
                 {
                     "ret": ["SUCCESS::调用成功"],
-                    "data": {"hasLogin": True, "userId": self.mtop_uid},
+                    "data": {"userId": self.nav_uid},
                 },
                 ensure_ascii=False,
             )
             return _FakeResponse(200, text=text)
+        self.query_params = dict(kwargs.get("params") or {})
         text = json.dumps(
             {"content": {"data": self.payload}},
             ensure_ascii=False,
         )
         return _FakeResponse(200, text=text)
 
-    def get(self, *_args, **_kwargs):
+    def get(self, url="", *_args, **_kwargs):
         self.redirect_visited = True
+        if "photoVerify/check.do" in str(url):
+            callback_url = (
+                "https://passport.goofish.com/iv/ivCheckLogin.htm"
+                if self.verification_code == "3"
+                else ""
+            )
+            return _FakeResponse(
+                200,
+                text=json.dumps(
+                    {"content": {"code": self.verification_code, "url": callback_url}}
+                ),
+                url=str(url),
+            )
+        if "ivCheckLogin.htm" in str(url):
+            if self.verification_callback_uid:
+                self.cookies["unb"] = self.verification_callback_uid
+            return _FakeResponse(200, text="ok", url=str(url))
         if self.redirect_uid:
             self.cookies["unb"] = self.redirect_uid
         return _FakeResponse(
             200,
-            text="ok",
+            text=(
+                'window.location.href="https://passport.goofish.com/iv/mini/verify_modes.htm?htoken=verify-token&_umidfg=";'
+                if str(url).rstrip("/") == "https://passport.goofish.com/verify"
+                else 'new Qrcode({ text: "https://passport.goofish.com/iv/face-qr" });'
+            ),
             url="https://passport.goofish.com/callback",
         )
 
@@ -162,16 +199,17 @@ class GetMH5TkContractTests(unittest.TestCase):
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "fixture-unb")
 
-    def test_confirmed_payload_user_id_is_used_when_cookie_lacks_unb(self) -> None:
+    def test_confirmed_payload_user_id_alone_does_not_forge_login_cookie(self) -> None:
         session = _FakeQrQuerySession(
             {
                 "qrCodeStatus": "CONFIRMED",
                 "userId": "2200000012345",
-            }
+            },
+            redirect_uid="",
         )
         result = xianyu_qr_login._poll_status_once(session, {})
-        self.assertEqual(result["status"], "confirmed")
-        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+        self.assertEqual(result["status"], "failed")
+        self.assertNotIn("unb", session.cookies)
 
     def test_verification_payload_user_id_is_used_when_redirect_lacks_unb(self) -> None:
         session = _FakeQrQuerySession(
@@ -182,11 +220,27 @@ class GetMH5TkContractTests(unittest.TestCase):
                 "userId": "2200000012345",
             },
             redirect_uid="",
+            verification_code="3",
+            verification_callback_uid="2200000012345",
         )
         result = xianyu_qr_login._poll_status_once(session, {})
         self.assertTrue(session.redirect_visited)
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
+    def test_verification_pending_exposes_second_qr_when_required(self) -> None:
+        session = _FakeQrQuerySession(
+            {
+                "qrCodeStatus": "CONFIRMED",
+                "iframeRedirect": True,
+                "iframeRedirectUrl": "https://passport.goofish.com/verify",
+            },
+            redirect_uid="",
+            verification_code="0",
+        )
+        result = xianyu_qr_login._poll_status_once(session, {})
+        self.assertEqual(result["status"], "verification_required")
+        self.assertTrue(result["faceQrImage"].startswith("data:image/png;base64,"))
 
     def test_confirmed_has_login_user_id_is_used_when_cookie_lacks_unb(self) -> None:
         session = _FakeQrQuerySession(
@@ -198,17 +252,49 @@ class GetMH5TkContractTests(unittest.TestCase):
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "2200000012345")
 
-    def test_confirmed_mtop_has_login_user_id_is_used_when_passport_lacks_uid(self) -> None:
+    def test_confirmed_login_token_is_exchanged_before_persisting(self) -> None:
+        session = _FakeQrQuerySession(
+            {"qrCodeStatus": "CONFIRMED", "token": "confirmed-token"},
+            redirect_uid="",
+            token_login_uid="2200000012345",
+        )
+        result = xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
+        self.assertTrue(session.token_login_visited)
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
+    def test_generated_lg_token_is_exchanged_when_confirm_payload_omits_token(self) -> None:
+        session = _FakeQrQuerySession(
+            {"qrCodeStatus": "CONFIRMED"},
+            redirect_uid="",
+            token_login_uid="2200000012345",
+        )
+        result = xianyu_qr_login._poll_status_once(
+            session,
+            {"appName": "xianyu", "lgToken": "generated-token"},
+        )
+        self.assertTrue(session.token_login_visited)
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
+    def test_confirmed_user_nav_id_is_used_when_token_exchange_lacks_uid(self) -> None:
         session = _FakeQrQuerySession(
             {"qrCodeStatus": "CONFIRMED"},
             redirect_uid="",
             has_login_uid="",
-            mtop_uid="2200000012345",
+            nav_uid="2200000012345",
         )
         session.cookies["_m_h5_tk"] = "token_fixture_123"
         result = xianyu_qr_login._poll_status_once(session, {"appName": "xianyu"})
+        self.assertTrue(session.nav_visited)
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["cookies"]["unb"], "2200000012345")
+
+    def test_qr_query_uses_current_passport_site_parameters(self) -> None:
+        session = _FakeQrQuerySession({"qrCodeStatus": "NEW"}, redirect_uid="")
+        result = xianyu_qr_login._poll_status_once(session, {})
+        self.assertEqual(result["status"], "new")
+        self.assertEqual(session.query_params, {"appName": "xianyu", "fromSite": "77"})
 
     def test_expired_after_confirm_uses_existing_cookies(self) -> None:
         session = _FakeQrQuerySession({"qrCodeStatus": "EXPIRED"})

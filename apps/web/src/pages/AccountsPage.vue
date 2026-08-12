@@ -1825,6 +1825,10 @@ async function checkQrStatus() {
     const nextStatus = normalizeQrStatus(data.status || qr.status)
     qr.status = nextStatus || qr.status
     qr.verificationUrl = normalizeQrVerificationUrl(data.iframe_redirect_url || data.iframeRedirectUrl || data.verificationUrl)
+    const faceQrImage = data.faceQrImage || data.face_qr_image || ''
+    if (qr.status === 'verification_required' && faceQrImage.startsWith('data:image/')) {
+      qr.qrUrl = faceQrImage
+    }
     qr.message = data.message || (nextStatus !== prevStatus ? qrStatusMessage(qr.status) : (qr.message || qrStatusMessage(qr.status)))
 
     if (qr.status === 'confirmed') {
