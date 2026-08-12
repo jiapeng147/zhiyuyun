@@ -327,7 +327,7 @@
         </div>
         <div class="scan-main">
           <div>
-            <div class="qr-box" :class="[`is-${qrStatusTone}`, { 'is-polling': qr.polling }]">
+            <div class="qr-box" :class="[`is-${qrStatusTone}`, { 'is-polling': qr.polling, 'is-verification': qr.verificationQrActive }]">
               <span v-if="qr.verificationQrActive" class="qr-phase-label">请再次扫码验证身份</span>
               <img v-if="qr.qrUrl" :src="qr.qrUrl" :alt="qr.verificationQrActive ? '闲鱼身份验证二维码' : '闲鱼登录二维码'">
               <div v-else class="qr-unavailable" role="status">
@@ -2482,6 +2482,30 @@ onBeforeUnmount(() => {
   padding: 14px;
   box-sizing: border-box;
   background: #fff;
+}
+
+.account-scan-modal .qr-phase-label {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.account-scan-modal .qr-box.is-verification img {
+  padding-top: 52px;
 }
 
 .account-scan-modal .qr-box.is-polling {
