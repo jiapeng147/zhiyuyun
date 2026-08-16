@@ -23,9 +23,9 @@
 
 ## 📸 项目截图
 
-| 控制台仪表盘 | 账号管理 |
+| 数据看板 | 账号管理 |
 | :---: | :---: |
-| ![仪表盘](screenshots/dashboard.png) | ![账号管理](screenshots/accounts.png) |
+| ![数据看板](screenshots/data-panel.png) | ![账号管理](screenshots/accounts.png) |
 
 | 商品管理 | 订单管理 |
 | :---: | :---: |
@@ -39,9 +39,9 @@
 | :---: | :---: |
 | ![AI 自动回复](screenshots/auto-reply.png) | ![商品发布](screenshots/product-publish.png) |
 
-| 数据看板 | 系统配置 |
-| :---: | :---: |
-| ![数据看板](screenshots/data-panel.png) | ![系统配置](screenshots/settings.png) |
+| 系统配置 |
+| :---: |
+| ![系统配置](screenshots/settings.png) |
 
 | 移动端 - 仪表盘 | 移动端 - 消息 |
 | :---: | :---: |
@@ -64,11 +64,6 @@
 - 🧩 **Crawler 滑块求解** — 由 API 同会话维护的二维码登录
 - 🏠 **首页运营** — 轮播、公告、文字广告、广告申请、关于我们
 - 🔗 **反馈建议** — 向我们反馈功能建议
-
-## 🖼️ 商业版预览
-| 商业版 - 截图 1 | 商业版 - 截图 2 |
-| :---: | :---: |
-| ![商业版1](screenshots/commercial-1.png) | ![商业版2](screenshots/commercial-2.png) |
 
 ## 🏆 商业版服务
 
@@ -245,40 +240,6 @@ python scripts/production_ops.py --env-file .env stop
 | [`SECURITY.md`](SECURITY.md) | 安全策略 |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | 贡献指南 |
 
-## 🤝 贡献
-
-欢迎提交 Issue 与 Pull Request。提交前请先阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)，并确保本地 `verify-local.bat`（或对应脚本）通过。
-
 ## 📄 许可证
 
 本项目采用 [Apache License 2.0](LICENSE) 开源许可证。使用、修改和分发时请遵守许可证条款，并保留适用的版权与声明信息。
-
----
-
-## 💖 赞助
-
-如果这个项目帮助到了你，或者你通过它赚到了钱，并且你愿意的话，希望你能赞助支持我的持续开发与维护工作。你的支持是我继续迭代、修复问题、添加新功能的动力。
-
-<div align="center">
-
-![赞助码](sponsorship/qr.png)
-
-</div>
-
-## 💬 微信交流群
-
-欢迎加入微信交流群，与更多平台卖家和开发者一起交流使用心得、反馈问题、获取最新动态。
-
-> 📌 **微信群二维码位置预留** — 届时我会在此附上微信群二维码。
-
-<div align="center">
-
-![微信群](sponsorship/wechat-group.png)
-
-</div>
-
-<div align="center">
-
-<sub>Made with care for the 闲鱼 seller community.</sub>
-
-</div>
