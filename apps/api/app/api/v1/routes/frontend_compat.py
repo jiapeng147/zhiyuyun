@@ -1103,23 +1103,30 @@ async def list_notifications(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    params: dict[str, Any] = {"limit": size, "offset": (current - 1) * size}
+    where_sql = ["deleted = 0"]
+    if not is_superadmin(current_user):
+        where_sql.append("owner_user_id = :owner_user_id")
+        params["owner_user_id"] = current_uid(current_user)
+    where_clause = " AND ".join(where_sql)
     total_result = await db.execute(
-        text("SELECT COUNT(*) AS total FROM notification WHERE deleted = 0")
+        text(f"SELECT COUNT(*) AS total FROM notification WHERE {where_clause}"),
+        params,
     )
     total = int(total_result.scalar() or 0)
     result = await db.execute(
         text(
-            """
+            f"""
             SELECT
               id, notification_type, title, content, reference_type, reference_id,
               is_read, read_time, priority, created_time, updated_time
             FROM notification
-            WHERE deleted = 0
+            WHERE {where_clause}
             ORDER BY id DESC
             LIMIT :limit OFFSET :offset
             """
         ),
-        {"limit": size, "offset": (current - 1) * size},
+        params,
     )
     rows = result.mappings().all()
     records = [
@@ -1337,16 +1344,26 @@ async def mark_notification_read(
     current_user: dict = Depends(get_current_user),
 ):
     now = _now()
-    await db.execute(
+    params: dict[str, Any] = {"id": notification_id, "now": now}
+    owner_sql = ""
+    if not is_superadmin(current_user):
+        owner_sql = " AND owner_user_id = :owner_user_id"
+        params["owner_user_id"] = current_uid(current_user)
+    result = await db.execute(
         text(
-            """
+            f"""
             UPDATE notification
             SET is_read = 1, read_time = :now, updated_time = :now
             WHERE id = :id
+              AND deleted = 0
+              {owner_sql}
             """
         ),
-        {"id": notification_id, "now": now},
+        params,
     )
+    if result.rowcount == 0:
+        await db.rollback()
+        return ResultObject.failed("通知不存在或无权操作", code=404)
     await db.commit()
     return ResultObject.success({"id": notification_id, "read": True})
 
@@ -2027,6 +2044,10 @@ async def list_operation_logs(
     where_sql = ["1 = 1"]
     params: dict[str, Any] = {"limit": size, "offset": (current - 1) * size}
 
+    if not is_superadmin(current_user):
+        where_sql.append("owner_user_id = :owner_user_id")
+        params["owner_user_id"] = current_uid(current_user)
+
     if operation_type:
         where_sql.append("operation_type = :operation_type")
         params["operation_type"] = operation_type
@@ -2095,6 +2116,10 @@ async def export_operation_logs(
     try:
         where_sql = ["1 = 1"]
         params: dict[str, Any] = {}
+
+        if not is_superadmin(current_user):
+            where_sql.append("owner_user_id = :owner_user_id")
+            params["owner_user_id"] = current_uid(current_user)
 
         if operation_type:
             where_sql.append("operation_type = :operation_type")
@@ -3759,7 +3784,6 @@ async def publish_address_history(
     """查询当前用户的常用发布地址历史。"""
     try:
         # 参考项目：从 user_publish_address 表查询，按 use_count 排序，最多 20 条
-        resolved_page = max(1, int(current or page or 1))
         sql = text(
             "SELECT id, poi_name, city, area, prov, division_id, gps, poi_id, detail, use_count, "
             "updated_time FROM user_publish_address "

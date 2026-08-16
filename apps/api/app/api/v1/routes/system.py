@@ -323,6 +323,7 @@ async def update_open_source_config(
     try:
         config = await save_open_source_config(db, payload or {})
         db.add(XianyuOperationLog(
+            owner_user_id=int(current_user.get("user_id") or 0) or None,
             operator=current_user.get("username", settings.admin_username),
             operation_type="update_open_source_config",
             operation_desc="更新系统配置",
@@ -435,6 +436,7 @@ async def change_password(
         old_password=req.old_password,
         new_password=req.new_password,
         operator=current_user.get("username", settings.admin_username),
+        owner_user_id=int(current_user.get("user_id") or 0) or None,
         ip_address=request_client_ip(request),
         operation_desc="修改登录密码",
         target_type="auth",

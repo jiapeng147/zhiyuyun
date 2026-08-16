@@ -76,21 +76,26 @@ def _audit_description(request: Request, status: str, http_status: int | None = 
 async def _create_audit_intent(request: Request) -> int:
     user = getattr(request.state, "current_user", None) or {}
     operator = str(user.get("username") or "authenticated-admin")[:64]
+    try:
+        owner_user_id = int(user.get("user_id") or 0) or None
+    except (TypeError, ValueError):
+        owner_user_id = None
     request_id = str(getattr(request.state, "request_id", ""))[:100]
     async with async_session() as db:
         result = await db.execute(
             text(
                 """
                 INSERT INTO operation_log(
-                    operator, operation_type, operation_desc, target_type,
+                    owner_user_id, operator, operation_type, operation_desc, target_type,
                     target_id, ip_address, created_time
                 ) VALUES(
-                    :operator, 'HTTP_MUTATION_STARTED', :description,
+                    :owner_user_id, :operator, 'HTTP_MUTATION_STARTED', :description,
                     'api_mutation', :request_id, :ip_address, NOW()
                 )
                 """
             ),
             {
+                "owner_user_id": owner_user_id,
                 "operator": operator,
                 "description": _audit_description(request, "started"),
                 "request_id": request_id,

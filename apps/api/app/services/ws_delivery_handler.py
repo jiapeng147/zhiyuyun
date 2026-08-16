@@ -634,6 +634,7 @@ async def _notify_realtime_delivery_attention(
             message,
             "自动发货核对提醒",
             "warn",
+            account_id=account_id,
         )
     except Exception as exc:
         logger.warning(

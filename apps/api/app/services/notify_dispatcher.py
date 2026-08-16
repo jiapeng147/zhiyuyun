@@ -314,15 +314,20 @@ def _is_event_enabled(events: list, event_display_name: str) -> bool:
     return True
 
 
-async def _load_notify_config(db: AsyncSession) -> Optional[dict]:
+async def _load_notify_config(
+    db: AsyncSession,
+    owner_user_id: int,
+) -> Optional[dict]:
     """读取租户的通知配置。返回 {channels, events, sendMode, user_id} 或 None。"""
+    if int(owner_user_id or 0) <= 0:
+        return None
     row = (await db.execute(
         text(
             "SELECT user_id, config_json FROM user_notification_setting "
-            "WHERE deleted = 0 "
+            "WHERE deleted = 0 AND user_id = :user_id "
             "ORDER BY updated_time DESC LIMIT 1"
         ),
-        {},
+        {"user_id": int(owner_user_id)},
     )).mappings().first()
     if not row:
         return None
@@ -444,12 +449,15 @@ async def _insert_in_app_notification(
             text(
                 """
                 INSERT INTO notification(
-                    notification_type, title, content, reference_type, reference_id,
+                    owner_user_id, notification_type, title, content, reference_type, reference_id,
                     priority, is_read, created_time, updated_time, deleted
-                ) VALUES(
+                )
+                SELECT owner_user_id,
                     :event_type, :title, :content, :event_type, :account_id,
                     :priority, 0, NOW(), NOW(), 0
-                )
+                FROM xianyu_account
+                WHERE id = :account_id AND deleted = 0
+                LIMIT 1
                 """
             ),
             {
@@ -716,6 +724,9 @@ async def dispatch_notification_detailed(
     title: str,
     content: str,
     template_context: Optional[dict[str, object]] = None,
+    *,
+    owner_user_id: Optional[int] = None,
+    account_id: Optional[int] = None,
 ) -> NotificationDispatchOutcome:
     """Dispatch once and report whether a provider call and outcome are known.
 
@@ -728,7 +739,23 @@ async def dispatch_notification_detailed(
     all_outcomes_known = True
     try:
         async with async_session() as db:
-            config = await _load_notify_config(db)
+            resolved_owner_user_id = int(owner_user_id or 0)
+            if resolved_owner_user_id <= 0 and int(account_id or 0) > 0:
+                resolved_owner_user_id = int((await db.execute(
+                    text(
+                        "SELECT owner_user_id FROM xianyu_account "
+                        "WHERE id = :account_id AND deleted = 0 LIMIT 1"
+                    ),
+                    {"account_id": int(account_id)},
+                )).scalar() or 0)
+            if resolved_owner_user_id <= 0:
+                logger.warning(
+                    "Notification skipped because tenant owner is unresolved event=%s",
+                    event_display_name,
+                )
+                return NotificationDispatchOutcome(False, False, True)
+
+            config = await _load_notify_config(db, resolved_owner_user_id)
             if not config:
                 return NotificationDispatchOutcome(False, False, True)
             if not _is_event_enabled(config["events"], event_display_name):
@@ -823,6 +850,9 @@ async def dispatch_notification(
     title: str,
     content: str,
     template_context: Optional[dict[str, object]] = None,
+    *,
+    owner_user_id: Optional[int] = None,
+    account_id: Optional[int] = None,
 ) -> bool:
     """Backward-compatible delivery-only view of the detailed dispatcher."""
 
@@ -831,6 +861,8 @@ async def dispatch_notification(
         title,
         content,
         template_context,
+        owner_user_id=owner_user_id,
+        account_id=account_id,
     )
     return outcome.delivered
 
@@ -855,6 +887,7 @@ async def notify_cookie_expired(account_id: int, cookie_status: int) -> None:
             event_display_name=EVENT_COOKIE_EXPIRED,
             title="⚠️ Cookie 失效告警",
             content=content,
+            account_id=account_id,
         )
 
     outcome = await _EVENT_COORDINATOR.execute(
@@ -896,6 +929,7 @@ async def notify_new_order(account_id: int, msg: dict) -> None:
             event_display_name=EVENT_NEW_ORDER,
             title="🛒 新订单提醒",
             content=content,
+            account_id=account_id,
         )
 
     outcome = await _EVENT_COORDINATOR.execute(
@@ -927,6 +961,7 @@ async def notify_account_offline(account_id: int, reason: str = "") -> None:
         event_display_name=EVENT_ACCOUNT_OFFLINE,
         title="📡 账号掉线提醒",
         content=content,
+        account_id=account_id,
     )
 
 
@@ -956,6 +991,7 @@ async def notify_captcha_required(account_id: int, scene: str = "") -> None:
         event_display_name=EVENT_CAPTCHA_REQUIRED,
         title="🤖 人机验证提醒",
         content=content,
+        account_id=account_id,
     )
 
 
@@ -978,4 +1014,5 @@ async def notify_auto_delivery(account_id: int, success: bool, order_id: str = "
         event_display_name=event,
         title=title,
         content=content,
+        account_id=account_id,
     )

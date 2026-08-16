@@ -148,17 +148,27 @@ These are baseline controls, not a certification or warranty.
 
 1. Copy `.env.example` to `.env`; restrict it to the deployment administrator
    (`chmod 600 .env` on Linux).
-2. Generate every required secret independently with a cryptographically secure
+2. Create the protected secret files with the dedicated container read group.
+   The default group ID is `10001`; keep `SECRET_READ_GID` and the file group in
+   sync. Secret files must be root-owned, group-readable, and inaccessible to
+   all other users:
+
+   ```sh
+   sudo chown root:10001 secrets/*
+   sudo chmod 0640 secrets/*
+   ```
+
+3. Generate every required secret independently with a cryptographically secure
    generator. Use a bcrypt cost of at least 12 for `ADMIN_PASSWORD_HASH`. Never
    store the plaintext administrator password in `.env`.
-3. Use separate non-root `MYSQL_APP_*` and `MYSQL_MIGRATION_*` identities with
+4. Use separate non-root `MYSQL_APP_*` and `MYSQL_MIGRATION_*` identities with
    the documented grants. Do not reuse root, runtime, migration, Redis, JWT,
    cookie, internal API, provider, or bridge credentials.
-4. Add the real hostname to `TRUSTED_HOSTS`. Keep `CORS_ALLOWED_ORIGINS` empty for
+5. Add the real hostname to `TRUSTED_HOSTS`. Keep `CORS_ALLOWED_ORIGINS` empty for
    same-origin traffic or provide only exact HTTPS origins.
-5. Leave the commercial bridge and AI/provider settings blank unless their URLs,
+6. Leave the commercial bridge and AI/provider settings blank unless their URLs,
    credentials, data processing, and failure modes have been reviewed.
-6. Keep `WEB_BIND_ADDRESS=127.0.0.1` when a same-host TLS proxy fronts the stack.
+7. Keep `WEB_BIND_ADDRESS=127.0.0.1` when a same-host TLS proxy fronts the stack.
    If binding publicly is unavoidable, `PUBLIC_BASE_URL` must be HTTPS and host
    firewall/TLS verification becomes a blocking step.
 

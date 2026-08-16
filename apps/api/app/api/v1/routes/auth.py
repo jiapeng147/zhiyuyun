@@ -172,6 +172,7 @@ async def update_admin_password(
     old_password: str,
     new_password: str,
     operator: str,
+    owner_user_id: int | None,
     ip_address: str,
     operation_desc: str,
     target_type: str,
@@ -199,6 +200,7 @@ async def update_admin_password(
         await save_admin_password_hash(db, new_password_hash, commit=False)
         await mark_admin_security_update(db, commit=False)
         db.add(XianyuOperationLog(
+            owner_user_id=owner_user_id,
             operator=operator,
             operation_type="change_password",
             operation_desc=operation_desc,
@@ -294,6 +296,7 @@ async def login(req: LoginReqDTO, request: Request, db: AsyncSession = Depends(g
             if authed_username == settings.admin_username:
                 await mark_admin_login(db, commit=False)
             db.add(XianyuOperationLog(
+                owner_user_id=authed_uid or None,
                 operator=authed_username,
                 operation_type="login",
                 operation_desc="用户登录",
@@ -383,6 +386,7 @@ async def change_password(
             old_password=req.old_password,
             new_password=req.new_password,
             operator=current_user.get("username", settings.admin_username),
+            owner_user_id=int(current_user.get("user_id") or 0) or None,
             ip_address=request_client_ip(request),
             operation_desc="修改登录密码",
             target_type="auth",
@@ -509,7 +513,9 @@ async def register(
     )
     db.add(user)
     try:
+        await db.flush()
         db.add(XianyuOperationLog(
+            owner_user_id=int(user.id),
             operator=username,
             operation_type="register",
             operation_desc="用户注册",

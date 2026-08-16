@@ -60,6 +60,55 @@ IMAGE_MESSAGE_ACK_TIMEOUT = 10  # 图片 ACK 可能延迟，与文本消息保�
 _AUTO_SOLVE_LAST_TS: dict[int, float] = {}
 
 
+async def _persist_ws_runtime_state(
+    account_id: int,
+    *,
+    connected: bool,
+    heartbeat: bool = False,
+) -> None:
+    """Best-effort mirror of the in-process WebSocket state.
+
+    The socket remains authoritative. A database outage must never tear down a
+    healthy upstream connection, but list and overview endpoints still need a
+    durable state that follows registration, heartbeats and disconnects.
+    """
+    try:
+        from ..core.database import async_session
+        from sqlalchemy import text
+
+        async with async_session() as db:
+            await db.execute(
+                text(
+                    "INSERT INTO xianyu_account_runtime "
+                    "(account_id, online_status, ws_status, last_heartbeat_time, "
+                    "last_online_time, deleted, created_time, updated_time) "
+                    "VALUES (:aid, :status, :status, "
+                    "CASE WHEN :touch_heartbeat = 1 THEN NOW() ELSE NULL END, "
+                    "CASE WHEN :status = 1 THEN NOW() ELSE NULL END, 0, NOW(), NOW()) "
+                    "ON DUPLICATE KEY UPDATE "
+                    "online_status = :status, ws_status = :status, "
+                    "last_heartbeat_time = CASE "
+                    "WHEN :touch_heartbeat = 1 THEN NOW() ELSE last_heartbeat_time END, "
+                    "last_online_time = CASE "
+                    "WHEN :status = 1 THEN NOW() ELSE last_online_time END, "
+                    "deleted = 0, "
+                    "updated_time = NOW() "
+                ),
+                {
+                    "aid": account_id,
+                    "status": 1 if connected else 0,
+                    "touch_heartbeat": 1 if heartbeat or connected else 0,
+                },
+            )
+            await db.commit()
+    except Exception as exc:
+        logger.warning(
+            "同步 WebSocket 数据库运行态失败（不影响连接）accountId=%d errorType=%s",
+            account_id,
+            type(exc).__name__,
+        )
+
+
 async def _lookup_account_name_safe(account_id: int) -> str:
     """查询账号昵称，失败时回退为账号 ID 字符串。供通知文案使用。"""
     try:
@@ -353,9 +402,15 @@ class XianyuWebSocketClient:
                 pass
             self._ws = None
 
-        # 取消所有任务
-        for task in self._tasks:
+        # Cancel and join the old connection loop before a replacement client
+        # may mark the same account online. Otherwise the old _connect finally
+        # block can race with the new registration and overwrite it as offline.
+        current_task = asyncio.current_task()
+        tasks_to_join = [task for task in self._tasks if task is not current_task]
+        for task in tasks_to_join:
             task.cancel()
+        if tasks_to_join:
+            await asyncio.gather(*tasks_to_join, return_exceptions=True)
         self._tasks.clear()
 
         # 清理发送 Future
@@ -364,6 +419,7 @@ class XianyuWebSocketClient:
                 fut.set_exception(asyncio.CancelledError())
         self._send_futures.clear()
 
+        await _persist_ws_runtime_state(self.account_id, connected=False)
         logger.info("WS 客户端停止 accountId=%d", self.account_id)
 
     async def send_text_message(self, cid: str, to_id: str, text: str, persist: bool = True) -> dict[str, Any]:
@@ -874,6 +930,11 @@ class XianyuWebSocketClient:
             # 商业版 im_client.py:155-163：注册后立即 return True，同步/心跳在后台进行
             self.phase = "connected"
             self.last_error = ""
+            await _persist_ws_runtime_state(
+                self.account_id,
+                connected=True,
+                heartbeat=True,
+            )
             logger.info("WS 连接成功（已注册）accountId=%d", self.account_id)
 
             # 后台发送同步消息（不阻塞连接状态）
@@ -909,6 +970,7 @@ class XianyuWebSocketClient:
             self._registered = False
             self._sid = None
             self._ws = None
+            await _persist_ws_runtime_state(self.account_id, connected=False)
             try:
                 await ws.close()
             except Exception:
@@ -1185,6 +1247,7 @@ class XianyuWebSocketClient:
                             f"时间：{time.strftime('%Y-%m-%d %H:%M:%S')}\n"
                             f"请前往账号管理页或连接管理页重新扫码登录闲鱼账号获取新 Cookie。"
                         ),
+                        account_id=self.account_id,
                     )
                 except Exception as exc:
                     logger.debug(
@@ -1390,6 +1453,11 @@ class XianyuWebSocketClient:
 
                 msg = build_heartbeat_message()
                 await ws.send(json.dumps(msg, ensure_ascii=False))
+                await _persist_ws_runtime_state(
+                    self.account_id,
+                    connected=True,
+                    heartbeat=True,
+                )
                 logger.debug("WS 心跳发送 accountId=%d", self.account_id)
             except Exception as exc:
                 logger.warning(

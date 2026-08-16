@@ -87,6 +87,7 @@ async def change_profile_password(
         old_password=req.old_password,
         new_password=req.new_password,
         operator=current_user.get("username", settings.admin_username),
+        owner_user_id=int(current_user.get("user_id") or 0) or None,
         ip_address=request_client_ip(request),
         operation_desc="个人中心修改登录密码",
         target_type="profile",

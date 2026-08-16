@@ -18,6 +18,8 @@ services:
     logging: *id002
     image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
     user: mysql
+    group_add:
+    - ${SECRET_READ_GID:-10001}
     read_only: true
     cap_drop:
     - ALL
@@ -65,6 +67,8 @@ services:
     logging: *id002
     image: redis:7.4-alpine@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
     user: redis
+    group_add:
+    - ${SECRET_READ_GID:-10001}
     read_only: true
     cap_drop:
     - ALL
@@ -102,6 +106,8 @@ services:
     build:
       context: ./apps/crawler
     user: pwuser
+    group_add:
+    - ${SECRET_READ_GID:-10001}
     read_only: true
     cap_drop:
     - ALL

@@ -568,6 +568,47 @@ async def _resolve_outbound_image_url(
         raise ValueError(url_error)
     return normalized
 
+
+def _resolve_outbound_image_dimensions(image_url: str) -> tuple[int, int]:
+    """解析出站图片的像素宽高（同步函数，供 asyncio.to_thread 调用）。
+
+    支持系统上传目录 /uploads/ 与安全 HTTPS 图片 URL。无法确定尺寸时返回 (0, 0)，
+    由平台按默认方式展示，不因取尺寸失败而阻断图片消息发送。
+    """
+    import io
+    from PIL import Image
+
+    normalized = str(image_url or "").strip()
+    if not normalized:
+        return (0, 0)
+    is_upload = normalized.startswith("/uploads/")
+    try:
+        if is_upload:
+            data = _read_uploaded_image_bytes(normalized)
+        else:
+            if _validate_safe_https_image_url(normalized):
+                return (0, 0)
+            import httpx
+
+            data = bytearray()
+            with httpx.Client(timeout=10.0, follow_redirects=True) as client:
+                with client.stream("GET", normalized) as resp:
+                    resp.raise_for_status()
+                    for chunk in resp.iter_bytes():
+                        data.extend(chunk)
+                        if len(data) > 20 * 1024 * 1024:
+                            return (0, 0)
+            data = bytes(data)
+        with Image.open(io.BytesIO(data)) as img:
+            width, height = img.size
+        return (int(width or 0), int(height or 0))
+    except Exception:
+        logger.warning(
+            "解析出站图片尺寸失败 source=%s", "uploads" if is_upload else "remote"
+        )
+        return (0, 0)
+
+
 async def _save_scan_login_result(session_id: str, db: AsyncSession) -> dict:
     """保存扫码登录成功后获取到的 Cookie 到数据库。
 
@@ -1705,9 +1746,13 @@ async def websocket_status(
             "lastError": "",
         })
     status = ws_manager.get_status(account_id)
+    connected = bool(getattr(client, "is_connected", False))
+    phase = status.get("phase", "unknown")
+    if not connected and phase in {"connected", "connected_socket", "registering"}:
+        phase = "reconnecting"
     return ResultObject.success({
-        "connected": bool(getattr(client, "is_connected", False)),
-        "status": status.get("phase", "unknown"),
+        "connected": connected,
+        "status": phase,
         "hasSid": bool(status.get("hasSid")),
         "lastError": status.get("lastError", ""),
     })

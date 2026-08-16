@@ -397,6 +397,7 @@ async def process_incoming_message(db: AsyncSession, payload: dict[str, Any]) ->
                 ),
                 "AI 自动回复核对提醒",
                 "warn",
+                account_id=account_id,
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning(
@@ -999,6 +1000,8 @@ async def insert_notification(
     content: str,
     notification_type: str = "system",
     priority: str = "normal",
+    *,
+    account_id: Optional[int] = None,
 ) -> None:
     """插入系统通知。
 
@@ -1012,12 +1015,15 @@ async def insert_notification(
             text(
                 """
                 INSERT INTO notification (
-                    notification_type, title, content, reference_type, reference_id,
+                    owner_user_id, notification_type, title, content, reference_type, reference_id,
                     is_read, priority, deleted, created_time, updated_time
-                ) VALUES (
+                )
+                SELECT owner_user_id,
                     :notification_type, :title, :content, :reference_type, :reference_id,
                     0, :priority, 0, NOW(), NOW()
-                )
+                FROM xianyu_account
+                WHERE id = :account_id AND deleted = 0
+                LIMIT 1
                 """
             ),
             {
@@ -1026,6 +1032,7 @@ async def insert_notification(
                 "content": content,
                 "reference_type": notification_type,
                 "reference_id": reference_id or 0,
+                "account_id": account_id,
                 "priority": priority_val,
             }
         )

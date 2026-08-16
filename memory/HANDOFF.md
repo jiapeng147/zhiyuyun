@@ -2,14 +2,25 @@
 
 ## 当前状态
 
+### 2026-08-12 真实账号只读验收与 WebSocket 运行态修复
+
+- 用户已用闲鱼 App 完成真实扫码，账号成功绑定为本地 `account_id=17`；加密 Cookie 存在，账号认证正常。二维码登录闭环不再是待验证项。
+- 真实只读同步通过：商品 `8/8`，订单 `58/58`、失败 0；订单无重复，58 笔均有订单明细；消息 76 条，真实上下文和在线会话可读取。
+- 真实 AI 中转站调用返回非空回复；管理员只读 API 矩阵 `59/59`，双租户隔离矩阵 `13/13`，普通测试用户不能读取或操作账号 17。
+- WebSocket 100 秒稳定性采样 `20/20`：HTTP 均为 `connected + hasSid + phase=connected`，数据库均为 `online_status=1/ws_status=1`，心跳年龄 0-14 秒。
+- 修复了 WebSocket 仅在进程内显示在线、数据库仍离线的问题：注册成功、周期心跳、停止和断线都会尽力同步 `xianyu_account_runtime`，数据库失败不影响真实连接。
+- 新增迁移 `040_account_runtime_unique.sql`，保证每个账号只有一条运行态并使用原子 upsert；生产 schema `001-040` current。
+- 验收期间没有创建任何 `delivery_record`、`realtime_delivery_attempt`、`ai_auto_reply_attempt` 或 `manual_message_attempt`，未执行外发消息、自动发货、发布、改价、下架或删除。
+- API unittest `50/50`，API 导入 207 条路由，生产 preflight 通过，API/Worker/Web/MySQL/Redis/Crawler 全部 healthy，域名首页和 `/ready` 均为 200。
+- 受控 `stop -> start` 回归通过：停止后数据库为 `0/0`，重连后 HTTP/数据库恢复在线并连续 `15/15` 稳定，旧连接清理不会覆盖新连接状态。
+
 ### 2026-08-12 QR 登录确认换票与身份验证闭环
 
 - 真实日志已确认根因：二维码状态返回 `CONFIRMED`，但旧代码漏掉确认后的 token 换票步骤，并调用不存在的 `mtop.taobao.idle.user.hasLogin`，上游返回 `FAIL_SYS_API_NOT_FOUNDED`，因此没有 `unb`、账号未落库。
 - `93ac57d` 已补齐当前协议：`CONFIRMED token -> passport login_token/login.do -> mtop.idle.web.user.page.nav -> unb -> 加密 Cookie 落库`。
 - 安全验证分支已补齐：保持同一 HTTP Cookie 会话，解析 `htoken`/验证二维码，轮询 `iv/photoVerify/check.do`，code=3 后访问官方回调收集 `unb`。前端收到二次验证二维码时会在原扫码框直接展示。
 - QR query 使用当前站点参数 `appName=xianyu&fromSite=77`，轮询表单补齐设备、页面、来源和导航字段；官方验证跳转只允许 HTTPS 的 `goofish.com`/`taobao.com` 子域。
-- 已验证：QR 契约 17/17、后端契约 38/38、前端生产构建通过；API/Web 容器 healthy，域名 200，真实上游二维码生成与会话清理冒烟成功。
-- 待用户手动验证：重新生成二维码，用闲鱼 App 扫码并确认；若页面切换到身份验证二维码，再扫一次完成验证。最终确认弹窗自动关闭且账号出现在列表。真实扫码不可由自动测试伪造。
+- 已验证：QR 契约、完整后端契约和前端生产构建通过；API/Web 容器 healthy，域名 200，用户已用闲鱼 App 完成真实扫码并成功绑定账号。
 
 最近一次硬化批次（`1116a1a`）已落地 P0 核心面：
 
@@ -21,43 +32,41 @@
 - 契约测试：21 个 unittest 用例覆盖订单状态、多规格、商在售证据、自动发货幂等、卡密并发、消息失败回滚、跨租户 SQL 编译等。
 - 迁移：`036_order_delivery_rule_guards.sql` 已应用，给 `xianyu_trade_order(account_id, external_order_id)` 加唯一键、`delivery_rule` 加 `owner_user_id` 列+索引并回填存量。
 
-## 当前 HEAD
+## Git 状态
 
 ```text
-93ac57d 修复闲鱼扫码确认后换票与身份验证闭环
+上传前基线：8136985
+最新提交：以 git log -1 --oneline 输出为准
 ```
 
-API/Web/MySQL/Redis 容器健康。工作树仍有接手前已有的 `misc.py`、`items.py`、`frontend_compat.py` 和 `memory/exports/` 改动，本次未回退、未提交。
+六个长期容器全部健康。本轮通知/审计租户隔离、秘密权限、WebSocket 运行态修复及验收文档由 GitHub 上传批次统一提交。
 
 ## 下一次接手先做什么
 
 按你的优先顺序，建议：
 
-1. **真实闲鱼 App 二维码扫码联调**（不可自动验证）：
-   - 在 admin 个人中心 -> 账号管理 -> 扫码登录。
-   - 开启 API 日志 `tail -f /var/lib/docker/volumes/xianyu-assistant_api-logs/_data/api.log | grep -E 'qrcode|qr_session|cookie_store'`。
-   - 观察从 `init → scanned → confirmed → cookie_persisted` 的状态迁移，验证加密 cookie 落库。
-2. **真实订单接入回归**（不可自动验证）：
-   - 找一个有历史订单的闲鱼账号，确保商品/订单/发货流程跑完一次。
-   - 主要看订单状态 6=待确认 是否真的出现在状态映射表上。
-3. **P1 商业桥 mock 契约**：
+1. **受控真实自动发货验收**（会向第三方产生副作用，需用户明确安排测试订单）：
+   - 验证通配规则、多规格数量、卡密扣减、失败补发和平台发货确认。
+2. **受控真实商品写操作验收**（需用户明确指定测试商品）：
+   - 发布、改价、下架和删除各走一次，核对平台状态、幂等记录和本地对账。
+3. **P1 商业桥 mock/真实回调契约**：
    - `apps/api/app/services/commercial_bridge.py` 已有未配置 503 降级，需要补一份 mock 契约测试覆盖 套餐列表/创建支付/回调/订单关闭/到期处理。
-4. **P3 生产 preflight**：
-   - 当前因为 `.env` 不可读所以 `scripts/production-readiness.sh` 走 fail-closed。可以补一份不读 `.env` 的纯配置契约测试。
+4. **继续长时观察真实私有协议**：
+   - 订单私有状态枚举和 WebSocket 协议可能随平台变化，保留告警与待确认兜底。
 
 ## 已自动验证（最近批次）
 
-- 21 个 unittest 全绿（11 业务契约 + 5 自动发货契约 + 5 跨租户 SQL 契约）。
-- API 容器健康，`POST /api/dashboard/stats`、`POST /api/item/list`、`POST /api/order/list`、`GET /api/profile/overview`、`GET /api/navigation/overview` 用 tester token 调用返回 200。
-- `deliver_rule.owner_user_id` 已存在并索引，`xianyu_trade_order.uk_trade_order_account_external` 已生效，DB schema_migration 036 落到顶部。
+- 50 个 API unittest 全绿，管理员只读 API 矩阵 `59/59`，双租户矩阵 `13/13`。
+- 真实账号商品/订单同步、消息读取、AI 中转站和 WebSocket 在线会话均已通过。
+- `delivery_rule.owner_user_id`、订单唯一键和账号运行态唯一键均已生效，数据库迁移到 040。
+- 生产 preflight 需以有权读取受保护 `.env`/`secrets` 的运维身份运行；`sudo python3 scripts/production_preflight.py --env-file .env` 已通过且不显示秘密。
 
 ## 仍待真实业务验证
 
-1. 闲鱼二维码 App 端扫码闭环（无法自动验证，UI 端 QR 状态更新不等于登录链路完全成功）。
-2. 闲鱼订单的状态枚举真实映射（闲鱼平台私有枚举可能变动，需要真实订单再确认 6=待确认 的边界）。
-3. 自动发货通配规则的优先级排序在生产订单下表现。
-4. AI 中转站 Responses/Chat Completions 双模式真实联调（中转站 URL 不固定）。
-5. 支付和商业桥的真实回调。
+1. 受控真实订单的自动发货、卡密消耗、人工补发和平台确认。
+2. 受控测试商品的发布、改价、下架、删除和失败对账。
+3. 闲鱼未来新增私有订单状态的映射；未知状态当前会进入 6=待确认，不会伪装成已付款。
+4. 支付和商业桥的真实回调。
 
 ## 主要代码入口
 

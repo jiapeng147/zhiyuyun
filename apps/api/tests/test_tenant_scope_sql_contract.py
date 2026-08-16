@@ -18,6 +18,7 @@ from app.models.entities import (
     CardItem,
     DeliveryRecord,
     DeliveryRule,
+    Notification,
     RagKnowledgeBase,
     ScheduledTask,
     XianyuAccount,
@@ -25,6 +26,7 @@ from app.models.entities import (
     XianyuConversation,
     XianyuGoods,
     XianyuMessage,
+    XianyuOperationLog,
     XianyuTradeOrder,
 )
 
@@ -102,6 +104,16 @@ class TenantScopeSqlContractTests(unittest.TestCase):
                 _SUPER,
             )
             self.assertNotIn("owner_user_id =", self._render(scoped_super))
+
+    def test_notification_and_operation_log_use_stable_owner_scope(self) -> None:
+        for entity, owner_col in [
+            (Notification, Notification.owner_user_id),
+            (XianyuOperationLog, XianyuOperationLog.owner_user_id),
+        ]:
+            scoped = scope_by_owner(select(entity), owner_col, _A_USER)
+            compiled = self._render(scoped)
+            self.assertIn("owner_user_id = 901", compiled)
+            self.assertNotIn("operator =", compiled)
 
     def test_card_item_groups_use_account_owner_chain(self) -> None:
         # CardItem has no owner column. CardGroup is therefore the only path

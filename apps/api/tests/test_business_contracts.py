@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import unittest
+from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, patch
 
 from sqlalchemy import select
@@ -12,6 +13,8 @@ from app.core.tenancy import scope_by_owner
 from app.core.xianyu_qr_login import _poll_status_once, _qr_status_result
 from app.models.entities import RagKnowledgeBase
 from app.services import ai_provider
+from app.services import notify_dispatcher
+from app.services import ws_client
 from app.services.ai_reply_batcher import AiAutoReplyBatcher
 from app.services.ws_delivery_handler import _delivery_rule_match_rank
 from app.services.ws_storage import stable_chat_message_uid
@@ -62,6 +65,14 @@ class _FakeQrSession:
 
     def post(self, *_args, **_kwargs):
         return _FakeQrResponse(self.status)
+
+
+class _FakeScalarResult:
+    def __init__(self, value) -> None:
+        self.value = value
+
+    def scalar(self):
+        return self.value
 
 
 class BusinessContractTests(unittest.TestCase):
@@ -328,6 +339,100 @@ class BusinessContractTests(unittest.TestCase):
 
 
 class AsyncBusinessContractTests(unittest.IsolatedAsyncioTestCase):
+    async def test_websocket_stop_joins_old_connection_task(self) -> None:
+        client = ws_client.XianyuWebSocketClient(17, "fixture-cookie", "fixture-token", "fixture-unb")
+        finalized = asyncio.Event()
+
+        async def old_connection_loop() -> None:
+            try:
+                await asyncio.Future()
+            finally:
+                finalized.set()
+
+        old_task = asyncio.create_task(old_connection_loop())
+        await asyncio.sleep(0)
+        client._tasks.append(old_task)
+
+        with patch.object(ws_client, "_persist_ws_runtime_state", new=AsyncMock()) as persist:
+            await client.stop()
+
+        self.assertTrue(old_task.done())
+        self.assertTrue(finalized.is_set())
+        persist.assert_awaited_once_with(17, connected=False)
+
+    async def test_websocket_runtime_state_tracks_connect_and_disconnect(self) -> None:
+        db = AsyncMock()
+
+        @asynccontextmanager
+        async def session_scope():
+            yield db
+
+        with patch("app.core.database.async_session", side_effect=session_scope):
+            await ws_client._persist_ws_runtime_state(17, connected=True, heartbeat=True)
+            await ws_client._persist_ws_runtime_state(17, connected=False)
+
+        self.assertEqual(db.commit.await_count, 2)
+        self.assertEqual(db.execute.await_count, 2)
+        connected_params = db.execute.await_args_list[0].args[1]
+        disconnected_params = db.execute.await_args_list[1].args[1]
+        self.assertEqual(connected_params, {"aid": 17, "status": 1, "touch_heartbeat": 1})
+        self.assertEqual(disconnected_params, {"aid": 17, "status": 0, "touch_heartbeat": 0})
+        compiled_sql = str(db.execute.await_args_list[0].args[0])
+        self.assertIn("ON DUPLICATE KEY UPDATE", compiled_sql)
+
+    async def test_websocket_runtime_database_failure_does_not_escape(self) -> None:
+        @asynccontextmanager
+        async def failed_session_scope():
+            raise RuntimeError("database unavailable")
+            yield
+
+        with patch("app.core.database.async_session", side_effect=failed_session_scope):
+            await ws_client._persist_ws_runtime_state(17, connected=True)
+
+    async def test_notification_dispatch_fails_closed_without_tenant(self) -> None:
+        db = AsyncMock()
+
+        @asynccontextmanager
+        async def session_scope():
+            yield db
+
+        config_loader = AsyncMock()
+        with patch.object(notify_dispatcher, "async_session", side_effect=session_scope), patch.object(
+            notify_dispatcher, "_load_notify_config", new=config_loader
+        ):
+            outcome = await notify_dispatcher.dispatch_notification_detailed(
+                "测试事件",
+                "标题",
+                "内容",
+            )
+        self.assertFalse(outcome.called)
+        self.assertFalse(outcome.delivered)
+        self.assertTrue(outcome.outcome_known)
+        db.execute.assert_not_awaited()
+        config_loader.assert_not_awaited()
+
+    async def test_notification_dispatch_resolves_account_owner(self) -> None:
+        db = AsyncMock()
+        db.execute.return_value = _FakeScalarResult(902)
+
+        @asynccontextmanager
+        async def session_scope():
+            yield db
+
+        config_loader = AsyncMock(return_value=None)
+        with patch.object(notify_dispatcher, "async_session", side_effect=session_scope), patch.object(
+            notify_dispatcher, "_load_notify_config", new=config_loader
+        ):
+            outcome = await notify_dispatcher.dispatch_notification_detailed(
+                "测试事件",
+                "标题",
+                "内容",
+                account_id=17,
+            )
+        self.assertFalse(outcome.called)
+        config_loader.assert_awaited_once_with(db, 902)
+        self.assertEqual(db.execute.await_args.args[1], {"account_id": 17})
+
     async def test_batcher_deduplicates_replay_but_allows_later_same_text(self) -> None:
         handled: list[list[dict]] = []
 

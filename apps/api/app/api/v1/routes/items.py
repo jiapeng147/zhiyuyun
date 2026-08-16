@@ -1145,15 +1145,6 @@ async def get_sync_progress(
             return invalid
         return ResultObject.success(progress)
 
-    scoped_owner_ids = owned_account_id_subquery(current_user)
-    if scoped_owner_ids is None:
-        owner_clause = ""
-        params_progress: dict[str, Any] = {"sync_id": sync_id}
-    else:
-        owner_clause = " AND account_id IN (SELECT id FROM xianyu_account WHERE deleted = 0 AND id IN (SELECT id FROM xianyu_account WHERE owner_user_id = :owner_scope))"
-        params_progress = {"sync_id": sync_id}
-        if scoped_owner_ids is not None:
-            params_progress["owner_scope"] = current_uid(current_user)
     result = await db.execute(
         select(XianyuGoodsSyncTask).where(
             XianyuGoodsSyncTask.sync_id == sync_id,

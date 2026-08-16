@@ -48,6 +48,7 @@ async def get_navigation_overview(
         today_orders = await db.execute(
             select(func.count()).select_from(XianyuTradeOrder).where(
                 XianyuTradeOrder.deleted == 0,
+                XianyuTradeOrder.account_id.in_(owned_account_id_subquery(current_user)),
                 func.coalesce(
                     XianyuTradeOrder.create_time,
                     XianyuTradeOrder.created_time,
@@ -57,6 +58,7 @@ async def get_navigation_overview(
         pending_orders = await db.execute(
             select(func.count()).select_from(DeliveryRecord).where(
                 DeliveryRecord.deleted == 0,
+                DeliveryRecord.account_id.in_(owned_account_id_subquery(current_user)),
                 DeliveryRecord.delivery_status == "pending",
             )
         )
@@ -78,13 +80,14 @@ async def get_navigation_notifications(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    del current_user
     try:
+        statement = select(Notification).where(Notification.deleted == 0)
+        if not is_superadmin(current_user):
+            statement = statement.where(
+                Notification.owner_user_id == current_uid(current_user)
+            )
         result = await db.execute(
-            select(Notification)
-            .where(Notification.deleted == 0)
-            .order_by(Notification.id.desc())
-            .limit(limit)
+            statement.order_by(Notification.id.desc()).limit(limit)
         )
         notifications = result.scalars().all()
         return ResultObject.success([

@@ -57,6 +57,9 @@ class XianyuAccountAuth(Base):
 
 class XianyuAccountRuntime(Base):
     __tablename__ = "xianyu_account_runtime"
+    __table_args__ = (
+        UniqueConstraint("account_id", name="uk_account_runtime_account"),
+    )
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     account_id = Column(BigInteger, nullable=False)
     online_status = Column(SmallInteger, default=0, comment="1在线 0离线")
@@ -261,6 +264,7 @@ class Notification(Base):
     """系统通知实体"""
     __tablename__ = "notification"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户(多租户隔离)")
     notification_type = Column(String(50), nullable=True, comment="通知类型")
     title = Column(String(300), nullable=True)
     content = Column(Text, nullable=True)
@@ -433,6 +437,7 @@ class QuickReplyTemplate(Base):
 class XianyuOperationLog(Base):
     __tablename__ = "operation_log"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id = Column(BigInteger, nullable=True, index=True, comment="归属用户(多租户隔离)")
     operator = Column(String(100), nullable=True, comment="操作人")
     operation_type = Column(String(100), nullable=True)
     operation_desc = Column(Text, nullable=True)

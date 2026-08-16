@@ -62,6 +62,7 @@ async def _insert_in_app_once(
     content: str,
     reference_type: str,
     reference_id: int,
+    owner_user_id: int,
     priority: int = 2,
 ) -> bool:
     ref_type = _safe_reference_type(reference_type)
@@ -73,11 +74,16 @@ async def _insert_in_app_once(
                 SELECT COUNT(*)
                 FROM notification
                 WHERE deleted = 0
+                  AND owner_user_id = :owner_user_id
                   AND reference_type = :reference_type
                   AND reference_id = :reference_id
                 """
             ),
-            {"reference_type": ref_type, "reference_id": ref_id},
+            {
+                "owner_user_id": int(owner_user_id),
+                "reference_type": ref_type,
+                "reference_id": ref_id,
+            },
         )
     ).scalar() or 0)
     if exists:
@@ -86,15 +92,16 @@ async def _insert_in_app_once(
         text(
             """
             INSERT INTO notification (
-                notification_type, title, content, reference_type, reference_id,
+                owner_user_id, notification_type, title, content, reference_type, reference_id,
                 is_read, priority, deleted, created_time, updated_time
             ) VALUES (
-                :event, :title, :content, :reference_type, :reference_id,
+                :owner_user_id, :event, :title, :content, :reference_type, :reference_id,
                 0, :priority, 0, NOW(), NOW()
             )
             """
         ),
         {
+            "owner_user_id": int(owner_user_id),
             "event": event[:50],
             "title": title[:300],
             "content": content,
@@ -107,13 +114,20 @@ async def _insert_in_app_once(
     return True
 
 
-async def _dispatch(event: str, title: str, content: str, context: dict[str, Any]) -> None:
+async def _dispatch(
+    event: str,
+    title: str,
+    content: str,
+    context: dict[str, Any],
+    owner_user_id: int,
+) -> None:
     try:
         await dispatch_notification_detailed(
             event_display_name=event,
             title=title,
             content=content,
             template_context=context,
+            owner_user_id=int(owner_user_id),
         )
     except Exception:
         logger.warning("billing notification dispatch failed event=%s", event, exc_info=True)
@@ -127,6 +141,7 @@ async def _notify_once(
     content: str,
     reference_type: str,
     reference_id: int,
+    owner_user_id: int,
     priority: int = 2,
     context: dict[str, Any] | None = None,
 ) -> bool:
@@ -137,10 +152,11 @@ async def _notify_once(
         content=content,
         reference_type=reference_type,
         reference_id=reference_id,
+        owner_user_id=owner_user_id,
         priority=priority,
     )
     if inserted:
-        await _dispatch(event, title, content, context or {})
+        await _dispatch(event, title, content, context or {}, owner_user_id)
     return inserted
 
 
@@ -170,6 +186,7 @@ async def notify_billing_order_pending(
         content=content,
         reference_type="billing_order_pending",
         reference_id=int(order.id),
+        owner_user_id=int(order.user_id),
         priority=2,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
     )
@@ -202,6 +219,7 @@ async def notify_billing_order_paid(
         content=content,
         reference_type="billing_order_paid",
         reference_id=int(order.id),
+        owner_user_id=int(order.user_id),
         priority=2,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
     )
@@ -230,6 +248,7 @@ async def notify_billing_order_closed(
         content=content,
         reference_type="billing_order_closed",
         reference_id=int(order.id),
+        owner_user_id=int(order.user_id),
         priority=1,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
     )
@@ -261,6 +280,7 @@ async def notify_billing_payment_proof_submitted(
         content=content,
         reference_type="billing_payment_proof",
         reference_id=int(order.id),
+        owner_user_id=int(order.user_id),
         priority=3,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
     )
@@ -291,6 +311,7 @@ async def notify_billing_order_refunded(
         content=content,
         reference_type="billing_order_refunded",
         reference_id=int(order.id),
+        owner_user_id=int(order.user_id),
         priority=3,
         context={"account": username, "orderNo": order.order_no, "plan": order.plan_code},
     )
@@ -318,6 +339,7 @@ async def notify_subscription_expiring(
         content=content,
         reference_type=f"subscription_expiring_{int(days_left)}d",
         reference_id=int(sub.id),
+        owner_user_id=int(sub.user_id),
         priority=2,
         context={"account": username, "plan": sub.plan_code, "daysLeft": days_left},
     )
@@ -340,6 +362,7 @@ async def notify_subscription_expired(db: AsyncSession, sub: AppSubscription) ->
         content=content,
         reference_type="subscription_expired",
         reference_id=int(sub.id),
+        owner_user_id=int(sub.user_id),
         priority=3,
         context={"account": username, "plan": sub.plan_code},
     )
@@ -374,6 +397,7 @@ async def notify_quota_usage_warning(
         content=content,
         reference_type=f"quota_{metric}_{threshold_percent}_{date.today().isoformat()}",
         reference_id=int(user_id),
+        owner_user_id=int(user_id),
         priority=3 if threshold_percent >= 100 else 2,
         context={"account": username, "metric": label, "used": used, "limit": limit},
     )
@@ -441,6 +465,7 @@ async def notify_quota_rejection(
             content=content,
             reference_type=f"{source_type or 'quota_block'}_{metric}_{date.today().isoformat()}",
             reference_id=int(user_id),
+            owner_user_id=int(user_id),
             priority=3,
             context={"account": username, "metric": label, "reason": reason},
         )

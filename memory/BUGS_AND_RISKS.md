@@ -19,7 +19,20 @@
 - QR 契约 17/17、完整后端契约 38/38、前端生产构建均通过。
 - API/Web 容器 healthy，域名 200，真实上游二维码生成和测试会话清理成功。
 
-仍需真实验收：用户使用闲鱼 App 重新扫码并完成身份校验，确认账号能出现在账号列表。
+真实验收已完成：用户已使用闲鱼 App 完成扫码和必要确认，账号成功绑定，加密 Cookie 落库，商品/订单/消息及 WebSocket 读取正常。
+
+### WebSocket 页面在线、数据库运行态离线
+
+位置：`apps/api/app/services/ws_client.py`、`apps/api/migrations/040_account_runtime_unique.sql`
+
+处理：
+
+- 注册成功后写入 `online_status=1/ws_status=1` 和在线/心跳时间。
+- 每次协议心跳持续刷新数据库心跳；停止、断线、注册失败和异常清理回写离线。
+- 数据库更新为 best effort，失败只记脱敏告警，不中断真实 WebSocket。
+- `account_id` 增加唯一约束并使用原子 upsert，避免并发启动创建重复运行态。
+
+验证：生产 HTTP 状态和数据库状态 100 秒 `20/20` 一致，心跳年龄 0-14 秒；数据库 schema current 040。
 
 ### 自动发货规则匹配缺优先级、空关键字、全租户
 
@@ -100,7 +113,7 @@
 - `apps/api/tests/test_delivery_contracts.py` (5)
 - `apps/api/tests/test_tenant_scope_sql_contract.py` (5)
 
-合计 21 个用例，使用 in-process SQLAlchemy 编译 + Mock，不依赖 DB。
+当前完整 API suite 为 50 个用例，覆盖业务契约、QR、自动发货、租户隔离、通知归属、WebSocket 运行态和连接切换竞态。
 
 ## 历史已修复
 
@@ -143,11 +156,10 @@
 
 ## 仍需实际业务复现的风险（不可自动验证）
 
-1. 真实闲鱼 App 二维码扫码闭环：UI 的 QR 轮询不等于闲鱼 App 登录链路完全成功。
-2. 闲鱼订单状态枚举的真实取值：私有枚举可能演变，6=待确认 是兜底边界。
-3. 自动发货通配规则在真实订单下的优先级表现（电商大促场景）。
-4. 中转站 AI Responses/Chat Completions 双模式在真实流量下的稳定性。
-5. 支付与商业桥的真实回调。
+1. 闲鱼订单状态枚举未来可能演变，6=待确认 是 fail-closed 兜底边界。
+2. 自动发货通配规则、卡密扣减和人工补发仍需受控真实订单验收。
+3. 发布、改价、下架和删除仍需受控测试商品验收。
+4. 支付与商业桥的真实回调。
 
 ## 安全提醒
 

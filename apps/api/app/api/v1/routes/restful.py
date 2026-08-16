@@ -13,6 +13,7 @@ from ....core.database import get_db
 from ....core.tenancy import (
     assert_account_owned,
     current_uid,
+    is_superadmin,
     owned_account_id_subquery,
 )
 from ....core.response import ResultObject
@@ -740,6 +741,10 @@ async def restful_get_notifications(
 ):
     try:
         query = select(Notification).where(Notification.deleted == 0)
+        if not is_superadmin(current_user):
+            query = query.where(
+                Notification.owner_user_id == current_uid(current_user)
+            )
         count_q = select(func.count()).select_from(query.subquery())
         total = (await db.execute(count_q)).scalar() or 0
         offset = (page - 1) * page_size

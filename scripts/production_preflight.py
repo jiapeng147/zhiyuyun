@@ -112,6 +112,14 @@ def load_env(
             value = value[1:-1]
         values[key] = value
 
+    try:
+        secret_read_gid = int(values.get("SECRET_READ_GID", "10001"))
+        if not 1 <= secret_read_gid <= 2_147_483_647:
+            raise ValueError
+    except ValueError:
+        report.error("SECRET_READ_GID", "must be a positive numeric group ID")
+        secret_read_gid = None
+
     for field_name in FILE_SECRET_FIELDS:
         direct_value = values.get(field_name, "")
         file_reference = values.get(f"{field_name}_FILE", "")
@@ -128,6 +136,7 @@ def load_env(
                 report,
                 field_name,
                 allow_empty=field_name in OPTIONAL_FILE_SECRET_FIELDS,
+                expected_group_gid=secret_read_gid,
             )
             if resolved is not None:
                 values[field_name] = resolved
@@ -147,6 +156,7 @@ def _read_secret_file(
     field_name: str,
     *,
     allow_empty: bool,
+    expected_group_gid: int | None,
 ) -> str | None:
     candidate = Path(reference)
     if not candidate.is_absolute():
@@ -165,9 +175,23 @@ def _read_secret_file(
     if stat_result.st_size > MAX_SECRET_FILE_BYTES:
         report.error(f"{field_name}_FILE", "exceeds the maximum permitted size")
         return None
-    if os.name != "nt" and stat.S_IMODE(stat_result.st_mode) & 0o077:
-        report.error(f"{field_name}_FILE", "must not grant group or other access")
-        return None
+    if os.name != "nt":
+        mode = stat.S_IMODE(stat_result.st_mode)
+        if stat_result.st_uid != 0:
+            report.error(f"{field_name}_FILE", "must be owned by root")
+            return None
+        if expected_group_gid is None or stat_result.st_gid != expected_group_gid:
+            report.error(
+                f"{field_name}_FILE",
+                "must use the dedicated SECRET_READ_GID group",
+            )
+            return None
+        if mode != 0o640:
+            report.error(
+                f"{field_name}_FILE",
+                "must use mode 0640 (root read/write, secret group read-only)",
+            )
+            return None
     try:
         raw = candidate.read_bytes()
         text = raw.decode("utf-8")
