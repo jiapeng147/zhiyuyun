@@ -6,7 +6,7 @@ uvicorn[standard]==0.51.0
 sqlalchemy==2.0.51
 aiomysql==0.3.2
 pydantic==2.12.5
-pydantic-settings==2.14.2
+pydantic-settings==2.15.0
 pyjwt==2.13.0
 bcrypt==5.0.0
 python-multipart==0.0.32
