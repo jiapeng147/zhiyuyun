@@ -238,7 +238,6 @@ python scripts/production_ops.py --env-file .env stop
 | [`docs/backup-restore.md`](docs/backup-restore.md) | 备份与恢复 |
 | [`apps/api/migrations/README.md`](apps/api/migrations/README.md) | 数据库迁移说明 |
 | [`SECURITY.md`](SECURITY.md) | 安全策略 |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | 贡献指南 |
 
 ## 📄 许可证
 
